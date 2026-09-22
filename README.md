@@ -6,7 +6,9 @@ The canonical repository is `~/Documents/Repositories/TrueMark`. Both `~/Reposit
 
 ## Preview
 
-The current development server runs at **http://127.0.0.1:5174/products**. The homepage is at **http://127.0.0.1:5174/**.
+The current development server runs at **http://127.0.0.1:5174/review**. This unified client package provides shared navigation to the Website, Landing visuals, and Typography review surfaces. The Website route opens the working prototype; the visual and typography studies remain interactive explorations for comparing directions and contexts.
+
+The homepage is at **http://127.0.0.1:5174/** and the catalog is at **http://127.0.0.1:5174/products**. The individual review routes also remain available at **http://127.0.0.1:5174/visual-study** and **http://127.0.0.1:5174/type-study**.
 
 **Quiet modern (Manrope) is the selected typography direction**, applied across the prototype. The exploration at **http://127.0.0.1:5174/type-study** preserves Sculptural (Instrument Serif / Manrope), Precise (Bodoni Moda / Manrope), Quiet modern, and the original font pairing for reference. It includes collection, product, documentation, and side-by-side specimens.
 
@@ -36,6 +38,7 @@ This is a frontend prototype. Forms do not send messages or authenticate account
 - [Design direction and content map](docs/DESIGN-NOTES.md)
 - [Verification record](docs/VERIFICATION.md)
 - [Generated image provenance and prompts](docs/IMAGE-PROVENANCE.md)
+- [Deployment notes](docs/DEPLOYMENT.md)
 - [Authenticated Oath reference study](reference-study/OATH-PRIMARY-REFERENCE.md)
 - [Initial reference analysis](reference-study/REFERENCE-ANALYSIS.md)
 

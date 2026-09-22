@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
+import { SectionLink } from "./SectionLink";
+import { assetUrl } from "./assetUrl";
 import "./visual-study.css";
 
 const directions = [
@@ -70,7 +72,7 @@ function Hero({ direction, compact = false }: { direction: Direction; compact?: 
         </>
       )}
       <section className="vs-hero" aria-label={`${direction.name} homepage composition`}>
-        <img className="vs-hero-image" src={`/images/studies/${direction.id}.png`} alt={direction.alt} fetchPriority={compact ? "auto" : "high"} loading={compact ? "lazy" : "eager"} />
+        <img className="vs-hero-image" src={assetUrl(`images/studies/${direction.id}.png`)} alt={direction.alt} fetchPriority={compact ? "auto" : "high"} loading={compact ? "lazy" : "eager"} />
         <div className="vs-hero-wash" />
         <div className="vs-hero-copy">
           <p className="vs-eyebrow">TRUEMARK BIOLABS</p>
@@ -78,7 +80,7 @@ function Hero({ direction, compact = false }: { direction: Direction; compact?: 
           <p className="vs-intro">Research compounds with a clear line from source to certificate. Precisely documented. Considered at every step.</p>
           {!compact && <div className="vs-actions"><Link className="vs-primary" to="/products">Explore the compounds <ArrowUpRight size={18} /></Link><Link className="vs-secondary" to="/quality">Our standard <ArrowRight size={17} /></Link></div>}
         </div>
-        <div className="vs-hero-bottom"><span>{direction.caption}</span>{!compact && <a href="#visual-notes" aria-label="Read the direction notes"><ArrowDown size={17} /></a>}<span>RESEARCH, WITH A RECORD.</span></div>
+        <div className="vs-hero-bottom"><span>{direction.caption}</span>{!compact && <SectionLink section="visual-notes" aria-label="Read the direction notes"><ArrowDown size={17} /></SectionLink>}<span>RESEARCH, WITH A RECORD.</span></div>
       </section>
       {!compact && <div className="vs-proof"><span>Independent testing</span><span>Lot-level documentation</span><span>Considered at every step</span></div>}
     </div>
@@ -104,7 +106,7 @@ export default function VisualStudy() {
 
   return (
     <div className="vs-study" ref={previewRef}>
-      <a className="vs-skip" href="#visual-preview">Skip to visual preview</a>
+      <SectionLink className="vs-skip" section="visual-preview">Skip to visual preview</SectionLink>
       <div className="vs-controls">
         <Link className="vs-return" to="/" aria-label="Return to current homepage"><ArrowLeft size={16} /><span>Current site</span></Link>
         <nav aria-label="Visual directions">{directions.map((item) => <button key={item.id} aria-pressed={!compare && selected.id === item.id} onClick={() => choose(item.id)}><span>{item.number}</span>{item.name}</button>)}</nav>

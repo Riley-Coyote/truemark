@@ -12,6 +12,8 @@ import "@fontsource-variable/bodoni-moda/standard.css";
 import "@fontsource-variable/dm-sans";
 import "@fontsource-variable/newsreader";
 import "@fontsource-variable/newsreader/wght-italic.css";
+import { SectionLink } from "./SectionLink";
+import { assetUrl } from "./assetUrl";
 import "./type-study.css";
 
 const directions = [
@@ -102,7 +104,7 @@ function Collection() {
       </div>
       <figure className="ts-hero-photo">
         <img
-          src="/images/hero-still-life.png"
+          src={assetUrl("images/hero-still-life.png")}
           alt="TrueMark ivory packaging and glass research vials"
         />
         <figcaption>Every lot has a record.</figcaption>
@@ -117,7 +119,7 @@ function Compound() {
       <div className="ts-product-photo">
         <p className="ts-kicker">The research collection / 01</p>
         <img
-          src="/images/research-vial.png"
+          src={assetUrl("images/research-vial.png")}
           alt="TrueMark research vial packaging concept"
         />
       </div>
@@ -288,9 +290,9 @@ export default function TypeStudy() {
 
   return (
     <div className="type-study">
-      <a className="ts-skip" href="#type-preview">
+      <SectionLink className="ts-skip" section="type-preview">
         Skip to typography preview
-      </a>
+      </SectionLink>
       <header className="ts-studio-header">
         <Link to="/products">
           TrueMark <span>/ Type studies</span>

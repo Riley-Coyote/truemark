@@ -1,14 +1,18 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, HashRouter } from "react-router-dom";
 import "@fontsource-variable/manrope";
 import AppRoutes from "./AppRoutes";
+import { SectionScroll } from "./SectionLink";
 import "./styles.css";
+
+const Router = import.meta.env.PROD ? HashRouter : BrowserRouter;
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <Router>
+      <SectionScroll />
       <AppRoutes />
-    </BrowserRouter>
+    </Router>
   </React.StrictMode>,
 );

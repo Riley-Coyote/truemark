@@ -50,6 +50,8 @@ import {
   products,
 } from "./data";
 import type { Product } from "./data";
+import { SectionLink } from "./SectionLink";
+import { assetUrl } from "./assetUrl";
 
 type CartItem = { id: string; quantity: number };
 type AppContextValue = {
@@ -345,7 +347,7 @@ function Header() {
           <div className="search-results">
             {matches.map((product) => (
               <Link key={product.id} to={`/product/${product.id}`}>
-                <img src="/images/research-vial.png" alt="" />
+                <img src={assetUrl("images/research-vial.png")} alt="" />
                 <div>
                   <strong>{product.name}</strong>
                   <span>
@@ -458,7 +460,7 @@ function ProductCard({
       <div className="product-visual">
         <span className="product-size">{product.size}</span>
         <img
-          src="/images/research-vial.png"
+          src={assetUrl("images/research-vial.png")}
           alt={`TrueMark research packaging concept for ${product.name}`}
           loading="lazy"
         />
@@ -551,7 +553,7 @@ function Home() {
         </div>
         <div className="home-hero-image">
           <img
-            src="/images/hero-still-life.png"
+            src={assetUrl("images/hero-still-life.png")}
             alt="TrueMark research vials and ivory packaging photographed in natural light"
           />
           <div className="photo-caption">
@@ -667,13 +669,13 @@ function Catalog() {
             Explore research compounds backed by lot-level documentation. A
             clear starting point for your next discovery.
           </p>
-          <a href="#collection" className="hero-scroll">
+          <SectionLink section="collection" className="hero-scroll">
             Explore the collection <ArrowDown size={16} />
-          </a>
+          </SectionLink>
         </div>
         <div className="catalog-hero-image">
           <img
-            src="/images/hero-still-life.png"
+            src={assetUrl("images/hero-still-life.png")}
             alt="TrueMark Biolabs ivory packaging and research vials"
           />
           <div className="hero-image-badge">
@@ -879,7 +881,7 @@ function ProductPage() {
             {String(products.indexOf(product) + 1).padStart(2, "0")}
           </span>
           <img
-            src="/images/research-vial.png"
+            src={assetUrl("images/research-vial.png")}
             alt={`TrueMark packaging concept for ${product.name}`}
           />
           <span className="detail-image-footer">
@@ -1412,7 +1414,7 @@ function Quality() {
       <section className="quality-opening page-width">
         <div className="quality-image">
           <img
-            src="/images/hero-still-life.png"
+            src={assetUrl("images/hero-still-life.png")}
             alt="TrueMark packaging and research vials"
           />
           <span>CONSIDERED AT EVERY STEP.</span>
@@ -1518,10 +1520,10 @@ function Handling() {
       <section className="handling-layout page-width">
         <aside className="contents-nav">
           <span>IN THIS GUIDE</span>
-          <a href="#receiving">01 · Receiving your material</a>
-          <a href="#storage">02 · Storage & documentation</a>
-          <a href="#records">03 · Keeping a clear record</a>
-          <a href="#questions">04 · Questions about a shipment</a>
+          <SectionLink section="receiving">01 · Receiving your material</SectionLink>
+          <SectionLink section="storage">02 · Storage & documentation</SectionLink>
+          <SectionLink section="records">03 · Keeping a clear record</SectionLink>
+          <SectionLink section="questions">04 · Questions about a shipment</SectionLink>
         </aside>
         <div className="handling-content">
           <section id="receiving">
@@ -1610,7 +1612,7 @@ function About() {
       />
       <section className="about-image page-width">
         <img
-          src="/images/hero-still-life.png"
+          src={assetUrl("images/hero-still-life.png")}
           alt="The proposed TrueMark research collection in warm natural light"
         />
         <span>TRUEMARK BIOLABS / CONSIDERED AT EVERY STEP</span>
@@ -1882,7 +1884,7 @@ function Access() {
     <section className="access-page page-width">
       <div className="access-image">
         <img
-          src="/images/hero-still-life.png"
+          src={assetUrl("images/hero-still-life.png")}
           alt="TrueMark research packaging"
         />
         <div>
@@ -2027,7 +2029,7 @@ function CartContent({ page = false }: { page?: boolean }) {
                 <div className="cart-item" key={item.id}>
                   <Link to={`/product/${p.id}`} onClick={closeCart}>
                     <img
-                      src="/images/research-vial.png"
+                      src={assetUrl("images/research-vial.png")}
                       alt={`${p.name} packaging concept`}
                     />
                   </Link>
@@ -2222,9 +2224,9 @@ export default function App() {
       }}
     >
       <RouteEffects />
-      <a className="skip-link" href="#main">
+      <SectionLink className="skip-link" section="main">
         Skip to content
-      </a>
+      </SectionLink>
       <Header />
       <main id="main">
         <Routes>

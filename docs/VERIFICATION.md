@@ -71,3 +71,14 @@ Riley clarified that the prototype should depict transparent fluid. Edited the t
 - Sol handled scoped copy changes, asset copying, and build checks. Terra audited asset consumers and documented provenance. Parent retained creative direction and visual judgment.
 - No powder/lyophilized wording remains in active source. Original prompts and screenshots remain historical records. Liquid fill levels are illustrative, not product specifications.
 - Production build and `git diff --check` pass. No layout or interaction changes were introduced.
+
+## Unified client review package — September 22, 2026
+
+Added `/review` as a client-facing overview and shared navigation across the full website, landing-image studies, and typography studies. The existing homepage remains available at `/`. The package is prepared for optional GitHub Pages hosting; no remote or public deployment was created.
+
+- Inspected the overview, exploration cards, shared navigation, typography comparison, and website sticky header in the browser. Reviewed the overview at desktop, 390-pixel, and 320-pixel CSS widths; no horizontal overflow or clipped headings/navigation labels.
+- Confirmed navigation between all review sections and typography comparison-to-context controls. Existing imagery is reused in the overview; all vial images include the clear-liquid correction.
+- Production uses hash routing and base-aware public assets. Tested the built package at `http://127.0.0.1:4173/TrueMark/#/review`, including resolved images under `/TrueMark/images/`, landing comparison-to-context navigation, refresh with a selected direction, typography controls, and catalog navigation.
+- Verified production section links preserve the route, scroll below both navigation bars, and focus the target. Catalog target top was 173 pixels with header bottom at 145 pixels. Production review recorded no browser warnings or errors.
+- Strict TypeScript, production build, and `git diff --check` pass. Temporary mobile viewport overrides were reset. Both the development server on 5174 and production subpath preview on 4173 remain running.
+- Sol handled hosting compatibility, asset paths, section links, and workflow setup. Terra audited the existing studies and updated the README. Parent handled presentation design, integration review, and live visual verification.
