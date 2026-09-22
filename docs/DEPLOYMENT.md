@@ -19,9 +19,10 @@ can change if 4173 is already occupied; Vite prints the active URL.
 
 ## Publish manually
 
-This checkout does not currently have a Git remote. Before the workflow can be
-run, create or choose the destination repository and push the project,
-including `.github/workflows/pages.yml`, to its default branch.
+The project is stored in the private GitHub repository
+[Riley-Coyote/truemark](https://github.com/Riley-Coyote/truemark), with `main`
+as the default branch. The Pages workflow is included; the site has not been
+published.
 
 1. In the destination GitHub repository, open **Settings → Pages** and select **GitHub
    Actions** as the source.

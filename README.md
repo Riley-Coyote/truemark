@@ -1,5 +1,7 @@
 # TrueMark Biolabs design prototype
 
+GitHub: [Riley-Coyote/truemark](https://github.com/Riley-Coyote/truemark) (private).
+
 A working frontend concept developed from the client's WordPress mockup, with Oath Research as the primary design reference and Fitish as a secondary reference.
 
 The canonical repository is `~/Documents/Repositories/TrueMark`. Both `~/Repositories/TrueMark` and the original `~/Documents/ChatGPT/TrueMark` workspace point to this same folder.
