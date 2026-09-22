@@ -8,6 +8,8 @@ The canonical repository is `~/Documents/Repositories/TrueMark`. Both `~/Reposit
 
 The current development server runs at **http://127.0.0.1:5174/products**. The homepage is at **http://127.0.0.1:5174/**.
 
+The typography exploration is at **http://127.0.0.1:5174/type-study**. Compare Sculptural (Instrument Serif / Manrope), Precise (Bodoni Moda / Manrope), and Quiet modern (Manrope) in collection, product, and documentation specimens, or side by side. The original font pairing is available as a reference. This isolated study does not change the storefront's typography.
+
 ```sh
 npm install
 npm run dev -- --port 5174
@@ -42,6 +44,7 @@ The account-protected source product, Handling, and About pages still need inspe
 - `src/App.tsx`: page templates, navigation, search, lot lookup, demo forms, and bag state.
 - `src/data.ts`: source catalog, compound classes, proposed process copy, FAQs, and editorial drafts.
 - `src/styles.css`: shared design tokens, components, responsive layouts, and reduced-motion behavior.
+- `src/TypeStudy.tsx` and `src/type-study.css`: typography directions and their isolated comparison surface, loaded only on `/type-study`.
 - `public/images/`: generated packaging concepts, not photographs of actual inventory.
 
 For deployment, serve the production `dist/` directory with a fallback to `index.html` for client-side routes. Production service integrations and deployment are outside this preview.

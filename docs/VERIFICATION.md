@@ -29,3 +29,14 @@ Refinements from review: larger secondary labels, local italic font loading, sta
 `npm run build` runs the strict TypeScript check and production Vite build. The final build passes.
 
 No production checkout, message delivery, account service, real certificate service, or WordPress integration is connected. No external form or purchase was submitted. Protected source pages remain unverified pending account access. A comprehensive screen-reader, contrast, and cross-browser audit remains production work.
+
+## Typography exploration — September 22, 2026
+
+Added an isolated `/type-study` route with three directions, collection/product/documentation specimens, an original-pairing reference, and a side-by-side comparison. No direction has been applied to the storefront.
+
+- Inspected all three type families in the browser. Chrome's rendered-font report confirmed Instrument Serif, Bodoni Moda, and Manrope are custom loaded fonts rather than fallbacks.
+- Visually reviewed the desktop comparison, collection, product, and certificate compositions. Checked mobile collection and documentation at 390 × 844, plus documentation/comparison overflow at 320 × 844. Refined the mobile display scale so the two collection statements each fit a line at 390 pixels.
+- Verified direction and scene switching, comparison-to-context navigation, and the original-pairing toggle returning to the previously selected direction. Keyboard Tab moves between controls with a visible focus outline.
+- Navigated back to `/products` and confirmed its heading still uses Newsreader and the study component is absent. The additional study styles are scoped, and its fonts and component load through a separate route chunk.
+- Kept the lazy route component outside the root bootstrap to avoid a duplicate-root warning during Vite hot refresh. A fresh reload and final navigation check produced no new browser warnings or errors.
+- Strict TypeScript and the production build pass. Screenshot: `screenshots/typography-comparison.png`.
