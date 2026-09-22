@@ -1,6 +1,8 @@
 # TrueMark Biolabs design prototype
 
-GitHub: [Riley-Coyote/truemark](https://github.com/Riley-Coyote/truemark) (private).
+Public GitHub repository: [Riley-Coyote/truemark](https://github.com/Riley-Coyote/truemark).
+
+GitHub Pages sharing target: [riley-coyote.github.io/truemark](https://riley-coyote.github.io/truemark/). In production, the bare site URL opens the client review; `#/` opens the website directly.
 
 A working frontend concept developed from the client's WordPress mockup, with Oath Research as the primary design reference and Fitish as a secondary reference.
 
@@ -55,4 +57,8 @@ The account-protected source product, Handling, and About pages still need inspe
 - `src/VisualStudy.tsx` and `src/visual-study.css`: homepage image compositions and their responsive comparison surface, loaded only on `/visual-study`.
 - `public/images/`: generated packaging concepts, not photographs of actual inventory.
 
-For deployment, serve the production `dist/` directory with a fallback to `index.html` for client-side routes. Production service integrations and deployment are outside this preview.
+Production builds use hash-based routes so the static `dist/` directory works
+from the GitHub Pages project path without server-side rewrites. See the
+[deployment notes](docs/DEPLOYMENT.md) for the manual publishing workflow and
+local production preview. Production service integrations remain outside this
+preview.
