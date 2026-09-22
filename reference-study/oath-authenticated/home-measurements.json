@@ -1,0 +1,202 @@
+{
+  "headings": [
+    {
+      "color": "rgb(255, 255, 255)",
+      "font": "Roboto, sans-serif",
+      "line": "40.8px",
+      "size": "34px",
+      "text": "Our Oath.",
+      "tracking": "normal",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(40, 40, 40)",
+      "font": "Roboto, sans-serif",
+      "line": "33.6px",
+      "size": "28px",
+      "text": "Verified Compounds.",
+      "tracking": "normal",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(136, 136, 136)",
+      "font": "Roboto, sans-serif",
+      "line": "22.4px",
+      "size": "16px",
+      "text": "Order lab tested research peptides, shipped with care.",
+      "tracking": "normal",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(255, 255, 255)",
+      "font": "Roboto, sans-serif",
+      "line": "33.6px",
+      "size": "28px",
+      "text": "Tested & Shipped in the USA.",
+      "tracking": "normal",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(238, 238, 238)",
+      "font": "Roboto, sans-serif",
+      "line": "22.4px",
+      "size": "16px",
+      "text": "Handled with care.",
+      "tracking": "normal",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(40, 40, 40)",
+      "font": "Roboto, sans-serif",
+      "line": "30.8px",
+      "size": "22px",
+      "text": "Order In Seconds",
+      "tracking": "normal",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(40, 40, 40)",
+      "font": "Roboto, sans-serif",
+      "line": "30.8px",
+      "size": "22px",
+      "text": "Fast 2 Day Delivery",
+      "tracking": "normal",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(40, 40, 40)",
+      "font": "Roboto, sans-serif",
+      "line": "30.8px",
+      "size": "22px",
+      "text": "Get Support Anytime",
+      "tracking": "normal",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(40, 40, 40)",
+      "font": "Roboto, sans-serif",
+      "line": "33.6px",
+      "size": "28px",
+      "text": "Why Choose Oath?",
+      "tracking": "normal",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(136, 136, 136)",
+      "font": "Roboto, sans-serif",
+      "line": "22.4px",
+      "size": "16px",
+      "text": "At Oath Peptides, we eliminate the middleman by supplying products directly from the lab. This ensures you receive the highest quality product with full transparency and competitive pricing.",
+      "tracking": "normal",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(119, 119, 119)",
+      "font": "Roboto, sans-serif",
+      "line": "22.4px",
+      "size": "16px",
+      "text": "“WOLVERINE” – BPC-157/TB-500",
+      "tracking": "normal",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(119, 119, 119)",
+      "font": "Roboto, sans-serif",
+      "line": "22.4px",
+      "size": "16px",
+      "text": "CJC-1295/Ipamorelin",
+      "tracking": "normal",
+      "weight": "400"
+    }
+  ],
+  "images": [
+    {
+      "alt": "Oath Research",
+      "height": 50,
+      "radius": "0px",
+      "src": "https://oathresearch.com/wp-content/uploads/2025/07/oath-logo-semibold.png",
+      "width": 136.5104217529297
+    },
+    {
+      "alt": "Oath Box",
+      "height": 362.09375,
+      "radius": "0px",
+      "src": "https://oathresearch.com/wp-content/uploads/2025/08/oath-box-banner.png",
+      "width": 599.9791870117188
+    },
+    {
+      "alt": "oath-background",
+      "height": 362.09375,
+      "radius": "0px",
+      "src": "https://oathresearch.com/wp-content/uploads/2025/08/oath-background.png",
+      "width": 599.9791870117188
+    },
+    {
+      "alt": "Order In Seconds",
+      "height": 68,
+      "radius": "50%",
+      "src": "https://oathresearch.com/wp-content/uploads/2025/08/Numbers-1.png",
+      "width": 68
+    },
+    {
+      "alt": "Fast 2 Day Delivery",
+      "height": 68,
+      "radius": "50%",
+      "src": "https://oathresearch.com/wp-content/uploads/2025/08/Numbers-2.png",
+      "width": 68
+    },
+    {
+      "alt": "Get Support Anytime",
+      "height": 68,
+      "radius": "50%",
+      "src": "https://oathresearch.com/wp-content/uploads/2025/08/Numbers-3.png",
+      "width": 68
+    },
+    {
+      "alt": "oath-background-trans",
+      "height": 642.5625,
+      "radius": "0px",
+      "src": "https://oathresearch.com/wp-content/uploads/2025/08/oath-background-trans.png",
+      "width": 401.59375
+    },
+    {
+      "alt": "",
+      "height": 287,
+      "radius": "0px",
+      "src": "https://oathresearch.com/wp-content/uploads/2025/08/BB10-680x680.png",
+      "width": 287
+    },
+    {
+      "alt": "",
+      "height": 287,
+      "radius": "0px",
+      "src": "https://oathresearch.com/wp-content/uploads/2025/08/CP10-3-680x680.png",
+      "width": 287
+    },
+    {
+      "alt": "",
+      "height": 287,
+      "radius": "0px",
+      "src": "https://oathresearch.com/wp-content/uploads/2025/08/B157-3-680x680.png",
+      "width": 287
+    },
+    {
+      "alt": "",
+      "height": 287,
+      "radius": "0px",
+      "src": "https://oathresearch.com/wp-content/uploads/2025/08/CU50-680x680.png",
+      "width": 287
+    },
+    {
+      "alt": "",
+      "height": 287,
+      "radius": "0px",
+      "src": "https://oathresearch.com/wp-content/uploads/2025/08/GLOW50-680x680.png",
+      "width": 287
+    }
+  ],
+  "viewport": {
+    "height": 1271,
+    "width": 2201
+  }
+}

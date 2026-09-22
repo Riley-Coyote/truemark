@@ -1,0 +1,146 @@
+- link "Skip to content":
+  - /url: "#content"
+- banner:
+  - generic: Research use only
+  - generic: ·
+  - generic: Not for human consumption
+  - banner:
+    - link "TRUEMARK BIOLABS logo TRUEMARK BIOLABS":
+      - /url: /
+      - img "TRUEMARK BIOLABS logo"
+      - generic: TRUEMARK
+      - emphasis: BIOLABS
+    - navigation:
+      - link "Home":
+        - /url: /
+      - link "Products":
+        - /url: /products/
+      - link "Verify":
+        - /url: /verify/
+      - link "Quality":
+        - /url: /quality/
+      - link "Handling":
+        - /url: /handling/
+      - link "About":
+        - /url: /about/
+      - link "Research Blog":
+        - /url: /research-blog/
+      - link "Contact":
+        - /url: /contact/
+    - link "Open search bar":
+      - /url: "#"
+      - text: Search
+    - link "Account":
+      - /url: /my-account/
+    - link "Cart (0)":
+      - /url: /cart/
+    - text: Search
+- paragraph: Quality
+- heading "Quality, documented." [level=1]
+- paragraph: Every lot moves through the same controlled path — from sourcing to release — and every step leaves a record you can read.
+- paragraph: Process
+- heading "From source batch to released vial" [level=2]
+- text: STEP 01
+- generic: Sourcing
+- paragraph: Raw material is purchased against a written specification, with the supplier batch number recorded.
+- text: STEP 02
+- generic: Receipt & quarantine
+- paragraph: Incoming lots are logged, assigned a TrueMark lot number, and held in temperature-controlled quarantine.
+- text: STEP 03
+- generic: Independent testing
+- paragraph: Samples are sent to a contracted laboratory for HPLC purity, MS identity, endotoxin and sterility testing.
+- text: STEP 04
+- generic: CoA review & release
+- paragraph: Results are reviewed against specification. Only approved lots are released; the CoA is published to the lot record.
+- text: STEP 05
+- generic: Cold-chain storage
+- paragraph: Released vials are stored at −20 °C and shipped with temperature control to institutional addresses.
+- paragraph: Release specification
+- heading "Every lot is tested against the same bar" [level=2]
+- paragraph: A lot that misses any specification is rejected and never enters released inventory. The full result set for each lot is published on its Certificate of Analysis and retrievable by lot number.
+- table:
+  - rowgroup:
+    - row "Test Method Specification":
+      - cell "Test"
+      - cell "Method"
+      - cell "Specification"
+    - row "Purity HPLC ≥ 99%":
+      - cell "Purity"
+      - cell "HPLC"
+      - cell "≥ 99%"
+    - row "Identity Mass spectrometry Mass confirmed":
+      - cell "Identity"
+      - cell "Mass spectrometry"
+      - cell "Mass confirmed"
+    - row "Endotoxin LAL assay < 0.25 EU/mg":
+      - cell "Endotoxin"
+      - cell "LAL assay"
+      - cell "< 0.25 EU/mg"
+    - row "Sterility Culture No growth":
+      - cell "Sterility"
+      - cell "Culture"
+      - cell "No growth"
+    - row "Net content Gravimetric Label claim met":
+      - cell "Net content"
+      - cell "Gravimetric"
+      - cell "Label claim met"
+- paragraph: Records
+- heading "What we keep on file for every lot" [level=2]
+- generic: Batch record
+- paragraph: Supplier batch number, receipt date, quarantine log, and assigned TrueMark lot number.
+- generic: Certificate of Analysis
+- paragraph: Full laboratory result set for the lot, published to the lot record and retrievable by lot number.
+- generic: Retained samples
+- paragraph: Vials from each lot are retained at −20 °C for re-testing if a question is ever raised.
+- generic: Distribution log
+- paragraph: Which lots shipped where and when — so any lot can be traced forward as well as back.
+- generic: Have a vial in hand? Read its certificate now.
+- link "Verify a lot":
+  - /url: /verify/
+- contentinfo:
+  - contentinfo:
+    - link "TRUEMARK logo TRUEMARK":
+      - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/
+      - img "TRUEMARK logo"
+      - generic: TRUEMARK
+    - paragraph: Research compounds supplied for laboratory use, with lot-level traceability.
+    - heading "Catalog" [level=5]
+    - list:
+      - link "All compounds":
+        - /url: /products/
+      - link "Peptide fragments":
+        - /url: /products/
+      - link "Neuropeptides":
+        - /url: /products/
+      - link "Lab supplies":
+        - /url: /products/
+    - heading "Verification" [level=5]
+    - list:
+      - link "Lot lookup":
+        - /url: /verify/
+      - link "Testing standards":
+        - /url: /quality/
+      - link "Reading a CoA":
+        - /url: /quality/
+    - heading "Handling" [level=5]
+    - list:
+      - link "Storage":
+        - /url: /handling/
+      - link "Shipping and cold chain":
+        - /url: /handling/
+    - heading "Company" [level=5]
+    - list:
+      - link "About":
+        - /url: /about/
+      - link "Quality":
+        - /url: /quality/
+      - link "Contact":
+        - /url: /contact/
+      - link "Terms":
+        - /url: /terms/
+      - link "Privacy":
+        - /url: /privacy-policy/
+    - paragraph: Research use only. All products supplied by TrueMark Biolabs are intended solely for laboratory research applications. They are not for human or veterinary use and are not intended to diagnose, treat, cure, or prevent any disease. No product listed here has been approved by the FDA for any therapeutic purpose. Nothing on this site constitutes medical advice. Purchasers are responsible for ensuring compliance with all applicable laws and regulations in their jurisdiction, and for the safe handling, storage, and disposal of these materials.
+    - paragraph: © 2026 TrueMark Biolabs · Research use only · Not for human consumption
+- generic: desktop
+- status

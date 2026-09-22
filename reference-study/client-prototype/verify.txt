@@ -1,0 +1,120 @@
+- link "Skip to content":
+  - /url: "#content"
+- banner:
+  - generic: Research use only
+  - generic: ·
+  - generic: Not for human consumption
+  - banner:
+    - link "TRUEMARK BIOLABS logo TRUEMARK BIOLABS":
+      - /url: /
+      - img "TRUEMARK BIOLABS logo"
+      - generic: TRUEMARK
+      - emphasis: BIOLABS
+    - navigation:
+      - link "Home":
+        - /url: /
+      - link "Products":
+        - /url: /products/
+      - link "Verify":
+        - /url: /verify/
+      - link "Quality":
+        - /url: /quality/
+      - link "Handling":
+        - /url: /handling/
+      - link "About":
+        - /url: /about/
+      - link "Research Blog":
+        - /url: /research-blog/
+      - link "Contact":
+        - /url: /contact/
+    - link "Open search bar":
+      - /url: "#"
+      - text: Search
+    - link "Account":
+      - /url: /my-account/
+    - link "Cart (0)":
+      - /url: /cart/
+    - text: Search
+- paragraph: Verification
+- heading "Enter a lot number. Read the certificate." [level=1]:
+  - text: Enter a lot number.
+  - text: Read the certificate.
+- paragraph: Every vial carries an NFC tag and a printed lot number. Both resolve to the Certificate of Analysis for that batch. No account required.
+- textbox "Lot number":
+  - /placeholder: Enter lot number — e.g. BP10-2611A
+  - text: BP10-2611A
+- button "Look up"
+- generic: "Try a released lot:"
+- button "BP10-2611A" [active]
+- button "MC10-2587B"
+- button "GC50-2603A"
+- generic: Certificate of Analysis
+- generic: The certificate for your lot will appear here after lookup.
+- paragraph: How it works
+- heading "Three steps to the certificate" [level=2]
+- text: "01"
+- generic: Find the lot number
+- paragraph: "Printed on every vial label, below the compound name. Format: letters, digits, and a dash."
+- text: "02"
+- generic: Enter it — or tap the vial
+- paragraph: Type the number above, or tap the NFC tag on the vial with your phone to open the same record.
+- text: "03"
+- generic: Read and retain the CoA
+- paragraph: Review purity, identity, endotoxin and sterility results, and retain the certificate with your laboratory records.
+- paragraph: Reading a CoA
+- heading "What each result means" [level=2]
+- generic: Purity · HPLC
+- paragraph: High-performance liquid chromatography measures the fraction of the sample that is the stated compound.
+- generic: Identity · MS
+- paragraph: Mass spectrometry confirms the molecular mass matches the stated compound and sequence.
+- generic: Endotoxin · LAL
+- paragraph: Limulus amebocyte lysate assay quantifies bacterial endotoxin, reported in EU per milligram.
+- generic: Sterility
+- paragraph: Culture-based testing verifies the absence of viable microbial growth in the sampled vials.
+- contentinfo:
+  - contentinfo:
+    - link "TRUEMARK logo TRUEMARK":
+      - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/
+      - img "TRUEMARK logo"
+      - generic: TRUEMARK
+    - paragraph: Research compounds supplied for laboratory use, with lot-level traceability.
+    - heading "Catalog" [level=5]
+    - list:
+      - link "All compounds":
+        - /url: /products/
+      - link "Peptide fragments":
+        - /url: /products/
+      - link "Neuropeptides":
+        - /url: /products/
+      - link "Lab supplies":
+        - /url: /products/
+    - heading "Verification" [level=5]
+    - list:
+      - link "Lot lookup":
+        - /url: /verify/
+      - link "Testing standards":
+        - /url: /quality/
+      - link "Reading a CoA":
+        - /url: /quality/
+    - heading "Handling" [level=5]
+    - list:
+      - link "Storage":
+        - /url: /handling/
+      - link "Shipping and cold chain":
+        - /url: /handling/
+    - heading "Company" [level=5]
+    - list:
+      - link "About":
+        - /url: /about/
+      - link "Quality":
+        - /url: /quality/
+      - link "Contact":
+        - /url: /contact/
+      - link "Terms":
+        - /url: /terms/
+      - link "Privacy":
+        - /url: /privacy-policy/
+    - paragraph: Research use only. All products supplied by TrueMark Biolabs are intended solely for laboratory research applications. They are not for human or veterinary use and are not intended to diagnose, treat, cure, or prevent any disease. No product listed here has been approved by the FDA for any therapeutic purpose. Nothing on this site constitutes medical advice. Purchasers are responsible for ensuring compliance with all applicable laws and regulations in their jurisdiction, and for the safe handling, storage, and disposal of these materials.
+    - paragraph: © 2026 TrueMark Biolabs · Research use only · Not for human consumption
+- generic: desktop
+- status

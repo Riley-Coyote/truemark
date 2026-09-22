@@ -1,0 +1,392 @@
+- link "Skip to content":
+  - /url: "#content"
+- banner:
+  - generic: Research use only
+  - generic: ·
+  - generic: Not for human consumption
+  - banner:
+    - link "TRUEMARK BIOLABS logo TRUEMARK BIOLABS":
+      - /url: /
+      - img "TRUEMARK BIOLABS logo"
+      - generic: TRUEMARK
+      - emphasis: BIOLABS
+    - navigation:
+      - link "Home":
+        - /url: /
+      - link "Products":
+        - /url: /products/
+      - link "Verify":
+        - /url: /verify/
+      - link "Quality":
+        - /url: /quality/
+      - link "Handling":
+        - /url: /handling/
+      - link "About":
+        - /url: /about/
+      - link "Research Blog":
+        - /url: /research-blog/
+      - link "Contact":
+        - /url: /contact/
+    - link "Open search bar":
+      - /url: "#"
+      - text: Search
+    - link "Account":
+      - /url: /my-account/
+    - link "Cart (0)":
+      - /url: /cart/
+    - text: Search
+- paragraph: Catalog
+- heading "Research compounds" [level=1]
+- paragraph: Every compound ships as lyophilized powder with lot-level traceability. Each lot is independently tested and released with a Certificate of Analysis.
+- link "All 24":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/products/
+  - text: All
+  - generic: "24"
+- link "Peptide Fragments 6":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/products/?pclass=34
+  - text: Peptide Fragments
+  - generic: "6"
+- link "Secretagogue Peptides 3":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/products/?pclass=35
+  - text: Secretagogue Peptides
+  - generic: "3"
+- link "Neuropeptides 3":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/products/?pclass=36
+  - text: Neuropeptides
+  - generic: "3"
+- link "Mitochondrial Peptides 3":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/products/?pclass=37
+  - text: Mitochondrial Peptides
+  - generic: "3"
+- link "Copper Complexes 2":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/products/?pclass=38
+  - text: Copper Complexes
+  - generic: "2"
+- link "Amino Acids & Derivatives 3":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/products/?pclass=39
+  - text: Amino Acids & Derivatives
+  - generic: "3"
+- link "Melanocortin Analogs 3":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/products/?pclass=40
+  - text: Melanocortin Analogs
+  - generic: "3"
+- link "Lab Supplies 1":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/products/?pclass=41
+  - text: Lab Supplies
+  - generic: "1"
+- link "BPC-157 BPC-157 10 MG Peptide Fragments BPC-157 10 MG Lyophilized powder · ≥99% (HPLC) $100.00 View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/bpc-157-10-mg/
+  - img "BPC-157":
+    - generic: RESEARCH USE ONLY
+  - generic: BPC-157
+  - generic: 10 MG
+  - generic: Peptide Fragments
+  - generic: BPC-157
+  - generic: 10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: $100.00
+  - generic: View details →
+- link "TB-500 TB-500 10 MG Peptide Fragments TB-500 10 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/tb-500-10-mg/
+  - img "TB-500":
+    - generic: RESEARCH USE ONLY
+  - generic: TB-500
+  - generic: 10 MG
+  - generic: Peptide Fragments
+  - generic: TB-500
+  - generic: 10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "KPV KPV 10 MG Peptide Fragments KPV 10 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/kpv-10-mg/
+  - img "KPV":
+    - generic: RESEARCH USE ONLY
+  - generic: KPV
+  - generic: 10 MG
+  - generic: Peptide Fragments
+  - generic: KPV
+  - generic: 10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "BPC/TB BPC/TB 5+5 MG Peptide Fragments BPC/TB 5+5 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/bpc-tb-55-mg/
+  - img "BPC/TB":
+    - generic: RESEARCH USE ONLY
+  - generic: BPC/TB
+  - generic: 5+5 MG
+  - generic: Peptide Fragments
+  - generic: BPC/TB
+  - generic: 5+5 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "BPC/TB BPC/TB 10+10 MG Peptide Fragments BPC/TB 10+10 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/bpc-tb-1010-mg/
+  - img "BPC/TB":
+    - generic: RESEARCH USE ONLY
+  - generic: BPC/TB
+  - generic: 10+10 MG
+  - generic: Peptide Fragments
+  - generic: BPC/TB
+  - generic: 10+10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "ARA-290 ARA-290 10 MG Peptide Fragments ARA-290 10 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/ara-290-10-mg/
+  - img "ARA-290":
+    - generic: RESEARCH USE ONLY
+  - generic: ARA-290
+  - generic: 10 MG
+  - generic: Peptide Fragments
+  - generic: ARA-290
+  - generic: 10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "Tesamorelin TESA 10 MG Secretagogue Peptides Tesamorelin 10 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/tesamorelin-10-mg/
+  - img "Tesamorelin":
+    - generic: RESEARCH USE ONLY
+  - generic: TESA
+  - generic: 10 MG
+  - generic: Secretagogue Peptides
+  - generic: Tesamorelin
+  - generic: 10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "Tesamorelin TESA 20 MG Secretagogue Peptides Tesamorelin 20 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/tesamorelin-20-mg/
+  - img "Tesamorelin":
+    - generic: RESEARCH USE ONLY
+  - generic: TESA
+  - generic: 20 MG
+  - generic: Secretagogue Peptides
+  - generic: Tesamorelin
+  - generic: 20 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "CJC/IPA CJC/IPA 5+5 MG Secretagogue Peptides CJC/IPA 5+5 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/cjc-ipa-55-mg/
+  - img "CJC/IPA":
+    - generic: RESEARCH USE ONLY
+  - generic: CJC/IPA
+  - generic: 5+5 MG
+  - generic: Secretagogue Peptides
+  - generic: CJC/IPA
+  - generic: 5+5 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "Semax SEMAX 10 MG Neuropeptides Semax 10 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/semax-10-mg/
+  - img "Semax":
+    - generic: RESEARCH USE ONLY
+  - generic: SEMAX
+  - generic: 10 MG
+  - generic: Neuropeptides
+  - generic: Semax
+  - generic: 10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "Selank SELANK 10 MG Neuropeptides Selank 10 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/selank-10-mg/
+  - img "Selank":
+    - generic: RESEARCH USE ONLY
+  - generic: SELANK
+  - generic: 10 MG
+  - generic: Neuropeptides
+  - generic: Selank
+  - generic: 10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "DSIP DSIP 10 MG Neuropeptides DSIP 10 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/dsip-10-mg/
+  - img "DSIP":
+    - generic: RESEARCH USE ONLY
+  - generic: DSIP
+  - generic: 10 MG
+  - generic: Neuropeptides
+  - generic: DSIP
+  - generic: 10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "MOTS-C MOTS-C 10 MG Mitochondrial Peptides MOTS-C 10 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/mots-c-10-mg/
+  - img "MOTS-C":
+    - generic: RESEARCH USE ONLY
+  - generic: MOTS-C
+  - generic: 10 MG
+  - generic: Mitochondrial Peptides
+  - generic: MOTS-C
+  - generic: 10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "MOTS-C MOTS-C 20 MG Mitochondrial Peptides MOTS-C 20 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/mots-c-20-mg/
+  - img "MOTS-C":
+    - generic: RESEARCH USE ONLY
+  - generic: MOTS-C
+  - generic: 20 MG
+  - generic: Mitochondrial Peptides
+  - generic: MOTS-C
+  - generic: 20 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "MOTS-C MOTS-C 40 MG Mitochondrial Peptides MOTS-C 40 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/mots-c-40-mg/
+  - img "MOTS-C":
+    - generic: RESEARCH USE ONLY
+  - generic: MOTS-C
+  - generic: 40 MG
+  - generic: Mitochondrial Peptides
+  - generic: MOTS-C
+  - generic: 40 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "GHK-Cu GHK-Cu 50 MG Copper Complexes GHK-Cu 50 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/ghk-cu-50-mg/
+  - img "GHK-Cu":
+    - generic: RESEARCH USE ONLY
+  - generic: GHK-Cu
+  - generic: 50 MG
+  - generic: Copper Complexes
+  - generic: GHK-Cu
+  - generic: 50 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "GHK-Cu GHK-Cu 100 MG Copper Complexes GHK-Cu 100 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/ghk-cu-100-mg/
+  - img "GHK-Cu":
+    - generic: RESEARCH USE ONLY
+  - generic: GHK-Cu
+  - generic: 100 MG
+  - generic: Copper Complexes
+  - generic: GHK-Cu
+  - generic: 100 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "NAD+ NAD+ 500 MG Amino Acids & Derivatives NAD+ 500 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/nad-500-mg/
+  - img "NAD+":
+    - generic: RESEARCH USE ONLY
+  - generic: NAD+
+  - generic: 500 MG
+  - generic: Amino Acids & Derivatives
+  - generic: NAD+
+  - generic: 500 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "NAD+ NAD+ 1000 MG Amino Acids & Derivatives NAD+ 1000 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/nad-1000-mg/
+  - img "NAD+":
+    - generic: RESEARCH USE ONLY
+  - generic: NAD+
+  - generic: 1000 MG
+  - generic: Amino Acids & Derivatives
+  - generic: NAD+
+  - generic: 1000 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "Glutathione GSH 1500 MG Amino Acids & Derivatives Glutathione 1500 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/glutathione-1500-mg/
+  - img "Glutathione":
+    - generic: RESEARCH USE ONLY
+  - generic: GSH
+  - generic: 1500 MG
+  - generic: Amino Acids & Derivatives
+  - generic: Glutathione
+  - generic: 1500 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "PT-141 PT-141 10 MG Melanocortin Analogs PT-141 10 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/pt-141-10-mg/
+  - img "PT-141":
+    - generic: RESEARCH USE ONLY
+  - generic: PT-141
+  - generic: 10 MG
+  - generic: Melanocortin Analogs
+  - generic: PT-141
+  - generic: 10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "Melanotan I MT-I 10 MG Melanocortin Analogs Melanotan I 10 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/melanotan-i-10-mg/
+  - img "Melanotan I":
+    - generic: RESEARCH USE ONLY
+  - generic: MT-I
+  - generic: 10 MG
+  - generic: Melanocortin Analogs
+  - generic: Melanotan I
+  - generic: 10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "Melanotan II MT-II 10 MG Melanocortin Analogs Melanotan II 10 MG Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/melanotan-ii-10-mg/
+  - img "Melanotan II":
+    - generic: RESEARCH USE ONLY
+  - generic: MT-II
+  - generic: 10 MG
+  - generic: Melanocortin Analogs
+  - generic: Melanotan II
+  - generic: 10 MG
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- link "Bacteriostatic Water BAC H2O 10 ML Lab Supplies Bacteriostatic Water 10 ML Lyophilized powder · ≥99% (HPLC) View details →":
+  - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/product/bacteriostatic-water-10-ml/
+  - img "Bacteriostatic Water":
+    - generic: RESEARCH USE ONLY
+  - generic: BAC H2O
+  - generic: 10 ML
+  - generic: Lab Supplies
+  - generic: Bacteriostatic Water
+  - generic: 10 ML
+  - generic: Lyophilized powder · ≥99% (HPLC)
+  - generic: View details →
+- generic: Have a vial in hand?
+- text: Enter its lot number to read the Certificate of Analysis for that batch.
+- link "Verify a lot":
+  - /url: /verify/
+- contentinfo:
+  - contentinfo:
+    - link "TRUEMARK logo TRUEMARK":
+      - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/
+      - img "TRUEMARK logo"
+      - generic: TRUEMARK
+    - paragraph: Research compounds supplied for laboratory use, with lot-level traceability.
+    - heading "Catalog" [level=5]
+    - list:
+      - link "All compounds":
+        - /url: /products/
+      - link "Peptide fragments":
+        - /url: /products/
+      - link "Neuropeptides":
+        - /url: /products/
+      - link "Lab supplies":
+        - /url: /products/
+    - heading "Verification" [level=5]
+    - list:
+      - link "Lot lookup":
+        - /url: /verify/
+      - link "Testing standards":
+        - /url: /quality/
+      - link "Reading a CoA":
+        - /url: /quality/
+    - heading "Handling" [level=5]
+    - list:
+      - link "Storage":
+        - /url: /handling/
+      - link "Shipping and cold chain":
+        - /url: /handling/
+    - heading "Company" [level=5]
+    - list:
+      - link "About":
+        - /url: /about/
+      - link "Quality":
+        - /url: /quality/
+      - link "Contact":
+        - /url: /contact/
+      - link "Terms":
+        - /url: /terms/
+      - link "Privacy":
+        - /url: /privacy-policy/
+    - paragraph: Research use only. All products supplied by TrueMark Biolabs are intended solely for laboratory research applications. They are not for human or veterinary use and are not intended to diagnose, treat, cure, or prevent any disease. No product listed here has been approved by the FDA for any therapeutic purpose. Nothing on this site constitutes medical advice. Purchasers are responsible for ensuring compliance with all applicable laws and regulations in their jurisdiction, and for the safe handling, storage, and disposal of these materials.
+    - paragraph: © 2026 TrueMark Biolabs · Research use only · Not for human consumption
+- generic: desktop
+- status

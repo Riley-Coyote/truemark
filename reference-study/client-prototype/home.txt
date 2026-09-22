@@ -1,0 +1,247 @@
+- link "Skip to content":
+  - /url: "#content"
+- banner:
+  - generic: Research use only
+  - generic: ·
+  - generic: Not for human consumption
+  - banner:
+    - link "TRUEMARK BIOLABS logo TRUEMARK BIOLABS":
+      - /url: /
+      - img "TRUEMARK BIOLABS logo"
+      - generic: TRUEMARK
+      - emphasis: BIOLABS
+    - navigation:
+      - link "Home":
+        - /url: /
+      - link "Products":
+        - /url: /products/
+      - link "Verify":
+        - /url: /verify/
+      - link "Quality":
+        - /url: /quality/
+      - link "Handling":
+        - /url: /handling/
+      - link "About":
+        - /url: /about/
+      - link "Research Blog":
+        - /url: /research-blog/
+      - link "Contact":
+        - /url: /contact/
+    - link "Open search bar":
+      - /url: "#"
+      - text: Search
+    - link "Account":
+      - /url: /my-account/
+    - link "Cart (0)":
+      - /url: /cart/
+    - text: Search
+- generic: Lot-level traceability
+- heading "True research. True precision. Verified." [level=1]:
+  - text: True research.
+  - text: True precision.
+  - text: Verified.
+- paragraph: Research compounds supplied as lyophilized powder — independently tested on receipt, quarantined until release, and traceable from the vial in your hand back to the source batch.
+- link "View catalog":
+  - /url: /products/
+- link "Verify a lot":
+  - /url: /verify/
+- img "BPC-157 vial"
+- img "MOTS-C vial"
+- img "GHK-Cu vial"
+- generic: LOT BP10-2611A HPLC 99.31% ✓ MS Confirmed ✓
+- heading "Research use only" [level=4]: Research use only
+- paragraph: Supplied for laboratory research applications.
+- heading "Not for human use" [level=4]: Not for human use
+- paragraph: Not for human or veterinary administration.
+- heading "Independently tested" [level=4]: Independently tested
+- paragraph: Every lot tested on receipt at a contracted laboratory.
+- heading "Cold chain" [level=4]: Cold chain
+- paragraph: Temperature-controlled storage and transit.
+- paragraph: One lot, end to end
+- heading "Every vial has a paper trail. Here's one." [level=2]
+- paragraph: Each lot moves through the same path before it is released, and the record stays open for anyone to read.
+- generic: LOT BP10-2611A
+- generic: BPC-157 · 10 mg
+- generic: Received
+- generic: 02 AUG
+- generic: Batch logged
+- generic: Quarantined
+- generic: 02 AUG
+- generic: Held at −20 °C
+- generic: Sampled
+- generic: 05 AUG
+- generic: Sent to laboratory
+- generic: Tested
+- generic: 11 AUG
+- generic: HPLC · MS
+- generic: Released
+- generic: 12 AUG
+- generic: Certificate published
+- generic: Shipped
+- generic: 14 AUG
+- generic: Cold chain
+- link "Read this lot's certificate":
+  - /url: /verify/
+  - text: Read this lot's certificate
+  - generic: →
+- paragraph: Catalog
+- heading "Organized by compound class" [level=2]
+- paragraph: Eight classes, each with full specification data — CAS number, molecular formula and weight, sequence, purity and identity method, solubility and storage.
+- link "Class 01 Peptide Fragments BPC-157 · TB-500 · KPV":
+  - /url: /products/
+  - generic: Class 01
+  - generic: Peptide Fragments
+  - text: BPC-157 · TB-500 · KPV
+- link "Class 02 Secretagogue Peptides Tesamorelin · CJC/IPA":
+  - /url: /products/
+  - generic: Class 02
+  - generic: Secretagogue Peptides
+  - text: Tesamorelin · CJC/IPA
+- link "Class 03 Neuropeptides Semax · Selank · DSIP":
+  - /url: /products/
+  - generic: Class 03
+  - generic: Neuropeptides
+  - text: Semax · Selank · DSIP
+- link "Class 04 Mitochondrial Peptides MOTS-C":
+  - /url: /products/
+  - generic: Class 04
+  - generic: Mitochondrial Peptides
+  - text: MOTS-C
+- link "Class 05 Copper Complexes GHK-Cu":
+  - /url: /products/
+  - generic: Class 05
+  - generic: Copper Complexes
+  - text: GHK-Cu
+- link "Class 06 Amino Acids & Derivatives NAD+ · Glutathione":
+  - /url: /products/
+  - generic: Class 06
+  - generic: Amino Acids & Derivatives
+  - text: NAD+ · Glutathione
+- link "Class 07 Melanocortin Analogs PT-141 · Melanotan":
+  - /url: /products/
+  - generic: Class 07
+  - generic: Melanocortin Analogs
+  - text: PT-141 · Melanotan
+- link "Supplies Lab Supplies Separate catalog":
+  - /url: /products/
+  - generic: Supplies
+  - generic: Lab Supplies
+  - text: Separate catalog
+- paragraph: Verification
+- heading "Enter a lot number. Read the certificate." [level=2]:
+  - text: Enter a lot number.
+  - text: Read the certificate.
+- paragraph: Every vial carries an NFC tag and a printed lot number. Both resolve to the Certificate of Analysis for that batch — purity, identity, endotoxin, sterility, testing laboratory, release date. No account required.
+- textbox "Lot number":
+  - /placeholder: BP10-2611A
+- button "Look up"
+- generic: Certificate of Analysis
+- generic: Approved
+- table:
+  - rowgroup:
+    - row "Lot BP10-2611A":
+      - cell "Lot"
+      - cell "BP10-2611A"
+    - row "Compound BPC-157":
+      - cell "Compound"
+      - cell "BPC-157"
+    - row "Testing laboratory [Contracted lab]":
+      - cell "Testing laboratory"
+      - cell "[Contracted lab]"
+    - row "Purity (HPLC) 99.31% ✓":
+      - cell "Purity (HPLC)"
+      - cell "99.31% ✓"
+    - row "Identity (MS) Confirmed ✓":
+      - cell "Identity (MS)"
+      - cell "Confirmed ✓"
+    - row "Endotoxin < 0.25 EU/mg ✓":
+      - cell "Endotoxin"
+      - cell "< 0.25 EU/mg ✓"
+    - row "Sterility Pass ✓":
+      - cell "Sterility"
+      - cell "Pass ✓"
+    - row "Test date 14 May 2026":
+      - cell "Test date"
+      - cell "14 May 2026"
+- generic: Lot traceable to source batch
+- generic: TM-COA-0114
+- paragraph: Who we supply
+- heading "Laboratory and institutional buyers" [level=2]
+- paragraph: Accounts are opened to verified research organizations. Orders ship to institutional addresses.
+- generic: Educational institutions
+- generic: Hospitals and medical institutions
+- generic: Pharmaceutical and biotech companies
+- generic: Government laboratories
+- generic: Private research organizations
+- generic: Contract research organizations
+- heading "Common questions" [level=2]
+- paragraph: Chemistry, storage, and documentation. Everything else is on the resources page.
+- generic "Why does the material arrive as a dry powder?":
+  - heading "Why does the material arrive as a dry powder?" [level=3]
+  - generic: +
+- generic "Why doesn't the vial weight match the certificate?":
+  - heading "Why doesn't the vial weight match the certificate?" [level=3]
+  - generic: +
+- generic "How is the material stored, and what changes once it's in solution?":
+  - heading "How is the material stored, and what changes once it's in solution?" [level=3]
+  - generic: +
+- generic "What is a retest date?":
+  - heading "What is a retest date?" [level=3]
+  - generic: +
+- generic "What is the lot number for?":
+  - heading "What is the lot number for?" [level=3]
+  - generic: +
+- generic "What does research use only mean?":
+  - heading "What does research use only mean?" [level=3]
+  - generic: +
+- link "Read the full resources hub":
+  - /url: /research-blog/
+  - text: Read the full resources hub
+  - generic: →
+- contentinfo:
+  - contentinfo:
+    - link "TRUEMARK logo TRUEMARK":
+      - /url: https://wordpress-1666461-6645643.cloudwaysapps.com/
+      - img "TRUEMARK logo"
+      - generic: TRUEMARK
+    - paragraph: Research compounds supplied for laboratory use, with lot-level traceability.
+    - heading "Catalog" [level=5]
+    - list:
+      - link "All compounds":
+        - /url: /products/
+      - link "Peptide fragments":
+        - /url: /products/
+      - link "Neuropeptides":
+        - /url: /products/
+      - link "Lab supplies":
+        - /url: /products/
+    - heading "Verification" [level=5]
+    - list:
+      - link "Lot lookup":
+        - /url: /verify/
+      - link "Testing standards":
+        - /url: /quality/
+      - link "Reading a CoA":
+        - /url: /quality/
+    - heading "Handling" [level=5]
+    - list:
+      - link "Storage":
+        - /url: /handling/
+      - link "Shipping and cold chain":
+        - /url: /handling/
+    - heading "Company" [level=5]
+    - list:
+      - link "About":
+        - /url: /about/
+      - link "Quality":
+        - /url: /quality/
+      - link "Contact":
+        - /url: /contact/
+      - link "Terms":
+        - /url: /terms/
+      - link "Privacy":
+        - /url: /privacy-policy/
+    - paragraph: Research use only. All products supplied by TrueMark Biolabs are intended solely for laboratory research applications. They are not for human or veterinary use and are not intended to diagnose, treat, cure, or prevent any disease. No product listed here has been approved by the FDA for any therapeutic purpose. Nothing on this site constitutes medical advice. Purchasers are responsible for ensuring compliance with all applicable laws and regulations in their jurisdiction, and for the safe handling, storage, and disposal of these materials.
+    - paragraph: © 2026 TrueMark Biolabs · Research use only · Not for human consumption
+- generic: desktop
+- status

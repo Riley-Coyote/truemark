@@ -1,0 +1,164 @@
+{
+  "headings": [
+    {
+      "color": "rgb(255, 255, 255)",
+      "font": "Roboto, sans-serif",
+      "size": "34px",
+      "text": "Our Oath.",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(40, 40, 40)",
+      "font": "Roboto, sans-serif",
+      "size": "28px",
+      "text": "Verified Compounds.",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(136, 136, 136)",
+      "font": "Roboto, sans-serif",
+      "size": "16px",
+      "text": "Order lab tested research peptides, shipped with care.",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(255, 255, 255)",
+      "font": "Roboto, sans-serif",
+      "size": "28px",
+      "text": "Tested & Shipped in the USA.",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(238, 238, 238)",
+      "font": "Roboto, sans-serif",
+      "size": "16px",
+      "text": "Handled with care.",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(40, 40, 40)",
+      "font": "Roboto, sans-serif",
+      "size": "22px",
+      "text": "Order In Seconds",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(40, 40, 40)",
+      "font": "Roboto, sans-serif",
+      "size": "22px",
+      "text": "Fast 2 Day Delivery",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(40, 40, 40)",
+      "font": "Roboto, sans-serif",
+      "size": "22px",
+      "text": "Get Support Anytime",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(40, 40, 40)",
+      "font": "Roboto, sans-serif",
+      "size": "28px",
+      "text": "Why Choose Oath?",
+      "weight": "400"
+    },
+    {
+      "color": "rgb(136, 136, 136)",
+      "font": "Roboto, sans-serif",
+      "size": "16px",
+      "text": "At Oath Peptides, we eliminate the middleman by supplying products directly from the lab. This ensures you receive the highest quality product with full transparency and competitive pricing.",
+      "weight": "400"
+    }
+  ],
+  "roundedPanels": [
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "nm-banner content-boxed full-width-parent image-type-css has-alt-image text-color-light subtitle-below alt-mobile-layout",
+      "height": 500,
+      "radius": "20px",
+      "width": 1600
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "elementor-widget-container",
+      "height": 362.09375,
+      "radius": "20px",
+      "width": 600
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "nm-banner content-full image-type-fluid has-alt-image text-color-dark subtitle-below",
+      "height": 362.09375,
+      "radius": "20px",
+      "width": 600
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "elementor-widget-container",
+      "height": 362.09375,
+      "radius": "20px",
+      "width": 600
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "nm-banner content-full image-type-fluid has-alt-image text-color-light subtitle-below",
+      "height": 362.09375,
+      "radius": "20px",
+      "width": 600
+    },
+    {
+      "background": "rgb(238, 238, 238)",
+      "class": "elementor-widget-container",
+      "height": 200,
+      "radius": "20px",
+      "width": 798.3958740234375
+    },
+    {
+      "background": "rgb(238, 238, 238)",
+      "class": "elementor-widget-container",
+      "height": 200,
+      "radius": "20px",
+      "width": 798.3958740234375
+    },
+    {
+      "background": "rgb(238, 238, 238)",
+      "class": "elementor-widget-container",
+      "height": 200,
+      "radius": "20px",
+      "width": 798.3958740234375
+    },
+    {
+      "background": "rgb(238, 238, 238)",
+      "class": "elementor-widget-container",
+      "height": 642.5625,
+      "radius": "20px",
+      "width": 401.6041870117187
+    },
+    {
+      "background": "rgba(0, 0, 0, 0)",
+      "class": "nm-banner content-full image-type-fluid has-alt-image text-color-dark subtitle-below",
+      "height": 642.5625,
+      "radius": "20px",
+      "width": 401.6041870117187
+    },
+    {
+      "background": "rgb(238, 238, 238)",
+      "class": "nm-shop-loop-thumbnail",
+      "height": 287,
+      "radius": "15px",
+      "width": 287
+    },
+    {
+      "background": "rgb(238, 238, 238)",
+      "class": "nm-shop-loop-thumbnail",
+      "height": 287,
+      "radius": "15px",
+      "width": 287
+    }
+  ],
+  "viewport": {
+    "h": 1271,
+    "w": 2201
+  }
+}

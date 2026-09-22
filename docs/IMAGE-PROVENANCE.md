@@ -1,0 +1,17 @@
+# Generated image provenance
+
+These are original concept assets for the local TrueMark design preview, generated with the built-in image generation tool on September 22, 2026. They are proposed packaging, not photographs of the client's actual products. Oath Research was an art-direction reference; no Oath assets were copied into the build.
+
+## Hero still life
+
+File: `public/images/hero-still-life.png`
+
+Use case: product-mockup. Asset type: photographic hero for a refined research-compound catalog prototype called TrueMark Biolabs. Create one beautiful, photorealistic landscape studio still life, 1536x1024. Art direction: the calm, tactile cream-and-black research packaging, soft shadows and careful material lighting exemplified by https://oathresearch.com/, but original TrueMark branding and composition. On a warm pale limestone surface stand two premium clear borosilicate research vials with satin black crimp caps and ivory paper labels, beside a tall slim ivory carton. One vial prominent foreground, one further back, carton just behind; balanced diagonal composition concentrated around center-right with breathing room on the left and above. Natural soft sidelight from upper left, subtle long shadows, warm-white plaster background, slight surface texture. Label typography: beautiful black serif brand wordmark "TrueMark" and small sans-serif "BIOLABS"; secondary short exact text "BPC-157" and "10 mg", and tiny "RESEARCH USE ONLY". Carton carries TrueMark wordmark and a very restrained small square crosshair mark. Looks like an expensive real product shoot, physically accurate glass, understated professional scientific supplier, high detail. No people, no needles, no bright colors, no green, no gradients or decorative atoms, no floating objects, no fake certification seals, no website UI, no watermark. This image fills a wide rounded hero panel on an off-white website; make cropping forgiving and keep label readable.
+
+## Catalog vial
+
+File: `public/images/research-vial.png`
+
+Use case: product-mockup. Create a single square 1024x1024 high-end catalog photograph for TrueMark Biolabs research compound website. One clear glass 3ml laboratory vial with an understated matte black crimp cap and subtle silver metal collar, standing upright, complete vial uncropped. Vial centered in lower-middle of image, about 68 percent of image height, ample margins; soft natural studio light from top left, realistic gentle shadow falling right, seamless pale warm off-white background #efeee9. Premium softly textured ivory label, black refined serif wordmark "TrueMark", tiny spaced sans-serif "BIOLABS", very fine horizontal hairline and tiny words "RESEARCH COMPOUND" and "RESEARCH USE ONLY". No specific compound name, no dosage, no CAS number, no purity percentage. The label is minimal and precise. Glass physically plausible, a little dry white lyophilized powder at bottom visible through glass base. Straight-on camera with a little top visibility of cap, attractive tactile studio realism similar in restraint to Oath Research packaging but its own brand. No carton, no other objects, no colored accent, no green, no giant shadows, no watermarks, no website UI. Entire background uniform neutral so image sits seamlessly on product card.
+
+The generic vial is reused across the draft catalog. Production needs approved photographs for each presentation, including the laboratory supply. The rendered page provides the actual compound and size as text outside the photograph.
