@@ -62,3 +62,12 @@ Added an isolated, lazy-loaded `/visual-study` route with four original generate
 - Confirmed direction switching, comparison-card-to-preview navigation, URL updates, and the primary catalog link. Catalog navigation removes the study component. No browser errors or warnings were reported.
 - Temporary viewport overrides were reset after review. These are static imagery studies; no motion treatment has been selected or implemented.
 - Keyboard Tab moves between the direction controls with a visible focus outline. Strict TypeScript and the production build pass.
+
+## Clear-liquid vial correction — September 22, 2026
+
+Riley clarified that the prototype should depict transparent fluid. Edited the three shared powder-containing photographs in place: hero still life, catalog vial, and sculptural object study. The glass macro had no visible powder and was retained. All consumers share these paths, including search, catalog cards, product detail, bag, quality, About, access, and the typography/visual studies. Six source presentation labels now say “Clear liquid”; quantities and illustrative certificate values remain unchanged.
+
+- Parent visually approved the generated edits and inspected the live homepage, product detail, and object study after integration. Composition, labels, and lighting were preserved; no visible powder remains in those assets.
+- Sol handled scoped copy changes, asset copying, and build checks. Terra audited asset consumers and documented provenance. Parent retained creative direction and visual judgment.
+- No powder/lyophilized wording remains in active source. Original prompts and screenshots remain historical records. Liquid fill levels are illustrative, not product specifications.
+- Production build and `git diff --check` pass. No layout or interaction changes were introduced.

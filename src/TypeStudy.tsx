@@ -125,7 +125,7 @@ function Compound() {
         <p className="ts-kicker">Peptides & proteins</p>
         <h2 className="ts-product-title">BPC-157</h2>
         <p className="ts-spec-line">
-          10 mg <span>Lyophilized powder</span>
+          10 mg <span>Clear liquid</span>
         </p>
         <p className="ts-body">
           BPC-157, supplied for laboratory research with lot-level traceability.
@@ -194,7 +194,7 @@ function Record() {
         <dl>
           <div>
             <dt>Presentation</dt>
-            <dd>Lyophilized powder</dd>
+            <dd>Clear liquid</dd>
           </div>
           <div>
             <dt>Lot identifier</dt>

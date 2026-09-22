@@ -483,7 +483,7 @@ function ProductCard({
       <p className="product-note">
         {product.category === "lab-supplies"
           ? "Laboratory supply"
-          : "Lyophilized powder"}
+          : "Clear liquid"}
         <span>Lot traceable</span>
       </p>
     </Link>
@@ -891,7 +891,7 @@ function ProductPage() {
           <h1>{product.name}</h1>
           <div className="detail-subtitle">
             <span>{product.size}</span>
-            <span>{isSupply ? "Laboratory supply" : "Lyophilized powder"}</span>
+            <span>{isSupply ? "Laboratory supply" : "Clear liquid"}</span>
           </div>
           <p className="detail-intro">
             {isSupply
@@ -1061,7 +1061,7 @@ function ProductPage() {
                   ["Presentation", product.size],
                   [
                     "Form",
-                    isSupply ? "Laboratory reagent" : "Lyophilized powder",
+                    isSupply ? "Laboratory reagent" : "Clear liquid",
                   ],
                   ["Intended use", "Laboratory research only"],
                   ["Documentation", "Lot-specific Certificate of Analysis"],
@@ -1304,7 +1304,7 @@ function Verify() {
               </div>
               <div>
                 <span>Presentation</span>
-                <strong>10 mg · lyophilized powder</strong>
+                <strong>10 mg · clear liquid</strong>
               </div>
               <div>
                 <span>Record reference</span>
