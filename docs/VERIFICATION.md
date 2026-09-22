@@ -51,3 +51,14 @@ Riley selected Quiet modern. Applied locally bundled Manrope throughout the stor
 - TypeScript and the production build pass. Evidence: `screenshots/quiet-modern-catalog.png` and `screenshots/quiet-modern-checks.json`.
 
 The generated packaging photographs still contain the earlier concept wordmark. The selected website typography is implemented as live text; packaging artwork requires a separate asset revision.
+
+## Homepage imagery exploration — September 22, 2026
+
+Added an isolated, lazy-loaded `/visual-study` route with four original generated images, full opening compositions, URL-preserved direction/view controls, and a two-column comparison that becomes one column on phones. The current storefront remains unchanged.
+
+- Visually reviewed all four desktop compositions and the comparison. Adjusted opening height for a short desktop window so the main action is visible.
+- Checked all four directions at a 390 × 844 CSS viewport: assets loaded, headline and primary action fit, and no horizontal page overflow. Visually reviewed coastal imagery at a narrower 333-pixel viewport, plus water and product compositions at 390 pixels.
+- Checked comparison layout at 390 and 320 CSS pixels with no horizontal overflow; no overflowing headings, paragraphs, or buttons in the 390-pixel comparison.
+- Confirmed direction switching, comparison-card-to-preview navigation, URL updates, and the primary catalog link. Catalog navigation removes the study component. No browser errors or warnings were reported.
+- Temporary viewport overrides were reset after review. These are static imagery studies; no motion treatment has been selected or implemented.
+- Keyboard Tab moves between the direction controls with a visible focus outline. Strict TypeScript and the production build pass.

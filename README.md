@@ -10,6 +10,8 @@ The current development server runs at **http://127.0.0.1:5174/products**. The h
 
 **Quiet modern (Manrope) is the selected typography direction**, applied across the prototype. The exploration at **http://127.0.0.1:5174/type-study** preserves Sculptural (Instrument Serif / Manrope), Precise (Bodoni Moda / Manrope), Quiet modern, and the original font pairing for reference. It includes collection, product, documentation, and side-by-side specimens.
 
+**Homepage imagery studies** are at **http://127.0.0.1:5174/visual-study**: Open horizon, Living patterns, Light through glass, and The research object. Each has a full homepage-opening preview; “Compare all” puts them together. These are isolated explorations with original generated assets, not an applied homepage redesign. [Creative intent, asset paths, and prompts](docs/VISUAL-STUDIES.md).
+
 ```sh
 npm install
 npm run dev -- --port 5174
@@ -45,6 +47,7 @@ The account-protected source product, Handling, and About pages still need inspe
 - `src/data.ts`: source catalog, compound classes, proposed process copy, FAQs, and editorial drafts.
 - `src/styles.css`: shared design tokens, components, responsive layouts, and reduced-motion behavior.
 - `src/TypeStudy.tsx` and `src/type-study.css`: typography directions and their isolated comparison surface, loaded only on `/type-study`.
+- `src/VisualStudy.tsx` and `src/visual-study.css`: homepage image compositions and their responsive comparison surface, loaded only on `/visual-study`.
 - `public/images/`: generated packaging concepts, not photographs of actual inventory.
 
 For deployment, serve the production `dist/` directory with a fallback to `index.html` for client-side routes. Production service integrations and deployment are outside this preview.
