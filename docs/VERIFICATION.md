@@ -40,3 +40,14 @@ Added an isolated `/type-study` route with three directions, collection/product/
 - Navigated back to `/products` and confirmed its heading still uses Newsreader and the study component is absent. The additional study styles are scoped, and its fonts and component load through a separate route chunk.
 - Kept the lazy route component outside the root bootstrap to avoid a duplicate-root warning during Vite hot refresh. A fresh reload and final navigation check produced no new browser warnings or errors.
 - Strict TypeScript and the production build pass. Screenshot: `screenshots/typography-comparison.png`.
+
+## Quiet modern applied — September 22, 2026
+
+Riley selected Quiet modern. Applied locally bundled Manrope throughout the storefront, including the wordmark, display headings, body copy, navigation, forms, and technical records. Removed decorative italic headline treatment, adjusted display proportions and responsive scales, enlarged supporting text, and added tabular numerals where figures need stable alignment. Alternative font families now load only with the study route; that route defaults to Quiet modern and preserves the initial pairing for reference.
+
+- Inspected the homepage, catalog, product detail, journal, article, certificate, and search dialog in the browser. Checked 13 mobile routes at 390 pixels and 11 desktop routes at 1440 pixels for horizontal overflow and clipped headings, paragraphs, and controls. The only clipped label was the intentionally screen-reader-only lot label.
+- Checked catalog, long product names, and the certificate at 320 pixels. Refined certificate column sizing and textual result sizes to fit inside the panel. Product categories now use the full card width above the name/price row, avoiding price-dependent wrapping.
+- Confirmed search for MOTS displays its three presentations, Escape closes the dialog, and focus returns to the search control. No browser warnings or errors were recorded during review.
+- TypeScript and the production build pass. Evidence: `screenshots/quiet-modern-catalog.png` and `screenshots/quiet-modern-checks.json`.
+
+The generated packaging photographs still contain the earlier concept wordmark. The selected website typography is implemented as live text; packaging artwork requires a separate asset revision.

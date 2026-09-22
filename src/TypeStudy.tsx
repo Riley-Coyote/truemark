@@ -9,7 +9,9 @@ import {
 } from "lucide-react";
 import "@fontsource/instrument-serif/latin-400.css";
 import "@fontsource-variable/bodoni-moda/standard.css";
-import "@fontsource-variable/manrope";
+import "@fontsource-variable/dm-sans";
+import "@fontsource-variable/newsreader";
+import "@fontsource-variable/newsreader/wght-italic.css";
 import "./type-study.css";
 
 const directions = [
@@ -263,12 +265,12 @@ export default function TypeStudy() {
   const direction: Direction =
     requested === "original" || directions.some((item) => item.id === requested)
       ? (requested as Direction)
-      : "sculptural";
+      : "quiet";
   const scene =
     scenes.find((item) => item.id === params.get("scene"))?.id ?? "collection";
   const compare = params.get("view") === "compare";
   const selected = directions.find((item) => item.id === direction);
-  const previousDirection = useRef<Direction>("sculptural");
+  const previousDirection = useRef<Direction>("quiet");
 
   useEffect(() => {
     if (direction !== "original") previousDirection.current = direction;
@@ -455,7 +457,7 @@ export default function TypeStudy() {
                 <h2>{selected?.character ?? "Our starting point."}</h2>
                 <p>
                   {selected?.description ??
-                    "The existing font pairing, shown in the study composition. The repeated italic second lines and denser proportions give it a more familiar editorial character. Use the prototype link to see the original layouts."}
+                    "The initial prototype’s font pairing, preserved in the study composition. The repeated italic second lines and denser proportions give it a more familiar editorial character. Quiet modern is now the selected direction for the site."}
                 </p>
               </div>
               <div>
@@ -475,8 +477,8 @@ export default function TypeStudy() {
         )}
         <footer className="ts-studio-footer">
           <p>
-            An exploration, not a brand decision. Packaging artwork is held
-            constant.
+            Quiet modern selected for the prototype. Packaging artwork is held
+            constant in this study.
           </p>
           <div>
             {directions.map((item) => (

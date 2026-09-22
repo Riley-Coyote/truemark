@@ -6,12 +6,12 @@ September 22, 2026. This is a proposed direction for review, not a finalized bra
 
 **Research, with a record.** Build the experience around the connection between compound, lot, documentation, and a research organization's next action. The client mockup already supplies a useful information architecture. Its arbitrary colors and placeholder identity are not design constraints.
 
-Oath is the primary reference: disciplined space, quiet product presentation, tactile cream packaging, short statements, and a clear relationship between commerce and evidence. The new TrueMark concept translates that restraint into an original serif identity and a consistent documentation experience. Fitish contributes approachable navigation and product-led merchandising. Neither reference's assets or identity are copied into the application.
+Oath is the primary reference: disciplined space, quiet product presentation, tactile cream packaging, short statements, and a clear relationship between commerce and evidence. The new TrueMark concept translates that restraint into a consistent documentation experience. Riley selected the Quiet modern typography direction on September 22, 2026 after reviewing three live alternatives. Fitish contributes approachable navigation and product-led merchandising. Neither reference's assets or identity are copied into the application.
 
 ## Visual system
 
 - Warm white page surfaces and neutral ink; subtle stone-colored dividers and panels.
-- Newsreader for the proposed wordmark and display type; DM Sans for controls and reading text. Both are locally bundled.
+- Quiet modern: locally bundled Manrope for the wordmark, display type, reading text, and controls. Display weight 430, wordmark weight 550, upright headlines, tighter tracking only at display sizes, generous body leading, and tabular numeric data. The earlier Newsreader / DM Sans pairing remains available in the typography study.
 - Photography with ivory labels, clear glass, black caps, and natural shadows. Product information remains selectable text outside the images.
 - Consistent rounded photographic panels, restrained rules, a centered wordmark, and compact navigation.
 - Four-column desktop and two-column phone catalogs. The mobile class filter scrolls horizontally within its own region.

@@ -526,7 +526,7 @@ function Home() {
           <h1>
             True research.
             <br />
-            Clear <em>confidence.</em>
+            Clear <span>confidence.</span>
           </h1>
           <p>
             Research compounds with a clear line from source to certificate.
@@ -587,7 +587,7 @@ function Home() {
           <h2>
             Confidence is
             <br />
-            <em>documented.</em>
+            <span>documented.</span>
           </h2>
           <p>
             Good research starts with knowing your material. Our standard
@@ -661,7 +661,7 @@ function Catalog() {
           <h1>
             Precisely sourced.
             <br />
-            <em>Clearly documented.</em>
+            <span>Clearly documented.</span>
           </h1>
           <p>
             Explore research compounds backed by lot-level documentation. A
@@ -1183,7 +1183,7 @@ function Verify() {
         <h1>
           Trust the process.
           <br />
-          <em>Read the record.</em>
+          <span>Read the record.</span>
         </h1>
         <p>
           One identifier connects your compound to its testing documentation.
@@ -1404,7 +1404,7 @@ function Quality() {
           <>
             Confidence doesn’t happen.
             <br />
-            <em>It’s documented.</em>
+            <span>It’s documented.</span>
           </>
         }
         description="A considered process from source material to released lot. Each step connected. Each record within reach."
@@ -1458,7 +1458,7 @@ function Quality() {
           <h2>
             A clear standard.
             <br />
-            <em>A readable record.</em>
+            <span>A readable record.</span>
           </h2>
           <p>
             Testing methods and specifications belong beside their results. The
@@ -1510,7 +1510,7 @@ function Handling() {
           <>
             Care, beyond
             <br />
-            <em>the delivery.</em>
+            <span>the delivery.</span>
           </>
         }
         description="Clear documentation supports a considered handoff, from receiving your shipment to retaining the record."
@@ -1603,7 +1603,7 @@ function About() {
           <>
             Research, with
             <br />
-            <em>a record.</em>
+            <span>a record.</span>
           </>
         }
         description="We believe confidence in a research compound begins with a clear understanding of where it comes from and the documentation behind it."
@@ -1620,7 +1620,7 @@ function About() {
         <h2>
           Precision in the material.
           <br />
-          <em>Clarity in the details.</em>
+          <span>Clarity in the details.</span>
         </h2>
         <div>
           <p>
@@ -1680,7 +1680,7 @@ function Journal() {
           <>
             A little more
             <br />
-            <em>understanding.</em>
+            <span>understanding.</span>
           </>
         }
         description="Notes on documentation, traceability, and the details that make a research workflow clearer."
@@ -1749,7 +1749,7 @@ function Contact() {
           <>
             Good questions.
             <br />
-            <em>Clear answers.</em>
+            <span>Clear answers.</span>
           </>
         }
         description="Ask about a compound, a lot record, or your organization’s research requirements."
@@ -1915,13 +1915,13 @@ function Access() {
                 <>
                   Welcome
                   <br />
-                  <em>back.</em>
+                  <span>back.</span>
                 </>
               ) : (
                 <>
                   Let’s begin
                   <br />
-                  <em>with the details.</em>
+                  <span>with the details.</span>
                 </>
               )}
             </h1>
@@ -2116,7 +2116,7 @@ function CartPage() {
           <>
             Your research
             <br />
-            <em>starts here.</em>
+            <span>starts here.</span>
           </>
         }
         description="Review the compounds selected for your organization."
@@ -2135,7 +2135,7 @@ function NotFound() {
       <h1>
         A different
         <br />
-        <em>starting point.</em>
+        <span>starting point.</span>
       </h1>
       <p>This page isn’t part of the collection.</p>
       <Link className="button button-dark" to="/products">

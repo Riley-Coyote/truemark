@@ -8,7 +8,7 @@ The canonical repository is `~/Documents/Repositories/TrueMark`. Both `~/Reposit
 
 The current development server runs at **http://127.0.0.1:5174/products**. The homepage is at **http://127.0.0.1:5174/**.
 
-The typography exploration is at **http://127.0.0.1:5174/type-study**. Compare Sculptural (Instrument Serif / Manrope), Precise (Bodoni Moda / Manrope), and Quiet modern (Manrope) in collection, product, and documentation specimens, or side by side. The original font pairing is available as a reference. This isolated study does not change the storefront's typography.
+**Quiet modern (Manrope) is the selected typography direction**, applied across the prototype. The exploration at **http://127.0.0.1:5174/type-study** preserves Sculptural (Instrument Serif / Manrope), Precise (Bodoni Moda / Manrope), Quiet modern, and the original font pairing for reference. It includes collection, product, documentation, and side-by-side specimens.
 
 ```sh
 npm install

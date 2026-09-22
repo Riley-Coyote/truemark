@@ -1,0 +1,188 @@
+{
+  "mobile": [
+    {
+      "clippedText": [],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/",
+      "width": 390
+    },
+    {
+      "clippedText": [],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/products",
+      "width": 390
+    },
+    {
+      "clippedText": [],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/product/glutathione-1500-mg",
+      "width": 390
+    },
+    {
+      "clippedText": [],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/product/bacteriostatic-water-10-ml",
+      "width": 390
+    },
+    {
+      "clippedText": [
+        {
+          "className": "sr-only",
+          "text": "Lot number"
+        }
+      ],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/verify",
+      "width": 390
+    },
+    {
+      "clippedText": [],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/quality",
+      "width": 390
+    },
+    {
+      "clippedText": [],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/handling",
+      "width": 390
+    },
+    {
+      "clippedText": [],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/about",
+      "width": 390
+    },
+    {
+      "clippedText": [],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/research-blog",
+      "width": 390
+    },
+    {
+      "clippedText": [],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/research-blog/reading-a-certificate",
+      "width": 390
+    },
+    {
+      "clippedText": [],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/contact",
+      "width": 390
+    },
+    {
+      "clippedText": [],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/access",
+      "width": 390
+    },
+    {
+      "clippedText": [],
+      "font": "\"Manrope Variable\", sans-serif",
+      "overflow": false,
+      "path": "/cart",
+      "width": 390
+    }
+  ],
+  "narrow": [
+    {
+      "overflow": false,
+      "path": "/products",
+      "textOverflow": [],
+      "width": 320
+    },
+    {
+      "overflow": false,
+      "path": "/product/bacteriostatic-water-10-ml",
+      "textOverflow": [],
+      "width": 320
+    },
+    {
+      "overflow": false,
+      "path": "/verify",
+      "textOverflow": [],
+      "width": 320
+    }
+  ],
+  "desktop": [
+    {
+      "clippedText": [],
+      "overflow": false,
+      "path": "/products",
+      "width": 1440
+    },
+    {
+      "clippedText": [],
+      "overflow": false,
+      "path": "/product/glutathione-1500-mg",
+      "width": 1440
+    },
+    {
+      "clippedText": [],
+      "overflow": false,
+      "path": "/verify",
+      "width": 1440
+    },
+    {
+      "clippedText": [],
+      "overflow": false,
+      "path": "/quality",
+      "width": 1440
+    },
+    {
+      "clippedText": [],
+      "overflow": false,
+      "path": "/handling",
+      "width": 1440
+    },
+    {
+      "clippedText": [],
+      "overflow": false,
+      "path": "/about",
+      "width": 1440
+    },
+    {
+      "clippedText": [],
+      "overflow": false,
+      "path": "/research-blog",
+      "width": 1440
+    },
+    {
+      "clippedText": [],
+      "overflow": false,
+      "path": "/research-blog/reading-a-certificate",
+      "width": 1440
+    },
+    {
+      "clippedText": [],
+      "overflow": false,
+      "path": "/contact",
+      "width": 1440
+    },
+    {
+      "clippedText": [],
+      "overflow": false,
+      "path": "/access",
+      "width": 1440
+    },
+    {
+      "clippedText": [],
+      "overflow": false,
+      "path": "/cart",
+      "width": 1440
+    }
+  ]
+}
