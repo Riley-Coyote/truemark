@@ -82,3 +82,25 @@ Added `/review` as a client-facing overview and shared navigation across the ful
 - Verified production section links preserve the route, scroll below both navigation bars, and focus the target. Catalog target top was 173 pixels with header bottom at 145 pixels. Production review recorded no browser warnings or errors.
 - Strict TypeScript, production build, and `git diff --check` pass. Temporary mobile viewport overrides were reset. Both the development server on 5174 and production subpath preview on 4173 remain running.
 - Sol handled hosting compatibility, asset paths, section links, and workflow setup. Terra audited the existing studies and updated the README. Parent handled presentation design, integration review, and live visual verification.
+
+
+## Client brand refinement — September 24, 2026
+
+Integrated the supplied SVG identity, Poppins display typography, brand colors,
+20 product renders and current catalog details. Restored powder in the earlier
+concept assets; BAC Water retains the supplied liquid image. See
+[Brand refinement](BRAND-REFINEMENT.md) for decisions and provenance.
+
+- Inspected desktop homepage, catalog, product detail, Quality, lot lookup and
+  the production review overview in the browser.
+- Checked mobile homepage and catalog: readable quantities, no horizontal
+  document overflow, header and review navigation fit, and all images load.
+- Exercised category filtering, verified the Lab supplies result and water form,
+  and added/removed a BPC-157 demo bag selection with the updated $40 subtotal.
+- Production review at `/truemark/#/review` resolves images and the new Poppins
+  font under the project subpath. No console errors were recorded.
+- TypeScript, production build and `git diff --check` pass.
+- Temporary mobile viewport overrides reset. Development remains on 5174 and
+  production preview on 4173. WordPress and the public Pages site were not changed.
+- Sol handled catalog integration and study-copy updates; Terra audited source
+  assets and implementation. Parent retained creative decisions and visual checks.

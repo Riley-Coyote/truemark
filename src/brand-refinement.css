@@ -1,0 +1,235 @@
+/* Client identity, with the space and hierarchy of the first design. */
+@font-face {
+  font-family: "TrueMark Poppins";
+  src: url("/fonts/Poppins-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "TrueMark Poppins";
+  src: url("/fonts/Poppins-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+.brand-refinement {
+  --paper: #fdfcfe;
+  --ink: #241a4a;
+  --muted: #625976;
+  --line: #e7e3ec;
+  --accent: #7a39b1;
+  --panel: #f4f5f8;
+  --brand-gradient: linear-gradient(100deg, #e9284c 0%, #b3146b 28%, #7a2aa0 55%, #2f1492 80%, #0a2ea9 100%);
+  --font-display: "TrueMark Poppins", "Manrope Variable", sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+}
+.brand-refinement h1,
+.brand-refinement h2 { font-weight: 400; letter-spacing: -.045em; }
+.brand-refinement p { color: var(--muted); }
+.brand-refinement :is(button, a, summary):focus-visible { outline-color: var(--accent); }
+.brand-refinement :is(input, select, textarea):focus { outline-color: var(--accent); }
+.brand-refinement ::selection { background: #e7d7f2; color: var(--ink); }
+.brand-refinement .eyebrow { color: #6b587d; }
+.brand-refinement .eyebrow > span { width: 19px; height: 2px; background: var(--brand-gradient); }
+.brand-refinement .button { border-radius: 999px; padding-inline: 24px; font-weight: 550; }
+.brand-refinement .button-dark { background: var(--accent); border-color: transparent; color: #fff; }
+.brand-refinement .button-dark:hover { background: #60268f; }
+.brand-refinement .button-outline { border-color: #bfa7d2; color: var(--ink); }
+.brand-refinement .button-outline:hover { background: #f0e9f6; }
+.brand-refinement .button-light { background: #fff; color: var(--ink); }
+.brand-refinement .announcement { background: var(--ink); color: #f3eff8; font-size: 10px; }
+.brand-refinement .site-header { background: #fdfcfeef; border-color: var(--line); }
+.brand-refinement .header-inner { grid-template-columns: 1fr auto 1fr; }
+.brand-refinement .wordmark { padding: 0; }
+.brand-logo { width: 194px; height: auto; display: block; }
+.brand-refinement .desktop-nav { gap: 25px; }
+.brand-refinement .desktop-nav > a.active:after { background: var(--accent); }
+.brand-refinement .nav-dropdown,
+.brand-refinement .modal-panel { background: var(--paper); }
+.brand-refinement .icon-button:hover { background: #f0eaf5; }
+.brand-refinement .home-hero { grid-template-columns: 47% 53%; padding-block: 34px 28px; min-height: 610px; }
+.brand-refinement .home-hero-copy { padding: 44px 38px 38px 0; }
+.brand-refinement .home-hero-copy h1 { font-size: clamp(42px, 4.4vw, 67px); line-height: 1.13; }
+.brand-refinement .home-hero-copy h1 span { color: var(--accent); }
+.brand-refinement .home-hero-copy > p:not(.eyebrow) { max-width: 370px; font-size: 16px; line-height: 1.8; }
+.brand-refinement .hero-actions { gap: 25px; flex-wrap: wrap; }
+.brand-refinement .hero-actions .button-dark { background: var(--brand-gradient); }
+.brand-refinement .hero-actions .button-dark:hover { filter: brightness(1.08); }
+.brand-refinement .home-hero-image { border-radius: 24px 24px 100px 24px; aspect-ratio: 1; align-self: center; }
+.brand-refinement .home-hero-image > img { object-position: center; }
+.brand-refinement .photo-caption { bottom: 22px; right: 70px; left: 26px; color: var(--ink); font-size: 8px; letter-spacing: .11em; }
+.brand-refinement .photo-caption span:last-child { display: none; }
+.brand-refinement .hero-footnote { color: var(--muted); margin-top: 38px; }
+.brand-refinement .hero-monogram { width: 29px; height: 29px; object-fit: contain; margin-right: 3px; }
+.brand-refinement .trust-strip { padding: 28px 0; }
+.brand-refinement .trust-strip > div { color: var(--muted); }
+.brand-refinement .trust-strip svg { color: var(--accent); stroke-width: 1.5; }
+.brand-refinement .section-heading h2 { font-size: clamp(30px, 3vw, 42px); }
+.brand-refinement .catalog-intro { display: grid; grid-template-columns: 1.4fr 1fr; gap: 80px; align-items: end; padding-block: 65px 52px; border-bottom: 1px solid var(--line); }
+.brand-refinement .catalog-intro h1 { font-size: clamp(36px, 4vw, 58px); line-height: 1.15; }
+.brand-refinement .catalog-intro h1 span { color: var(--accent); }
+.brand-refinement .catalog-intro-aside { max-width: 370px; justify-self: end; padding-bottom: 2px; }
+.brand-refinement .catalog-intro-aside p { font-size: 14px; line-height: 1.8; }
+.brand-refinement .catalog-intro-aside > a { margin-top: 17px; color: var(--ink); }
+.brand-spectrum { display: flex; gap: 7px; margin-top: 27px; }
+.brand-spectrum span { width: 25px; height: 7px; border-radius: 8px; }
+.brand-refinement .collection { padding-top: 36px; }
+.brand-refinement .collection-title { margin-bottom: 25px; }
+.brand-refinement .collection-title h2 { font-size: 25px; }
+.brand-refinement .collection-title h2 > span { color: var(--accent); border: 0; background: #eee5f5; border-radius: 50%; padding: 7px; margin: 0; }
+.brand-refinement .category-list { gap: 7px; border: 0; padding-bottom: 3px; }
+.brand-refinement .category-list button { min-height: 40px; padding: 9px 15px; color: #635971; border: 1px solid var(--line); border-radius: 999px; background: #fff; }
+.brand-refinement .category-list button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.brand-refinement .category-list button:not(.active):hover { background: #eee6f5; border-color: #d2bbdf; }
+.brand-refinement .filter-toggle { border-radius: 999px; min-height: 42px; }
+.brand-refinement .collection-status { color: var(--muted); }
+.brand-refinement .collection-status > span:last-child { color: #71677e; }
+.brand-refinement .product-grid { gap: 34px 23px; }
+.brand-refinement .product-visual { aspect-ratio: 1 / 1.12; border-radius: 16px; background: #f4f5f8; border: 1px solid #eeedf2; }
+.brand-refinement .product-visual::after { content: ""; position: absolute; height: 4px; inset: auto 0 0; background: var(--product-color); opacity: .85; }
+.brand-refinement .product-visual img { height: 100%; padding: 24px 5px; object-fit: contain; mix-blend-mode: normal; background: #f6f8fa; }
+.brand-refinement .product-size { display: none; }
+.brand-refinement .image-caption { display: block; color: var(--product-ink); font-size: 11px; left: 17px; bottom: 16px; letter-spacing: 0; font-weight: 600; padding: 4px 10px; background: #ffffffed; border: 1px solid #ffffff; border-radius: 999px; }
+.brand-refinement .product-open { display: grid; opacity: 1; transform: none; bottom: 17px; color: var(--product-ink); background: white; }
+.brand-refinement .product-card:hover .product-open { background: var(--product-color); color: #fff; }
+.brand-refinement .product-category { color: var(--product-ink, var(--muted)); letter-spacing: .055em; font-size: 10px; }
+.brand-refinement .product-meta { margin-top: 17px; }
+.brand-refinement .product-meta h3 { font-size: 18px; font-weight: 550; line-height: 1.4; }
+.brand-refinement .product-price { font-size: 14px; font-weight: 500; align-self: start; margin-top: 3px; }
+.brand-refinement .product-note,
+.brand-refinement .product-note span { color: var(--muted); font-size: 11px; }
+.brand-refinement .product-note { flex-wrap: wrap; column-gap: 10px; }
+.brand-refinement .standard-feature { background: #f3eff7; border-radius: 20px; }
+.brand-refinement .standard-steps > div { border-color: #dfd6e8; }
+.brand-refinement .step-number { color: var(--accent); }
+.brand-refinement .standard-steps svg { color: var(--accent); }
+.brand-refinement .verification-banner { background: var(--ink); border-radius: 20px; color: white; padding: 48px; }
+.brand-refinement .verification-banner::before { content: ""; position: absolute; inset: auto 0 0; height: 5px; background: var(--brand-gradient); }
+.brand-refinement .verification-banner .eyebrow,
+.brand-refinement .verification-banner-copy p { color: #d5cce2; }
+.brand-refinement .verification-icon { border-color: #817391; color: #e6d8f0; border-radius: 50%; height: 70px; width: 70px; }
+.brand-refinement .verification-icon img { width: 33px; height: 33px; }
+.brand-refinement .verification-banner h2 { font-size: 34px; }
+.brand-refinement .article-art { border-radius: 16px; }
+.brand-refinement .article-01 .article-art { background: #f0e6f5; color: #7a39b1; }
+.brand-refinement .article-02 .article-art { background: #f8e9ed; color: #ab3154; }
+.brand-refinement .article-03 .article-art { background: #e9edf8; color: #445da3; }
+.brand-refinement .article-index { color: #655875; }
+.brand-refinement .article-brand { position: absolute; right: 23px; bottom: 21px; height: 23px; width: 23px; }
+.brand-refinement .site-footer { background: #f2f0f5; border-top: 1px solid var(--line); }
+.brand-refinement .footer-wordmark { width: fit-content; }
+.brand-refinement .footer-bottom { border-color: #dfd9e6; }
+.brand-refinement .footer-column a,
+.brand-refinement .footer-bottom p,
+.brand-refinement .footer-bottom > div { color: var(--muted); }
+.brand-refinement .detail-image { background: #f6f8fa; border-radius: 22px; border: 1px solid var(--line); }
+.brand-refinement .detail-image::after { content: ""; height: 5px; position: absolute; bottom: 0; left: 0; right: 0; background: var(--product-color); }
+.brand-refinement .detail-image img { padding: 45px 10px; object-fit: contain; }
+.brand-refinement .detail-image-label,
+.brand-refinement .detail-image-footer { color: var(--muted); }
+.brand-refinement .detail-copy h1 { font-family: var(--font-sans); font-weight: 500; font-size: clamp(36px, 4.4vw, 60px); }
+.brand-refinement .detail-copy .eyebrow { color: var(--product-ink); }
+.brand-refinement .detail-copy .eyebrow > span { background: var(--product-color); }
+.brand-refinement .detail-assurances,
+.brand-refinement .detail-verify { background: #f3eff7; border-color: #e7dcec; border-radius: 12px; }
+.brand-refinement .detail-assurances { color: var(--product-ink); }
+.brand-refinement .detail-assurances svg { color: var(--product-color); }
+.brand-refinement .variant-options a { border-radius: 999px; }
+.brand-refinement .variant-options a.active { border-color: var(--product-color); color: var(--product-ink); background: #fff; }
+.brand-refinement .product-page .purchase-block .button-dark { background: var(--product-ink); }
+.brand-refinement .detail-subtitle,
+.brand-refinement .detail-subtitle span,
+.brand-refinement .breadcrumbs { color: var(--muted); }
+.brand-refinement .quantity { border-radius: 999px; }
+.brand-refinement .quality-image,
+.brand-refinement .about-image,
+.brand-refinement .access-image { border-radius: 20px; overflow: hidden; }
+.brand-refinement .quality-image img { object-position: center; }
+.brand-refinement .page-intro h1 > span { color: var(--accent); }
+.brand-refinement .verify-intro { background-image: url("/images/brand/waves.svg"); background-size: cover; border-radius: 0 0 24px 24px; padding-inline: 24px; }
+.brand-refinement .search-results img,
+.brand-refinement .cart-item img { object-fit: contain; background: #f6f8fa; border-radius: 8px; }
+.brand-refinement .review-intro h1 { font-size: clamp(45px, 5.2vw, 74px); }
+.brand-refinement .review-site-feature { background: #f1eaf7; border-radius: 22px; overflow: hidden; }
+.brand-refinement .review-site-image img { object-position: center; }
+.brand-refinement .review-enter { border-radius: 999px; background: var(--accent); }
+.brand-refinement .review-type-cover { background: #eee7f4; border-radius: 16px; }
+.brand-refinement .review-visual-cover { border-radius: 16px; }
+@media (max-width: 1100px) {
+  .brand-refinement .hero-actions { gap: 19px; }
+  .brand-refinement .home-hero-copy { padding-right: 24px; }
+  .brand-refinement .home-hero-copy h1 { font-size: 44px; }
+  .brand-refinement .home-hero { min-height: auto; }
+  .brand-refinement .catalog-intro { gap: 40px; }
+  .brand-refinement .verification-banner { grid-template-columns: 65px 1fr 260px; gap: 20px; padding: 35px; }
+  .brand-refinement .verification-banner h2 { font-size: 29px; }
+}
+@media (max-width: 800px) {
+  .brand-refinement .home-hero { grid-template-columns: 1fr; gap: 20px; }
+  .brand-refinement .home-hero-copy { padding: 22px 0 10px; }
+  .brand-refinement .home-hero-copy h1 { font-size: clamp(41px, 7.7vw, 60px); }
+  .brand-refinement .home-hero-copy > p:not(.eyebrow) { max-width: 490px; }
+  .brand-refinement .home-hero-image { aspect-ratio: 1.2; max-height: 620px; }
+  .brand-refinement .home-hero-image img { object-position: center 60%; }
+  .brand-refinement .hero-footnote { display: none; }
+  .brand-refinement .catalog-intro { gap: 24px; padding-block: 38px 32px; grid-template-columns: 1fr; }
+  .brand-refinement .catalog-intro-aside { justify-self: start; max-width: 480px; }
+  .brand-refinement .catalog-intro h1 { font-size: clamp(32px, 6vw, 44px); }
+  .brand-refinement .catalog-intro-aside > a { margin-top: 12px; }
+  .brand-spectrum { margin-top: 18px; }
+  .brand-refinement .verification-banner { grid-template-columns: 1fr; padding: 30px; }
+  .brand-refinement .verification-icon { display: none; }
+  .brand-refinement .verification-banner-copy p { max-width: 400px; }
+  .brand-refinement .brand-logo { width: 172px; }
+}
+@media (max-width: 600px) {
+  .brand-refinement .header-inner { grid-template-columns: 1fr auto 1fr; gap: 10px; }
+  .brand-refinement .brand-logo { width: 150px; }
+  .brand-refinement .site-header { height: 78px; }
+  .brand-refinement .announcement { justify-content: center; height: 29px; }
+  .brand-refinement .announcement > span:nth-child(2) { margin: 0; font-size: 9px; }
+  .brand-refinement .home-hero { padding-top: 21px; gap: 24px; }
+  .brand-refinement .home-hero-copy { padding-top: 10px; }
+  .brand-refinement .home-hero-copy .eyebrow { margin-bottom: 20px; }
+  .brand-refinement .home-hero-copy h1 { font-size: clamp(33px, 9vw, 40px); }
+  .brand-refinement .home-hero-copy > p:not(.eyebrow) { font-size: 14px; line-height: 1.8; margin-top: 19px; }
+  .brand-refinement .hero-actions { margin-top: 24px; gap: 17px; }
+  .brand-refinement .hero-actions .button { padding-inline: 16px; gap: 12px; font-size: 11px; }
+  .brand-refinement .home-hero-image { border-radius: 18px 18px 65px 18px; aspect-ratio: 1; }
+  .brand-refinement .trust-strip { padding-block: 20px; gap: 16px 7px; }
+  .brand-refinement .trust-strip > div { font-size: 10px; gap: 7px; }
+  .brand-refinement .trust-strip svg { width: 16px; }
+  .brand-refinement .section-heading h2 { font-size: 27px; }
+  .brand-refinement .catalog-intro h1 { font-size: clamp(27px, 7.5vw, 32px); }
+  .brand-refinement .collection { padding-top: 28px; }
+  .brand-refinement .collection-title { align-items: flex-start; gap: 12px; }
+  .brand-refinement .collection-title h2 { font-size: 22px; gap: 9px; }
+  .brand-refinement .collection-title p { font-size: 11px; max-width: 220px; }
+  .brand-refinement .filter-toggle { padding: 9px; font-size: 11px; }
+  .brand-refinement .filter-toggle svg:last-child { display: none; }
+  .brand-refinement .category-list { gap: 6px; }
+  .brand-refinement .category-list button { padding: 8px 11px; font-size: 10px; }
+  .brand-refinement .product-grid { gap: 27px 13px; }
+  .brand-refinement .product-visual { border-radius: 12px; aspect-ratio: 1 / 1.24; }
+  .brand-refinement .product-visual img { padding: 8px 0 25px; }
+  .brand-refinement .image-caption { font-size: 10px; bottom: 12px; left: 9px; padding: 3px 8px; max-width: calc(100% - 45px); line-height: 1.3; }
+  .brand-refinement .product-open { width: 25px; height: 25px; right: 9px; bottom: 13px; }
+  .brand-refinement .product-open svg { width: 15px; }
+  .brand-refinement .product-meta { margin-top: 11px; grid-template-columns: 1fr; }
+  .brand-refinement .product-meta h3 { font-size: 16px; overflow-wrap: anywhere; }
+  .brand-refinement .product-category { font-size: 9px; }
+  .brand-refinement .product-price { font-size: 13px; margin-top: 4px; }
+  .brand-refinement .product-note { font-size: 10px; margin-top: 4px; }
+  .brand-refinement .product-note span { display: none; }
+  .brand-refinement .detail-image { aspect-ratio: 1; }
+  .brand-refinement .detail-image img { padding: 25px 0; }
+  .brand-refinement .detail-image-label { top: 15px; font-size: 9px; }
+  .brand-refinement .detail-image-footer { bottom: 14px; font-size: 10px; }
+  .brand-refinement .detail-copy h1 { font-size: 41px; }
+  .brand-refinement .review-intro h1 { font-size: 43px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-refinement *, .brand-refinement *::before, .brand-refinement *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

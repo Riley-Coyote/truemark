@@ -71,7 +71,7 @@ const scenes: { id: Scene; label: string }[] = [
 
 function Brand() {
   return (
-    <div className="ts-brand" aria-label="TrueMark Biolabs">
+    <div className="ts-brand" aria-label="TrueMark BioLabs">
       TrueMark<span>Biolabs</span>
     </div>
   );
@@ -127,7 +127,7 @@ function Compound() {
         <p className="ts-kicker">Peptides & proteins</p>
         <h2 className="ts-product-title">BPC-157</h2>
         <p className="ts-spec-line">
-          10 mg <span>Clear liquid</span>
+          10 mg <span>Lyophilized powder</span>
         </p>
         <p className="ts-body">
           BPC-157, supplied for laboratory research with lot-level traceability.
@@ -196,7 +196,7 @@ function Record() {
         <dl>
           <div>
             <dt>Presentation</dt>
-            <dd>Clear liquid</dd>
+            <dd>Lyophilized powder</dd>
           </div>
           <div>
             <dt>Lot identifier</dt>
@@ -279,7 +279,7 @@ export default function TypeStudy() {
   }, [direction]);
 
   useEffect(() => {
-    document.title = "Typography studies — TrueMark Biolabs";
+    document.title = "Earlier typography exploration — TrueMark BioLabs";
   }, []);
 
   function update(values: Record<string, string>) {
@@ -304,7 +304,7 @@ export default function TypeStudy() {
       <main className="ts-workspace">
         <div className="ts-intro">
           <div>
-            <p className="ts-studio-eyebrow">A study in quiet distinction</p>
+            <p className="ts-studio-eyebrow">Earlier typography exploration</p>
             <h1>The character of TrueMark.</h1>
             <p>
               Three typographic directions. The same words, considered
@@ -459,7 +459,7 @@ export default function TypeStudy() {
                 <h2>{selected?.character ?? "Our starting point."}</h2>
                 <p>
                   {selected?.description ??
-                    "The initial prototype’s font pairing, preserved in the study composition. The repeated italic second lines and denser proportions give it a more familiar editorial character. Quiet modern is now the selected direction for the site."}
+                    "The initial prototype’s font pairing, preserved in the study composition. The repeated italic second lines and denser proportions give it a more familiar editorial character. The revised website combines the client’s brand typography with our quiet approach to spacing and hierarchy."}
                 </p>
               </div>
               <div>
@@ -479,8 +479,10 @@ export default function TypeStudy() {
         )}
         <footer className="ts-studio-footer">
           <p>
-            Quiet modern selected for the prototype. Packaging artwork is held
-            constant in this study.
+            Earlier typography exploration · The revised website combines the
+            client’s brand typography with our quiet approach to spacing and
+            hierarchy. Original concept packaging is held constant in this
+            study.
           </p>
           <div>
             {directions.map((item) => (

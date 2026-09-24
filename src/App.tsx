@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { CSSProperties, FormEvent, ReactNode } from "react";
 import {
   Link,
   NavLink,
@@ -52,6 +52,8 @@ import {
 import type { Product } from "./data";
 import { SectionLink } from "./SectionLink";
 import { assetUrl } from "./assetUrl";
+import { BrandLogo } from "./BrandLogo";
+import "./brand-refinement.css";
 
 type CartItem = { id: string; quantity: number };
 type AppContextValue = {
@@ -104,9 +106,9 @@ function Wordmark({ footer = false }: { footer?: boolean }) {
     <Link
       className={`wordmark ${footer ? "footer-wordmark" : ""}`}
       to="/"
-      aria-label="TrueMark Biolabs home"
+      aria-label="TrueMark BioLabs home"
     >
-      TrueMark<span>BIOLABS</span>
+      <BrandLogo />
     </Link>
   );
 }
@@ -347,7 +349,7 @@ function Header() {
           <div className="search-results">
             {matches.map((product) => (
               <Link key={product.id} to={`/product/${product.id}`}>
-                <img src={assetUrl("images/research-vial.png")} alt="" />
+                <img src={assetUrl(product.image ?? "images/brand/monogram.svg")} alt="" />
                 <div>
                   <strong>{product.name}</strong>
                   <span>
@@ -407,12 +409,12 @@ function Footer() {
       </div>
       <div className="footer-bottom page-width">
         <p>
-          For laboratory research use only. Not for human or veterinary use.
+          For research use only. Not for human consumption. Not for human or veterinary use.
           Products are not intended to diagnose, treat, cure, or prevent
           disease.
         </p>
         <div>
-          <span>© 2026 TrueMark Biolabs</span>
+          <span>© 2026 TrueMark BioLabs</span>
           <span className="preview-label">Design preview</span>
           <span>Considered at every step.</span>
         </div>
@@ -455,19 +457,19 @@ function ProductCard({
     <Link
       className="product-card"
       to={`/product/${product.id}`}
-      style={{ animationDelay: `${Math.min(index, 7) * 35}ms` }}
+      style={{ "--product-color": product.color, "--product-ink": product.colorInk, animationDelay: `${Math.min(index, 7) * 35}ms` } as CSSProperties}
     >
       <div className="product-visual">
         <span className="product-size">{product.size}</span>
         <img
-          src={assetUrl("images/research-vial.png")}
-          alt={`TrueMark research packaging concept for ${product.name}`}
+          src={assetUrl(product.image ?? "images/brand/monogram.svg")}
+          alt={`${product.name}, ${product.size}, TrueMark BioLabs research vial`}
           loading="lazy"
         />
         <span className="product-open" aria-hidden="true">
           <ArrowUpRight size={19} />
         </span>
-        <span className="image-caption">TRUEMARK / RESEARCH COLLECTION</span>
+        <span className="image-caption">{product.size}</span>
       </div>
       <div className="product-meta">
         <div>
@@ -483,9 +485,7 @@ function ProductCard({
         </span>
       </div>
       <p className="product-note">
-        {product.category === "lab-supplies"
-          ? "Laboratory supply"
-          : "Clear liquid"}
+        {product.form}
         <span>Lot traceable</span>
       </p>
     </Link>
@@ -496,7 +496,7 @@ function VerificationBanner() {
   return (
     <section className="verification-banner">
       <div className="verification-icon">
-        <FileCheck2 strokeWidth={1} size={46} />
+        <img src={assetUrl("images/brand/monogram-white.svg")} alt="" />
       </div>
       <div>
         <Eyebrow>TRACEABLE BY DESIGN</Eyebrow>
@@ -543,7 +543,7 @@ function Home() {
             </Link>
           </div>
           <div className="hero-footnote">
-            <span className="tiny-mark">TM</span>
+            <img className="hero-monogram" src={assetUrl("images/brand/monogram.svg")} alt="" />
             <span>
               For the work that moves
               <br />
@@ -553,8 +553,9 @@ function Home() {
         </div>
         <div className="home-hero-image">
           <img
-            src={assetUrl("images/hero-still-life.png")}
-            alt="TrueMark research vials and ivory packaging photographed in natural light"
+            src={assetUrl("images/brand/hero-collection.png")}
+            alt="TrueMark BioLabs powder vials with purple, teal and pink labels in soft natural light"
+            fetchPriority="high"
           />
           <div className="photo-caption">
             <span>THE TRUEMARK COLLECTION</span>
@@ -572,11 +573,11 @@ function Home() {
             <h2>Purpose in every detail.</h2>
           </div>
           <Link className="understated-link" to="/products">
-            Explore all 24 compounds <ArrowRight size={18} />
+            Explore all {products.length} compounds <ArrowRight size={18} />
           </Link>
         </div>
         <div className="product-grid featured-grid">
-          {[products[0], products[12], products[15], products[17]].map(
+          {["retatrutide-10-mg", "bpc-157-10-mg", "ghk-cu-100-mg", "nad-500-mg"].map(id => products.find(p => p.id === id)!).filter(Boolean).map(
             (p, i) => (
               <ProductCard key={p.id} product={p} index={i} />
             ),
@@ -647,6 +648,11 @@ function Catalog() {
       (activeCategory === "all" || p.category === activeCategory) &&
       `${p.name} ${p.size}`.toLowerCase().includes(query.toLowerCase()),
   );
+  if (sort === "curated" && activeCategory === "all" && !query) {
+    const opening = ["retatrutide-10-mg", "bpc-157-10-mg", "glow-70-mg", "mots-c-10-mg"];
+    const rank = (id: string) => { const index = opening.indexOf(id); return index < 0 ? opening.length : index; };
+    filtered.sort((a, b) => rank(a.id) - rank(b.id));
+  }
   if (sort === "az") filtered.sort((a, b) => a.name.localeCompare(b.name));
   if (sort === "za") filtered.sort((a, b) => b.name.localeCompare(a.name));
   function update(key: string, value: string) {
@@ -657,41 +663,22 @@ function Catalog() {
   }
   return (
     <>
-      <section className="catalog-hero page-width">
-        <div className="catalog-hero-copy">
+      <section className="catalog-intro page-width">
+        <div>
           <Eyebrow>THE RESEARCH COLLECTION</Eyebrow>
-          <h1>
-            Precisely sourced.
-            <br />
-            <span>Clearly documented.</span>
-          </h1>
-          <p>
-            Explore research compounds backed by lot-level documentation. A
-            clear starting point for your next discovery.
-          </p>
-          <SectionLink section="collection" className="hero-scroll">
-            Explore the collection <ArrowDown size={16} />
-          </SectionLink>
+          <h1>Precisely sourced.<br /><span>Clearly documented.</span></h1>
         </div>
-        <div className="catalog-hero-image">
-          <img
-            src={assetUrl("images/hero-still-life.png")}
-            alt="TrueMark Biolabs ivory packaging and research vials"
-          />
-          <div className="hero-image-badge">
-            <FileCheck2 size={18} />
-            <span>Every lot has a record.</span>
-          </div>
+        <div className="catalog-intro-aside">
+          <p>A considered collection of research compounds. Distinct by design. Connected by a commitment to clear documentation.</p>
+          <Link className="understated-link" to="/quality">Get to know our standard <ArrowUpRight size={17} /></Link>
+          <div className="brand-spectrum" aria-label="Eight color-coded product families">{["#7A39B1", "#058F93", "#CC3358", "#0273D0", "#B97102", "#4E762E", "#AB531A", "#486377"].map(color => <span key={color} style={{ background: color }} />)}</div>
         </div>
       </section>
-      <div className="page-width">
-        <TrustStrip />
-      </div>
       <section className="collection page-width" id="collection">
         <div className="collection-title">
           <div>
             <h2>
-              Research compounds<span>24</span>
+              Research compounds<span>{products.length}</span>
             </h2>
             <p>Find the right material. Know exactly where it starts.</p>
           </div>
@@ -834,7 +821,7 @@ function ArticleCard({ article }: { article: (typeof articles)[number] }) {
             <PackageCheck size={72} strokeWidth={0.7} />
           )}
         </span>
-        <span className="article-wordmark">TrueMark</span>
+        <img className="article-brand" src={assetUrl("images/brand/monogram.svg")} alt="TrueMark BioLabs" />
       </div>
       <p className="product-category">
         {article.category} <span>· {article.time}</span>
@@ -864,7 +851,7 @@ function ProductPage() {
     .slice(0, 4);
   const isSupply = product.category === "lab-supplies";
   return (
-    <div className="page-width product-page">
+    <div className="page-width product-page" style={{ "--product-color": product.color, "--product-ink": product.colorInk } as CSSProperties}>
       <nav className="breadcrumbs" aria-label="Breadcrumb">
         <Link to="/products">Compounds</Link>
         <ChevronRight size={12} />
@@ -881,8 +868,8 @@ function ProductPage() {
             {String(products.indexOf(product) + 1).padStart(2, "0")}
           </span>
           <img
-            src={assetUrl("images/research-vial.png")}
-            alt={`TrueMark packaging concept for ${product.name}`}
+            src={assetUrl(product.image ?? "images/brand/monogram.svg")}
+            alt={`${product.name}, ${product.size}, TrueMark BioLabs research vial`}
           />
           <span className="detail-image-footer">
             A clear line from source to certificate.
@@ -893,7 +880,7 @@ function ProductPage() {
           <h1>{product.name}</h1>
           <div className="detail-subtitle">
             <span>{product.size}</span>
-            <span>{isSupply ? "Laboratory supply" : "Clear liquid"}</span>
+            <span>{product.form}</span>
           </div>
           <p className="detail-intro">
             {isSupply
@@ -965,11 +952,7 @@ function ProductPage() {
           </div>
           <Link
             className="detail-verify"
-            to={
-              product.id === "bpc-157-10-mg"
-                ? "/verify?lot=BP10-2611A"
-                : "/verify"
-            }
+            to="/verify"
           >
             <FileText size={26} strokeWidth={1.2} />
             <span>
@@ -1042,7 +1025,7 @@ function ProductPage() {
                   presentation, and applicable lot record.
                 </p>
                 <p>
-                  Intended exclusively for qualified laboratory research. Not
+                  For research use only. Not for human consumption. Not
                   for human or veterinary use. Consult the product-specific
                   documentation and your institution’s procedures.
                 </p>
@@ -1063,7 +1046,7 @@ function ProductPage() {
                   ["Presentation", product.size],
                   [
                     "Form",
-                    isSupply ? "Laboratory reagent" : "Clear liquid",
+                    product.form,
                   ],
                   ["Intended use", "Laboratory research only"],
                   ["Documentation", "Lot-specific Certificate of Analysis"],
@@ -1414,8 +1397,8 @@ function Quality() {
       <section className="quality-opening page-width">
         <div className="quality-image">
           <img
-            src={assetUrl("images/hero-still-life.png")}
-            alt="TrueMark packaging and research vials"
+            src={assetUrl("images/studies/glass.png")}
+            alt="Curved glass and refracted light, a study in clarity"
           />
           <span>CONSIDERED AT EVERY STEP.</span>
         </div>
@@ -1612,8 +1595,8 @@ function About() {
       />
       <section className="about-image page-width">
         <img
-          src={assetUrl("images/hero-still-life.png")}
-          alt="The proposed TrueMark research collection in warm natural light"
+          src={assetUrl("images/studies/horizon.png")}
+          alt="An open coastline in soft morning light"
         />
         <span>TRUEMARK BIOLABS / CONSIDERED AT EVERY STEP</span>
       </section>
@@ -1715,7 +1698,7 @@ function Article() {
         </Eyebrow>
         <h1>{article.title}</h1>
         <p>{article.description}</p>
-        <span>{article.time} · TrueMark Biolabs</span>
+        <span>{article.time} · TrueMark BioLabs</span>
       </header>
       <div className="article-body">
         {article.sections.map(([title, text]) => (
@@ -1884,8 +1867,8 @@ function Access() {
     <section className="access-page page-width">
       <div className="access-image">
         <img
-          src={assetUrl("images/hero-still-life.png")}
-          alt="TrueMark research packaging"
+          src={assetUrl("images/studies/water.png")}
+          alt="Sunlight moving through clear water"
         />
         <div>
           <Eyebrow>TRUEMARK BIOLABS</Eyebrow>
@@ -2029,8 +2012,8 @@ function CartContent({ page = false }: { page?: boolean }) {
                 <div className="cart-item" key={item.id}>
                   <Link to={`/product/${p.id}`} onClick={closeCart}>
                     <img
-                      src={assetUrl("images/research-vial.png")}
-                      alt={`${p.name} packaging concept`}
+                      src={assetUrl(p.image ?? "images/brand/monogram.svg")}
+                      alt={`${p.name}, ${p.size}, TrueMark BioLabs research vial`}
                     />
                   </Link>
                   <div>
@@ -2166,7 +2149,7 @@ function RouteEffects() {
           "/access": "Research account",
           "/cart": "Your bag",
         }[location.pathname] ?? "Field notes");
-    document.title = `${title} — TrueMark Biolabs`;
+    document.title = `${title} — TrueMark BioLabs`;
     if (location.pathname !== previousPath.current) {
       window.scrollTo({ top: 0, behavior: "instant" });
       previousPath.current = location.pathname;
@@ -2223,35 +2206,37 @@ export default function App() {
         closeCart: () => setCartOpen(false),
       }}
     >
-      <RouteEffects />
-      <SectionLink className="skip-link" section="main">
-        Skip to content
-      </SectionLink>
-      <Header />
-      <main id="main">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/products" element={<Catalog />} />
-          <Route path="/product/:id" element={<ProductPage />} />
-          <Route path="/verify" element={<Verify />} />
-          <Route path="/quality" element={<Quality />} />
-          <Route path="/handling" element={<Handling />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/research-blog" element={<Journal />} />
-          <Route path="/research-blog/:id" element={<Article />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/access" element={<Access />} />
-          <Route path="/my-account" element={<Access />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </main>
-      <Footer />
-      {cartOpen && (
-        <Modal title="Your bag" onClose={() => setCartOpen(false)} side>
-          <CartContent />
-        </Modal>
-      )}
+      <div className="brand-refinement">
+        <RouteEffects />
+        <SectionLink className="skip-link" section="main">
+          Skip to content
+        </SectionLink>
+        <Header />
+        <main id="main">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/products" element={<Catalog />} />
+            <Route path="/product/:id" element={<ProductPage />} />
+            <Route path="/verify" element={<Verify />} />
+            <Route path="/quality" element={<Quality />} />
+            <Route path="/handling" element={<Handling />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/research-blog" element={<Journal />} />
+            <Route path="/research-blog/:id" element={<Article />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/access" element={<Access />} />
+            <Route path="/my-account" element={<Access />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+        <Footer />
+        {cartOpen && (
+          <Modal title="Your bag" onClose={() => setCartOpen(false)} side>
+            <CartContent />
+          </Modal>
+        )}
+      </div>
     </AppContext.Provider>
   );
 }

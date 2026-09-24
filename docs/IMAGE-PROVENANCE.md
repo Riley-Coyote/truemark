@@ -1,5 +1,7 @@
 # Generated image provenance
 
+**September 24 update:** the original powder versions below are restored for earlier studies. The current website uses supplied labeled product renders and a new branded group composition. See [Brand refinement](BRAND-REFINEMENT.md) for source decisions and the new image prompt. The September 22 liquid edits below are historical records.
+
 The additional homepage exploration assets in `public/images/studies/` are documented, with full generation prompts, in [VISUAL-STUDIES.md](VISUAL-STUDIES.md). These include environmental, abstract nature, glass macro, and product sculpture concepts.
 
 These are original concept assets for the local TrueMark design preview, generated with the built-in image generation tool on September 22, 2026. They are proposed packaging, not photographs of the client's actual products. Oath Research was an art-direction reference; no Oath assets were copied into the build.

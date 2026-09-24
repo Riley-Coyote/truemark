@@ -1,8 +1,8 @@
-# TrueMark Biolabs design prototype
+# TrueMark BioLabs design prototype
 
 Public GitHub repository: [Riley-Coyote/truemark](https://github.com/Riley-Coyote/truemark).
 
-GitHub Pages sharing target: [riley-coyote.github.io/truemark](https://riley-coyote.github.io/truemark/). In production, the bare site URL opens the client review; `#/` opens the website directly.
+GitHub Pages presentation (September 22 version): [riley-coyote.github.io/truemark](https://riley-coyote.github.io/truemark/). In production, the bare site URL opens the client review; `#/` opens the website directly.
 
 A working frontend concept developed from the client's WordPress mockup, with Oath Research as the primary design reference and Fitish as a secondary reference.
 
@@ -14,7 +14,7 @@ The current development server runs at **http://127.0.0.1:5174/review**. This un
 
 The homepage is at **http://127.0.0.1:5174/** and the catalog is at **http://127.0.0.1:5174/products**. The individual review routes also remain available at **http://127.0.0.1:5174/visual-study** and **http://127.0.0.1:5174/type-study**.
 
-**Quiet modern (Manrope) is the selected typography direction**, applied across the prototype. The exploration at **http://127.0.0.1:5174/type-study** preserves Sculptural (Instrument Serif / Manrope), Precise (Bodoni Moda / Manrope), Quiet modern, and the original font pairing for reference. It includes collection, product, documentation, and side-by-side specimens.
+**September 24 brand refinement:** the current local website integrates the client’s supplied SVG logo, color-coded product imagery, violet ink and gradient accents. Poppins display type is set at a quieter weight alongside Manrope body/UI text, preserving the earlier Quiet modern direction’s restraint. [Design rationale and source decisions](docs/BRAND-REFINEMENT.md). This revision has not been deployed to GitHub Pages. The exploration at **http://127.0.0.1:5174/type-study** preserves Sculptural (Instrument Serif / Manrope), Precise (Bodoni Moda / Manrope), Quiet modern, and the original font pairing for reference. It includes collection, product, documentation, and side-by-side specimens.
 
 **Homepage imagery studies** are at **http://127.0.0.1:5174/visual-study**: Open horizon, Living patterns, Light through glass, and The research object. Each has a full homepage-opening preview; “Compare all” puts them together. These are isolated explorations with original generated assets, not an applied homepage redesign. [Creative intent, asset paths, and prompts](docs/VISUAL-STUDIES.md).
 
@@ -28,7 +28,7 @@ React, TypeScript, Vite, and React Router. Fonts and generated concept photograp
 
 ## Included
 
-- Homepage, 24-item catalog, eight compound classes, search, sorting, and empty states.
+- Homepage, 20-item catalog, eight compound classes, search, sorting, and empty states.
 - Product details with real size variants from the source catalog, keyboard-accessible information tabs, and inquiry links.
 - Lot lookup with the original mockup's illustrative BP10-2611A record and an unknown-lot state.
 - Quality, handling, About, research journal, three editorial drafts, inquiry, and account preview pages.
@@ -52,10 +52,11 @@ The account-protected source product, Handling, and About pages still need inspe
 
 - `src/App.tsx`: page templates, navigation, search, lot lookup, demo forms, and bag state.
 - `src/data.ts`: source catalog, compound classes, proposed process copy, FAQs, and editorial drafts.
-- `src/styles.css`: shared design tokens, components, responsive layouts, and reduced-motion behavior.
+- `src/styles.css`: original design tokens and components. `src/brand-refinement.css` and `src/BrandLogo.tsx`: the scoped client-brand integration.
 - `src/TypeStudy.tsx` and `src/type-study.css`: typography directions and their isolated comparison surface, loaded only on `/type-study`.
 - `src/VisualStudy.tsx` and `src/visual-study.css`: homepage image compositions and their responsive comparison surface, loaded only on `/visual-study`.
-- `public/images/`: generated packaging concepts, not photographs of actual inventory.
+- `public/images/products/`: the client’s individual labeled vial renders, copied unchanged.
+- `public/images/brand/`: original SVG marks and a generated homepage group composition. Earlier concept imagery remains available for the studies.
 
 Production builds use hash-based routes so the static `dist/` directory works
 from the GitHub Pages project path without server-side rewrites. See the
