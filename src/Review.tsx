@@ -17,7 +17,7 @@ export default function Review() {
         </div>
         <div className="review-intro-copy">
           <p>Your identity.<br />A more considered experience.</p>
-          <p>Explore the brand-refined website, then revisit the earlier landing and typography studies that informed its spacing, hierarchy, and sense of clarity.</p>
+          <p>Quiet typography, natural light, and your original identity. Explore the revised website and compare the new environmental imagery alongside the original studies.</p>
         </div>
       </header>
 
@@ -29,7 +29,7 @@ export default function Review() {
           <span className="review-enter">Explore the website <ArrowUpRight size={19} /></span>
         </div>
         <div className="review-site-image">
-          <img src={assetUrl("images/brand/hero-collection.png")} alt="TrueMark BioLabs powder vials with the client’s color-coded labels" fetchPriority="high" />
+          <img src={assetUrl("images/studies/morning.png")} alt="Morning light over a clear coastal cove" fetchPriority="high" />
           <span>THE COMPLETE PROTOTYPE</span>
         </div>
       </Link>
@@ -37,19 +37,19 @@ export default function Review() {
       <section className="review-explorations" aria-labelledby="review-explorations-title">
         <div className="review-section-intro">
           <h2 id="review-explorations-title">Consider the possibilities.</h2>
-          <p>Revisit the earlier directions and see each one in context.</p>
+          <p>Two fresh studies join the original four directions. See each one in context.</p>
         </div>
         <div className="review-exploration-grid">
           <Link className="review-exploration" to="/visual-study?view=compare">
             <div className="review-visual-cover">
-              <img src={assetUrl("images/studies/water.png")} alt="Sunlight creates an abstract pattern in clear water" loading="lazy" />
-              <span>Four ways<br />to begin.</span>
+              <img src={assetUrl("images/studies/tidal.png")} alt="Sunlight creates an abstract pattern in clear water" loading="lazy" />
+              <span>Six ways<br />to begin.</span>
             </div>
             <div className="review-exploration-caption">
-              <div><p className="review-eyebrow">02 / EARLIER LANDING VISUALS</p><h3>A different first feeling.</h3><p>Open landscapes, living patterns, light through glass, and the research object. Four early approaches to the opening moment.</p></div>
+              <div><p className="review-eyebrow">02 / LANDING VISUALS</p><h3>A different first feeling.</h3><p>Open landscapes, living patterns, light through glass, and the research object. Plus two new studies in morning light and quiet renewal.</p></div>
               <ArrowUpRight size={23} />
             </div>
-            <span className="review-text-action">Explore four directions <ArrowRight size={16} /></span>
+            <span className="review-text-action">Explore six directions <ArrowRight size={16} /></span>
           </Link>
 
           <Link className="review-exploration" to="/type-study?direction=quiet&view=compare">
@@ -59,7 +59,7 @@ export default function Review() {
               <span className="review-type-baseline">Sculptural <span>Precise</span> Quiet modern</span>
             </div>
             <div className="review-exploration-caption">
-              <div><p className="review-eyebrow">03 / EARLIER TYPOGRAPHY</p><h3>Quietly distinctive.</h3><p>Three earlier typographic directions, shown across the collection, product, and documentation pages. The revised website combines the client’s brand typography with our quiet approach to spacing and hierarchy.</p></div>
+              <div><p className="review-eyebrow">03 / EARLIER TYPOGRAPHY</p><h3>Quietly distinctive.</h3><p>Three earlier typographic directions, shown across the collection, product, and documentation pages. The revised website returns to Quiet modern, paired with the client’s original logo and product labels.</p></div>
               <ArrowUpRight size={23} />
             </div>
             <span className="review-text-action">Compare the typography <ArrowRight size={16} /></span>

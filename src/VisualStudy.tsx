@@ -4,6 +4,7 @@ import { ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { SectionLink } from "./SectionLink";
 import { assetUrl } from "./assetUrl";
 import "./visual-study.css";
+import { BrandLogo } from "./BrandLogo";
 
 const directions = [
   {
@@ -50,6 +51,28 @@ const directions = [
     alt: "A single TrueMark research vial with earlier concept packaging on a pale limestone plinth with a long architectural shadow",
     caption: "Purpose in every detail.",
   },
+  {
+    id: "morning",
+    name: "First light",
+    number: "05",
+    kind: "New / Environment",
+    feeling: "Freshness. Openness. Quiet optimism.",
+    description: "The open-horizon direction with a little more life: clear morning water, sun-warmed limestone, and small wildflowers. Natural color creates an optimistic opening while the surrounding interface stays quiet.",
+    association: "A fresh perspective.",
+    alt: "Clear blue water in a sunlit limestone cove with delicate coastal wildflowers",
+    caption: "A world worth understanding.",
+  },
+  {
+    id: "tidal",
+    name: "Light in motion",
+    number: "06",
+    kind: "New / Abstract nature",
+    feeling: "Lightness. Renewal. Living detail.",
+    description: "Pale blue ripples meet warm reflected light. A closer, more abstract expression of the same world: tactile, luminous, and quietly alive. The feeling comes from the photograph, leaving the product story precise.",
+    association: "Extraordinary, in the ordinary.",
+    alt: "Sunlight traces delicate patterns through pale blue shallow water over warm limestone",
+    caption: "Look closer. There is more here.",
+  },
 ] as const;
 
 type Direction = (typeof directions)[number];
@@ -60,13 +83,13 @@ function StudyBrand() {
 
 function Hero({ direction, compact = false }: { direction: Direction; compact?: boolean }) {
   return (
-    <div className={`vs-composition vs-${direction.id}${compact ? " vs-compact" : ""}`}>
+    <div className={`vs-composition vs-${direction.id === "morning" || direction.id === "tidal" ? "water" : direction.id}${compact ? " vs-compact" : ""}`}>
       {!compact && (
         <>
           <div className="vs-announcement"><span>Research, with a record.</span><span>For laboratory research use only</span><Link to="/verify">Verify your lot <ArrowUpRight size={12} /></Link></div>
           <header className="vs-site-header">
             <nav aria-label="Study storefront navigation"><Link to="/products">Compounds</Link><Link to="/quality">Our standard</Link></nav>
-            <StudyBrand />
+            {direction.id === "morning" || direction.id === "tidal" ? <Link className="vs-brand" to="/" aria-label="TrueMark BioLabs home"><BrandLogo /></Link> : <StudyBrand />}
             <nav aria-label="Study resources"><Link to="/research-blog">Journal</Link><Link to="/verify">Verify a lot <ArrowUpRight size={14} /></Link></nav>
           </header>
         </>
@@ -95,7 +118,7 @@ export default function VisualStudy() {
 
   useEffect(() => {
     const previous = document.title;
-    document.title = "Earlier landing explorations — TrueMark BioLabs";
+    document.title = "Landing explorations — TrueMark BioLabs";
     return () => { document.title = previous; };
   }, []);
 
@@ -115,13 +138,13 @@ export default function VisualStudy() {
       <main id="visual-preview">
         {compare ? (
           <section className="vs-comparison">
-            <div className="vs-comparison-heading"><p className="vs-eyebrow">TRUEMARK / EARLIER LANDING EXPLORATIONS</p><h1>Four ways to begin.</h1><p>Earlier studies of the same words, typography, and four different first feelings.</p></div>
+            <div className="vs-comparison-heading"><p className="vs-eyebrow">TRUEMARK / LANDING EXPLORATIONS</p><h1>Six ways to begin.</h1><p>Four original directions, joined by two new studies in light, life, and subtle color.</p></div>
             <div className="vs-comparison-grid">{directions.map((item) => <article key={item.id}><button className="vs-preview-button" onClick={() => choose(item.id)} aria-label={`Open ${item.name} full preview`}><Hero direction={item} compact /></button><div className="vs-card-caption"><div><p className="vs-eyebrow">{item.number} / {item.kind}</p><h2>{item.name}</h2><p>{item.feeling}</p></div><button onClick={() => choose(item.id)} aria-label={`Explore ${item.name}`}><ArrowUpRight size={23} /></button></div></article>)}</div>
           </section>
         ) : <Hero direction={selected} />}
         <section className="vs-notes" id="visual-notes" aria-label="Art direction notes">
           <div className="vs-note-heading"><p className="vs-eyebrow">{compare ? "THE CREATIVE INTENT" : `${selected.number} / ${selected.kind}`}</p><h2>{compare ? "A feeling of possibility." : selected.name}</h2><p className="vs-feeling">{compare ? "Presence. Curiosity. Connection." : selected.feeling}</p></div>
-          <div className="vs-note-body"><p>{compare ? "These earlier directions explored an emotional connection through the world around the work: open space, natural light, living systems, and attention to detail. These are associations for the brand, not promises about personal health or performance." : selected.description}</p><blockquote>{compare ? "A world worth understanding." : selected.association}</blockquote><p className="vs-boundary">Earlier art-direction study · Original generated imagery · Earlier concept packaging where shown</p></div>
+          <div className="vs-note-body"><p>{compare ? "These directions explore an emotional connection through the world around the work: open space, natural light, living systems, and attention to detail. These are associations for the brand, not promises about personal health or performance." : selected.description}</p><blockquote>{compare ? "A world worth understanding." : selected.association}</blockquote><p className="vs-boundary">Generated art-direction imagery · Directions 01–04 preserve the earlier concepts; 05–06 use the current identity.</p></div>
         </section>
         <section className="vs-image-system" aria-labelledby="vs-system-title">
           <div><p className="vs-eyebrow">VARIETY, WITH A COMMON THREAD</p><h2 id="vs-system-title">One world.<br />Different perspectives.</h2><p>Natural light, tactile detail, restrained color. Give each part of the site its own subject and scale.</p></div>
@@ -133,7 +156,7 @@ export default function VisualStudy() {
           </div>
         </section>
       </main>
-      <footer className="vs-footer"><span>TrueMark / Earlier landing explorations</span><span>Original concept imagery · Earlier concept packaging where shown</span><Link to="/">Return to current homepage <ArrowUpRight size={14} /></Link></footer>
+      <footer className="vs-footer"><span>TrueMark / Landing explorations</span><span>Original concept imagery · Earlier concept packaging where shown</span><Link to="/">Return to current homepage <ArrowUpRight size={14} /></Link></footer>
     </div>
   );
 }

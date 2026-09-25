@@ -553,13 +553,13 @@ function Home() {
         </div>
         <div className="home-hero-image">
           <img
-            src={assetUrl("images/brand/hero-collection.png")}
-            alt="TrueMark BioLabs powder vials with purple, teal and pink labels in soft natural light"
+            src={assetUrl("images/studies/morning.png")}
+            alt="Morning sunlight over a clear blue coastal cove, pale limestone and small wildflowers"
             fetchPriority="high"
           />
           <div className="photo-caption">
-            <span>THE TRUEMARK COLLECTION</span>
-            <span>01 / RESEARCH COMPOUNDS</span>
+            <span>A WORLD WORTH UNDERSTANDING</span>
+            <span>01 / FIRST LIGHT</span>
           </div>
         </div>
       </section>
@@ -663,17 +663,19 @@ function Catalog() {
   }
   return (
     <>
-      <section className="catalog-intro page-width">
-        <div>
+      <section className="catalog-hero page-width">
+        <div className="catalog-hero-copy">
           <Eyebrow>THE RESEARCH COLLECTION</Eyebrow>
-          <h1>Precisely sourced.<br /><span>Clearly documented.</span></h1>
+          <h1>Precisely sourced.<br />Clearly documented.</h1>
+          <p>Explore research compounds backed by lot-level documentation. A clear starting point for your next discovery.</p>
+          <SectionLink className="hero-scroll" section="collection">Explore the collection <ArrowDown size={17} /></SectionLink>
         </div>
-        <div className="catalog-intro-aside">
-          <p>A considered collection of research compounds. Distinct by design. Connected by a commitment to clear documentation.</p>
-          <Link className="understated-link" to="/quality">Get to know our standard <ArrowUpRight size={17} /></Link>
-          <div className="brand-spectrum" aria-label="Eight color-coded product families">{["#7A39B1", "#058F93", "#CC3358", "#0273D0", "#B97102", "#4E762E", "#AB531A", "#486377"].map(color => <span key={color} style={{ background: color }} />)}</div>
+        <div className="catalog-hero-image">
+          <img src={assetUrl("images/brand/hero-collection.png")} alt="TrueMark powder vials with the supplied purple, teal and pink label designs" fetchPriority="high" />
+          <Link className="hero-image-badge" to="/verify"><FileCheck2 size={18} /> Every lot has a record.</Link>
         </div>
       </section>
+      <div className="page-width"><TrustStrip /></div>
       <section className="collection page-width" id="collection">
         <div className="collection-title">
           <div>
@@ -1595,8 +1597,8 @@ function About() {
       />
       <section className="about-image page-width">
         <img
-          src={assetUrl("images/studies/horizon.png")}
-          alt="An open coastline in soft morning light"
+          src={assetUrl("images/studies/tidal.png")}
+          alt="Clear shallow water with pale blue ripples and warm refracted morning light"
         />
         <span>TRUEMARK BIOLABS / CONSIDERED AT EVERY STEP</span>
       </section>

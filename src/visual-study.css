@@ -11,7 +11,7 @@
 .vs-skip { position: fixed; top: -100px; left: 20px; z-index: 100; background: var(--vs-ink); color: white; padding: 12px 20px; }
 .vs-skip:focus { top: 10px; }
 .vs-controls { min-height: 66px; padding: 10px 24px; display: flex; align-items: center; gap: 24px; border-bottom: 1px solid var(--vs-line); background: #eeede8; }
-.vs-controls nav { display: flex; justify-content: center; gap: 4px; flex: 1; }
+.vs-controls nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px; flex: 1; }
 .vs-controls button { min-height: 40px; padding: 8px 13px; font-size: 12px; white-space: nowrap; border-radius: 4px; transition: background 150ms ease; }
 .vs-controls button:hover { background: #e1e0db; }
 .vs-controls button[aria-pressed="true"] { background: var(--vs-ink); color: var(--vs-paper); }
