@@ -1,0 +1,28 @@
+name: Keep the review notes awake
+
+# Supabase pauses a free project after a week without activity. Twice a week,
+# this asks the review notes database one tiny question so it stays awake.
+# It does nothing until the REVIEW_SUPABASE_* repository variables are set.
+on:
+  schedule:
+    - cron: "17 14 * * 1,4"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    if: ${{ vars.REVIEW_SUPABASE_URL != '' && vars.REVIEW_SUPABASE_ANON_KEY != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the notes database
+        env:
+          SUPABASE_URL: ${{ vars.REVIEW_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ vars.REVIEW_SUPABASE_ANON_KEY }}
+        run: |
+          curl --fail --silent --show-error --max-time 30 \
+            -X POST "${SUPABASE_URL%/}/rest/v1/rpc/review_ping" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{}'

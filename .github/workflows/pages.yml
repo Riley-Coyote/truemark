@@ -1,5 +1,8 @@
 name: Deploy review to GitHub Pages
 
+# Publishes the client review: the platform at the site's root, and the first
+# design (as sent on 22 September, tag archive/07-pages-september-22) at
+# /first-design/, so the link the client already has still reaches both.
 on:
   workflow_dispatch:
 
@@ -18,6 +21,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
@@ -27,8 +32,19 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Install dependencies
         run: npm ci
-      - name: Build
+      - name: Build the platform
+        env:
+          # The shared notes behind the review layer. Without them, notes stay on each device.
+          VITE_REVIEW_SUPABASE_URL: ${{ vars.REVIEW_SUPABASE_URL }}
+          VITE_REVIEW_SUPABASE_ANON_KEY: ${{ vars.REVIEW_SUPABASE_ANON_KEY }}
         run: npm run build
+      - name: Build the first design
+        run: |
+          git worktree add ../first-design archive/07-pages-september-22
+          cd ../first-design
+          npm ci
+          npm run build
+          mv dist "$GITHUB_WORKSPACE/dist/first-design"
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:

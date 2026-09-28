@@ -1,0 +1,305 @@
+/* The shop's product card: one vial in the lilac studio. */
+
+.tm-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-4);
+  min-width: 0;
+  color: var(--tm-ink);
+}
+.tm-card-stage {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-lilac-studio);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-card-vial {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 13%;
+  width: 44%;
+  transform: translateX(-50%);
+  transition: transform var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.tm-card-vial img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+.tm-card-shadow {
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  bottom: 11.4%;
+  width: 52%;
+  height: 4.5%;
+  border-radius: var(--tm-radius-pill);
+  background: radial-gradient(ellipse at center, var(--tm-lilac-shadow) 0%, transparent 70%);
+  filter: blur(3px);
+  transform: translateX(-50%);
+  transition: transform var(--tm-dur-slow) var(--tm-ease-enter), opacity var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.tm-card-tag {
+  position: absolute;
+  z-index: 2;
+  top: var(--tm-space-4);
+  left: var(--tm-space-4);
+  padding: var(--tm-space-2) var(--tm-space-3);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tm-ink-2);
+}
+
+.tm-card-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--tm-space-4);
+  row-gap: var(--tm-space-2);
+  padding-inline: var(--tm-space-1);
+}
+.tm .tm-card-name {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1.25 var(--tm-font-display);
+  letter-spacing: -0.005em;
+}
+/* The name's link stretches over the whole card, so the card is one target. */
+.tm .tm-card-link {
+  color: var(--tm-ink);
+  outline: none;
+}
+.tm-card-link::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  border-radius: var(--tm-radius-lg);
+}
+.tm .tm-card-price {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+  text-align: right;
+  white-space: nowrap;
+}
+.tm-card-price span {
+  color: var(--tm-ink-3);
+}
+.tm .tm-card-meta {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-1);
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-2);
+}
+.tm-card-meta span {
+  color: var(--tm-ink-3);
+}
+
+/* Hover: the vial lifts from its shadow. */
+.tm-card:hover .tm-card-vial {
+  transform: translateX(-50%) translateY(-3%);
+}
+.tm-card:hover .tm-card-shadow {
+  transform: translateX(-50%) scale(0.86);
+  opacity: 0.7;
+}
+.tm-card:has(.tm-card-link:active) .tm-card-vial {
+  transform: translateX(-50%) translateY(-1%);
+}
+/* Focus: the card's own edge brightens in place. */
+.tm-card:has(.tm-card-link:focus-visible) .tm-card-stage {
+  border-color: var(--tm-ink);
+}
+
+/* Add to bag: a quiet disc in the studio's corner, above the card's link. */
+.tm-card-add {
+  position: absolute;
+  z-index: 4;
+  right: var(--tm-space-3);
+  top: var(--tm-space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--tm-space-2);
+}
+.tm-card-plus {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-whisper);
+  color: var(--tm-ink);
+  cursor: pointer;
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-card-plus svg {
+  transition: transform var(--tm-dur-slow) var(--tm-ease-micro);
+}
+.tm-card-plus:hover {
+  background: var(--tm-ink);
+  border-color: var(--tm-ink);
+  color: var(--tm-paper);
+}
+.tm-card-plus:active {
+  transform: scale(0.94);
+}
+.tm-card-plus:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+  box-shadow: inset 0 0 0 1px var(--tm-ink);
+}
+.tm-card-plus[aria-expanded="true"] svg {
+  transform: rotate(45deg);
+}
+.tm-card-sizes {
+  order: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 9.5rem;
+  padding: var(--tm-space-1);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-lift);
+  animation: tm-card-menu var(--tm-dur-base) var(--tm-ease-enter) both;
+}
+.tm-card-sizes button {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  padding: var(--tm-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-sm);
+  background: transparent;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+  cursor: pointer;
+  transition: background-color var(--tm-dur-quick) var(--tm-ease-enter);
+}
+.tm-card-sizes button span {
+  color: var(--tm-ink-3);
+}
+.tm-card-sizes button:hover {
+  background: var(--tm-wash);
+}
+.tm-card-sizes button:active {
+  background: var(--tm-line);
+}
+.tm-card-sizes button:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink-3);
+}
+@keyframes tm-card-menu {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--tm-space-2) * -1));
+  }
+}
+
+/* Fingers need a larger target than a pointer does. */
+@media (pointer: coarse) {
+  .tm-card-plus {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-card-vial,
+  .tm-card-shadow,
+  .tm-card-plus svg {
+    transition: none;
+  }
+  .tm-card-sizes {
+    animation: none;
+  }
+}
+
+/* In a scrolling rail, cards snap to the start. */
+.tm-rail > .tm-card {
+  scroll-snap-align: start;
+}
+
+/* ---------- The catalog page ---------- */
+
+.brand-refinement .tm-catalog-head {
+  --tm-bg: var(--tm-paper);
+}
+.brand-refinement .tm-catalog-grid {
+  padding-top: var(--tm-space-7);
+}
+.brand-refinement .tm-grid {
+  row-gap: var(--tm-space-7);
+}
+.tm-catalog-note .tm-offer {
+  margin-top: var(--tm-space-5);
+}
+/* The first-order offer: a quiet line, marked with the logo's dot. */
+.tm .tm-offer {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-2);
+  padding: var(--tm-space-2) var(--tm-space-4);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.3 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-offer .tm-brand-dot {
+  width: var(--tm-space-2);
+  height: var(--tm-space-2);
+  margin: 0;
+}
+.tm-offer-code {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  color: var(--tm-ink);
+}
+.tm .tm-offer:hover {
+  border-color: var(--tm-ink-3);
+  color: var(--tm-ink);
+}
+.tm .tm-offer:active {
+  border-color: var(--tm-ink-2);
+}
+.brand-refinement .tm .tm-offer:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+}
+
+/* ---------- The product page ---------- */
+
+.brand-refinement .tm-product-top {
+  --tm-bg: var(--tm-paper);
+}
+.brand-refinement .tm-product-stage {
+  grid-template-columns: min(100%, 60svh);
+}
+.brand-refinement .tm-product-stage .tm-stage-tools {
+  border-top: 0;
+}

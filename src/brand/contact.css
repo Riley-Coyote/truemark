@@ -1,0 +1,302 @@
+/* Contact: the client's four routes, their hours, and a form that never transmits. */
+
+.tm-contact {
+  /* Local tokens for this page. */
+  --tm-contact-title: clamp(3rem, 6.1vw, 5.5rem); /* the opening, at the home hero's scale */
+  --tm-contact-message: 10rem; /* the message field at rest */
+  --tm-contact-sent: clamp(1.75rem, 2.8vw, 2.25rem); /* the sent notice */
+}
+
+/* ---------- The opening ---------- */
+
+.tm-contact-open {
+  padding-block: var(--tm-space-9) var(--tm-space-8);
+  row-gap: 0;
+}
+.tm-contact-open-head {
+  grid-column: 1 / span 8;
+}
+.tm .tm-contact-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-contact-title) / var(--tm-leading-display) var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  color: var(--tm-ink);
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) both;
+}
+.tm .tm-contact-lead {
+  grid-column: 9 / -1;
+  align-self: end;
+  /* Lifted so its last line shares the headline's baseline. */
+  margin: 0 0 var(--tm-space-2);
+  max-width: 36ch;
+  font: var(--tm-weight-regular) var(--tm-type-lead) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) var(--tm-stagger) both;
+}
+
+/* ---------- Routes and form: two columns hanging from one line ---------- */
+
+.tm-contact-main {
+  padding-top: 0;
+  row-gap: var(--tm-space-8);
+  align-items: start;
+}
+.tm-contact-directory {
+  grid-column: 1 / span 5;
+}
+.tm-contact-routes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-contact-route {
+  padding-block: var(--tm-space-5) var(--tm-space-6);
+  border-top: 1px solid var(--tm-line-strong);
+}
+.tm .tm-contact-route-title {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink);
+}
+.tm .tm-contact-route-text {
+  margin: var(--tm-space-3) 0 0;
+  max-width: 40ch;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+/* An address is information: Heros, with a hairline that brightens under the pointer and on focus. */
+.tm .tm-contact-email {
+  display: inline-block;
+  margin-top: var(--tm-space-3);
+  padding-block: var(--tm-space-1);
+  border-bottom: 1px solid var(--tm-line-strong);
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink);
+  transition:
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm .tm-contact-email:hover {
+  border-bottom-color: var(--tm-ink);
+}
+.tm .tm-contact-email:active {
+  color: var(--tm-ink-2);
+  border-bottom-color: var(--tm-ink-3);
+}
+.brand-refinement .tm .tm-contact-email:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+  background: var(--tm-wash);
+}
+.tm .tm-contact-hours {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-2);
+  margin: 0;
+  padding-top: var(--tm-space-5);
+  border-top: 1px solid var(--tm-line-strong);
+}
+.tm-contact-hours-time {
+  font: var(--tm-weight-light) var(--tm-type-h3) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+}
+.tm-contact-hours-reply {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+
+.tm-contact-compose {
+  grid-column: 7 / -1;
+  padding-top: var(--tm-space-5);
+  border-top: 1px solid var(--tm-line-strong);
+}
+
+/* ---------- The form ---------- */
+
+.tm-contact-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--tm-space-5) var(--tm-gutter);
+}
+.tm-contact-field {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+/* Whatever receives focus lands below the sticky header (and the review bar, when present). */
+.tm-contact-field,
+.tm .tm-contact-sent-title {
+  scroll-margin-block: calc(var(--review-bar-height, 0px) + var(--tm-header-height) + var(--tm-space-5)) var(--tm-space-5);
+}
+.tm-contact-field.is-half {
+  grid-column: span 1;
+}
+.tm-contact-field label {
+  display: block;
+  margin-bottom: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm .tm-contact-hint {
+  margin: 0 0 var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm .tm-contact-field :is(input, select, textarea) {
+  display: block;
+  width: 100%;
+  margin: 0;
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-paper);
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink);
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    box-shadow var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm .tm-contact-field :is(input, select) {
+  height: var(--tm-control);
+  padding: 0 var(--tm-space-4);
+}
+.tm .tm-contact-field textarea {
+  min-height: var(--tm-contact-message);
+  padding: var(--tm-space-3) var(--tm-space-4);
+  resize: vertical;
+}
+.tm .tm-contact-field :is(input, textarea)::placeholder {
+  color: var(--tm-ink-3);
+  opacity: 1;
+}
+.tm .tm-contact-field :is(input, select, textarea):hover {
+  border-color: var(--tm-ink-3);
+}
+/* Focus: the field's own border brightens in place. */
+.brand-refinement .tm .tm-contact-field :is(input, select, textarea):focus {
+  outline: none;
+  border-color: var(--tm-ink);
+  box-shadow: inset 0 0 0 1px var(--tm-ink);
+}
+.tm .tm-contact-field :is(input, select, textarea):disabled {
+  border-color: var(--tm-line);
+  background: var(--tm-studio);
+  color: var(--tm-ink-3);
+  cursor: not-allowed;
+}
+.tm .tm-contact-field.is-invalid :is(input, textarea) {
+  border-color: var(--tm-danger);
+}
+.brand-refinement .tm .tm-contact-field.is-invalid :is(input, textarea):focus {
+  border-color: var(--tm-danger);
+  box-shadow: inset 0 0 0 1px var(--tm-danger);
+}
+.tm .tm-contact-error {
+  margin: var(--tm-space-2) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-danger);
+}
+.tm-contact-select {
+  position: relative;
+  display: block;
+}
+.tm .tm-contact-select select {
+  padding-right: var(--tm-space-8);
+  cursor: pointer;
+}
+.tm-contact-select svg {
+  position: absolute;
+  top: 50%;
+  right: var(--tm-space-4);
+  color: var(--tm-ink-3);
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-contact-select:hover svg,
+.tm-contact-select:focus-within svg {
+  color: var(--tm-ink);
+}
+.tm-contact-send {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-4) var(--tm-space-6);
+  margin-top: var(--tm-space-3);
+}
+.tm .tm-contact-note {
+  margin: 0;
+  max-width: 32ch;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+
+/* ---------- Sent: said plainly ---------- */
+
+/* It fades in where it will stay, so the scroll that brings it into view lands true. */
+.tm-contact-sent {
+  animation: tm-appear var(--tm-dur-scene) var(--tm-ease-enter) both;
+}
+.tm .tm-contact-sent-title {
+  margin: 0;
+  max-width: 20ch;
+  font: var(--tm-weight-light) var(--tm-contact-sent) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+  text-wrap: balance;
+}
+.tm .tm-contact-sent-title:focus {
+  outline: none;
+}
+.tm-contact-sent-route {
+  margin-top: var(--tm-space-7);
+  padding-top: var(--tm-space-5);
+  border-top: 1px solid var(--tm-line);
+}
+.tm-contact-sent .tm-button {
+  margin-top: var(--tm-space-7);
+}
+
+/* ---------- Motion preferences ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .tm .tm-contact-title,
+  .tm .tm-contact-lead,
+  .tm-contact-sent {
+    animation: none;
+  }
+}
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 960px) {
+  .tm-contact-open {
+    padding-block: var(--tm-space-7) var(--tm-space-7);
+  }
+  .tm-contact-open-head,
+  .tm .tm-contact-lead,
+  .tm-contact-directory,
+  .tm-contact-compose {
+    grid-column: 1 / -1;
+  }
+  .tm .tm-contact-lead {
+    margin: var(--tm-space-5) 0 0;
+  }
+}
+@media (max-width: 640px) {
+  .tm-contact-field.is-half {
+    grid-column: 1 / -1;
+  }
+  /* On a phone the send action spans the form, under the thumb. */
+  .tm .tm-contact-send .tm-button {
+    width: 100%;
+  }
+}

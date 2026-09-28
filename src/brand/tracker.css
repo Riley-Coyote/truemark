@@ -1,0 +1,586 @@
+/*
+ * An order's journey, in the home page's paper-trail language: stations on a
+ * hairline, and the logo's dot travelling to where the parcel is now. Across the
+ * column on wide screens, down it on phones. Client brand, on paper.
+ */
+
+.tm-tracker {
+  /* Local tokens. */
+  --tm-tracker-node: 0.6875rem; /* a station, as on the home trail */
+  --tm-tracker-halo: 3px; /* paper ring that lifts the dot off the line */
+  --tm-tracker-hairline: 1px;
+  --tm-tracker-leg: 720ms; /* one leg, as on the home trail; Tracker.tsx paces the dot with it */
+  --tm-tracker-travel: 480ms; /* the moving two thirds of a leg */
+  --tm-tracker-date: 4.5rem; /* phones: the date column, as on the home trail */
+  --tm-tracker-pulse: 2.6; /* how far the live halo spreads */
+  --tm-tracker-step-track: -0.01em; /* Poppins at lead size, as the home trail's steps */
+  --tm-tracker-number-track: 0.02em; /* a tracking number, read character by character */
+  --tm-tracker-measure: 44ch; /* the cold-chain lines, a little wider than the tight measure */
+  --tm-tracker-vial: var(--tm-space-8); /* a vial's square of the lilac studio, as in the account's lists */
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-7);
+  min-width: 0;
+}
+
+/* ---------- The track ---------- */
+
+.tm-tracker-rail {
+  position: relative;
+}
+/* The hairline, from the first station to the last. */
+.tm-tracker-rail::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--tm-tracker-node) / 2);
+  left: calc(var(--tm-tracker-node) / 2);
+  width: calc((100% + var(--tm-gutter)) * (var(--tm-tracker-n) - 1) / var(--tm-tracker-n));
+  height: var(--tm-tracker-hairline);
+  background: var(--tm-line-strong);
+}
+.tm-tracker .tm-tracker-track {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--tm-tracker-n), minmax(0, 1fr));
+  gap: var(--tm-gutter);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-tracker-stop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.tm-tracker-node {
+  flex: none;
+  width: var(--tm-tracker-node);
+  height: var(--tm-tracker-node);
+  margin-bottom: var(--tm-space-5);
+  border: var(--tm-tracker-hairline) solid var(--tm-ink-4);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  /* A station lights as the dot arrives: after the moving part of its leg. */
+  transition:
+    background-color var(--tm-dur-slow) var(--tm-ease-enter) var(--tm-tracker-travel),
+    border-color var(--tm-dur-slow) var(--tm-ease-enter) var(--tm-tracker-travel);
+}
+.tm-tracker-stop[data-lit] .tm-tracker-node {
+  border-color: var(--tm-ink);
+  background: var(--tm-ink);
+}
+.tm-tracker-stop:first-child .tm-tracker-node,
+.tm-tracker-stop:first-child .tm-tracker-step {
+  transition-delay: 0s;
+}
+.tm-tracker-stop[data-ending] .tm-tracker-node {
+  border-color: var(--tm-ink-3);
+  background: var(--tm-paper);
+}
+.tm-tracker .tm-tracker-date {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+}
+.tm-tracker .tm-tracker-step {
+  margin-top: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.2 var(--tm-font-display);
+  letter-spacing: var(--tm-tracker-step-track);
+  color: var(--tm-ink-3);
+  transition: color var(--tm-dur-slow) var(--tm-ease-enter) var(--tm-tracker-travel);
+}
+.tm-tracker-stop[data-lit] .tm-tracker-step {
+  color: var(--tm-ink);
+}
+.tm-tracker-stop[data-ending] .tm-tracker-step {
+  color: var(--tm-ink-2);
+}
+.tm-tracker .tm-tracker-detail {
+  margin-top: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+}
+
+/* The distance travelled, in ink, and the parcel itself: the logo's dot, lit by the brand gradient. */
+.tm-tracker-progress {
+  position: absolute;
+  z-index: 2;
+  top: calc(var(--tm-tracker-node) / 2);
+  left: calc(var(--tm-tracker-node) / 2);
+  width: calc((100% + var(--tm-gutter)) * var(--tm-tracker-at) / var(--tm-tracker-n));
+  height: var(--tm-tracker-hairline);
+  background: var(--tm-ink);
+}
+/* Only while a leg is travelled: at rest the line holds its station through any relayout. */
+.tm-tracker-rail[data-moving] .tm-tracker-progress {
+  transition: width var(--tm-tracker-travel) var(--tm-ease-breathe);
+}
+.tm-tracker-progress::before,
+.tm-tracker-progress::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(var(--tm-tracker-node) * -0.5 - var(--tm-tracker-hairline));
+  width: calc(var(--tm-tracker-node) + var(--tm-tracker-hairline) * 2);
+  height: calc(var(--tm-tracker-node) + var(--tm-tracker-hairline) * 2);
+  border-radius: var(--tm-radius-pill);
+}
+.tm-tracker-progress::after {
+  background: var(--tm-gradient);
+  box-shadow: 0 0 0 var(--tm-tracker-halo) var(--tm-paper);
+  transform: translateY(-50%) scale(0);
+  transition: transform var(--tm-dur-slow) var(--tm-ease-micro);
+}
+.tm-tracker-rail[data-started] .tm-tracker-progress::after {
+  transform: translateY(-50%) scale(1);
+}
+/* While the order is still on its way, the dot breathes out a faint ring. */
+.tm-tracker-progress::before {
+  border: var(--tm-tracker-hairline) solid var(--tm-purple);
+  opacity: 0;
+  transform: translateY(-50%);
+}
+.tm-tracker-rail[data-live] .tm-tracker-progress::before {
+  animation: tm-tracker-halo var(--tm-cycle-5) var(--tm-ease-enter) var(--tm-tracker-leg) infinite;
+}
+@keyframes tm-tracker-halo {
+  0% {
+    opacity: 0.45;
+    transform: translateY(-50%) scale(1);
+  }
+  60%,
+  100% {
+    opacity: 0;
+    transform: translateY(-50%) scale(var(--tm-tracker-pulse));
+  }
+}
+
+/* ---------- The shipment ---------- */
+
+.tm-tracker-shipment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-4);
+}
+.tm-tracker .tm-tracker-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--tm-space-5) var(--tm-gutter);
+  margin: 0;
+  padding-top: var(--tm-space-5);
+  border-top: 1px solid var(--tm-line-strong);
+}
+.tm-tracker-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-3);
+  min-width: 0;
+}
+.tm-tracker .tm-tracker-facts dt,
+.tm-tracker .tm-tracker-label {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-tracker .tm-tracker-facts dd {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--tm-space-2);
+  min-width: 0;
+  margin: 0;
+}
+/* The day it should arrive, as a designed number. */
+.tm-tracker .tm-tracker-figure {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--tm-space-2) var(--tm-space-3);
+  font: var(--tm-weight-light) var(--tm-type-h3) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+}
+.tm-tracker .tm-tracker-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tm-space-5);
+  padding: 0 var(--tm-space-3);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  font: var(--tm-weight-medium) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: 0;
+  color: var(--tm-ink-2);
+}
+.tm-tracker .tm-tracker-value {
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--tm-ink);
+  overflow-wrap: anywhere;
+}
+.tm-tracker .tm-tracker-sub,
+.tm-tracker .tm-tracker-note {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-tracker-number {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-2) var(--tm-space-3);
+  max-width: 100%;
+}
+.tm-tracker-number .tm-mono {
+  letter-spacing: var(--tm-tracker-number-track);
+}
+
+/* Copy: a small quiet pill. Five states; focus brightens its own border. */
+.tm-tracker .tm-tracker-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-1);
+  min-height: var(--tm-space-6);
+  padding: 0 var(--tm-space-3);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: transparent;
+  font: var(--tm-weight-medium) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-display);
+  color: var(--tm-ink);
+  cursor: pointer;
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-tracker .tm-tracker-copy:hover {
+  border-color: var(--tm-ink-3);
+  background: var(--tm-wash);
+}
+.tm-tracker .tm-tracker-copy:active {
+  transform: scale(0.96);
+}
+.tm-tracker .tm-tracker-copy:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+}
+.tm-tracker .tm-tracker-copy:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* The client's cold-chain lines, in the lilac world; once it ships, what to do on arrival beside them. */
+.tm-tracker-cold {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    "label label"
+    "pack sign";
+  gap: var(--tm-space-3) var(--tm-gutter);
+  padding: var(--tm-space-5) var(--tm-space-6) var(--tm-space-6);
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-lilac-50);
+}
+.tm-tracker-cold[data-arrival] {
+  grid-template-areas:
+    "label arrival-label"
+    "pack arrival"
+    "sign arrival";
+  row-gap: var(--tm-space-2);
+}
+.tm-tracker-cold .tm-tracker-label {
+  margin-bottom: var(--tm-space-1);
+}
+.tm-tracker-cold-label {
+  grid-area: label;
+}
+.tm-tracker-cold-pack {
+  grid-area: pack;
+}
+.tm-tracker-cold-sign {
+  grid-area: sign;
+}
+.tm-tracker-arrival-label {
+  grid-area: arrival-label;
+}
+.tm-tracker-arrival {
+  grid-area: arrival;
+}
+.tm-tracker .tm-tracker-cold .tm-tracker-text {
+  max-width: var(--tm-tracker-measure);
+}
+.tm-tracker .tm-tracker-text {
+  margin: 0;
+  max-width: var(--tm-measure-tight);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+.tm-tracker .tm-tracker-closing {
+  margin: 0;
+  padding-top: var(--tm-space-5);
+  border-top: 1px solid var(--tm-line-strong);
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+
+/* ---------- The parcel ---------- */
+
+.tm-tracker-parcel .tm-tracker-label {
+  display: flex;
+  align-items: baseline;
+  gap: var(--tm-space-3);
+  margin-bottom: var(--tm-space-4);
+}
+.tm-tracker-parcel .tm-tracker-label span {
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-2);
+}
+.tm-tracker .tm-tracker-lots {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--tm-line-strong);
+}
+/* Each lot: its vial in a small square of the lilac studio, the compound and lot, the count, the certificate. */
+.tm-tracker-lot {
+  display: grid;
+  grid-template-columns: var(--tm-tracker-vial) minmax(0, 1fr) minmax(var(--tm-space-9), auto) auto;
+  align-items: center;
+  column-gap: var(--tm-space-6);
+  padding-block: var(--tm-space-3);
+  border-bottom: 1px solid var(--tm-line);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-tracker-vial {
+  position: relative;
+  width: var(--tm-tracker-vial);
+  height: var(--tm-tracker-vial);
+  overflow: hidden;
+  border-radius: var(--tm-radius-sm);
+  background: var(--tm-lilac-studio);
+}
+.tm-tracker-vial img {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  width: auto;
+  height: 84%;
+  transform: translateX(-50%);
+}
+.tm-tracker-lot-name {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-1);
+  min-width: 0;
+}
+.tm-tracker-lot-product {
+  font-size: var(--tm-type-body);
+  color: var(--tm-ink);
+}
+.tm-tracker-lot-product span {
+  color: var(--tm-ink-3);
+}
+.tm-tracker-lot-id {
+  min-width: 0;
+  color: var(--tm-ink-3);
+  overflow-wrap: anywhere;
+}
+.tm-tracker-lot-id .tm-mono {
+  color: var(--tm-ink);
+}
+.tm-tracker-lot-qty {
+  justify-self: end;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tm-tracker-lot-cert {
+  display: inline-flex;
+  align-items: baseline;
+  justify-self: end;
+  gap: var(--tm-space-3);
+  white-space: nowrap;
+}
+.tm-tracker .tm-tracker-cert-state {
+  font-size: var(--tm-type-micro);
+  color: var(--tm-ink-3);
+}
+.tm-tracker .tm-tracker-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-1);
+  border-bottom: 1px solid var(--tm-line-strong);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-display);
+  color: var(--tm-ink);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-tracker .tm-tracker-link:hover {
+  border-bottom-color: var(--tm-ink);
+}
+.tm-tracker .tm-tracker-link:active {
+  opacity: 0.7;
+}
+.tm-tracker .tm-tracker-link:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+  background: var(--tm-wash);
+}
+
+/* ---------- Phones: the track runs down the column ---------- */
+
+@media (max-width: 960px) {
+  .tm-tracker-rail::before {
+    top: calc(var(--tm-tracker-node) / 2 + var(--tm-space-1) / 2);
+    width: var(--tm-tracker-hairline);
+    height: calc(100% * (var(--tm-tracker-n) - 1) / var(--tm-tracker-n));
+  }
+  .tm-tracker .tm-tracker-track {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 0;
+  }
+  .tm-tracker-stop {
+    display: grid;
+    grid-template-columns: var(--tm-tracker-node) var(--tm-tracker-date) minmax(0, 1fr);
+    grid-template-areas:
+      "node date step"
+      ". . detail";
+    column-gap: var(--tm-space-4);
+    align-items: baseline;
+    align-content: start;
+    padding-bottom: var(--tm-space-5);
+  }
+  .tm-tracker-node {
+    grid-area: node;
+    align-self: start;
+    margin: 0;
+    transform: translateY(calc(var(--tm-space-1) / 2));
+  }
+  .tm-tracker .tm-tracker-date {
+    grid-area: date;
+  }
+  .tm-tracker .tm-tracker-step {
+    grid-area: step;
+    margin: 0;
+  }
+  .tm-tracker .tm-tracker-detail {
+    grid-area: detail;
+    margin-top: var(--tm-space-1);
+  }
+  /* Measured from the first station's centre, so each leg ends on a station. */
+  .tm-tracker-progress {
+    top: calc(var(--tm-tracker-node) / 2 + var(--tm-space-1) / 2);
+    width: var(--tm-tracker-hairline);
+    height: calc(100% * var(--tm-tracker-at) / var(--tm-tracker-n));
+  }
+  .tm-tracker-rail[data-moving] .tm-tracker-progress {
+    transition: height var(--tm-tracker-travel) var(--tm-ease-breathe);
+  }
+  .tm-tracker-progress::before,
+  .tm-tracker-progress::after {
+    top: auto;
+    right: auto;
+    bottom: calc(var(--tm-tracker-node) * -0.5 - var(--tm-tracker-hairline));
+    left: 50%;
+  }
+  .tm-tracker-progress::before {
+    transform: translateX(-50%);
+  }
+  .tm-tracker-progress::after {
+    transform: translateX(-50%) scale(0);
+  }
+  .tm-tracker-rail[data-started] .tm-tracker-progress::after {
+    transform: translateX(-50%) scale(1);
+  }
+  .tm-tracker-rail[data-live] .tm-tracker-progress::before {
+    animation-name: tm-tracker-halo-down;
+  }
+  .tm-tracker .tm-tracker-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tm-tracker-facts > div:first-child {
+    grid-column: 1 / -1;
+  }
+}
+@keyframes tm-tracker-halo-down {
+  0% {
+    opacity: 0.45;
+    transform: translateX(-50%) scale(1);
+  }
+  60%,
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(var(--tm-tracker-pulse));
+  }
+}
+
+@media (max-width: 560px) {
+  .tm-tracker {
+    gap: var(--tm-space-6);
+  }
+  .tm-tracker .tm-tracker-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tm-tracker-cold {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "label"
+      "pack"
+      "sign";
+    padding: var(--tm-space-5);
+  }
+  .tm-tracker-cold[data-arrival] {
+    grid-template-areas:
+      "label"
+      "pack"
+      "sign"
+      "arrival-label"
+      "arrival";
+  }
+  .tm-tracker .tm-tracker-cold .tm-tracker-arrival-label {
+    margin-top: var(--tm-space-4);
+  }
+  .tm-tracker-lot {
+    grid-template-columns: var(--tm-tracker-vial) minmax(0, 1fr) auto;
+    grid-template-areas:
+      "vial name qty"
+      "vial cert cert";
+    align-items: start;
+    column-gap: var(--tm-space-4);
+    row-gap: var(--tm-space-2);
+  }
+  .tm-tracker-vial {
+    grid-area: vial;
+  }
+  .tm-tracker-lot-name {
+    grid-area: name;
+  }
+  .tm-tracker-lot-qty {
+    grid-area: qty;
+  }
+  .tm-tracker-lot-cert {
+    grid-area: cert;
+    justify-self: start;
+  }
+}
+
+/* ---------- Reduced motion: the dot is simply where the parcel is ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-tracker-node,
+  .tm-tracker .tm-tracker-step,
+  .tm-tracker-rail[data-moving] .tm-tracker-progress,
+  .tm-tracker-progress::after,
+  .tm-tracker .tm-tracker-copy {
+    transition: none;
+  }
+  .tm-tracker-rail[data-live] .tm-tracker-progress::before {
+    animation: none;
+  }
+}

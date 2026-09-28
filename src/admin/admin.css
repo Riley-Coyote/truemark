@@ -1,0 +1,1319 @@
+/* The command center's own compositions, built on the app kit's theme tokens. */
+
+/* Local tokens: the switch, the vial plate, the bell and its toasts (the kit has none of them). */
+.kit {
+  --cc-switch-w: 2.75rem;
+  --cc-switch-h: 1.5rem;
+  --cc-switch-thumb: 1rem;
+  --cc-vial-w: var(--tm-space-8);
+  --cc-vial-h: var(--tm-space-9);
+  --cc-badge: 1rem; /* the bell's unread count */
+  --cc-badge-ring: 2px; /* the ground-coloured ring that lifts the count off the bell */
+  --cc-bell-panel: 24rem;
+  --cc-bell-panel-height: 34rem;
+  --cc-channel: 8.5rem; /* a channel column in the alerts table */
+  --cc-channel-narrow: 5.5rem;
+  --cc-hint: 14rem; /* the footer hint's width before it wraps under the action */
+  --cc-toast: 21rem;
+  --cc-toast-layer: 52; /* above an open drawer (48–49), below the review bar (55) */
+  --cc-panel-layer: 40;
+  --cc-toast-lift: calc(var(--tm-space-3) * -1); /* how far a toast drops in from */
+  --cc-bell-swing: 14deg; /* the bell's first swing when an order lands; each swing after is smaller */
+}
+
+.cc-result-count {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.kit .cc-footnote,
+.kit .cc-chart-note {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.kit .cc-chart-note {
+  margin-top: var(--tm-space-3);
+}
+.cc-chart-loading {
+  height: var(--kit-chart);
+  padding-block: var(--tm-space-2);
+}
+.cc-chart-loading .kit-skeleton {
+  border-radius: var(--tm-radius-sm);
+}
+.cc-list-loading,
+.cc-drawer-loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-5);
+  padding-block: var(--tm-space-4);
+}
+
+.cc-overview {
+  align-items: stretch;
+}
+
+/* Needs attention */
+.cc-attention li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--tm-space-3);
+  min-height: calc(var(--kit-row) + var(--tm-space-4));
+  border-top: 1px solid var(--kit-line);
+}
+.cc-attention li:first-child {
+  border-top: 0;
+}
+.kit .cc-attention-text {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+  text-wrap: pretty;
+}
+/* Set with .kit-figure (the brand face); this keeps its inline h3 size and no top margin. */
+.kit .cc-attention-figure {
+  display: inline-block;
+  min-width: 1.6ch;
+  margin: 0 var(--tm-space-2) 0 0;
+  font-size: var(--tm-type-h3);
+  vertical-align: -0.12em;
+}
+.cc-breathe {
+  animation: kit-breathe var(--tm-cycle-5) var(--tm-ease-breathe) infinite;
+}
+.cc-attention li:nth-child(2) .cc-breathe {
+  animation-duration: var(--tm-cycle-7);
+}
+.cc-attention li:nth-child(3) .cc-breathe {
+  animation-duration: var(--tm-cycle-11);
+}
+
+/* Top compounds */
+.cc-top li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  row-gap: var(--tm-space-2);
+  padding-block: var(--tm-space-3);
+}
+.cc-top li:first-child {
+  padding-top: var(--tm-space-2);
+}
+.cc-top-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  min-width: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.cc-top-value {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+.cc-top-bar {
+  grid-column: 1 / -1;
+  height: var(--tm-space-1);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-wash);
+  overflow: hidden;
+}
+.cc-top-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--kit-series-soft);
+}
+
+/* Drawer: order lines and totals */
+.cc-lines li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  column-gap: var(--tm-space-3);
+  padding-block: var(--tm-space-3);
+  border-top: 1px solid var(--kit-line);
+}
+.cc-lines .kit-dot {
+  transform: translateY(-0.05em);
+}
+.cc-line-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-1);
+  min-width: 0;
+}
+.cc-line-name {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.cc-lot-link,
+.cc-inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-1);
+  width: fit-content;
+  border-bottom: 1px solid transparent;
+  color: var(--kit-ink-3);
+  transition: color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.cc-lot-link {
+  font-size: var(--tm-type-micro);
+}
+.cc-lot-link svg {
+  width: var(--tm-space-3);
+  height: var(--tm-space-3);
+}
+.cc-inline-link {
+  color: var(--kit-ink);
+  border-bottom-color: var(--kit-line-strong);
+}
+.cc-lot-link:hover,
+.cc-inline-link:hover {
+  color: var(--kit-ink);
+  border-bottom-color: var(--kit-ink-3);
+}
+.cc-lot-link:active,
+.cc-inline-link:active {
+  opacity: 0.72;
+}
+.cc-lot-link:focus-visible,
+.cc-inline-link:focus-visible {
+  color: var(--kit-ink);
+  border-bottom-color: var(--kit-focus);
+}
+.cc-line-qty {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+  white-space: nowrap;
+}
+.cc-line-total {
+  min-width: 5.5rem;
+  text-align: right;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink);
+  white-space: nowrap;
+}
+.cc-totals {
+  border-top: 1px solid var(--kit-line);
+}
+.cc-totals > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  padding-top: var(--tm-space-3);
+}
+.cc-totals dt {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.cc-totals dd {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink);
+  font-variant-numeric: tabular-nums;
+}
+.cc-totals > .is-total {
+  margin-top: var(--tm-space-3);
+  padding-top: var(--tm-space-4);
+  border-top: 1px solid var(--kit-line);
+}
+.cc-totals > .is-total dt {
+  color: var(--kit-ink);
+}
+/* Set with .kit-figure; kept at h3 with no top margin. */
+.cc-totals > .is-total dd {
+  margin-top: 0;
+  font-size: var(--tm-type-h3);
+}
+.cc-address {
+  display: flex;
+  flex-direction: column;
+  font-style: normal;
+}
+
+/* Drawer: lot results, certificate stand-in, public record */
+.cc-results {
+  border-bottom: 1px solid var(--kit-line);
+}
+.cc-results > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  padding-block: var(--tm-space-3);
+  border-top: 1px solid var(--kit-line);
+}
+.cc-results dt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-1);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.cc-results dt span {
+  font-size: var(--tm-type-micro);
+  color: var(--kit-ink-3);
+}
+.cc-results dd {
+  font: var(--tm-weight-light) var(--tm-type-h3) / 1 var(--tm-font-sans);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--kit-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cc-results dd small {
+  margin-left: var(--tm-space-1);
+  font-size: var(--tm-type-micro);
+  letter-spacing: 0;
+  color: var(--kit-ink-3);
+}
+.cc-upload {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-4);
+  padding: var(--tm-space-5);
+  border: 1px dashed var(--kit-line-strong);
+  border-radius: var(--tm-radius-sm);
+  color: var(--kit-ink-3);
+  cursor: not-allowed;
+}
+.cc-upload svg {
+  width: var(--tm-space-6);
+  height: var(--tm-space-6);
+  flex: none;
+}
+.kit .cc-upload-title {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+.cc-public-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  width: fit-content;
+  height: var(--kit-control);
+  padding-inline: var(--tm-space-4);
+  border: 1px solid var(--kit-line-strong);
+  border-radius: var(--tm-radius-pill);
+  color: var(--kit-ink);
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.cc-public-link svg {
+  width: var(--kit-icon);
+  height: var(--kit-icon);
+  color: var(--kit-ink-3);
+}
+.cc-public-link:hover {
+  background: var(--kit-wash);
+  border-color: var(--kit-ink-4);
+}
+.cc-public-link:active {
+  background: var(--kit-wash-strong);
+}
+.cc-public-link:focus-visible {
+  border-color: var(--kit-focus);
+}
+.cc-lot-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  max-width: 100%;
+}
+.cc-sample-mark {
+  flex: none;
+  padding: 0 var(--tm-space-2);
+  border: 1px solid var(--kit-line-strong);
+  border-radius: var(--tm-radius-pill);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.6 var(--tm-font-sans);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--kit-ink-3);
+}
+
+/* Drawer: decisions and confirmations */
+.cc-live:not(:empty) {
+  margin-bottom: var(--tm-space-6);
+}
+.cc-actions,
+.cc-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-3);
+  width: 100%;
+}
+.kit .cc-confirm-text {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.cc-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tm-space-3);
+}
+.cc-tag-text {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.kit .cc-prose {
+  max-width: var(--tm-measure-base);
+  margin-top: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+.cc-checks li,
+.cc-files li {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+  padding-block: var(--tm-space-2);
+  border-top: 1px solid var(--kit-line);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.cc-checks li:first-child,
+.cc-files li:first-child {
+  border-top: 0;
+}
+.cc-checks svg,
+.cc-files svg {
+  width: var(--kit-icon);
+  height: var(--kit-icon);
+  flex: none;
+  color: var(--kit-ink-3);
+}
+
+/* Drawer: customer figures and orders */
+.cc-figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--tm-gutter);
+  margin-bottom: var(--tm-space-7);
+}
+/* Each figure is a .kit-figure (h2, h3 on phones); only its distance from the label differs. */
+.kit .cc-figures dd {
+  margin-top: var(--tm-space-3);
+}
+.cc-addresses li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+}
+.cc-drawer-table {
+  border: 1px solid var(--kit-line);
+  border-radius: var(--tm-radius-md);
+  overflow: clip;
+}
+
+.cc-missing {
+  padding-top: var(--tm-space-8);
+}
+
+/* ---------- Shared by the catalog, partner and settings sections ---------- */
+
+.cc-dot-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+}
+/* A value with a mark beside it (Edited, New); the value gives way first. */
+.cc-marked {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  max-width: 100%;
+  vertical-align: middle;
+}
+.cc-marked-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* A group row named in words rather than by a status. */
+.cc-group-name {
+  font-weight: var(--tm-weight-medium);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--kit-ink-2);
+}
+/* A unit that only phones print, where the column header is gone. */
+.cc-unit {
+  display: none;
+}
+.cc-fact-line {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-2) var(--tm-space-3);
+}
+/* A result line inside a section sits close to the control that made it. */
+.kit-section > .cc-live:not(:empty) {
+  margin-bottom: 0;
+}
+.cc-preview-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-3) var(--tm-space-5);
+}
+/* Drawer and card footers: actions first, the preview tag at the far end. */
+.cc-foot-row {
+  width: 100%;
+  align-items: center;
+}
+.cc-foot-row > .kit-tag:last-child {
+  margin-left: auto;
+}
+.cc-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-3) var(--tm-space-5);
+  padding: var(--tm-space-4) var(--tm-space-5);
+  border-top: 1px solid var(--kit-line);
+}
+
+/* Fields the kit lacks: a one-line input with an optional affix, and a full-width select. */
+.cc-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-5);
+}
+/* Short values get a short control; their hints keep the full measure. */
+.cc-field-short .cc-control {
+  max-width: calc(var(--tm-space-9) + var(--tm-space-6));
+}
+.cc-field-medium .cc-control {
+  max-width: calc(var(--tm-space-10) + var(--tm-space-9));
+}
+.cc-form .kit-segmented {
+  align-self: flex-start;
+}
+.cc-control {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  height: var(--kit-control);
+  padding-inline: var(--tm-space-3);
+  border: 1px solid var(--kit-line-strong);
+  border-radius: var(--tm-radius-sm);
+  background: var(--kit-field);
+  color: var(--kit-ink-3);
+  cursor: text;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.cc-control:hover:not([data-disabled]) {
+  border-color: var(--kit-ink-4);
+}
+.cc-control:active:not([data-disabled]) {
+  background: var(--kit-wash);
+}
+.cc-control:focus-within {
+  border-color: var(--kit-focus);
+}
+.cc-control[data-invalid="true"] {
+  border-color: var(--kit-tone-danger);
+}
+/* An invalid field still shows focus: its red border brightens toward the ink. */
+.cc-control[data-invalid="true"]:focus-within {
+  border-color: color-mix(in srgb, var(--kit-tone-danger) 55%, var(--kit-ink));
+}
+.cc-control[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.cc-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink);
+  font-variant-numeric: tabular-nums;
+}
+.cc-input::placeholder {
+  color: var(--kit-ink-3);
+  opacity: 1;
+}
+.cc-input:disabled {
+  cursor: not-allowed;
+}
+.cc-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+.cc-affix {
+  flex: none;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.cc-select {
+  display: flex;
+  width: 100%;
+}
+.cc-select select {
+  width: 100%;
+  border-color: var(--kit-line-strong);
+  border-radius: var(--tm-radius-sm);
+}
+.cc-select select:hover:not(:disabled) {
+  border-color: var(--kit-ink-4);
+}
+.cc-select select:focus-visible {
+  border-color: var(--kit-focus);
+}
+.cc-select select[aria-invalid="true"] {
+  border-color: var(--kit-tone-danger);
+}
+.cc-select select[aria-invalid="true"]:focus-visible {
+  border-color: color-mix(in srgb, var(--kit-tone-danger) 55%, var(--kit-ink));
+}
+.cc-select select:invalid {
+  color: var(--kit-ink-3);
+}
+
+/* The switch: a pill whose thumb crosses to the right when on. Five states, focus in its own border. */
+.cc-switch {
+  position: relative;
+  flex: none;
+  width: var(--cc-switch-w);
+  height: var(--cc-switch-h);
+  padding: 0;
+  border: 1px solid var(--kit-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-wash-strong);
+  cursor: pointer;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.cc-switch-thumb {
+  position: absolute;
+  top: 50%;
+  left: calc((var(--cc-switch-h) - var(--cc-switch-thumb)) / 2 - 1px);
+  width: var(--cc-switch-thumb);
+  height: var(--cc-switch-thumb);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-ink-2);
+  box-shadow: var(--tm-shadow-whisper);
+  transform: translate(0, -50%);
+  transition: transform var(--tm-dur-base) var(--tm-ease-micro), background-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.cc-switch[aria-checked="true"] {
+  background: var(--kit-primary);
+  border-color: var(--kit-primary);
+}
+.cc-switch[aria-checked="true"] .cc-switch-thumb {
+  background: var(--kit-primary-ink);
+  transform: translate(calc(var(--cc-switch-w) - var(--cc-switch-h)), -50%);
+}
+.cc-switch:hover:not(:disabled) {
+  border-color: var(--kit-ink-3);
+}
+.cc-switch[aria-checked="true"]:hover:not(:disabled) {
+  background: var(--kit-primary-hover);
+  border-color: var(--kit-primary-hover);
+}
+.cc-switch:active:not(:disabled) .cc-switch-thumb {
+  transform: translate(0, -50%) scale(0.86);
+}
+.cc-switch[aria-checked="true"]:active:not(:disabled) .cc-switch-thumb {
+  transform: translate(calc(var(--cc-switch-w) - var(--cc-switch-h)), -50%) scale(0.86);
+}
+.cc-switch:focus-visible {
+  border-color: var(--kit-focus);
+}
+.cc-switch[aria-checked="true"]:focus-visible {
+  border-color: var(--kit-primary-focus);
+}
+.cc-switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.cc-switch-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--tm-space-5);
+  padding-block: var(--tm-space-4);
+  border-top: 1px solid var(--kit-line);
+}
+.cc-switch-row:first-child {
+  border-top: 0;
+}
+.kit-section > .cc-switch-row,
+.cc-form > .cc-switch-row {
+  border-bottom: 1px solid var(--kit-line);
+}
+.cc-switch-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-1);
+  min-width: 0;
+  max-width: var(--tm-measure-base);
+}
+.kit .cc-switch-title {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.kit .cc-switch-text {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+  text-wrap: pretty;
+}
+.cc-switch-side {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+  min-height: calc(var(--tm-type-ui) * var(--tm-leading-body));
+}
+.cc-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-1);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+  white-space: nowrap;
+}
+.cc-lock svg {
+  width: var(--tm-space-3);
+  height: var(--tm-space-3);
+}
+
+/* ---------- Products ---------- */
+
+/* Sizes of one compound read as one block: the compound named once, no rule between its sizes. */
+.cc-product-table tr[data-continues="true"] td {
+  border-bottom-color: transparent;
+}
+.cc-product-table tr[data-continued="true"] .cc-compound-name {
+  color: transparent;
+}
+.cc-product-table tr[data-continued="true"] .kit-dot {
+  opacity: 0;
+}
+.cc-compound-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cc-size-sub {
+  display: none;
+}
+.cc-product-head {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--tm-space-5);
+  margin-bottom: var(--tm-space-7);
+}
+.cc-product-head .cc-figures {
+  flex: 1 1 auto;
+  margin-bottom: 0;
+}
+/* The vial stands in a small plate of the lilac studio, as it does in the shop. */
+.cc-vial {
+  position: relative;
+  flex: none;
+  width: var(--cc-vial-w);
+  height: var(--cc-vial-h);
+  overflow: hidden;
+  border-radius: var(--tm-radius-sm);
+  background: var(--tm-lilac-studio);
+}
+.cc-vial img {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: auto;
+  height: 88%;
+  transform: translateX(-50%);
+}
+.cc-inline-form {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--tm-space-3);
+}
+.cc-inline-form > .kit-field {
+  flex: 0 1 calc(var(--tm-space-10) + var(--tm-space-8));
+  min-width: 0;
+}
+/* Level with the input, below its label. */
+.cc-inline-form > .kit-button {
+  margin-top: calc(var(--tm-type-ui) * var(--tm-leading-label) + var(--tm-space-2));
+}
+
+/* ---------- Partners ---------- */
+
+.cc-batch li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  padding-block: var(--tm-space-3);
+  border-top: 1px solid var(--kit-line);
+}
+.cc-batch li:last-child {
+  border-bottom: 1px solid var(--kit-line);
+}
+
+/* ---------- Settings ---------- */
+
+.cc-setting {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--tm-gutter);
+  row-gap: var(--tm-space-4);
+  align-items: start;
+}
+.cc-setting + .cc-setting {
+  margin-top: var(--tm-space-5);
+}
+.cc-setting-intro {
+  grid-column: 1 / span 4;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-3);
+  padding-top: var(--tm-space-5);
+}
+.kit .cc-setting-note {
+  max-width: var(--tm-measure-tight);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+  text-wrap: pretty;
+}
+.cc-setting-body {
+  grid-column: 5 / -1;
+  min-width: 0;
+}
+.cc-setting-card {
+  padding: var(--tm-space-1) var(--tm-space-5);
+}
+.cc-setting-card .kit-facts {
+  border-bottom: 0;
+}
+.cc-setting-card .kit-facts > div:first-child > :is(dt, dd) {
+  border-top: 0;
+}
+.cc-switch-card {
+  padding: var(--tm-space-1) var(--tm-space-5);
+}
+.cc-rate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, calc(var(--tm-space-9) + var(--tm-space-7)));
+  align-items: center;
+  gap: var(--tm-space-5);
+  padding-block: var(--tm-space-4);
+  border-top: 1px solid var(--kit-line);
+}
+.cc-rate:first-child {
+  border-top: 0;
+}
+.kit .cc-rate-name {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.kit .cc-rate-detail {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.cc-rates .cc-live:not(:empty) {
+  margin-bottom: var(--tm-space-4);
+}
+.cc-rates > .cc-foot-row {
+  padding-block: var(--tm-space-4);
+  border-top: 1px solid var(--kit-line);
+}
+.cc-connect {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-3) var(--tm-space-4);
+}
+.kit-empty > .cc-connect {
+  margin-top: var(--tm-space-2);
+}
+.cc-checks.is-muted li {
+  color: var(--kit-ink-2);
+}
+
+/* ---------- Orders: the bell, toasts, fulfilment, the emails a step sent ---------- */
+
+/* The bell: the owner's alerts. Unread is the kit's signal. */
+.cc-bell {
+  position: relative;
+  display: inline-flex;
+}
+.cc-bell-button {
+  position: relative;
+}
+.cc-bell-button[aria-expanded="true"] {
+  border-color: var(--kit-line-strong);
+  background: var(--kit-wash);
+  color: var(--kit-ink);
+}
+.cc-bell-button[aria-expanded="true"]:focus-visible {
+  border-color: var(--kit-focus);
+}
+/* A new order swings the bell once, from its hanger. */
+.cc-bell-button[data-ringing] svg {
+  transform-origin: 50% 8%;
+  animation: cc-bell-ring var(--tm-dur-scene) var(--tm-ease-enter);
+}
+@keyframes cc-bell-ring {
+  0%,
+  100% {
+    transform: none;
+  }
+  15% {
+    transform: rotate(var(--cc-bell-swing));
+  }
+  35% {
+    transform: rotate(calc(var(--cc-bell-swing) * -0.8));
+  }
+  55% {
+    transform: rotate(calc(var(--cc-bell-swing) * 0.5));
+  }
+  75% {
+    transform: rotate(calc(var(--cc-bell-swing) * -0.2));
+  }
+}
+.cc-bell-count {
+  position: absolute;
+  top: calc(var(--tm-space-1) * -0.5);
+  right: calc(var(--tm-space-1) * -0.5);
+  display: grid;
+  place-items: center;
+  min-width: var(--cc-badge);
+  height: var(--cc-badge);
+  padding: 0 var(--tm-space-1);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-tone-signal);
+  box-shadow: 0 0 0 var(--cc-badge-ring) var(--kit-bg);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--kit-bg);
+}
+.cc-bell-panel {
+  position: absolute;
+  z-index: var(--cc-panel-layer);
+  top: calc(100% + var(--tm-space-2));
+  right: calc(var(--tm-space-2) * -1);
+  display: flex;
+  flex-direction: column;
+  width: var(--cc-bell-panel);
+  max-height: min(var(--cc-bell-panel-height), calc(100dvh - var(--kit-offset) - var(--kit-topbar) - var(--tm-space-6)));
+  overflow: hidden;
+  border: 1px solid var(--kit-line-strong);
+  border-radius: var(--tm-radius-md);
+  background: var(--kit-panel);
+  box-shadow: var(--kit-shadow), var(--kit-edge);
+  animation: kit-drop var(--tm-dur-base) var(--tm-ease-enter);
+}
+.cc-bell-panel:focus {
+  outline: none;
+}
+.cc-bell-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  padding: var(--tm-space-4) var(--tm-space-5) var(--tm-space-3);
+  border-bottom: 1px solid var(--kit-line);
+}
+.kit .cc-bell-read {
+  font-size: var(--tm-type-micro);
+}
+.cc-bell-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.cc-alert {
+  display: grid;
+  grid-template-columns: var(--kit-dot) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--tm-space-1) var(--tm-space-3);
+  padding: var(--tm-space-3) var(--tm-space-5);
+  border-top: 1px solid var(--kit-line);
+  color: var(--kit-ink);
+  transition: background-color var(--tm-dur-quick) var(--tm-ease-enter), box-shadow var(--tm-dur-quick) var(--tm-ease-enter);
+}
+.cc-bell-list li:first-child .cc-alert {
+  border-top: 0;
+}
+.cc-alert:hover {
+  background: var(--kit-wash);
+}
+.cc-alert:active {
+  background: var(--kit-wash-strong);
+}
+.cc-alert:focus-visible {
+  background: var(--kit-wash);
+  box-shadow: inset 0 0 0 1px var(--kit-focus);
+}
+.cc-alert-dot {
+  align-self: center;
+  width: var(--kit-dot);
+  height: var(--kit-dot);
+  border-radius: var(--tm-radius-pill);
+}
+.cc-alert[data-unread] .cc-alert-dot {
+  background: var(--kit-tone-signal);
+}
+.cc-alert-title {
+  min-width: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+.cc-alert[data-unread] .cc-alert-title {
+  color: var(--kit-ink);
+}
+.cc-alert-time {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--kit-ink-3);
+  white-space: nowrap;
+}
+.cc-alert-body {
+  grid-column: 2 / -1;
+  min-width: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--kit-ink-3);
+}
+.kit .cc-bell-empty {
+  padding: var(--tm-space-5);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.cc-bell-foot {
+  flex: none;
+  padding: 0 var(--tm-space-5);
+  border-top: 1px solid var(--kit-line);
+  background: var(--kit-panel);
+}
+.cc-bell-foot .cc-switch-row {
+  padding-block: var(--tm-space-3);
+}
+
+/* Toasts: every order lands here, top right, while the command center is open. */
+.cc-toasts {
+  position: fixed;
+  z-index: var(--cc-toast-layer);
+  top: calc(var(--kit-offset) + var(--kit-topbar) + var(--tm-space-4));
+  right: var(--tm-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-3);
+  width: var(--cc-toast);
+  pointer-events: none;
+}
+.cc-toast {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-2);
+  padding: var(--tm-space-4) var(--tm-space-4) var(--tm-space-4) var(--tm-space-5);
+  border: 1px solid var(--kit-line-strong);
+  border-radius: var(--tm-radius-md);
+  background: var(--kit-panel);
+  box-shadow: var(--kit-shadow), var(--kit-edge);
+  pointer-events: auto;
+  animation: cc-toast-in var(--tm-dur-slow) var(--tm-ease-enter);
+}
+@keyframes cc-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--cc-toast-lift));
+  }
+}
+.cc-toast-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--tm-space-3);
+}
+.cc-toast-dot {
+  animation: kit-breathe var(--tm-cycle-5) var(--tm-ease-breathe) infinite;
+}
+.kit .cc-toast-title {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-display);
+  color: var(--kit-ink);
+}
+.kit .cc-toast-close {
+  margin: calc(var(--tm-space-2) * -1) calc(var(--tm-space-2) * -1) calc(var(--tm-space-2) * -1) 0;
+}
+.kit .cc-toast-figure {
+  margin-top: var(--tm-space-2);
+}
+.kit .cc-toast-meta {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+.cc-toast-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  margin-top: var(--tm-space-2);
+}
+.cc-toast-when {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+
+/* The drawer's timeline: which steps told the customer, with the email itself one click away. */
+.cc-notified {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--tm-space-1) var(--tm-space-3);
+  margin-top: var(--tm-space-1);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.cc-notified-text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-1);
+}
+.cc-notified-text svg {
+  width: var(--tm-space-3);
+  height: var(--tm-space-3);
+  color: var(--kit-tone-signal);
+}
+.cc-notified-toggle {
+  padding: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+.cc-email-reveal {
+  margin: var(--tm-space-3) 0 var(--tm-space-2);
+  animation: kit-drop var(--tm-dur-base) var(--tm-ease-enter);
+}
+.kit-section > .cc-footnote {
+  margin-top: var(--tm-space-1);
+}
+.cc-landed {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tm-space-2);
+  color: var(--kit-ink);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.cc-landed svg {
+  flex: none;
+  width: var(--kit-icon);
+  height: var(--kit-icon);
+  margin-top: calc(var(--tm-space-1) / 2);
+  color: var(--kit-tone-signal);
+}
+.cc-landed:focus {
+  outline: none;
+  border-color: var(--kit-focus);
+}
+
+/* The drawer's footer: the next step, and what it will do. */
+.cc-fulfil {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-3) var(--tm-space-4);
+}
+.cc-fulfil .cc-footnote {
+  flex: 1 1 var(--cc-hint);
+  min-width: 0;
+}
+.cc-ship {
+  gap: var(--tm-space-4);
+}
+.cc-ship .kit-segmented {
+  align-self: flex-start;
+}
+
+/* Settings: new-order alerts, person by channel, and what they receive. */
+.cc-alerts {
+  overflow: clip;
+}
+.cc-alerts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.cc-alerts-table :is(th, td) {
+  padding: var(--tm-space-3) var(--tm-space-5);
+  border-bottom: 1px solid var(--kit-line);
+  text-align: left;
+  vertical-align: middle;
+}
+.cc-alerts-table thead th {
+  height: var(--kit-head-row);
+  padding-block: 0;
+  font: var(--tm-weight-medium) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--kit-ink-3);
+}
+.cc-alerts-table :is(thead th, td):not(:first-child) {
+  width: var(--cc-channel);
+  padding-inline: var(--tm-space-3);
+  text-align: center;
+  white-space: nowrap;
+}
+.cc-alerts-table tbody th {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.cc-alerts-who {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+  min-width: 0;
+}
+.cc-alerts-person {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-1);
+  min-width: 0;
+}
+.cc-alerts-person .kit-quiet {
+  font-size: var(--tm-type-micro);
+}
+.cc-alerts-previews {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-4);
+  padding: var(--tm-space-5);
+}
+.cc-alerts-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--tm-space-2) var(--tm-space-4);
+}
+.cc-alerts-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: var(--tm-gutter);
+  align-items: start;
+}
+.cc-alerts-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-3);
+}
+
+@media (max-width: 75rem) {
+  .cc-alerts-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 56.25rem) {
+  .cc-setting-intro,
+  .cc-setting-body {
+    grid-column: 1 / -1;
+  }
+  .cc-setting-intro {
+    padding-top: 0;
+  }
+  /* In the menu bar the panel hangs full width beneath it, as the menu does. */
+  .cc-bell {
+    position: static;
+  }
+  .cc-bell-panel {
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: auto;
+    max-height: calc(100dvh - var(--kit-offset) - var(--kit-mbar));
+    border-width: 0 0 1px;
+    border-radius: 0;
+  }
+  .cc-toasts {
+    top: calc(var(--kit-offset) + var(--kit-mbar) + var(--tm-space-3));
+    left: var(--tm-space-3);
+    right: var(--tm-space-3);
+    width: auto;
+  }
+}
+
+@media (max-width: 45rem) {
+  .cc-lines li {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    row-gap: var(--tm-space-1);
+  }
+  .cc-line-qty {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .cc-line-total {
+    grid-column: 3;
+    grid-row: 1;
+    min-width: 0;
+  }
+  .cc-missing {
+    padding-top: var(--tm-space-5);
+  }
+  /* Stacked rows name their compound and size every time. */
+  .cc-unit,
+  .cc-size-sub {
+    display: inline;
+  }
+  .cc-product-table tr[data-continued="true"] .cc-compound-name {
+    color: inherit;
+  }
+  .cc-product-table tr[data-continued="true"] .kit-dot {
+    opacity: 1;
+  }
+  .cc-product-head {
+    gap: var(--tm-space-4);
+    margin-bottom: var(--tm-space-6);
+  }
+  .cc-setting-card,
+  .cc-switch-card {
+    padding-inline: var(--tm-space-4);
+  }
+  .cc-card-foot {
+    padding-inline: var(--tm-space-4);
+  }
+  .cc-rate {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--tm-space-3);
+  }
+  .cc-switch-row {
+    gap: var(--tm-space-4);
+  }
+  .cc-alerts-table :is(th, td) {
+    padding-inline: var(--tm-space-4) var(--tm-space-2);
+  }
+  .cc-alerts-table :is(thead th, td):not(:first-child) {
+    width: var(--cc-channel-narrow);
+    padding-inline: var(--tm-space-2);
+    white-space: normal;
+  }
+  .cc-alerts-previews {
+    padding: var(--tm-space-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-toast,
+  .cc-toast-dot,
+  .cc-bell-panel,
+  .cc-email-reveal,
+  .cc-bell-button[data-ringing] svg {
+    animation: none;
+  }
+}

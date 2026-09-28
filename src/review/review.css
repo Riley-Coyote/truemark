@@ -1,0 +1,159 @@
+/*
+ * The review layer's tokens — Riley's own language (Dark Technical), laid over the client's
+ * site. The review bar (src/review.css) and the layer (./layer.css) use these and nothing
+ * else. Loaded with the page so the bar never draws without them; the layer's rules and its
+ * fonts load with the layer itself.
+ */
+
+:root {
+  /* Surfaces */
+  --rl-floor: #060608;
+  --rl-raised: #0f0f13;
+  --rl-raised-2: #161619;
+
+  /* Ink, a cool cascade */
+  --rl-ink: #f3f3f5;
+  --rl-ink-1: rgba(243, 243, 245, 0.9);
+  --rl-ink-2: rgba(208, 210, 216, 0.72);
+  --rl-ink-3: rgba(186, 190, 198, 0.62);
+  --rl-ink-4: rgba(150, 155, 164, 0.46);
+  --rl-ink-5: rgba(144, 149, 159, 0.36);
+
+  /* Hairlines and flat objects */
+  --rl-line: rgba(255, 255, 255, 0.06);
+  --rl-line-mid: rgba(255, 255, 255, 0.1);
+  --rl-line-strong: rgba(255, 255, 255, 0.16);
+  --rl-line-on-ink: rgba(6, 6, 8, 0.22);
+  --rl-border: rgba(255, 255, 255, 0.09);
+  --rl-focus: rgba(255, 255, 255, 0.5);
+  --rl-fill: rgba(255, 255, 255, 0.032);
+  --rl-fill-hover: rgba(255, 255, 255, 0.052);
+  --rl-fill-active: rgba(255, 255, 255, 0.016);
+  --rl-edge: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --rl-inset: inset 0 1px 2px rgba(0, 0, 0, 0.24);
+  --rl-whisper: 0 1px 2px rgba(0, 0, 0, 0.18);
+  --rl-lift: 0 1px 2px rgba(0, 0, 0, 0.18), 0 10px 28px rgba(6, 6, 8, 0.16);
+  --rl-scrim: rgba(6, 6, 8, 0.48);
+  --rl-disabled: 0.42;
+
+  /* The one accent: a signal only (unread, live, an unanswered question) */
+  --rl-signal: #6d93c9;
+
+  /* Pins and dots */
+  --rl-pin: 24px;
+  --rl-pin-half: 12px;
+  --rl-pin-ring: rgba(255, 255, 255, 0.14);
+  --rl-pin-shadow: 0 1px 3px rgba(6, 6, 8, 0.28);
+  --rl-pin-grow: 1.1;
+  --rl-pin-press: 0.96;
+  --rl-dot: 6px;
+  --rl-dot-ring: 2px;
+  --rl-dot-offset: -3px;
+  --rl-touch-slop: 10px;
+
+  /* Outlines drawn over the page: a dark and a light hairline, so one always shows */
+  --rl-trace-dark: rgba(6, 6, 8, 0.82);
+  --rl-trace-light: rgba(243, 243, 245, 0.72);
+  --rl-trace-fill: rgba(6, 6, 8, 0.03);
+  --rl-corner: 7px;
+  --rl-corner-offset: -5px;
+  --rl-corner-halo: drop-shadow(0 0 0.5px var(--rl-trace-light)) drop-shadow(0 0 0.5px var(--rl-trace-light));
+
+  /* Type */
+  --rl-font-display: "Inter Tight Variable", "Inter Tight", "Inter Variable", "Inter", system-ui, sans-serif;
+  --rl-font-ui: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --rl-weight-thin: 280;
+  --rl-weight-light: 320;
+  --rl-weight-normal: 400;
+  --rl-weight-medium: 450;
+  --rl-weight-strong: 540;
+  --rl-text-3xs: 10px;
+  --rl-text-2xs: 11px;
+  --rl-text-xs: 12px;
+  --rl-text-sm: 13px;
+  --rl-text-md: 14px;
+  --rl-text-lg: 15px;
+  --rl-text-xl: 18px;
+  --rl-text-2xl: 20px;
+  --rl-text-3xl: 28px;
+  --rl-leading-none: 1;
+  --rl-leading-display: 1.12;
+  --rl-leading-tight: 1.25;
+  --rl-leading: 1.5;
+  --rl-leading-body: 1.55;
+  --rl-track-caps: 0.12em;
+  --rl-track-tag: 0.04em;
+  --rl-track-initials: 0.02em;
+  --rl-track-display: -0.02em;
+  --rl-track-ui: -0.005em;
+
+  /* Space, on a 4px grid */
+  --rl-space-half: 2px;
+  --rl-space-1: 4px;
+  --rl-space-2: 8px;
+  --rl-space-3: 12px;
+  --rl-space-4: 16px;
+  --rl-space-5: 20px;
+  --rl-space-6: 24px;
+  --rl-space-7: 28px;
+  --rl-space-8: 32px;
+
+  /* Shape */
+  --rl-radius-xs: 4px;
+  --rl-radius-sm: 6px;
+  --rl-radius-md: 8px;
+  --rl-radius-lg: 10px;
+  --rl-radius-xl: 12px;
+  --rl-radius-pill: 999px;
+
+  /* Sizes */
+  --rl-bar-height: 44px;
+  --rl-control-sm: 24px;
+  --rl-control-md: 28px;
+  --rl-control: 32px;
+  --rl-control-lg: 36px;
+  --rl-control-xl: 40px;
+  --rl-control-touch: 44px;
+  --rl-avatar: 24px;
+  --rl-avatar-sm: 20px;
+  --rl-kbd: 18px;
+  --rl-mark: 14px;
+  --rl-mark-inset: 3px;
+  --rl-check-weight: 1.5px;
+  --rl-switch-width: 26px;
+  --rl-switch-height: 16px;
+  --rl-switch-thumb: 10px;
+  --rl-textarea-min: 76px;
+  --rl-textarea-max: 240px;
+  --rl-pop-width: 360px;
+  --rl-drawer-width: 400px;
+  --rl-welcome-width: 440px;
+  --rl-dock-room: 70px;
+  --rl-sheet-max: 74vh;
+  --rl-sheet-tall: 84vh;
+
+  /* Motion */
+  --rl-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --rl-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --rl-dur-fast: 120ms;
+  --rl-dur: 180ms;
+  --rl-dur-slow: 320ms;
+  --rl-dur-spot: 1300ms;
+  --rl-breathe: 5s;
+  --rl-rise: 8px;
+  --rl-slide: 16px;
+  --rl-press: 0.5px;
+
+  /* Stacking, above everything the site draws */
+  --rl-z: 2000;
+  --rl-z-catcher: 1;
+  --rl-z-outline: 2;
+  --rl-z-pins: 3;
+  --rl-z-drawer: 4;
+  --rl-z-dock: 5;
+  --rl-z-pop: 6;
+  --rl-z-sheet: 7;
+  --rl-z-toast: 8;
+  --rl-z-scrim: 9;
+  --rl-z-modal: 10;
+}

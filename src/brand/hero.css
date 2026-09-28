@@ -1,0 +1,333 @@
+/* Home, top of page: the client's hero, re-set. */
+
+.tm-bhero {
+  --tm-bg: var(--tm-lilac-studio);
+  --tm-vial: clamp(6.5rem, 11.2vw, 11rem);
+  padding-block: var(--tm-space-7) 0;
+  overflow: hidden;
+}
+.tm-bhero-head {
+  grid-column: 1 / span 7;
+}
+.tm .tm-pill-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+  margin: 0 0 var(--tm-space-6);
+  padding: var(--tm-space-2) var(--tm-space-4);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink-2);
+}
+.tm-pill-eyebrow .tm-brand-dot {
+  width: var(--tm-space-2);
+  height: var(--tm-space-2);
+  margin: 0;
+}
+.tm .tm-bhero-title {
+  margin: 0;
+  font: var(--tm-weight-light) clamp(3rem, 6.1vw, 5.5rem) / 1.02 var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  color: var(--tm-ink);
+}
+/* Each line rises from behind a clean edge, one after another. The padding gives
+   descenders room inside the clip; the negative margin keeps the leading. */
+.tm-bhero-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.tm-bhero-line > span {
+  display: inline-block;
+  animation: tm-line-up 1000ms var(--tm-ease-enter) calc(var(--tm-i) * 110ms + 120ms) both;
+}
+@keyframes tm-line-up {
+  from {
+    transform: translateY(108%);
+  }
+}
+/* The monogram's dot, set as a full stop. */
+.tm-brand-dot {
+  display: inline-block;
+  width: 0.17em;
+  height: 0.17em;
+  margin-left: 0.05em;
+  border-radius: var(--tm-radius-pill);
+  background: linear-gradient(135deg, #e9284c 0%, #b3146b 30%, #7a2aa0 55%, #2f1492 80%, #0a2ea9 100%);
+  vertical-align: baseline;
+}
+.tm-bhero-aside {
+  grid-column: 8 / -1;
+  align-self: end;
+  padding-bottom: var(--tm-space-2);
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) var(--tm-stagger) both;
+}
+.tm .tm-bhero-lead {
+  margin: 0;
+  max-width: 36ch;
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.55 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+.tm-bhero-aside .tm-actions {
+  margin-top: var(--tm-space-6);
+}
+
+/* The shelf: the vials, cut from their renders, standing in the lilac studio.
+   Each casts its own soft contact shadow; nothing tints the product itself. */
+.tm-shelf {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: clamp(0.75rem, 2.2vw, 2.25rem);
+  margin: var(--tm-space-8) calc(var(--tm-pad) * -1) 0;
+}
+.tm .tm-shelf-vial {
+  position: relative;
+  flex: 0 0 var(--tm-vial);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: var(--tm-vial);
+  color: var(--tm-ink-2);
+  animation: tm-shelf-rise 1000ms var(--tm-ease-enter) both;
+  animation-delay: calc(var(--tm-i) * 90ms + 180ms);
+}
+.tm-shelf-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.tm-shelf-stage img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: transform var(--tm-dur-slow) var(--tm-ease-enter);
+  user-select: none;
+}
+.tm-shelf-shadow {
+  position: absolute;
+  z-index: 0;
+  left: 4%;
+  right: 4%;
+  bottom: -3%;
+  height: 9%;
+  border-radius: var(--tm-radius-pill);
+  background: radial-gradient(ellipse at center, var(--tm-lilac-shadow) 0%, transparent 70%);
+  filter: blur(3px);
+  transition: transform var(--tm-dur-slow) var(--tm-ease-enter), opacity var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.tm-shelf-name {
+  margin-top: var(--tm-space-4);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  white-space: nowrap;
+  border-bottom: 1px solid transparent;
+  transition: color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-shelf-name span {
+  margin-left: var(--tm-space-1);
+  color: var(--tm-ink-3);
+}
+.tm .tm-shelf-vial:hover :is(img, .tm-sheen),
+.tm .tm-shelf-vial:focus-visible :is(img, .tm-sheen) {
+  transform: translateY(calc(var(--tm-space-3) * -1));
+}
+.tm .tm-shelf-vial:hover .tm-shelf-shadow,
+.tm .tm-shelf-vial:focus-visible .tm-shelf-shadow {
+  transform: scale(0.86);
+  opacity: 0.7;
+}
+.tm .tm-shelf-vial:hover .tm-shelf-name {
+  color: var(--tm-ink);
+}
+.tm .tm-shelf-vial:active :is(img, .tm-sheen) {
+  transform: translateY(calc(var(--tm-space-1) * -1));
+}
+/* The highlight rides with its vial when it lifts. */
+.tm-shelf-stage .tm-sheen {
+  transition: transform var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.brand-refinement .tm .tm-shelf-vial:focus-visible {
+  outline: none;
+}
+.brand-refinement .tm .tm-shelf-vial:focus-visible .tm-shelf-name {
+  color: var(--tm-ink);
+  border-bottom-color: var(--tm-ink-3);
+}
+
+/* The lot card over the centre vial: the client's own hero card, arriving with the first light. */
+.tm-lotchip {
+  position: absolute;
+  z-index: 3;
+  bottom: calc(100% + var(--tm-space-4));
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-1);
+  padding: var(--tm-space-2) var(--tm-space-3);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-md);
+  background: color-mix(in srgb, var(--tm-paper) 94%, transparent);
+  box-shadow: var(--tm-shadow-lift);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: tm-lotchip-in 800ms var(--tm-ease-enter) 2250ms both;
+}
+/* A hairline from the card to the cap. */
+.tm-lotchip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 1px;
+  height: var(--tm-space-4);
+  background: var(--tm-line-strong);
+}
+.tm-lotchip-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+}
+.tm-lotchip-lot,
+.tm-lotchip-status {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.tm-lotchip-lot {
+  color: var(--tm-ink-3);
+}
+.tm-lotchip-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-1);
+  color: var(--tm-signal);
+}
+.tm-lotchip-status i {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--tm-radius-pill);
+  background: currentColor;
+}
+.tm-lotchip-results {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.3 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+}
+@keyframes tm-lotchip-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(var(--tm-space-2));
+  }
+}
+/* When the pass completes, the full stop after "Verified" is stamped once. */
+.tm .tm-bhero-title .tm-brand-dot {
+  animation: tm-dot-verify 1100ms var(--tm-ease-micro) 3150ms both;
+}
+@keyframes tm-dot-verify {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(122, 42, 160, 0.35);
+  }
+  40% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0.35em rgba(122, 42, 160, 0);
+  }
+}
+
+/* The trace runs the full width under the shelf; its one peak rises under the centre vial. */
+.tm-bhero-trace {
+  grid-column: 1 / -1;
+  margin: var(--tm-space-3) calc(var(--tm-pad) * -1) 0;
+}
+/* Their four trust lines, as a quiet row. */
+.tm-trust {
+  --tm-bg: var(--tm-paper);
+  padding-top: var(--tm-space-6);
+  padding-block: 0 var(--tm-space-9);
+  row-gap: var(--tm-space-6);
+}
+.tm-trust-item {
+  grid-column: span 3;
+  padding-top: var(--tm-space-4);
+  border-top: 1px solid var(--tm-line-strong);
+}
+.tm .tm-trust-title {
+  margin: 0 0 var(--tm-space-2);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink);
+}
+.tm .tm-trust-text {
+  margin: 0;
+  max-width: 28ch;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+
+@keyframes tm-shelf-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--tm-space-6));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tm-bhero-line > span,
+  .tm-bhero-aside,
+  .tm .tm-shelf-vial,
+  .tm-lotchip,
+  .tm .tm-bhero-title .tm-brand-dot {
+    animation: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .tm-bhero {
+    --tm-vial: 30vw;
+  }
+  .tm-lotchip {
+    display: none;
+  }
+  .tm-bhero-head,
+  .tm-bhero-aside {
+    grid-column: 1 / -1;
+  }
+  .tm-bhero-aside {
+    margin-top: var(--tm-space-6);
+  }
+  .tm-shelf {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-inline: var(--tm-pad);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .tm-shelf::-webkit-scrollbar {
+    display: none;
+  }
+  .tm .tm-shelf-vial {
+    scroll-snap-align: center;
+  }
+  .tm-trust-item {
+    grid-column: span 6;
+  }
+}
+@media (max-width: 560px) {
+  .tm-trust-item {
+    grid-column: 1 / -1;
+  }
+}

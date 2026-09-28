@@ -1,0 +1,368 @@
+/* About: the client's page, in their order and words. */
+
+.tm-about {
+  /* Local tokens for this page. */
+  --tm-about-title: clamp(3rem, 6.1vw, 5.5rem); /* the opening, at the home hero's scale */
+  --tm-about-verb: clamp(2.75rem, 5.4vw, 5rem); /* the largest that keeps "Document" inside its column */
+  --tm-about-principle: clamp(1.25rem, 1.9vw, 1.625rem);
+  --tm-about-quote: clamp(1.375rem, 2.3vw, 1.875rem);
+  --tm-about-photo: 5 / 2; /* the lab, as a wide plate under the opening */
+  --tm-about-band: clamp(10rem, 21vw, 19rem); /* the caustics band: a breath, not a scene */
+  --tm-about-mark: 2rem; /* the monogram that signs the promise */
+  --tm-about-promise: 34rem; /* the promise's width once it drops below Who we supply */
+  --tm-about-trace-foot: 1.125rem; /* Trace draws its baseline this far above its bottom edge */
+  --tm-about-leg: 520ms; /* one plain rule drawing across its column */
+  --tm-about-sweep: 1100ms; /* the trace drawing across the Test column */
+}
+
+/* ---------- The opening ---------- */
+
+.tm-about-open {
+  padding-block: var(--tm-space-9) 0;
+  row-gap: 0;
+}
+.tm-about-open-head {
+  position: relative;
+  z-index: 1;
+  grid-column: 1 / span 8;
+  grid-row: 1;
+}
+.tm .tm-about-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-about-title) / var(--tm-leading-display) var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  color: var(--tm-ink);
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) both;
+}
+.tm .tm-about-lead {
+  position: relative;
+  z-index: 1;
+  grid-column: 9 / -1;
+  grid-row: 1;
+  align-self: end;
+  /* Lifted so its last line shares the headline's last baseline. */
+  margin: 0 0 var(--tm-space-2);
+  max-width: 36ch;
+  font: var(--tm-weight-regular) var(--tm-type-lead) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) var(--tm-stagger) both;
+}
+/* The bench rises out of the page under the last line and settles back into it. */
+.tm-about-open-photo {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin: calc(var(--tm-space-8) * -1) calc(var(--tm-pad) * -1) 0;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, var(--tm-ink) 30%, var(--tm-ink) 74%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, var(--tm-ink) 30%, var(--tm-ink) 74%, transparent);
+  animation: tm-appear var(--tm-dur-scene) var(--tm-ease-enter) calc(var(--tm-stagger) * 2) both;
+}
+.tm-about-open-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: var(--tm-about-photo);
+  object-fit: cover;
+  object-position: 50% 30%;
+}
+
+/* ---------- What we do: three verbs on one line ---------- */
+
+.tm-about-verbs {
+  padding-top: var(--tm-space-8);
+  row-gap: 0;
+}
+.tm-about-verbs-head {
+  grid-column: 1 / span 7;
+}
+.tm-about-verb-list {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--tm-space-9) var(--tm-gutter);
+  margin: var(--tm-space-10) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-about-verb-list li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding-top: var(--tm-space-6);
+}
+/* The plain stretches of the line, drawn left to right. */
+.tm-about-verb-list li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--tm-ink-4);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.tm-about-verb-list li.is-test::before {
+  content: none;
+}
+.tm-about-verb-list li.is-visible::before {
+  animation: tm-about-rule var(--tm-about-leg) linear forwards;
+}
+.tm-about-verb-list li:nth-child(3).is-visible::before {
+  animation-delay: calc(var(--tm-about-leg) + var(--tm-about-sweep));
+}
+/* Over Test the line becomes the trace: its baseline continues the rule, its peak rises above. */
+.tm-about-verb-list .tm-about-verb-trace {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% - var(--tm-about-trace-foot));
+}
+.tm-about-verb-list .tm-trace-line {
+  animation: tm-draw var(--tm-about-sweep) linear var(--tm-about-leg) forwards;
+  animation-play-state: paused;
+}
+/* The peak lights as the drawn line crests it, a little under halfway along its path. */
+.tm-about-verb-list .tm-trace-peak {
+  animation: tm-appear-to var(--tm-dur-slow) var(--tm-ease-enter) calc(var(--tm-about-leg) + var(--tm-about-sweep) * 0.42) forwards;
+  animation-play-state: paused;
+}
+.tm-about-verb-list li.is-visible :is(.tm-trace-line, .tm-trace-peak) {
+  animation-play-state: running;
+}
+.tm-about-verb-number {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+}
+.tm .tm-about-verb {
+  margin: var(--tm-space-4) 0 0;
+  font: var(--tm-weight-light) var(--tm-about-verb) / var(--tm-leading-display) var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  color: var(--tm-ink);
+}
+.tm .tm-about-verb-text {
+  margin: var(--tm-space-5) 0 0;
+  max-width: var(--tm-measure-tight);
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+@keyframes tm-about-rule {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---------- Principles, on night ---------- */
+
+.tm-about-principles {
+  row-gap: var(--tm-space-8);
+}
+.tm-about-principles-head {
+  grid-column: 1 / span 5;
+  align-self: start;
+}
+.tm-about-principle-list {
+  grid-column: 6 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--tm-night-line);
+}
+.tm-about-principle-list li {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: baseline;
+  row-gap: var(--tm-space-3);
+  padding-block: var(--tm-space-6) var(--tm-space-7);
+  border-top: 1px solid var(--tm-night-line);
+}
+.tm .tm-about-principle {
+  grid-column: 1 / span 3;
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-about-principle) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-glow);
+  text-wrap: balance;
+}
+.tm .tm-about-principle-text {
+  grid-column: 4 / -1;
+  margin: 0;
+  max-width: 44ch;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-glow-2);
+  text-wrap: pretty;
+}
+
+/* ---------- A band of light ---------- */
+
+.tm-about-light {
+  height: var(--tm-about-band);
+  overflow: hidden;
+  background: var(--tm-paper);
+}
+.tm-about-light img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  -webkit-mask-image: linear-gradient(to bottom, var(--tm-ink) 58%, transparent);
+  mask-image: linear-gradient(to bottom, var(--tm-ink) 58%, transparent);
+}
+
+/* ---------- Who we supply, and the promise ---------- */
+
+.tm-about-close {
+  padding-top: var(--tm-space-8);
+  row-gap: var(--tm-space-8);
+  align-items: end;
+}
+.tm-about-supply {
+  grid-column: 1 / span 6;
+}
+.tm .tm-about-supply .tm-section-note {
+  margin-top: var(--tm-space-6);
+  max-width: 46ch;
+}
+.tm-about-promise {
+  grid-column: 8 / -1;
+  margin: 0;
+}
+.tm-about-promise-mark {
+  display: block;
+  width: auto;
+  height: var(--tm-about-mark);
+}
+.tm-about-promise-quote {
+  margin: var(--tm-space-6) 0 0;
+}
+.tm .tm-about-promise-quote p {
+  position: relative;
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-about-quote) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+  text-wrap: pretty;
+}
+/* The opening mark hangs in the margin so the words keep the column's edge. */
+.tm-about-promise-open {
+  position: absolute;
+  right: 100%;
+}
+.tm-about-promise-by {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--tm-space-3);
+  margin-top: var(--tm-space-6);
+  padding-top: var(--tm-space-4);
+  border-top: 1px solid var(--tm-line-strong);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+
+/* ---------- Motion preferences ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .tm .tm-about-title,
+  .tm .tm-about-lead,
+  .tm-about-open-photo {
+    animation: none;
+  }
+  .tm-about-verb-list li::before,
+  .tm-about-verb-list li.is-visible::before {
+    animation: none;
+    transform: none;
+  }
+  .tm-about-verb-list .tm-trace-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .tm-about-verb-list .tm-trace-peak {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 1100px) {
+  .tm-about-principles-head,
+  .tm-about-principle-list {
+    grid-column: 1 / -1;
+  }
+  .tm .tm-about-principle {
+    grid-column: 1 / span 5;
+  }
+  .tm .tm-about-principle-text {
+    grid-column: 7 / -1;
+  }
+  .tm-about-supply,
+  .tm-about-promise {
+    grid-column: 1 / -1;
+  }
+  .tm-about-promise {
+    max-width: var(--tm-about-promise);
+  }
+}
+@media (max-width: 960px) {
+  .tm-about-open {
+    padding-top: var(--tm-space-7);
+  }
+  .tm-about-open-head,
+  .tm .tm-about-lead {
+    grid-column: 1 / -1;
+  }
+  .tm .tm-about-lead {
+    grid-row: 2;
+    margin: var(--tm-space-6) 0 0;
+  }
+  .tm-about-open-photo {
+    grid-row: 3;
+    margin-top: var(--tm-space-5);
+  }
+  .tm-about-open-photo img {
+    aspect-ratio: 4 / 3;
+    object-position: 44% 40%;
+  }
+  .tm-about-verbs-head {
+    grid-column: 1 / -1;
+  }
+  .tm-about-verb-list {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--tm-space-9);
+    margin-top: var(--tm-space-9);
+  }
+  .tm .tm-about-verb-text {
+    max-width: var(--tm-measure-base);
+  }
+  /* Stacked, the verbs arrive one at a time: each stretch of the line draws as its verb does. */
+  .tm-about-verb-list li:nth-child(3).is-visible::before,
+  .tm-about-verb-list .tm-trace-line {
+    animation-delay: 0s;
+  }
+  .tm-about-verb-list .tm-trace-peak {
+    animation-delay: calc(var(--tm-about-sweep) * 0.42);
+  }
+  .tm-about-principle-list li {
+    display: block;
+  }
+  .tm .tm-about-principle-text {
+    margin-top: var(--tm-space-3);
+  }
+}
+@media (max-width: 640px) {
+  .tm-about-light {
+    height: calc(var(--tm-about-band) * 1.2);
+  }
+}

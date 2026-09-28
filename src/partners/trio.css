@@ -1,0 +1,35 @@
+/* Three cut-out vials on the studio floor, shared by the public pages and the portal. */
+
+.pp-trio {
+  --pp-vial: clamp(5.5rem, 9vw, 8.5rem);
+  --pp-trio-gap: clamp(0.75rem, 1.6vw, 1.5rem);
+  --pp-shadow-blur: 3px;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--pp-trio-gap);
+}
+.pp-trio-vial {
+  position: relative;
+  display: block;
+  flex: 0 0 var(--pp-vial);
+  width: var(--pp-vial);
+}
+.pp-trio-vial img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+.pp-trio-shadow {
+  position: absolute;
+  z-index: 0;
+  left: 4%;
+  right: 4%;
+  bottom: -3%;
+  height: 9%;
+  border-radius: var(--tm-radius-pill);
+  background: radial-gradient(ellipse at center, var(--tm-lilac-shadow) 0%, transparent 70%);
+  filter: blur(var(--pp-shadow-blur));
+}

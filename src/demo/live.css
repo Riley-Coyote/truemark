@@ -1,0 +1,248 @@
+/* One order, three views: the live demo, in the client's brand. */
+
+.tm-live {
+  --tm-live-pad: clamp(1.25rem, 4.6vw, 4.5rem);
+  min-height: 100vh;
+  padding: var(--tm-space-7) var(--tm-live-pad) var(--tm-space-8);
+  background: var(--tm-lilac-studio);
+  color: var(--tm-ink);
+  font-family: var(--tm-font-sans);
+}
+.tm-live-head {
+  max-width: 60rem;
+}
+.tm-live .tm-live-eyebrow {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-live .tm-live-title {
+  margin: var(--tm-space-3) 0 0;
+  font: var(--tm-weight-light) clamp(2.25rem, 4.2vw, 3.75rem) / 1.04 var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  color: var(--tm-ink);
+}
+.tm-live .tm-live-lead {
+  max-width: 58ch;
+  margin: var(--tm-space-4) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+
+.tm-live-stage {
+  display: grid;
+  grid-template-columns: minmax(15rem, 19rem) minmax(0, 21rem) minmax(0, 1fr);
+  gap: var(--tm-space-6);
+  align-items: start;
+  margin-top: var(--tm-space-7);
+}
+
+/* The script */
+.tm-live-script {
+  position: sticky;
+  top: calc(var(--review-bar-height, 0px) + var(--tm-space-6));
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-5);
+}
+.tm-live .tm-live-steps {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--tm-line-strong);
+}
+.tm-live-steps li {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  column-gap: var(--tm-space-2);
+  row-gap: var(--tm-space-2);
+  padding-block: var(--tm-space-4);
+  border-bottom: 1px solid var(--tm-line);
+}
+.tm-live-index {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.6 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  color: var(--tm-ink-3);
+}
+.tm-live-step-title {
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1.35 var(--tm-font-display);
+  color: var(--tm-ink-3);
+  transition: color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-live-step-text {
+  grid-column: 2;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  animation: tm-rise var(--tm-dur-slow) var(--tm-ease-enter) both;
+}
+.tm-live-steps li.is-current .tm-live-step-title {
+  color: var(--tm-ink);
+}
+.tm-live-steps li.is-current .tm-live-index {
+  color: var(--tm-ink);
+}
+.tm-live-steps li.is-done .tm-live-step-title {
+  color: var(--tm-ink-2);
+}
+.tm-live-go {
+  position: relative;
+  isolation: isolate;
+  align-self: flex-start;
+  min-height: var(--tm-control);
+  padding-inline: var(--tm-space-6);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-ink);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-paper);
+  cursor: pointer;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-live-go::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 14%;
+  right: 14%;
+  bottom: calc(var(--tm-space-2) * -1);
+  height: var(--tm-space-5);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-gradient);
+  filter: blur(12px);
+  opacity: 0.38;
+  transition: opacity var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-live-go:hover {
+  background: var(--tm-ink-hover);
+}
+.tm-live-go:hover::after {
+  opacity: 0.62;
+}
+.tm-live-go:active {
+  transform: scale(0.975);
+}
+.tm-live-go:focus-visible {
+  outline: none;
+  border-color: var(--tm-glow-3);
+}
+.tm-live-go:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+.tm-live .tm-live-order {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-2);
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-2);
+}
+.tm-live-pill {
+  padding: var(--tm-space-1) var(--tm-space-3);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  color: var(--tm-ink);
+}
+.tm-live .tm-live-note {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-live-note a {
+  color: var(--tm-ink-2);
+  border-bottom: 1px solid var(--tm-line-strong);
+}
+.tm-live-note a:hover {
+  color: var(--tm-ink);
+}
+.brand-refinement .tm-live-note a:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+}
+
+/* The frames */
+.tm-live-desks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-5);
+}
+.tm-live-frame {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-2);
+}
+.tm-live-frame figcaption {
+  display: flex;
+  align-items: baseline;
+  gap: var(--tm-space-3);
+}
+.tm-live-frame-label {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink);
+}
+.tm-live-frame-detail {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-live-screen {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-lift);
+  transition: border-color var(--tm-dur-slow) var(--tm-ease-enter), box-shadow var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.tm-live-screen iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 0;
+  transform-origin: top left;
+}
+/* The phone: a bezel of the brand's ink. */
+.tm-live-stage > .tm-live-frame .tm-live-screen {
+  border: 0.5rem solid var(--tm-night);
+  border-radius: 2.25rem;
+  box-shadow: var(--tm-shadow-float);
+}
+/* A view that has just heard the order is lit from beneath, with the brand's light. */
+.tm-live-frame.is-lit .tm-live-screen {
+  border-color: var(--tm-ink-3);
+  box-shadow: var(--tm-shadow-float), 0 0.75rem 2.5rem -0.75rem color-mix(in srgb, var(--tm-purple) 55%, transparent);
+}
+.tm-live-stage > .tm-live-frame.is-lit .tm-live-screen {
+  border-color: var(--tm-night);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-live-step-text {
+    animation: none;
+  }
+  .tm-live-screen,
+  .tm-live-go {
+    transition: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .tm-live-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tm-live-script {
+    position: static;
+  }
+  .tm-live-stage > .tm-live-frame {
+    max-width: 22rem;
+  }
+}

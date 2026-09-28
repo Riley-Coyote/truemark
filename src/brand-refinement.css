@@ -13,9 +13,10 @@
 .brand-refinement h1,
 .brand-refinement h2 { font-weight: 430; letter-spacing: -.045em; }
 .brand-refinement p { color: var(--muted); }
-.brand-refinement :is(button, a, summary):focus-visible { outline: 2px solid #8a7050; outline-offset: 5px; }
-.brand-refinement :is(input, select, textarea):focus { outline-color: #8a7050; }
-.brand-refinement ::selection { background: #e8dfd0; color: #1c1c1c; }
+/* The fallback focus for anything without its own: a hairline in the element's own ink, on its edge. */
+.brand-refinement :is(button, a, summary):focus-visible { outline: 1px solid color-mix(in srgb, currentColor 60%, transparent); outline-offset: 0; }
+.brand-refinement :is(input, select, textarea):focus { outline-color: var(--tm-ink-2); }
+.brand-refinement ::selection { background: var(--tm-lilac-200); color: var(--tm-ink); }
 .brand-refinement .eyebrow { color: #747368; }
 .brand-refinement .eyebrow > span { width: 5px; height: 5px; background: #9b8d76; }
 .brand-refinement .button { border-radius: 5px; }
@@ -122,12 +123,6 @@
 .brand-refinement .verify-intro { background-image: none; border-radius: 0; }
 .brand-refinement .search-results img,
 .brand-refinement .cart-item img { object-fit: contain; background: #efeee9; border-radius: 4px; }
-.brand-refinement .review-intro h1 { font-size: clamp(45px, 5.2vw, 74px); }
-.brand-refinement .review-site-feature { background: #eeede7; border-radius: 8px; overflow: hidden; }
-.brand-refinement .review-site-image img { object-position: center; }
-.brand-refinement .review-enter { border-radius: 4px; background: var(--ink); }
-.brand-refinement .review-type-cover { background: #e8e7e0; border-radius: 6px; }
-.brand-refinement .review-visual-cover { border-radius: 6px; }
 @media (max-width: 1100px) {
   .brand-refinement .hero-actions { gap: 19px; }
   .brand-refinement .home-hero-copy { padding-right: 24px; }
@@ -190,7 +185,6 @@
   .brand-refinement .detail-image-label { top: 15px; font-size: 9px; }
   .brand-refinement .detail-image-footer { bottom: 14px; font-size: 10px; }
   .brand-refinement .detail-copy h1 { font-size: clamp(34px, 9vw, 41px); }
-  .brand-refinement .review-intro h1 { font-size: clamp(38px, 10vw, 43px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .brand-refinement *, .brand-refinement *::before, .brand-refinement *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

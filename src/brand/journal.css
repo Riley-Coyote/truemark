@@ -1,0 +1,275 @@
+/* The Research Blog index, and the article card it shares with "Keep reading". */
+
+.tm-journal,
+.tm-article-page {
+  /* A photograph eases forward under the pointer, and settles back when pressed. */
+  --tm-photo-lift: 1.03;
+  --tm-photo-press: 1.015;
+  /* Where a title's underline sits below its baseline. */
+  --tm-underline-offset: 0.18em;
+}
+
+/* ---------- Head: the client's heading and lead ---------- */
+
+.tm-journal-head {
+  padding-block: var(--tm-space-9) var(--tm-space-5);
+  align-items: end;
+}
+.tm-journal-heading {
+  grid-column: 1 / span 8;
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) both;
+}
+.tm .tm-journal-intro {
+  grid-column: 9 / -1;
+  padding-bottom: var(--tm-space-3);
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) var(--tm-stagger) both;
+}
+.tm-journal-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+}
+
+/* ---------- The list ---------- */
+
+.tm-journal-list {
+  padding-top: var(--tm-space-7);
+}
+.tm-journal-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  row-gap: var(--tm-space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-journal-grid > li {
+  grid-column: span 4;
+  min-width: 0;
+}
+.tm-journal-grid > .tm-journal-lead {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  padding-bottom: var(--tm-space-4);
+}
+
+/* ---------- The card ---------- */
+
+.tm-jcard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-5);
+  height: 100%;
+  color: var(--tm-ink);
+}
+.tm-jcard-photo {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-lilac-100);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-jcard-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--tm-focus, 50% 50%);
+  transition: transform var(--tm-dur-scene) var(--tm-ease-enter);
+  user-select: none;
+}
+.tm-jcard-tag {
+  position: absolute;
+  z-index: 1;
+  top: var(--tm-space-4);
+  left: var(--tm-space-4);
+  padding: var(--tm-space-2) var(--tm-space-3);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-2);
+}
+.tm-jcard-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--tm-space-5);
+  padding-inline: var(--tm-space-1);
+}
+.tm .tm-jcard-kicker {
+  margin: 0 0 var(--tm-space-3);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm .tm-jcard-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-h3) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+  text-wrap: balance;
+}
+.tm .tm-jcard-link {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: transparent;
+  text-underline-offset: var(--tm-underline-offset);
+  transition: text-decoration-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+/* The title's link covers the whole card. */
+.tm-jcard-link::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  border-radius: var(--tm-radius-lg);
+}
+.tm .tm-jcard-dek {
+  margin: var(--tm-space-3) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+.tm .tm-jcard-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-3) var(--tm-space-5);
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+}
+.tm-jcard-more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  padding-block: var(--tm-space-1);
+  border-bottom: 1px solid var(--tm-line-strong);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-display);
+  color: var(--tm-ink);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), gap var(--tm-dur-base) var(--tm-ease-micro);
+}
+
+/* Five states. Hover: the photograph eases forward and the title takes a hairline. */
+.tm-jcard:hover .tm-jcard-photo img {
+  transform: scale(var(--tm-photo-lift));
+}
+.tm-jcard:hover .tm-jcard-link {
+  text-decoration-color: var(--tm-ink-4);
+}
+.tm-jcard:hover .tm-jcard-more {
+  gap: var(--tm-space-3);
+  border-bottom-color: var(--tm-ink);
+}
+.tm-jcard:has(.tm-jcard-link:active) .tm-jcard-photo img {
+  transform: scale(var(--tm-photo-press));
+}
+/* Focus: the card's own frame and the title's line brighten in place. */
+.brand-refinement .tm .tm-jcard-link:focus-visible {
+  outline: none;
+  text-decoration-color: var(--tm-ink);
+}
+.tm-jcard:has(.tm-jcard-link:focus-visible) .tm-jcard-photo {
+  border-color: var(--tm-ink);
+}
+
+/* ---------- The lead article: large, the photograph beside its text ---------- */
+
+.tm-jcard.is-lead {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: stretch;
+}
+.is-lead .tm-jcard-photo {
+  grid-column: 1 / span 7;
+  aspect-ratio: 3 / 2;
+}
+.is-lead .tm-jcard-body {
+  grid-column: 8 / -1;
+  padding: var(--tm-space-4) 0 var(--tm-space-2) var(--tm-space-5);
+}
+.tm .is-lead .tm-jcard-kicker {
+  margin-bottom: var(--tm-space-5);
+}
+.tm .is-lead .tm-jcard-title {
+  font-size: var(--tm-type-h2);
+  letter-spacing: var(--tm-track-display);
+}
+.tm .is-lead .tm-jcard-dek {
+  margin-top: var(--tm-space-5);
+  max-width: var(--tm-measure-base);
+  font-size: var(--tm-type-lead);
+}
+
+/* ---------- Motion preferences ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-journal-heading,
+  .tm .tm-journal-intro {
+    animation: none;
+  }
+  .tm-jcard-photo img {
+    transition: none;
+  }
+  .tm-jcard:hover .tm-jcard-photo img,
+  .tm-jcard:has(.tm-jcard-link:active) .tm-jcard-photo img {
+    transform: none;
+  }
+}
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 1100px) {
+  .tm-journal-grid > li {
+    grid-column: span 6;
+  }
+}
+@media (max-width: 960px) {
+  .tm-journal-heading,
+  .tm .tm-journal-intro {
+    grid-column: 1 / -1;
+  }
+  .tm .tm-journal-intro {
+    margin-top: var(--tm-space-5);
+  }
+  .tm-jcard.is-lead {
+    display: flex;
+  }
+  .is-lead .tm-jcard-body {
+    padding: 0 var(--tm-space-1);
+  }
+}
+@media (max-width: 640px) {
+  .tm-journal-head {
+    padding-top: var(--tm-space-8);
+  }
+  .tm-journal-grid {
+    row-gap: var(--tm-space-7);
+  }
+  .tm-journal-grid > li {
+    grid-column: 1 / -1;
+  }
+  .tm .tm-jcard-title,
+  .tm .is-lead .tm-jcard-title {
+    font-size: var(--tm-type-h3);
+  }
+  .tm .is-lead .tm-jcard-dek {
+    font-size: var(--tm-type-ui);
+  }
+}

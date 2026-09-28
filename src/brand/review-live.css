@@ -1,0 +1,206 @@
+/* 04 on the Overview: the live demo's door. A night card; one order's notices arrive in turn. */
+
+.rv .rv-live {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: center;
+  gap: var(--tm-space-7);
+  margin-top: var(--tm-gutter);
+  padding: clamp(1.75rem, 3.6vw, 3.5rem);
+  overflow: hidden;
+  border: 1px solid var(--tm-night-line);
+  border-radius: var(--tm-radius-xl);
+  background: var(--tm-night);
+  color: var(--tm-glow);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), box-shadow var(--tm-dur-slow) var(--tm-ease-enter);
+}
+/* The brand's gradient, as light pooled under the notices. */
+.rv-live::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: 6%;
+  bottom: -24%;
+  width: 56%;
+  height: 64%;
+  border-radius: 50%;
+  background: var(--tm-gradient);
+  filter: blur(72px);
+  opacity: 0.3;
+  transition: opacity var(--tm-dur-scene) var(--tm-ease-enter);
+}
+
+.rv-live-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.rv .rv-live-eyebrow {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-glow-3);
+}
+.rv .rv-live-title {
+  margin: var(--tm-space-5) 0 0;
+  font: var(--tm-weight-light) clamp(2rem, 3.4vw, 3rem) / 1.08 var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  color: var(--tm-glow);
+}
+.rv .rv-live-text {
+  max-width: 40ch;
+  margin: var(--tm-space-5) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-glow-2);
+  text-wrap: pretty;
+}
+.rv-live-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+  margin-top: var(--tm-space-6);
+  padding: var(--tm-space-3) var(--tm-space-5);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-ink);
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), gap var(--tm-dur-base) var(--tm-ease-micro);
+}
+
+/* The notices: a cascade, each a little further along than the last, centred on the middle one. */
+.rv .rv-live-stack {
+  --rv-step-max: var(--tm-space-7);
+  justify-self: center;
+  width: min(100%, 26rem + 2 * var(--rv-step-max));
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rv-live-notice {
+  --rv-step: var(--tm-space-6);
+  display: grid;
+  gap: var(--tm-space-1);
+  width: calc(100% - 2 * var(--rv-step-max));
+  margin-inline: auto;
+  padding: var(--tm-space-4) var(--tm-space-5);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-paper);
+  color: var(--tm-ink);
+  box-shadow: var(--tm-shadow-float), var(--tm-edge-lit);
+  translate: calc((var(--rv-i) - 1) * var(--rv-step)) 0;
+  opacity: 0;
+  transition: translate var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.rv-live.is-shown .rv-live-notice {
+  animation: rv-live-arrive 640ms var(--tm-ease-enter) calc(var(--rv-i) * 420ms + 160ms) both;
+}
+@keyframes rv-live-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rv-live-who {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-3);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.rv-live-who span {
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+.rv-live-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--tm-space-4);
+}
+.rv-live-notice-title {
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1.35 var(--tm-font-display);
+  color: var(--tm-ink);
+}
+.rv-live-amount {
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1.35 var(--tm-font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+}
+.rv-live-notice.is-earned .rv-live-amount {
+  color: var(--tm-signal);
+}
+.rv-live-body {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+
+/* Five states: the card is one door. */
+.rv .rv-live:hover {
+  border-color: var(--tm-glow-4);
+  box-shadow: var(--tm-shadow-lift);
+}
+.rv .rv-live:hover::before {
+  opacity: 0.44;
+}
+.rv .rv-live:hover .rv-live-notice {
+  --rv-step: var(--tm-space-7);
+}
+.rv .rv-live:hover .rv-live-action {
+  gap: var(--tm-space-4);
+  background: var(--tm-glow);
+}
+.rv .rv-live:active {
+  transform: scale(0.997);
+}
+.brand-refinement.rv .rv-live:focus-visible {
+  outline: none;
+  border-color: var(--tm-glow-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv-live-notice,
+  .rv-live.is-shown .rv-live-notice {
+    opacity: 1;
+    animation: none;
+    transition: none;
+  }
+  .rv-live::before,
+  .rv-live-action {
+    transition: none;
+  }
+  .rv .rv-live:active {
+    transform: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .rv .rv-live {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--tm-space-6);
+  }
+  .rv .rv-live-stack {
+    --rv-step-max: var(--tm-space-3);
+    width: 100%;
+  }
+  .rv-live-notice,
+  .rv .rv-live:hover .rv-live-notice {
+    --rv-step: var(--tm-space-3);
+  }
+  .rv-live::before {
+    right: -10%;
+    width: 90%;
+    height: 50%;
+  }
+}

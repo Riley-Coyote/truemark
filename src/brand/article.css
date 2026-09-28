@@ -1,0 +1,495 @@
+/*
+ * A Research Blog article, set for reading. One alignment line runs down the
+ * page at column 5: the heading, the photograph, the text and the notice all
+ * hang from it. The margin to its left carries the way back and the contents.
+ */
+
+.tm-article-page {
+  /* Reading size: body text a step above the interface's 1rem. */
+  --tm-read: clamp(1rem, 0.94rem + 0.25vw, 1.125rem);
+  /* The pull quote: the h3 step on wide screens, a little smaller on a phone. */
+  --tm-type-quote: clamp(1.375rem, 1.1rem + 1.1vw, 1.75rem);
+  /* Half a line of body text, where a list marker or a contents node sits. */
+  --tm-half-line: calc(var(--tm-leading-body) * 0.5em);
+  /* The contents: node size, and half a line of its own text. */
+  --tm-toc-node: 0.6875rem;
+  --tm-toc-leading: 1.45;
+  --tm-toc-half-line: calc(var(--tm-toc-leading) * 0.5em);
+  /* Below the sticky review bar and header. */
+  --tm-sticky-top: calc(var(--review-bar-height, 0rem) + var(--tm-header-height) + var(--tm-space-6));
+  /* The photograph arrives from slightly closer. */
+  --tm-photo-arrive: 1.04;
+}
+
+/* ---------- The head ---------- */
+
+.tm-article-head {
+  padding-block: var(--tm-space-7) 0;
+}
+.tm-crumbs {
+  grid-column: 1 / span 4;
+  grid-row: 1;
+}
+.tm-crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+}
+.tm-crumbs li + li::before {
+  content: "/" / "";
+  margin-right: var(--tm-space-2);
+  color: var(--tm-ink-4);
+}
+.tm-crumbs a {
+  display: inline-block;
+  padding-block: var(--tm-space-1);
+  border-bottom: 1px solid transparent;
+  color: var(--tm-ink-3);
+  transition: color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-crumbs a:hover {
+  color: var(--tm-ink);
+}
+.tm-crumbs a:active {
+  color: var(--tm-ink-2);
+}
+.brand-refinement .tm-crumbs a:focus-visible {
+  outline: none;
+  color: var(--tm-ink);
+  border-bottom-color: var(--tm-ink-3);
+}
+
+.tm-article-intro {
+  grid-column: 5 / span 7;
+  grid-row: 2;
+  padding-top: var(--tm-space-8);
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) both;
+}
+.tm .tm-article-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-h1) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  color: var(--tm-ink);
+  text-wrap: balance;
+}
+.tm .tm-article-dek {
+  margin: var(--tm-space-5) 0 0;
+  max-width: var(--tm-measure-base);
+  font: var(--tm-weight-regular) var(--tm-type-lead) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+
+/* The byline: the quality team, under the monogram, and the educational-use marker. */
+.tm-article-byline {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-4);
+  margin-top: var(--tm-space-7);
+  padding-block: var(--tm-space-4);
+  border-block: 1px solid var(--tm-line);
+}
+.tm-article-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--tm-control-sm);
+  height: var(--tm-control-sm);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+}
+.tm-article-mark img {
+  display: block;
+  width: 58%;
+  height: auto;
+}
+.tm .tm-article-author {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-1);
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm-article-author span {
+  font-size: var(--tm-type-ui);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+}
+/* The date and read time stay together when the line breaks. */
+.tm-article-author .tm-article-when {
+  white-space: nowrap;
+}
+.tm .tm-article-use {
+  flex: none;
+  margin: 0 0 0 auto;
+  padding: var(--tm-space-2) var(--tm-space-3);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-2);
+}
+
+/* The photograph starts on the text's line and runs off the right edge. */
+.tm-article-photo {
+  grid-column: 5 / -1;
+  grid-row: 3;
+  aspect-ratio: 2 / 1;
+  margin: var(--tm-space-8) calc(var(--tm-pad) * -1) 0 0;
+  overflow: hidden;
+  border-radius: var(--tm-radius-xl) 0 0 var(--tm-radius-xl);
+  background: var(--tm-lilac-100);
+}
+.tm-article-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--tm-focus, 50% 50%);
+  animation: tm-article-arrive var(--tm-dur-shimmer) var(--tm-ease-enter) both;
+  user-select: none;
+}
+@keyframes tm-article-arrive {
+  from {
+    opacity: 0;
+    transform: scale(var(--tm-photo-arrive));
+  }
+}
+
+/* ---------- The text ---------- */
+
+.tm-article-main {
+  padding-block: var(--tm-space-9) var(--tm-space-9);
+  align-items: start;
+}
+.tm-article-body {
+  grid-column: 5 / span 7;
+  grid-row: 1;
+  max-width: var(--tm-measure-base);
+  font: var(--tm-weight-regular) var(--tm-read) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm .tm-article-body > p {
+  margin: 0 0 var(--tm-space-5);
+  font: inherit;
+  color: inherit;
+  text-wrap: pretty;
+}
+.tm .tm-article-body h2 {
+  margin: var(--tm-space-8) 0 var(--tm-space-4);
+  font: var(--tm-weight-light) var(--tm-type-h3) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+  text-wrap: balance;
+  scroll-margin-top: var(--tm-sticky-top);
+}
+/* A heading takes focus only when the contents move the reader to it. */
+.tm .tm-article-body h2:focus {
+  outline: none;
+}
+
+/* Lists: hairline rows, as on the legal pages. A defined term reads in full ink. */
+.tm .tm-article-list {
+  margin: 0 0 var(--tm-space-6);
+  padding: 0;
+  list-style: none;
+}
+.tm .tm-article-list li {
+  position: relative;
+  padding: var(--tm-space-3) 0 var(--tm-space-3) var(--tm-space-6);
+  border-top: 1px solid var(--tm-line);
+}
+.tm .tm-article-list li:last-child {
+  border-bottom: 1px solid var(--tm-line);
+}
+.tm .tm-article-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: calc(var(--tm-space-3) + var(--tm-half-line));
+  width: var(--tm-space-3);
+  height: 1px;
+  background: var(--tm-ink-3);
+}
+.tm-article-list dfn {
+  font-style: normal;
+  color: var(--tm-ink);
+}
+
+/* The CoA's four results: a record, row by row. */
+.tm .tm-article-table {
+  width: 100%;
+  margin: var(--tm-space-2) 0 var(--tm-space-6);
+  border-collapse: collapse;
+}
+.tm-article-table th,
+.tm-article-table td {
+  padding: var(--tm-space-4) 0;
+  border-top: 1px solid var(--tm-line);
+  text-align: left;
+  vertical-align: baseline;
+}
+.tm-article-table tr:last-child :is(th, td) {
+  border-bottom: 1px solid var(--tm-line);
+}
+.tm .tm-article-table th {
+  width: 36%;
+  padding-right: var(--tm-space-5);
+  font: var(--tm-weight-regular) var(--tm-read) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm .tm-article-table td {
+  font: var(--tm-weight-regular) var(--tm-read) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+
+/* The one line to remember, set in the brand's voice and closed with its dot. */
+.tm .tm-article-quote {
+  margin: var(--tm-space-7) 0;
+  padding: var(--tm-space-1) 0 var(--tm-space-1) var(--tm-space-5);
+  border-left: 1px solid var(--tm-ink);
+}
+.tm .tm-article-quote p {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-quote) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+  text-wrap: pretty;
+}
+
+/* References, numbered in the brand's figures. */
+.tm .tm-article-refs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: tm-ref;
+}
+.tm .tm-article-refs li {
+  counter-increment: tm-ref;
+  display: grid;
+  grid-template-columns: var(--tm-space-7) minmax(0, 1fr);
+  align-items: baseline;
+  padding-block: var(--tm-space-3);
+  border-top: 1px solid var(--tm-line);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm .tm-article-refs li:last-child {
+  border-bottom: 1px solid var(--tm-line);
+}
+.tm .tm-article-refs li::before {
+  content: counter(tm-ref, decimal-leading-zero);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+}
+
+/* The HPLC article's chromatogram: an illustration, drawn when it comes into view. */
+.tm-article-figure {
+  margin: var(--tm-space-7) 0;
+  padding-block: var(--tm-space-6) var(--tm-space-4);
+  border-block: 1px solid var(--tm-line);
+}
+.tm .tm-article-figure figcaption {
+  margin-top: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-article-figure:not(.is-visible) :is(.tm-trace-line, .tm-trace-peak, .tm-trace-caption) {
+  animation-play-state: paused;
+}
+
+/* The research-use notice, once, where the article ends. */
+.tm-article-notice {
+  margin-top: var(--tm-space-8);
+  padding: var(--tm-space-5);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-wash);
+}
+.tm .tm-article-notice p {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-article-notice span {
+  color: var(--tm-ink);
+}
+
+/* ---------- The contents: the article's own path ---------- */
+
+.tm-contents {
+  grid-column: 1 / span 3;
+  grid-row: 1;
+  position: sticky;
+  top: var(--tm-sticky-top);
+  padding-top: var(--tm-space-2);
+}
+.tm .tm-contents-label {
+  margin: 0 0 var(--tm-space-5);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-contents-track {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-contents-track li {
+  position: relative;
+  padding: 0 0 var(--tm-space-4) calc(var(--tm-toc-node) + var(--tm-space-4));
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-toc-leading) var(--tm-font-sans);
+}
+.tm-contents-track li:last-child {
+  padding-bottom: 0;
+}
+/* A station for each heading. */
+.tm-contents-track li::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  top: calc(var(--tm-toc-half-line) - var(--tm-toc-node) / 2);
+  width: var(--tm-toc-node);
+  height: var(--tm-toc-node);
+  border: 1px solid var(--tm-ink-4);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  transition: background-color var(--tm-dur-slow) var(--tm-ease-enter), border-color var(--tm-dur-slow) var(--tm-ease-enter);
+}
+/* The track to the next station, which fills in ink once the reader has passed it. */
+.tm-contents-track li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--tm-toc-node) / 2);
+  top: var(--tm-toc-half-line);
+  width: 1px;
+  height: 100%;
+  translate: -50% 0;
+  background:
+    linear-gradient(var(--tm-ink), var(--tm-ink)) top / 100% 0% no-repeat,
+    var(--tm-line-strong);
+  transition: background-size var(--tm-dur-scene) var(--tm-ease-enter);
+}
+.tm-contents-track li.is-passed::after {
+  background-size: 100% 100%, auto;
+}
+.tm-contents-track li:is(.is-passed, .is-current)::before {
+  border-color: var(--tm-ink);
+  background: var(--tm-ink);
+}
+.tm-contents-track a {
+  border-bottom: 1px solid transparent;
+  color: var(--tm-ink-3);
+  transition: color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-contents-track .is-passed a {
+  color: var(--tm-ink-2);
+}
+.tm-contents-track .is-current a,
+.tm-contents-track a:hover {
+  color: var(--tm-ink);
+}
+.tm-contents-track a:active {
+  color: var(--tm-ink-2);
+}
+.brand-refinement .tm-contents-track a:focus-visible {
+  outline: none;
+  color: var(--tm-ink);
+  border-bottom-color: var(--tm-ink-3);
+}
+
+/* ---------- Keep reading ---------- */
+
+.tm-article-more {
+  padding-top: 0;
+}
+.tm.tm-article-more > .tm-eyebrow {
+  grid-column: 1 / -1;
+  margin: 0 0 var(--tm-space-7);
+  padding-top: var(--tm-space-5);
+  border-top: 1px solid var(--tm-line);
+}
+
+/* ---------- Motion preferences ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-article-intro,
+  .tm-article-photo img {
+    animation: none;
+  }
+  .tm-contents-track li::before,
+  .tm-contents-track li:not(:last-child)::after {
+    transition: none;
+  }
+}
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 960px) {
+  .tm-crumbs,
+  .tm-article-intro,
+  .tm-article-photo,
+  .tm-article-body {
+    grid-column: 1 / -1;
+  }
+  .tm-article-intro {
+    padding-top: var(--tm-space-7);
+  }
+  .tm-article-photo {
+    aspect-ratio: 3 / 2;
+    margin: var(--tm-space-7) calc(var(--tm-pad) * -1) 0;
+    border-radius: 0;
+  }
+  .tm-article-main {
+    padding-block: var(--tm-space-8);
+  }
+  /* The article is short enough to read straight through on a phone. */
+  .tm-contents {
+    display: none;
+  }
+}
+@media (max-width: 560px) {
+  /* On a phone the marker drops to its own line, under the byline's text. */
+  .tm-article-byline {
+    display: grid;
+    grid-template-columns: var(--tm-control-sm) minmax(0, 1fr);
+    column-gap: var(--tm-space-4);
+    row-gap: var(--tm-space-3);
+  }
+  .tm .tm-article-use {
+    grid-column: 2;
+    justify-self: start;
+    margin: 0;
+  }
+  .tm-article-table tr {
+    display: flex;
+    flex-direction: column;
+    padding-block: var(--tm-space-3);
+    border-top: 1px solid var(--tm-line);
+  }
+  .tm-article-table tr:last-child {
+    border-bottom: 1px solid var(--tm-line);
+  }
+  .tm .tm-article-table :is(th, td),
+  .tm .tm-article-table tr:last-child :is(th, td) {
+    width: auto;
+    padding: 0;
+    border: 0;
+  }
+  .tm .tm-article-table th {
+    margin-bottom: var(--tm-space-1);
+  }
+}

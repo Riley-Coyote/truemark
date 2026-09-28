@@ -1,0 +1,64 @@
+/* The HPLC trace motif (Trace.tsx): a baseline that draws in, one peak lit by the brand gradient. */
+.tm-trace {
+  position: relative;
+  width: auto;
+}
+.tm-trace svg {
+  display: block;
+  overflow: visible;
+}
+.tm-trace-line {
+  fill: none;
+  stroke-width: 1;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: tm-draw 2400ms var(--tm-ease-breathe) 500ms forwards;
+}
+.tm-trace-light .tm-trace-line {
+  stroke: var(--tm-ink-4);
+}
+.tm-trace-night .tm-trace-line {
+  stroke: var(--tm-glow-4);
+}
+.tm-trace-peak {
+  opacity: 0;
+  animation: tm-appear-to 900ms var(--tm-ease-enter) 1500ms forwards;
+}
+.tm-trace-caption {
+  position: absolute;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  animation: tm-appear-to 900ms var(--tm-ease-enter) 1900ms forwards;
+}
+.tm-trace-light .tm-trace-caption {
+  color: var(--tm-ink-3);
+}
+.tm-trace-night .tm-trace-caption {
+  color: var(--tm-glow-3);
+}
+
+@keyframes tm-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes tm-appear-to {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-trace-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .tm-trace-peak,
+  .tm-trace-caption {
+    animation: none;
+    opacity: 1;
+  }
+}

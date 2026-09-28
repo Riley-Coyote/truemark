@@ -1,0 +1,174 @@
+/*
+ * TrueMark platform tokens, set from the client's brand kit
+ * (docs/client-documents/TrueMark_BioLabs_Brand_Guidelines.pdf).
+ * Their parts, our assembly: brand ink and surface grey carry the interface,
+ * Poppins speaks for the brand, TeX Gyre Heros carries information, category
+ * colours live in the vials, and the gradient appears as light, never as paint.
+ */
+@font-face {
+  font-family: "TeX Gyre Heros";
+  src: url("../brand/fonts/texgyreheros-regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "TeX Gyre Heros";
+  src: url("../brand/fonts/texgyreheros-italic.woff") format("woff");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "TeX Gyre Heros";
+  src: url("../brand/fonts/texgyreheros-bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Surfaces: sampled from the supplied renders so vials sit in the page. */
+  /* The guide's surface grey is the product backdrop tint; this is that backdrop as the renders actually sample. */
+  --tm-studio: #f4f7fa;
+  --tm-studio-deep: #ecedf2;
+  --tm-paper: #fdfdfe;
+  --tm-night: #241a4a;
+  --tm-night-raised: #2e2458;
+  --tm-night-line: rgba(255, 255, 255, 0.12);
+
+  /* Ink cascade: the brand's ink, ink soft and a darkened muted (AA on surface grey). */
+  --tm-ink: #241a4a;
+  --tm-ink-2: #4a3f6b;
+  --tm-ink-3: #6f6786;
+  --tm-ink-4: rgba(36, 26, 74, 0.32);
+  --tm-line: rgba(36, 26, 74, 0.11);
+  --tm-line-strong: rgba(36, 26, 74, 0.22);
+  --tm-wash: rgba(36, 26, 74, 0.045);
+
+  --tm-glow: rgba(255, 255, 255, 0.96);
+  --tm-glow-2: rgba(255, 255, 255, 0.76);
+  --tm-glow-3: rgba(255, 255, 255, 0.58);
+  --tm-glow-4: rgba(255, 255, 255, 0.3);
+
+  /* Signal: released / verified (the client site's green). */
+  --tm-signal: #0e8a5f;
+  --tm-signal-night: #63d6a4;
+  --tm-purple: #7a39b1;
+  --tm-gradient: linear-gradient(100deg, #e9284c 0%, #b3146b 28%, #7a2aa0 55%, #2f1492 80%, #0a2ea9 100%);
+  --tm-gradient-soft: linear-gradient(100deg, rgba(233, 40, 76, 0.55), rgba(122, 42, 160, 0.55) 55%, rgba(10, 46, 169, 0.55));
+  --tm-danger: #b3473b;
+  --tm-danger-night: #e0877a;
+
+  /* Type, per the brand guide: Poppins is the brand voice (headlines, labels,
+     buttons, designed numbers); Heros carries information (names, lots, body). */
+  --tm-font-display: "Poppins", system-ui, sans-serif;
+  --tm-font-sans: "TeX Gyre Heros", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --tm-font-mono: "TeX Gyre Heros", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* Scale: a square-root-of-two ladder, 14 → 112, plus body and micro. */
+  --tm-type-micro: 0.75rem;
+  --tm-type-ui: 0.875rem;
+  --tm-type-body: 1rem;
+  --tm-type-lead: clamp(1.0625rem, 0.8rem + 1.2vw, 1.25rem);
+  --tm-type-h3: 1.75rem;
+  --tm-type-h2: clamp(2rem, 3.4vw, 2.5rem);
+  --tm-type-h1: clamp(2.5rem, 4.9vw, 3.5rem);
+  --tm-type-display: clamp(3rem, 7vw, 5rem);
+  --tm-type-monument: clamp(3.5rem, 9.4vw, 7rem);
+
+  --tm-weight-light: 300;
+  --tm-weight-book: 400;
+  --tm-weight-regular: 400;
+  --tm-weight-medium: 500;
+
+  --tm-track-monument: -0.04em;
+  --tm-track-display: -0.035em;
+  --tm-track-heading: -0.02em;
+  --tm-track-body: 0;
+  --tm-track-label: 0.1em;
+
+  --tm-leading-display: 1.04;
+  --tm-leading-heading: 1.14;
+  --tm-leading-body: 1.6;
+  --tm-leading-label: 1;
+
+  --tm-measure-tight: 34ch;
+  --tm-measure-base: 62ch;
+
+  /* Space, 8px rhythm. */
+  --tm-space-1: 0.25rem;
+  --tm-space-2: 0.5rem;
+  --tm-space-3: 0.75rem;
+  --tm-space-4: 1rem;
+  --tm-space-5: 1.5rem;
+  --tm-space-6: 2rem;
+  --tm-space-7: 3rem;
+  --tm-space-8: 4rem;
+  --tm-space-9: 6rem;
+  --tm-space-10: 8rem;
+  --tm-space-silence: clamp(6rem, 11vw, 10rem);
+
+  /* Grid. */
+  --tm-margin: clamp(1.25rem, 4.6vw, 4.5rem);
+  --tm-gutter: clamp(1rem, 1.7vw, 1.5rem);
+  --tm-content: 90rem;
+
+  /* Form. */
+  --tm-radius-xs: 4px;
+  --tm-radius-sm: 8px;
+  --tm-radius-md: 14px;
+  --tm-radius-lg: 22px;
+  --tm-radius-xl: 32px;
+  --tm-radius-pill: 999px;
+
+  --tm-shadow-whisper: 0 1px 2px rgba(36, 26, 74, 0.07);
+  --tm-shadow-lift: 0 1px 2px rgba(36, 26, 74, 0.06), 0 12px 32px -12px rgba(36, 26, 74, 0.2);
+  --tm-shadow-float: 0 2px 6px rgba(36, 26, 74, 0.06), 0 30px 60px -24px rgba(36, 26, 74, 0.3);
+  --tm-edge-lit: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+
+  /* Motion: entrance, micro (slight overshoot), breathing. */
+  --tm-ease-enter: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --tm-ease-micro: cubic-bezier(0.34, 1.3, 0.64, 1);
+  --tm-ease-breathe: cubic-bezier(0.45, 0, 0.55, 1);
+  --tm-dur-quick: 140ms;
+  --tm-dur-base: 240ms;
+  --tm-dur-slow: 420ms;
+  --tm-dur-scene: 900ms;
+  --tm-dur-shimmer: 1400ms;
+  --tm-stagger: 120ms;
+  --tm-cycle-5: 5s;
+  --tm-cycle-7: 7s;
+  --tm-cycle-11: 11s;
+
+  /* Controls. */
+  --tm-control: 3rem;
+  --tm-control-sm: 2.25rem;
+  --tm-swatch: 1.375rem;
+  --tm-logo-width: 9.5rem;
+  --tm-type-nano: 0.625rem;
+  --tm-ink-hover: #332763;
+  --tm-glow-hover: #fbfcfd;
+  --tm-scrim: rgba(24, 16, 52, 0.46);
+  --tm-image-scrim: linear-gradient(to top, rgba(24, 16, 52, 0.62), rgba(24, 16, 52, 0.18) 38%, rgba(24, 16, 52, 0) 62%);
+  --tm-sheen: linear-gradient(105deg, rgba(255, 255, 255, 0) 36%, rgba(255, 255, 255, 0.34) 47%, rgba(255, 255, 255, 0.08) 53%, rgba(255, 255, 255, 0) 60%);
+  --tm-shadow-night: 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 40px 90px -30px rgba(10, 6, 30, 0.7);
+
+  /* The lilac studio: TrueMark's colour world, tints of the brand purple #7A39B1.
+     Products and photography live here; the interface around it stays white and ink. */
+  --tm-lilac-50: #f7f3fb;
+  --tm-lilac-100: #f0e9f8;
+  --tm-lilac-200: #e4d8f2;
+  --tm-lilac-300: #d2c0ea;
+  --tm-lilac-shadow: rgba(76, 38, 128, 0.3);
+  /* The floor of the pedestal photographs, and the bench of the lab photograph,
+     sampled so a section can continue where its photograph ends. */
+  --tm-lilac-floor: #e1d6ee;
+  --tm-bench: #d2d2e5;
+  --tm-lilac-studio: linear-gradient(to bottom, var(--tm-lilac-50) 0%, var(--tm-lilac-100) 58%, var(--tm-lilac-200) 100%);
+
+  --tm-shelf-floor: linear-gradient(to bottom, #f4f7fa 0%, #f4f7fa 74%, #f1f5f9 78%, #edf0f4 83%, #e7eaef 87.5%, #f1f4f8 92.5%, #f4f7fa 100%);
+
+  --tm-header-height: 4.5rem;
+  --tm-notice-height: 2rem;
+}

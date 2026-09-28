@@ -1,0 +1,206 @@
+/* Anything that inherits its type (dialogs, form fields, older components) inherits Heros. */
+.brand-refinement {
+  font-family: var(--tm-font-sans);
+}
+
+/*
+ * The brand voice layer. Per the guide, Poppins sets headlines, section labels,
+ * pills, buttons and designed numbers; everything informational stays in Heros.
+ * Loaded after the shop styles so these families win without raising specificity.
+ */
+.brand-refinement :is(
+    .tm-display,
+    .tm-heading,
+    .tm-figure,
+    .tm-eyebrow,
+    .tm-button,
+    .tm-textlink,
+    .tm-pill,
+    .tm-chip,
+    .tm-price,
+    .tm-stage-price,
+    .tm-specs dt,
+    .tm-record-kicker,
+    .tm-status,
+    .tm-record-card dd,
+    .tm-process h3,
+    .tm-note-title,
+    .tm-note-more,
+    .tm-faq summary,
+    .tm-footer-title,
+    .tm-footer-line,
+    .tm-notice p,
+    .tm-sizes legend,
+    .tm-lot-card-label,
+    .tm-preview-head,
+    .tm-preview-foot,
+    .tm-empty-title,
+    .tm-mobile-nav a,
+    .tm-atmosphere p,
+    .modal-heading h2
+  ) {
+  font-family: var(--tm-font-display);
+}
+
+/* Poppins runs wide; labels in caps take the guide's +8–10% tracking. */
+.brand-refinement :is(.tm-eyebrow, .tm-specs dt, .tm-record-kicker, .tm-footer-title, .tm-sizes legend, .tm-lot-card-label) {
+  letter-spacing: var(--tm-track-label);
+}
+
+/* Identifiers read in Heros with even figures. */
+.brand-refinement .tm-mono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* Buttons: ink pills. The primary casts the brand gradient as light beneath it. */
+.brand-refinement .tm .tm-button-primary {
+  position: relative;
+  isolation: isolate;
+}
+.brand-refinement .tm .tm-button-primary::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 14%;
+  right: 14%;
+  bottom: calc(var(--tm-space-2) * -1);
+  height: var(--tm-space-5);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-gradient);
+  filter: blur(12px);
+  opacity: 0.38;
+  transition: opacity var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-base) var(--tm-ease-enter);
+}
+.brand-refinement .tm .tm-button-primary:hover::after {
+  opacity: 0.62;
+  transform: translateY(2px);
+}
+.brand-refinement .tm .tm-button-primary:active::after {
+  opacity: 0.3;
+}
+.brand-refinement .tm .tm-button-outline {
+  background: transparent;
+  border-color: var(--tm-ink-4);
+  color: var(--tm-ink);
+}
+.brand-refinement .tm .tm-button-outline:hover {
+  border-color: var(--tm-ink);
+  background: var(--tm-wash);
+}
+.brand-refinement .tm .tm-button-outline:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+  box-shadow: inset 0 0 0 1px var(--tm-ink);
+}
+
+/* Header, in the client's own navigation. */
+.brand-refinement .tm-notice-inner {
+  justify-content: center;
+}
+.brand-refinement .tm-notice p {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.brand-refinement .tm-header {
+  background: color-mix(in srgb, var(--tm-paper) 88%, transparent);
+}
+.brand-refinement .tm-logo .brand-logo {
+  width: var(--tm-logo-width);
+}
+.brand-refinement .tm-nav {
+  grid-column: 4 / span 7;
+  justify-self: center;
+  gap: var(--tm-space-2);
+  margin: 0;
+}
+.brand-refinement .tm-nav a {
+  position: relative;
+  padding: var(--tm-space-2) var(--tm-space-2);
+  border-radius: var(--tm-radius-xs);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.brand-refinement .tm-nav a:hover {
+  background: transparent;
+  color: var(--tm-ink);
+}
+.brand-refinement .tm-nav a.active {
+  color: var(--tm-ink);
+}
+/* Where you are: a short line of the brand gradient under the current page. */
+.brand-refinement .tm-nav a.active::after {
+  content: "";
+  position: absolute;
+  left: var(--tm-space-2);
+  right: var(--tm-space-2);
+  bottom: calc(var(--tm-space-2) * -1);
+  height: 2px;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-gradient);
+}
+.brand-refinement .tm-tools {
+  gap: var(--tm-space-4);
+}
+.brand-refinement .tm-textool {
+  padding: var(--tm-space-2) 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.brand-refinement .tm-textool:hover {
+  color: var(--tm-ink);
+}
+.brand-refinement .tm-textool:active {
+  color: var(--tm-ink-3);
+}
+.brand-refinement .tm-textool:focus-visible {
+  outline: none;
+  color: var(--tm-ink);
+  border-bottom-color: var(--tm-ink-3);
+}
+@media (max-width: 960px) {
+  .brand-refinement .tm-textool.tm-hide-small {
+    display: none;
+  }
+}
+
+/* Search results show the vial standing in a small square of the lilac studio. */
+.brand-refinement .tm-search-thumb {
+  position: relative;
+  flex: none;
+  display: block;
+  width: var(--tm-space-8);
+  height: var(--tm-space-8);
+  overflow: hidden;
+  border-radius: var(--tm-radius-sm);
+  background: var(--tm-lilac-studio);
+}
+.brand-refinement .search-results .tm-search-thumb img {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  width: auto;
+  height: 84%;
+  transform: translateX(-50%);
+  object-fit: contain;
+  border-radius: 0;
+  background: none;
+}
+
+/* When a form moves focus to a field (a first error, say), the field lands below the
+   sticky header rather than under it. */
+.brand-refinement :is(input, select, textarea) {
+  scroll-margin-block: calc(var(--review-bar-height, 0px) + var(--tm-header-height) + var(--tm-space-5)) var(--tm-space-5);
+}
+
+/* Sections a link scrolls to take focus for screen readers; they draw no ring of their own. */
+.brand-refinement [tabindex="-1"]:focus {
+  outline: none;
+}

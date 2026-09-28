@@ -1,0 +1,302 @@
+/*
+ * /track: find an order by its number and the email it was placed with, then
+ * follow it on its tracker. Client brand: paper, ink, the frost photograph beside
+ * the lookup, and the lilac world only where the page asks for help.
+ */
+
+.tm-trackpage {
+  /* Local tokens. */
+  --tm-trackpage-form: 28rem; /* the lookup's measure */
+  --tm-trackpage-photo: 4 / 5; /* the frost photograph, cropped upright */
+  --tm-trackpage-icon-drop: 0.2em; /* sets an error's icon on its first line */
+}
+
+.tm-trackpage-lookup,
+.tm-trackpage-status {
+  --tm-bg: var(--tm-paper);
+  min-height: calc(100svh - var(--review-bar-height, 0px) - var(--tm-header-height) - var(--tm-notice-height));
+  padding-top: var(--tm-space-8);
+  padding-bottom: var(--tm-space-9);
+  row-gap: var(--tm-space-6);
+  align-content: start;
+  align-items: start;
+}
+.tm-trackpage-status {
+  min-height: 0;
+}
+.tm .tm-trackpage-finding {
+  grid-column: 1 / -1;
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+
+/* ---------- Lookup ---------- */
+
+.tm-trackpage-copy {
+  grid-column: 1 / span 6;
+  min-width: 0;
+}
+.tm .tm-trackpage-copy .tm-section-note {
+  margin-top: var(--tm-space-6);
+}
+.tm-trackpage-photo {
+  grid-column: 8 / -1;
+  margin: 0;
+  aspect-ratio: var(--tm-trackpage-photo);
+  overflow: hidden;
+  border-radius: var(--tm-radius-xl);
+  background: var(--tm-lilac-studio);
+}
+.tm-trackpage-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tm-trackpage-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-5);
+  max-width: var(--tm-trackpage-form);
+  margin-top: var(--tm-space-7);
+}
+.tm-trackpage-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-2);
+}
+.tm .tm-trackpage-field label {
+  font: var(--tm-weight-medium) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm .tm-trackpage-field input {
+  width: 100%;
+  height: var(--tm-control);
+  padding: 0 var(--tm-space-4);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-paper);
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink);
+  transition:
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    box-shadow var(--tm-dur-base) var(--tm-ease-enter),
+    background-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm .tm-trackpage-field input::placeholder {
+  color: var(--tm-ink-3);
+  opacity: 1;
+}
+.tm .tm-trackpage-field input:hover {
+  border-color: var(--tm-ink-3);
+}
+.tm .tm-trackpage-field input:active {
+  background: var(--tm-studio);
+}
+.brand-refinement .tm .tm-trackpage-field input:focus {
+  outline: none;
+  border-color: var(--tm-ink);
+  background: var(--tm-paper);
+}
+.tm .tm-trackpage-field input:disabled {
+  border-color: var(--tm-line);
+  background: var(--tm-studio);
+  color: var(--tm-ink-3);
+}
+/* Invalid: a heavier edge and a written reason; the system has no error colour. */
+.tm .tm-trackpage-field.is-invalid input {
+  border-color: var(--tm-ink);
+  box-shadow: inset 0 0 0 1px var(--tm-ink);
+}
+.tm .tm-trackpage-hint {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm .tm-trackpage-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tm-space-2);
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm-trackpage-error svg {
+  flex: none;
+  margin-top: var(--tm-trackpage-icon-drop);
+}
+.tm-trackpage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-5);
+  margin-top: var(--tm-space-2);
+}
+.tm .tm-trackpage-miss {
+  margin: 0;
+  padding: var(--tm-space-4) var(--tm-space-5);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-lilac-50);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm .tm-trackpage-miss:focus {
+  outline: none;
+  border-color: var(--tm-ink-3);
+}
+.tm .tm-trackpage-mail {
+  border-bottom: 1px solid var(--tm-line-strong);
+  color: var(--tm-ink);
+  overflow-wrap: anywhere;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm .tm-trackpage-mail:hover {
+  border-bottom-color: var(--tm-ink);
+}
+.tm .tm-trackpage-mail:active {
+  opacity: 0.7;
+}
+.brand-refinement .tm .tm-trackpage-mail:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+  background: var(--tm-wash);
+}
+.tm .tm-trackpage-account {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--tm-space-2) var(--tm-space-3);
+  max-width: var(--tm-trackpage-form);
+  margin: var(--tm-space-7) 0 0;
+  padding-top: var(--tm-space-5);
+  border-top: 1px solid var(--tm-line);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+
+/* ---------- The order, found ---------- */
+
+.tm-trackpage-head {
+  grid-column: 1 / span 8;
+  min-width: 0;
+}
+.tm .tm-trackpage-head .tm-eyebrow .tm-mono {
+  letter-spacing: 0;
+}
+.brand-refinement .tm .tm-trackpage-head h1:focus {
+  outline: none;
+}
+.tm-trackpage-aside {
+  grid-column: 9 / -1;
+  align-self: end;
+  justify-self: end;
+}
+.tm .tm-trackpage-another {
+  padding-inline: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.tm-trackpage-tracker {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin-top: var(--tm-space-7);
+}
+
+/* ---------- Help: the client's route for shipping questions ---------- */
+
+.tm-trackpage-help {
+  --tm-bg: var(--tm-studio);
+  padding-block: var(--tm-space-8);
+  row-gap: var(--tm-space-7);
+  align-items: end;
+}
+.tm-trackpage-help-contact {
+  grid-column: 1 / span 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--tm-space-3);
+}
+.tm .tm-trackpage-help-title {
+  margin: 0 0 var(--tm-space-2);
+  font: var(--tm-weight-medium) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm .tm-trackpage-help-text {
+  margin: 0;
+  max-width: var(--tm-measure-tight);
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm .tm-trackpage-help-hours {
+  margin: var(--tm-space-2) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-trackpage-help-verify {
+  grid-column: 7 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--tm-space-5);
+}
+.tm .tm-trackpage-help-line {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-h3) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+}
+.tm .tm-trackpage-help-line span {
+  color: var(--tm-ink-3);
+}
+
+/* Content settles in as it mounts. */
+.tm-trackpage-rise {
+  animation: tm-rise var(--tm-dur-slow) var(--tm-ease-enter) both;
+  animation-delay: calc(var(--tm-i, 0) * var(--tm-stagger));
+}
+
+@media (max-width: 960px) {
+  .tm-trackpage-lookup,
+  .tm-trackpage-status {
+    min-height: 0;
+    padding-top: var(--tm-space-7);
+    padding-bottom: var(--tm-space-8);
+  }
+  .tm-trackpage-copy,
+  .tm-trackpage-head,
+  .tm-trackpage-aside,
+  .tm-trackpage-help-contact,
+  .tm-trackpage-help-verify {
+    grid-column: 1 / -1;
+  }
+  .tm-trackpage-photo {
+    display: none;
+  }
+  .tm-trackpage-aside {
+    justify-self: start;
+  }
+  .tm-trackpage-tracker {
+    margin-top: var(--tm-space-5);
+  }
+  .tm-trackpage-help-verify {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-trackpage-rise {
+    animation: none;
+  }
+  .tm .tm-trackpage-field input,
+  .tm .tm-trackpage-mail {
+    transition: none;
+  }
+}

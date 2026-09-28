@@ -1,0 +1,188 @@
+/* Email and text-message previews, in the client's brand. */
+
+.tm-email {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-paper);
+  color: var(--tm-ink);
+  font-family: var(--tm-font-sans);
+}
+.tm-email-meta {
+  margin: 0;
+  padding: var(--tm-space-4) var(--tm-space-5);
+  border-bottom: 1px solid var(--tm-line);
+}
+.tm-email-meta div {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  gap: var(--tm-space-3);
+  padding-block: var(--tm-space-1);
+}
+.tm-email-meta dt {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.9 var(--tm-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-email-meta dd {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  overflow-wrap: anywhere;
+}
+.tm-email-meta .tm-email-subject {
+  color: var(--tm-ink);
+}
+.tm-email-meta .tm-email-preheader {
+  color: var(--tm-ink-3);
+}
+.tm-email-canvas {
+  padding: var(--tm-space-6) var(--tm-space-4);
+  background: var(--tm-lilac-studio);
+}
+.tm-email-body {
+  max-width: 34rem;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-whisper);
+}
+.tm-email-head {
+  padding: var(--tm-space-5) var(--tm-space-6) var(--tm-space-4);
+  border-bottom: 1px solid var(--tm-line);
+}
+.tm-email-head .brand-logo {
+  width: 8.5rem;
+}
+.tm-email-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-5);
+  padding: var(--tm-space-6);
+}
+.tm-email .tm-email-heading {
+  margin: 0;
+  font: var(--tm-weight-light) 1.75rem / 1.15 var(--tm-font-display);
+  letter-spacing: -0.02em;
+  color: var(--tm-ink);
+}
+.tm-email .tm-email-text {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-email-figure {
+  padding: var(--tm-space-5);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-lilac-50);
+}
+.tm-email .tm-email-label {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-email .tm-email-value {
+  margin: var(--tm-space-2) 0 0;
+  font: var(--tm-weight-light) 2.75rem / 1 var(--tm-font-display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+}
+.tm-email .tm-email-figure-note {
+  margin: var(--tm-space-2) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-email .tm-email-rows {
+  margin: 0;
+  border-top: 1px solid var(--tm-line);
+}
+.tm-email-rows div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  padding-block: var(--tm-space-3);
+  border-bottom: 1px solid var(--tm-line);
+}
+.tm-email .tm-email-rows dt {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-email .tm-email-rows dd {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+  text-align: right;
+}
+.tm-email-button {
+  align-self: flex-start;
+  padding: var(--tm-space-3) var(--tm-space-5);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-ink);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-paper);
+}
+.tm-email .tm-email-note {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.55 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-email-foot {
+  padding: var(--tm-space-5) var(--tm-space-6);
+  border-top: 1px solid var(--tm-line);
+  background: var(--tm-lilac-50);
+}
+.tm-email .tm-email-foot p {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.6 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+
+/* A text message */
+.tm-sms {
+  margin: 0;
+  padding: var(--tm-space-5);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-paper);
+  font-family: var(--tm-font-sans);
+}
+.tm-sms .tm-sms-meta,
+.tm-sms .tm-sms-count {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-sms-meta span {
+  color: var(--tm-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.tm-sms-thread {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--tm-space-1);
+  margin: var(--tm-space-4) 0;
+}
+.tm-sms .tm-sms-sender {
+  margin: 0 0 0 var(--tm-space-3);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-sms .tm-sms-bubble {
+  max-width: 22rem;
+  margin: 0;
+  padding: var(--tm-space-3) var(--tm-space-4);
+  border-radius: var(--tm-radius-lg) var(--tm-radius-lg) var(--tm-radius-lg) var(--tm-radius-xs);
+  background: var(--tm-lilac-100);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink);
+}

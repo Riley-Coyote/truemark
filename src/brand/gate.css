@@ -1,0 +1,460 @@
+/* The front door: sign in and create account. */
+
+.tm.tm-gate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 0;
+  min-height: calc(100svh - var(--review-bar-height, 0px));
+  padding: 0;
+  background: var(--tm-paper);
+}
+
+/* Left: the brand, in their ink. */
+.tm-gate-brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: var(--tm-space-7) clamp(2rem, 5.5vw, 5.5rem) var(--tm-space-6);
+  background: var(--tm-night);
+  color: var(--tm-glow);
+  overflow: hidden;
+}
+.tm-gate-brand::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--tm-gradient);
+}
+.tm-gate-logo {
+  align-self: flex-start;
+  display: inline-flex;
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-xs);
+}
+.tm-gate-logo .brand-logo {
+  width: var(--tm-logo-width);
+  height: auto;
+}
+.brand-refinement .tm-gate-logo:focus-visible {
+  outline: none;
+  border-color: var(--tm-glow-3);
+}
+.tm-gate-statement {
+  margin-top: clamp(2.5rem, 7vh, 5.5rem);
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) both;
+}
+.tm .tm-gate-title {
+  margin: 0;
+  max-width: 11ch;
+  font: var(--tm-weight-light) clamp(2.5rem, 4.2vw, 3.75rem) / 1.08 var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  color: var(--tm-glow);
+}
+.tm .tm-gate-lead {
+  margin: var(--tm-space-5) 0 0;
+  max-width: 30ch;
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.55 var(--tm-font-sans);
+  color: var(--tm-glow-2);
+}
+.tm-gate-brand > :not(.tm-floats, .tm-light-pool) {
+  position: relative;
+  z-index: 1;
+}
+.tm-gate-lotline {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-2);
+  margin-top: auto;
+  padding-top: var(--tm-space-7);
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) calc(var(--tm-stagger) * 2) both;
+}
+.tm-gate-lot-label {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-glow-3);
+}
+.tm-gate-lot {
+  font: var(--tm-weight-regular) var(--tm-type-h3) / 1.1 var(--tm-font-sans);
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-glow);
+}
+.tm-gate-lot-note {
+  max-width: 30ch;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-glow-3);
+}
+.tm-gate-trace {
+  flex-shrink: 0;
+  box-sizing: content-box;
+  margin: 0 calc(clamp(2rem, 5.5vw, 5.5rem) * -1) 0;
+  padding-top: var(--tm-space-5);
+}
+.tm .tm-gate-legal {
+  margin: var(--tm-space-3) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-glow-3);
+}
+
+/* Right: the form. Its left edge hangs from a line a fifth into the panel. */
+.tm-gate-panel {
+  display: flex;
+  align-items: center;
+  padding: var(--tm-space-8) clamp(1.5rem, 14%, 10rem);
+  background: var(--tm-paper);
+}
+.tm-gate-form {
+  width: min(100%, 26rem);
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) var(--tm-stagger) both;
+}
+.tm .tm-gate-heading {
+  margin: 0;
+  font: var(--tm-weight-light) clamp(2.25rem, 3.4vw, 3rem) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+}
+.tm .tm-gate-sub {
+  margin: var(--tm-space-3) 0 0;
+  max-width: 36ch;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--tm-space-1);
+  margin-top: var(--tm-space-7);
+  padding: var(--tm-space-1);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-studio);
+}
+.tm .tm-segmented button {
+  min-height: calc(var(--tm-control) - var(--tm-space-2));
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-ink-3);
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter), box-shadow var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm .tm-segmented button:hover {
+  color: var(--tm-ink);
+}
+.tm .tm-segmented button:active {
+  transform: scale(0.98);
+}
+.tm .tm-segmented button[aria-pressed="true"] {
+  background: var(--tm-paper);
+  color: var(--tm-ink);
+  box-shadow: var(--tm-shadow-whisper);
+}
+.brand-refinement .tm .tm-segmented button:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink-3);
+}
+.tm-gate-form form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-5);
+  margin-top: var(--tm-space-6);
+}
+.tm-field-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  margin-bottom: var(--tm-space-2);
+}
+.tm-field-top label {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm .tm-field input:not([type="checkbox"]) {
+  width: 100%;
+  height: var(--tm-control);
+  padding: 0 var(--tm-space-4);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-paper);
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1 var(--tm-font-sans);
+  color: var(--tm-ink);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), box-shadow var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm .tm-field input::placeholder {
+  color: var(--tm-ink-3);
+}
+.tm .tm-field input:hover {
+  border-color: var(--tm-ink-3);
+}
+.brand-refinement .tm .tm-field input:not([type="checkbox"]):focus {
+  outline: none;
+  border-color: var(--tm-ink);
+  box-shadow: inset 0 0 0 1px var(--tm-ink);
+}
+.tm .tm-field.is-invalid input:not([type="checkbox"]) {
+  border-color: var(--tm-danger);
+}
+.tm .tm-field-error {
+  margin: var(--tm-space-2) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-danger);
+}
+.tm-password {
+  position: relative;
+  display: block;
+}
+.tm .tm-password input {
+  padding-right: calc(var(--tm-space-8) + var(--tm-space-2));
+}
+.tm .tm-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: var(--tm-space-3);
+  transform: translateY(-50%);
+  padding: var(--tm-space-1) var(--tm-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-xs);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm .tm-password-toggle:hover {
+  color: var(--tm-ink);
+}
+.brand-refinement .tm .tm-password-toggle:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink-3);
+}
+
+/* Checkbox: a flat square whose own border brightens on focus. */
+.tm .tm-check {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  cursor: pointer;
+}
+.tm .tm-check input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.tm-check-box {
+  position: relative;
+  flex: 0 0 auto;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.125rem;
+  border: 1px solid var(--tm-ink-4);
+  border-radius: 5px;
+  background: var(--tm-paper);
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm .tm-check:hover .tm-check-box {
+  border-color: var(--tm-ink-3);
+}
+.tm .tm-check input:checked + .tm-check-box {
+  background: var(--tm-ink);
+  border-color: var(--tm-ink);
+}
+.tm .tm-check input:checked + .tm-check-box::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1.5px;
+  width: 5px;
+  height: 10px;
+  border-right: 1.75px solid var(--tm-paper);
+  border-bottom: 1.75px solid var(--tm-paper);
+  transform: rotate(45deg);
+}
+.tm .tm-check input:focus-visible + .tm-check-box {
+  border-color: var(--tm-ink);
+  box-shadow: inset 0 0 0 1px var(--tm-ink);
+}
+.tm .tm-field.is-invalid .tm-check-box {
+  border-color: var(--tm-danger);
+}
+.tm .tm-gate-submit {
+  width: 100%;
+  margin-top: var(--tm-space-2);
+}
+.tm .tm-gate-submit:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+.tm .tm-gate-switch {
+  margin: var(--tm-space-6) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm .tm-gate-link {
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  font: inherit;
+  font-size: var(--tm-type-ui);
+  color: var(--tm-purple);
+  cursor: pointer;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm .tm-gate-link:hover {
+  border-bottom-color: currentColor;
+}
+.brand-refinement .tm .tm-gate-link:focus-visible {
+  outline: none;
+  border-bottom-color: currentColor;
+  background: var(--tm-wash);
+}
+.tm .tm-gate-preview {
+  margin: var(--tm-space-3) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+
+/* The collection, drifting behind the statement. */
+.tm-floats {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.tm-float {
+  --tm-parallax: 26px;
+  position: absolute;
+  transform: translate(-50%, -50%) rotate(var(--tm-rot));
+  /* Depth: as the light moves, near vials shift more than far ones. */
+  translate: calc(var(--dx, 0) * var(--tm-parallax) * -1) calc(var(--dy, 0) * var(--tm-parallax) * -0.6);
+  transition: translate 1400ms var(--tm-ease-enter);
+  animation: tm-drift var(--tm-cycle) var(--tm-ease-breathe) var(--tm-delay) infinite alternate;
+}
+.tm-float-body {
+  position: relative;
+  display: block;
+  animation: tm-float-in 1400ms var(--tm-ease-enter) calc(var(--tm-i, 0) * 110ms + 250ms) both;
+}
+@keyframes tm-float-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+    filter: blur(6px);
+  }
+}
+.tm-float img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* Light through coloured glass: the label's own colour, behind the vial only. */
+.tm-float-glow {
+  position: absolute;
+  z-index: 0;
+  inset: 12% -24%;
+  border-radius: var(--tm-radius-pill);
+  background: radial-gradient(closest-side, var(--tm-tone), transparent);
+  opacity: 0.32;
+  filter: blur(26px);
+}
+.tm-float-d1 {
+  --tm-parallax: 14px;
+  filter: blur(1px);
+  opacity: 0.88;
+}
+.tm-float-d2 {
+  --tm-parallax: 7px;
+  filter: blur(2.5px);
+  opacity: 0.62;
+}
+/* The way in for a visitor with a vial in hand: verification needs no account. */
+.tm .tm-gate-verify {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--tm-space-2);
+  margin-top: var(--tm-space-3);
+  padding-block: var(--tm-space-1);
+  border-bottom: 1px solid var(--tm-glow-4);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-glow);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), gap var(--tm-dur-base) var(--tm-ease-micro);
+}
+.tm .tm-gate-verify:hover {
+  gap: var(--tm-space-3);
+  border-bottom-color: var(--tm-glow-2);
+}
+.tm .tm-gate-verify:active {
+  color: var(--tm-glow-2);
+}
+.brand-refinement .tm .tm-gate-verify:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-glow);
+}
+@keyframes tm-drift {
+  from {
+    transform: translate(-50%, -50%) rotate(var(--tm-rot)) translateY(calc(var(--tm-space-2) * -1.5));
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(calc(var(--tm-rot) + 3deg)) translateY(calc(var(--tm-space-2) * 1.5));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-gate-statement,
+  .tm-gate-lotline,
+  .tm-gate-form,
+  .tm-float,
+  .tm-float-body {
+    animation: none;
+  }
+  .tm-float {
+    transition: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .tm.tm-gate {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+  /* On a phone the form is the point: the brand band stays short. */
+  .tm-gate-brand {
+    padding: var(--tm-space-5) var(--tm-margin) var(--tm-space-4);
+  }
+  .tm-gate-statement {
+    margin-top: var(--tm-space-6);
+  }
+  .tm .tm-gate-title {
+    font-size: clamp(2rem, 8.4vw, 2.75rem);
+  }
+  .tm .tm-gate-lead,
+  .tm-gate-lotline,
+  .tm-float-d1,
+  .tm-float-d2 {
+    display: none;
+  }
+  /* On a phone one vial drifts at the edge of the band. */
+  .tm-float-d0 {
+    left: 88% !important;
+    top: 46% !important;
+    width: 22% !important;
+  }
+  .tm-gate-trace {
+    margin-inline: calc(var(--tm-margin) * -1);
+    padding-top: var(--tm-space-4);
+  }
+  .tm-gate-panel {
+    padding: var(--tm-space-6) var(--tm-margin) var(--tm-space-8);
+  }
+  .tm-segmented {
+    margin-top: var(--tm-space-5);
+  }
+}

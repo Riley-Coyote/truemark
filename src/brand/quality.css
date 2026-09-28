@@ -1,0 +1,376 @@
+/* Quality: the client's page, in the client's order and words. */
+
+.tm-quality {
+  /* Local tokens. */
+  --tm-hairline: 1px;
+  /*
+   * The opening is composed on the trio photograph, which scales with the
+   * viewport; the headline and lead scale with it so they stay clear of the vials.
+   */
+  --tm-quality-sky: 2.6vw; /* photo's top edge to the eyebrow */
+  --tm-quality-floor: 2.4vw; /* the lead's last line to the photo's bottom edge */
+  --tm-quality-title: clamp(2.75rem, 4.2vw, 4.25rem);
+  --tm-quality-trace-h: 120px; /* the Trace's drawn height, as on the home band */
+  --tm-quality-caption-delay: 1900ms; /* the caption follows the peak, as the Trace's own does */
+  --tm-quality-label-track: 0.14em; /* nano capitals, as the home labels */
+  --tm-quality-title-track: -0.01em; /* Poppins at lead size, as the home certificate's title */
+}
+
+/* Sections that can be linked to land below the sticky header. */
+.tm-quality-process,
+.tm-quality-spec,
+.tm-quality-records {
+  scroll-margin-top: var(--tm-header-height);
+}
+/* A section takes focus on arrival for screen readers; it is not a control, so no ring. */
+:is(.tm-quality-process, .tm-quality-spec, .tm-quality-records):focus {
+  outline: none;
+}
+
+/* ---------- Opening: the trio, with the headline in its headroom ---------- */
+
+.tm-quality-open {
+  --tm-bg: var(--tm-paper);
+  grid-template-rows: auto 1fr auto;
+  padding-block: 0;
+  row-gap: 0;
+}
+.tm-quality-open-photo {
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  margin-inline: calc(var(--tm-pad) * -1);
+  /* The studio floor dissolves into the page. */
+  -webkit-mask-image: linear-gradient(to bottom, var(--tm-ink) 84%, transparent);
+  mask-image: linear-gradient(to bottom, var(--tm-ink) 84%, transparent);
+  animation: tm-appear var(--tm-dur-scene) var(--tm-ease-enter) both;
+}
+.tm-quality-open-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* Set in the photograph's own headroom, above the first pedestal. */
+.tm-quality-open-head {
+  grid-column: 1 / span 6;
+  grid-row: 1;
+  position: relative;
+  z-index: 1;
+  padding-top: var(--tm-quality-sky);
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) both;
+}
+.tm .tm-quality-open-head .tm-eyebrow {
+  margin-bottom: var(--tm-space-4);
+  color: var(--tm-ink-2);
+}
+.tm .tm-quality-open-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-quality-title) / var(--tm-leading-display) var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  color: var(--tm-ink);
+}
+/* The lead stands on the studio floor, hung from the headline's left edge. */
+.tm .tm-quality-open-lead {
+  grid-column: 1 / span 5;
+  grid-row: 3;
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding-bottom: var(--tm-quality-floor);
+  max-width: 44ch;
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.55 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) var(--tm-stagger) both;
+}
+
+/* ---------- Process ---------- */
+
+.tm-quality-process {
+  row-gap: var(--tm-space-8);
+}
+.tm-quality-process-head {
+  grid-column: 1 / span 7;
+}
+.tm-quality-process .tm-track {
+  grid-column: 1 / -1;
+}
+
+/* ---------- Release specification ---------- */
+
+.tm-quality-spec {
+  row-gap: 0;
+  align-items: start;
+}
+.tm-quality-spec-head {
+  grid-column: 1 / span 6;
+  grid-row: 1;
+  position: relative;
+  z-index: 1;
+}
+/* The trace runs under the heading, full bleed; its peak stands over the purity requirement. */
+.tm-quality-trace {
+  position: relative;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin: calc(var(--tm-quality-trace-h) * -0.42) calc(var(--tm-pad) * -1) 0;
+  pointer-events: none;
+}
+.tm-quality-trace:not(.is-visible) :is(.tm-trace-line, .tm-trace-peak) {
+  animation-play-state: paused;
+}
+.tm-quality-trace-caption {
+  position: absolute;
+  top: 30%;
+  left: calc(var(--tm-peak-at) * 100%);
+  transform: translateX(calc(-100% - var(--tm-space-5)));
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-quality-label-track);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--tm-glow-3);
+  opacity: 0;
+}
+.tm-quality-trace.is-visible .tm-quality-trace-caption {
+  animation: tm-quality-caption-in var(--tm-dur-scene) var(--tm-ease-enter) var(--tm-quality-caption-delay) forwards;
+}
+@keyframes tm-quality-caption-in {
+  to {
+    opacity: 1;
+  }
+}
+/* Its first line shares a baseline with the sheet's title. */
+.tm .tm-quality-spec-note {
+  grid-column: 1 / span 5;
+  grid-row: 3;
+  margin-top: var(--tm-space-7);
+  max-width: 44ch;
+}
+
+/* The specification: a paper sheet on the night, like the certificate on the home page. */
+.tm-quality-sheet {
+  grid-column: 7 / -1;
+  grid-row: 3;
+  position: relative;
+  z-index: 1;
+  margin-top: var(--tm-space-4);
+  padding: var(--tm-space-2) var(--tm-space-6) var(--tm-space-4);
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-night);
+  color: var(--tm-ink);
+}
+.tm-quality-sheet table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tm-quality-sheet caption {
+  padding: var(--tm-space-5) 0;
+  text-align: left;
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.2 var(--tm-font-display);
+  letter-spacing: var(--tm-quality-title-track);
+  color: var(--tm-ink);
+}
+.tm-quality-sheet thead th {
+  padding: 0 var(--tm-space-4) var(--tm-space-3) 0;
+  border-bottom: var(--tm-hairline) solid var(--tm-line-strong);
+  text-align: left;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-quality-label-track);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-quality-sheet tbody :is(th, td) {
+  padding: var(--tm-space-4) var(--tm-space-4) var(--tm-space-4) 0;
+  border-bottom: var(--tm-hairline) solid var(--tm-line);
+  text-align: left;
+  vertical-align: baseline;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.35 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-quality-sheet tbody th {
+  color: var(--tm-ink);
+}
+.tm-quality-sheet tbody td:last-child {
+  color: var(--tm-ink);
+  font-variant-numeric: tabular-nums;
+}
+.tm-quality-sheet :is(th, td):last-child {
+  padding-right: 0;
+}
+.tm-quality-sheet tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+/* ---------- Records ---------- */
+
+.tm-quality-records {
+  row-gap: 0;
+  align-items: start;
+}
+.tm-quality-records-photo {
+  grid-column: 1 / span 5;
+  grid-row: 1 / span 2;
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-lilac-100);
+}
+.tm-quality-records-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 58% 50%;
+}
+.tm-quality-records-head {
+  grid-column: 7 / -1;
+  grid-row: 1;
+}
+.tm .tm-quality-files {
+  grid-column: 7 / -1;
+  grid-row: 2;
+  margin: var(--tm-space-7) 0 0;
+}
+.tm-quality-files > div {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  column-gap: var(--tm-gutter);
+  padding-block: var(--tm-space-5);
+  border-top: var(--tm-hairline) solid var(--tm-line-strong);
+}
+.tm-quality-files > div:last-child {
+  border-bottom: var(--tm-hairline) solid var(--tm-line-strong);
+}
+.tm .tm-quality-files dt {
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.3 var(--tm-font-display);
+  letter-spacing: var(--tm-quality-title-track);
+  color: var(--tm-ink);
+}
+.tm .tm-quality-files dd {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+/* A hyphenated word that should not break at its hyphen. */
+.tm-quality-keep {
+  white-space: nowrap;
+}
+
+/* The client's closing lines. */
+.tm-quality-close {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--tm-space-6) var(--tm-space-8);
+  margin-top: var(--tm-space-9);
+  padding-top: var(--tm-space-7);
+  border-top: var(--tm-hairline) solid var(--tm-line);
+}
+.tm .tm-quality-close-line {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-h2) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+}
+.tm .tm-quality-close-line span {
+  color: var(--tm-ink-3);
+}
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 1100px) {
+  .tm-quality-open {
+    grid-template-rows: none;
+    padding-top: var(--tm-space-7);
+  }
+  .tm-quality-open-head,
+  .tm .tm-quality-open-lead {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    padding: 0;
+  }
+  .tm .tm-quality-open-lead {
+    margin-top: var(--tm-space-5);
+  }
+  .tm-quality-open-photo {
+    grid-row: auto;
+    margin-top: var(--tm-space-6);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, var(--tm-ink) 10%, var(--tm-ink) 84%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, var(--tm-ink) 10%, var(--tm-ink) 84%, transparent);
+  }
+  .tm-quality-spec-head,
+  .tm .tm-quality-spec-note,
+  .tm-quality-trace,
+  .tm-quality-sheet {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .tm .tm-quality-spec-note {
+    margin-top: var(--tm-space-5);
+  }
+  .tm-quality-trace {
+    margin-top: var(--tm-space-5);
+  }
+  .tm-quality-sheet {
+    margin-top: var(--tm-space-2);
+  }
+}
+@media (max-width: 960px) {
+  .tm-quality-process-head {
+    grid-column: 1 / -1;
+  }
+  .tm-quality-records-photo,
+  .tm-quality-records-head,
+  .tm .tm-quality-files,
+  .tm-quality-close {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .tm-quality-records-photo {
+    aspect-ratio: 4 / 3;
+    margin-bottom: var(--tm-space-7);
+  }
+  /* The ledger's last rule already closes the list; one line is enough. */
+  .tm-quality-close {
+    margin-top: var(--tm-space-8);
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+@media (max-width: 640px) {
+  /* Closer on the three vials, keeping every pedestal whole. */
+  .tm-quality-open-photo img {
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+  .tm-quality-sheet {
+    padding-inline: var(--tm-space-5);
+  }
+  .tm-quality-files > div {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--tm-space-2);
+  }
+  .tm-quality-close {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* ---------- Motion preferences ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-quality-open-photo,
+  .tm-quality-open-head,
+  .tm .tm-quality-open-lead {
+    animation: none;
+  }
+  .tm-quality-trace-caption,
+  .tm-quality-trace.is-visible .tm-quality-trace-caption {
+    opacity: 1;
+    animation: none;
+  }
+}

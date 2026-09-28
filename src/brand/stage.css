@@ -1,0 +1,77 @@
+/* The product on its plinth. Placement comes from scripts/stage-vials.py ("product-stage"). */
+
+.tm-pstage {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--tm-radius-xl);
+  background: var(--tm-lilac-100);
+}
+.tm-pstage-world {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 40%;
+  transition: transform 900ms var(--tm-ease-enter);
+}
+/* Label detail: move in on the label, plinth and all. */
+.tm-pstage.is-zoomed .tm-pstage-world {
+  transform: scale(1.9);
+}
+.tm-pstage-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+.tm-pstage-vial {
+  position: absolute;
+  left: 30.68%;
+  top: 12.52%;
+  width: 38.63%;
+  aspect-ratio: 578 / 1103;
+}
+.tm-pstage-vial img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  user-select: none;
+}
+.tm-pstage-vial img.is-prev {
+  opacity: 1;
+  z-index: 1;
+  animation: tm-vial-lift var(--tm-dur-slow) var(--tm-ease-enter) forwards;
+}
+.tm-pstage-vial img.is-active {
+  opacity: 1;
+  z-index: 2;
+  animation: tm-vial-settle 700ms var(--tm-ease-enter) both;
+}
+/* The chosen size is set down on the plinth; the last one leaves. */
+@keyframes tm-vial-settle {
+  from {
+    opacity: 0;
+    transform: translateY(-2.5%);
+  }
+}
+@keyframes tm-vial-lift {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-pstage-world {
+    transition: none;
+  }
+  .tm-pstage-vial img.is-active,
+  .tm-pstage-vial img.is-prev {
+    animation: none;
+  }
+  .tm-pstage-vial img.is-prev {
+    opacity: 0;
+  }
+}

@@ -1,0 +1,914 @@
+/*
+ * Partners who feel every sale: the sale toast, the alerts bell, momentum on the
+ * overview (goal, milestones, sample levels), alert preferences and the previews
+ * of what a partner receives. Built on the kit's studio theme tokens; the brand
+ * gradient appears only as light (the toast's glow and the logo's dot).
+ */
+
+/* Local measures (named in the report). */
+.kit {
+  --pp-toast-width: 22rem;
+  --pp-toast-figure: 3rem;
+  --pp-glow-blur: 12px;
+  --pp-glow-rest: 0.38;
+  --pp-glow-peak: 0.72;
+  --pp-meter: 0.125rem;
+  --pp-mark: 0.625rem;
+  --pp-node: 0.625rem;
+  --pp-node-halo: 0.1875rem;
+  --pp-row-line: 1.25rem;
+  --pp-count: 1rem;
+  --pp-count-ring: 0.125rem;
+  --pp-bell-panel: 25rem;
+  --pp-bell-max: 34rem;
+  --pp-channel-col: 6rem;
+  --pp-field-min: 11rem;
+  --pp-sms-max: 30rem;
+}
+
+/* ---------- The sale moment ---------- */
+
+.pp-toasts {
+  position: fixed;
+  z-index: 52;
+  top: calc(var(--kit-offset) + var(--kit-topbar) + var(--tm-space-4));
+  right: var(--kit-pad);
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-3);
+  width: min(var(--pp-toast-width), calc(100vw - var(--kit-pad) * 2));
+  pointer-events: none;
+}
+.pp-toast {
+  position: relative;
+  padding: var(--tm-space-4) var(--tm-space-4) var(--tm-space-5) var(--tm-space-5);
+  border: 1px solid var(--kit-line);
+  border-radius: var(--tm-radius-md);
+  background: var(--kit-panel);
+  box-shadow: var(--kit-edge), var(--kit-shadow);
+  pointer-events: auto;
+  animation: pp-toast-rise var(--tm-dur-slow) var(--tm-ease-enter) both;
+}
+.pp-toast-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-3);
+}
+.kit .pp-toast-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-display);
+  color: var(--kit-ink);
+}
+.kit .pp-toast-close {
+  width: calc(var(--kit-control) - var(--tm-space-2));
+  height: calc(var(--kit-control) - var(--tm-space-2));
+  margin: calc(var(--tm-space-1) * -1) calc(var(--tm-space-1) * -1) calc(var(--tm-space-1) * -1) 0;
+}
+.kit .pp-toast-close svg {
+  width: var(--tm-space-4);
+  height: var(--tm-space-4);
+}
+.kit .pp-toast-figure {
+  margin-top: var(--tm-space-4);
+  font: var(--tm-weight-light) var(--pp-toast-figure) / 1 var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--kit-ink);
+  white-space: nowrap;
+}
+.pp-toast-figure small {
+  margin-left: 0.04em;
+  font-size: 0.5em;
+  letter-spacing: 0;
+  color: var(--kit-ink-3);
+}
+/* The final figure holds the space; the live one counts over it. */
+.pp-toast-count {
+  position: relative;
+  display: inline-grid;
+  isolation: isolate;
+}
+.pp-toast-final,
+.pp-toast-live {
+  grid-area: 1 / 1;
+}
+.pp-toast-final {
+  visibility: hidden;
+}
+/* The one place the portal lets light in: the brand gradient, blurred, beneath the figure. */
+.pp-toast-glow {
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--tm-space-3) * -1);
+  height: var(--tm-space-4);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-gradient);
+  filter: blur(var(--pp-glow-blur));
+  opacity: var(--pp-glow-rest);
+  animation: pp-glow var(--tm-dur-shimmer) var(--tm-ease-enter) both;
+}
+.pp-toast-earned {
+  margin-left: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  letter-spacing: 0;
+  color: var(--kit-ink-3);
+}
+.kit .pp-toast-line {
+  margin-top: var(--tm-space-4);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+.pp-toast-line .kit-mono {
+  color: var(--kit-ink);
+}
+.kit .pp-toast-link {
+  margin-top: var(--tm-space-3);
+}
+
+/* ---------- Alerts: the bell and its panel ---------- */
+
+.pp-bell {
+  position: relative;
+  display: inline-flex;
+}
+.kit .pp-bell-button {
+  position: relative;
+}
+.kit .pp-bell-button[aria-expanded="true"] {
+  color: var(--kit-ink);
+  border-color: var(--kit-line-strong);
+  background: var(--kit-wash);
+}
+.kit .pp-bell-button[aria-expanded="true"]:focus-visible {
+  border-color: var(--kit-focus);
+}
+.pp-bell-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  min-width: var(--pp-count);
+  height: var(--pp-count);
+  padding-inline: var(--tm-space-1);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-primary);
+  box-shadow: 0 0 0 var(--pp-count-ring) var(--kit-bg);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-display);
+  color: var(--kit-primary-ink);
+  pointer-events: none;
+}
+.pp-bell-count[data-rang="true"] {
+  animation: pp-pop var(--tm-dur-slow) var(--tm-ease-micro);
+}
+
+.pp-bell-panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + var(--tm-space-2));
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  width: var(--pp-bell-panel);
+  max-height: min(var(--pp-bell-max), calc(100dvh - var(--kit-offset) - var(--kit-topbar) - var(--tm-space-6)));
+  border: 1px solid var(--kit-line-strong);
+  border-radius: var(--tm-radius-md);
+  background: var(--kit-panel);
+  box-shadow: var(--kit-edge), var(--kit-shadow);
+  color: var(--kit-ink);
+  animation: kit-drop var(--tm-dur-base) var(--tm-ease-enter);
+}
+.pp-bell-panel:focus {
+  outline: none;
+}
+.pp-bell-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+  padding: var(--tm-space-4) var(--tm-space-5) var(--tm-space-3);
+  border-bottom: 1px solid var(--kit-line);
+}
+.pp-bell-unread {
+  margin-right: auto;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.kit .pp-bell-markall {
+  font-size: var(--tm-type-micro);
+}
+.pp-bell-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.pp-notice {
+  display: grid;
+  grid-template-columns: var(--tm-space-4) minmax(0, 1fr) auto;
+  column-gap: var(--tm-space-3);
+  padding: var(--tm-space-3) var(--tm-space-5) var(--tm-space-3) var(--tm-space-4);
+  border: 1px solid transparent;
+  border-bottom-color: var(--kit-line);
+  color: var(--kit-ink);
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.pp-bell-list li:last-child .pp-notice {
+  border-bottom-color: transparent;
+}
+.pp-notice:hover {
+  background: var(--kit-wash);
+}
+.pp-notice:active {
+  background: var(--kit-wash-strong);
+}
+.pp-notice:focus-visible {
+  border-color: var(--kit-focus);
+}
+.pp-notice-mark {
+  display: flex;
+  justify-content: center;
+  padding-top: calc((var(--pp-row-line) - var(--kit-dot)) / 2);
+}
+.pp-notice-text {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--tm-space-1) / 2);
+  min-width: 0;
+}
+.pp-notice-title {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--pp-row-line) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+.pp-notice[data-unread="true"] .pp-notice-title {
+  color: var(--kit-ink);
+}
+.pp-notice-body {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.pp-notice-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: calc(var(--tm-space-1) / 2);
+  text-align: right;
+}
+.pp-notice-amount {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--pp-row-line) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.pp-notice-time {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+  white-space: nowrap;
+}
+.kit .pp-bell-empty {
+  padding: var(--tm-space-6) var(--tm-space-5);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.pp-bell-foot {
+  flex: none;
+  padding: var(--tm-space-3) var(--tm-space-5) var(--tm-space-4);
+  border-top: 1px solid var(--kit-line);
+}
+
+/* ---------- Momentum on the overview ---------- */
+
+.pp-momentum .kit-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* A thin line filled to a share; its tip is a dot, lit with the logo's gradient once complete. */
+.pp-meter {
+  position: relative;
+  display: block;
+  height: var(--pp-meter);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-wash-strong);
+}
+.pp-meter-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(var(--pp-fill) * 100%);
+  border-radius: inherit;
+  background: var(--kit-ink);
+  transition: width var(--tm-dur-scene) var(--tm-ease-enter);
+}
+.pp-meter-fill::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(var(--pp-node) / -2);
+  width: var(--pp-node);
+  height: var(--pp-node);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-ink);
+  box-shadow: 0 0 0 var(--pp-node-halo) var(--kit-panel);
+  transform: translateY(-50%);
+}
+.pp-meter[data-lit="true"] .pp-meter-fill::after {
+  background: var(--tm-gradient);
+}
+.pp-meter-mark {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--pp-at) * 100%);
+  width: 1px;
+  height: var(--pp-mark);
+  background: var(--kit-ink-2);
+  box-shadow: 0 0 0 1px var(--kit-panel);
+  transform: translate(-50%, -50%);
+}
+
+.kit .pp-goal-figure {
+  margin-top: var(--tm-space-2);
+}
+.pp-goal-of {
+  margin-left: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  letter-spacing: 0;
+  color: var(--kit-ink-3);
+}
+.pp-goal .pp-meter {
+  margin: var(--tm-space-6) calc(var(--pp-node) / 2) 0 0;
+}
+.kit .pp-goal-status {
+  margin-top: var(--tm-space-5);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+.kit .pp-goal-best {
+  display: flex;
+  align-items: baseline;
+  gap: var(--tm-space-2);
+  margin: var(--tm-space-1) 0 var(--tm-space-5);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.pp-goal-best-mark {
+  flex: none;
+  width: 1px;
+  height: var(--pp-mark);
+  background: var(--kit-ink-2);
+}
+.kit .pp-momentum .pp-card-link {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+/* Milestones and levels: a short vertical trail, one node per step. */
+.pp-miles li,
+.pp-ladder li {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tm-space-5) minmax(0, 1fr) auto;
+  column-gap: var(--tm-space-2);
+  align-items: start;
+  padding-bottom: var(--tm-space-4);
+}
+.pp-miles li:last-child,
+.pp-ladder li:last-child {
+  padding-bottom: 0;
+}
+.pp-miles li::before,
+.pp-ladder li::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--pp-node) / 2 - 0.5px);
+  top: calc(var(--pp-row-line) / 2);
+  bottom: calc(var(--pp-row-line) / -2);
+  width: 1px;
+  background: var(--kit-line-strong);
+}
+.pp-miles li:last-child::before,
+.pp-ladder li:last-child::before {
+  display: none;
+}
+.pp-miles li[data-joined="true"]::before {
+  background: var(--kit-ink);
+}
+.pp-mile-node,
+.pp-ladder-node {
+  position: relative;
+  z-index: 1;
+  grid-row: 1;
+  width: var(--pp-node);
+  height: var(--pp-node);
+  margin-top: calc((var(--pp-row-line) - var(--pp-node)) / 2);
+  border: 1px solid var(--kit-ink-4);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-panel);
+}
+/* Reached: the logo's dot. */
+.pp-miles li[data-state="reached"] .pp-mile-node {
+  border: 0;
+  background: var(--tm-gradient);
+  box-shadow: 0 0 0 var(--pp-node-halo) var(--kit-panel);
+}
+.pp-miles li[data-state="next"] .pp-mile-node {
+  border-color: var(--kit-ink-2);
+}
+.pp-mile-title {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--pp-row-line) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.pp-miles li[data-state="ahead"] .pp-mile-title {
+  color: var(--kit-ink-3);
+}
+.pp-mile-date {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--pp-row-line) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+  white-space: nowrap;
+}
+.pp-mile-far {
+  grid-column: 2 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-2);
+  margin-top: var(--tm-space-3);
+}
+.pp-mile-far .pp-meter {
+  margin-right: calc(var(--pp-node) / 2);
+}
+.pp-mile-far-text {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+
+.pp-levels .kit-card-head {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+.pp-levels .kit-card-meta {
+  white-space: normal;
+}
+.pp-ladder li {
+  row-gap: var(--tm-space-1);
+  padding-bottom: var(--tm-space-5);
+}
+/* The way from the current level to the next fills with ink as referred orders add up. */
+.pp-ladder li[data-state="current"]::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--pp-node) / 2 - 0.5px);
+  top: calc(var(--pp-row-line) / 2);
+  width: 1px;
+  height: calc(var(--pp-fill) * 100%);
+  background: var(--kit-ink);
+  transition: height var(--tm-dur-scene) var(--tm-ease-enter);
+}
+.pp-ladder li:last-child::after {
+  display: none;
+}
+.pp-ladder li[data-state="current"] .pp-ladder-node,
+.pp-ladder li[data-state="passed"] .pp-ladder-node {
+  border-color: var(--kit-ink);
+  background: var(--kit-ink);
+}
+.pp-ladder li[data-state="passed"]::before {
+  background: var(--kit-ink);
+}
+.pp-ladder-name {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--pp-row-line) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.pp-ladder li[data-state="ahead"] .pp-ladder-name {
+  color: var(--kit-ink-2);
+}
+.pp-ladder-rate {
+  font: var(--tm-weight-light) var(--tm-type-lead) / var(--pp-row-line) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--kit-ink);
+}
+.pp-ladder li[data-state="ahead"] .pp-ladder-rate {
+  color: var(--kit-ink-3);
+}
+.pp-ladder-note {
+  grid-column: 2 / -1;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+
+/* ---------- Settings: goal, alert preferences ---------- */
+
+.kit .pp-setting-lead {
+  margin-bottom: var(--tm-space-4);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.pp-field {
+  min-width: 0;
+}
+.pp-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-3);
+}
+.pp-field-row .pp-input {
+  flex: 1 1 var(--pp-field-min);
+  min-width: 0;
+}
+.pp-field-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-2) var(--tm-space-4);
+}
+.pp-saved {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+
+.pp-input {
+  display: flex;
+  align-items: center;
+  height: var(--kit-control);
+  padding-inline: var(--tm-space-4);
+  border: 1px solid var(--kit-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-field);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.pp-input:hover {
+  border-color: var(--kit-ink-4);
+}
+.pp-input:active {
+  background: var(--kit-wash);
+}
+.pp-input:focus-within {
+  border-color: var(--kit-focus);
+  background: var(--kit-field);
+}
+.pp-input[data-invalid="true"] {
+  border-color: var(--kit-tone-danger);
+}
+.pp-input[data-disabled="true"] {
+  opacity: 0.4;
+}
+.pp-input-prefix {
+  margin-right: var(--tm-space-1);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.pp-input input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--kit-ink);
+}
+.pp-input input::placeholder {
+  color: var(--kit-ink-3);
+  opacity: 1;
+}
+.pp-input input:disabled {
+  cursor: not-allowed;
+}
+
+/* A link that brings the partner here (the bell's "Alert preferences", the goal card's
+   "Set your goal") lands the section or field below the sticky bars, not under them. */
+.pp-alerts,
+.pp-field input {
+  scroll-margin-top: calc(var(--kit-offset) + var(--kit-topbar) + var(--tm-space-5));
+}
+.pp-alerts:focus {
+  outline: none;
+}
+.pp-alerts:focus-visible {
+  border-color: var(--kit-focus);
+}
+.pp-prefs {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.pp-prefs th,
+.pp-prefs td {
+  padding: var(--tm-space-3) 0;
+  border-top: 1px solid var(--kit-line);
+  text-align: center;
+  vertical-align: middle;
+}
+.pp-prefs thead th {
+  width: var(--pp-channel-col);
+  padding-top: var(--tm-space-1);
+  border-top: 0;
+  font: var(--tm-weight-medium) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-display);
+  color: var(--kit-ink-3);
+  white-space: nowrap;
+}
+.pp-prefs thead th:first-child {
+  width: auto;
+}
+.pp-prefs tbody th {
+  padding-right: var(--tm-space-4);
+  text-align: left;
+  font-weight: var(--tm-weight-regular);
+}
+.pp-prefs-event {
+  display: block;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.pp-prefs-hint {
+  display: block;
+  margin-top: var(--tm-space-1);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.pp-prefs-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--tm-space-2);
+  min-width: var(--kit-control);
+  min-height: var(--kit-control);
+  cursor: pointer;
+}
+.pp-prefs-cell[data-disabled="true"] {
+  cursor: not-allowed;
+}
+.pp-prefs-channel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+.pp-phone {
+  margin-top: var(--tm-space-3);
+  padding-top: var(--tm-space-5);
+  border-top: 1px solid var(--kit-line);
+}
+.pp-alert-notes {
+  margin-top: var(--tm-space-5);
+}
+.pp-alert-notes li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--tm-space-3);
+  padding-block: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.pp-alert-notes li::before {
+  content: "";
+  flex: none;
+  width: var(--tm-space-1);
+  height: var(--tm-space-1);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-ink-4);
+  transform: translateY(-0.15em);
+}
+
+/* ---------- What you'll receive ---------- */
+
+.pp-receive .kit-card-head {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+.pp-receive .kit-card-meta {
+  white-space: normal;
+}
+.pp-receive-body {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  gap: var(--tm-space-5) var(--tm-gutter);
+  align-items: start;
+}
+.pp-inbox {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--kit-line);
+  border-radius: var(--tm-radius-md);
+}
+.pp-inbox-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-1);
+  padding: var(--tm-space-3) var(--tm-space-4);
+  border: 1px solid transparent;
+  border-bottom-color: var(--kit-line);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.pp-inbox-item:last-child {
+  border-bottom-color: transparent;
+}
+.pp-inbox-item:hover {
+  background: var(--kit-wash);
+}
+.pp-inbox-item:active {
+  background: var(--kit-wash-strong);
+}
+.pp-inbox-item[aria-pressed="true"] {
+  background: var(--kit-bg);
+  box-shadow: inset var(--pp-meter) 0 0 var(--kit-ink);
+}
+.pp-inbox-item:focus-visible {
+  border-color: var(--kit-focus);
+}
+.pp-inbox-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--tm-space-3);
+}
+.pp-inbox-label {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+.pp-inbox-item[aria-pressed="true"] .pp-inbox-label {
+  color: var(--kit-ink);
+}
+.pp-inbox-channel {
+  flex: none;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.pp-inbox-subject {
+  overflow: hidden;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pp-receive-view {
+  min-width: 0;
+}
+.pp-receive-view .tm-sms {
+  max-width: var(--pp-sms-max);
+}
+
+/* ---------- Motion (the kit stops all of it under reduced motion; base styles are the final state) ---------- */
+
+@keyframes pp-toast-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--tm-space-3));
+  }
+}
+@keyframes pp-glow {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
+  45% {
+    opacity: var(--pp-glow-peak);
+    transform: scaleX(1.04);
+  }
+  100% {
+    opacity: var(--pp-glow-rest);
+    transform: none;
+  }
+}
+
+/* ---------- Narrow fields ---------- */
+
+@media (max-width: 75rem) {
+  .pp-receive-body {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+}
+
+/* Below 900px the shell's menu bar replaces the top bar. */
+@media (max-width: 56.25rem) {
+  .pp-alerts,
+  .pp-field input {
+    scroll-margin-top: calc(var(--kit-offset) + var(--kit-mbar) + var(--tm-space-5));
+  }
+  .pp-toasts {
+    top: calc(var(--kit-offset) + var(--kit-mbar) + var(--tm-space-3));
+    left: var(--kit-pad);
+    right: var(--kit-pad);
+    width: auto;
+  }
+  .kit-mbar .pp-bell {
+    position: static;
+  }
+  .kit-mbar .pp-bell-panel {
+    z-index: 2;
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: auto;
+    max-height: calc(100dvh - var(--kit-offset) - var(--kit-mbar));
+    border-width: 0 0 1px;
+    border-radius: 0 0 var(--tm-radius-md) var(--tm-radius-md);
+  }
+  .kit-mbar .pp-bell-head,
+  .kit-mbar .pp-bell-foot {
+    padding-inline: var(--kit-pad);
+  }
+  .kit-mbar .pp-notice {
+    padding-inline: calc(var(--kit-pad) - var(--tm-space-1)) var(--kit-pad);
+  }
+  .pp-receive-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 45rem) {
+  .kit .pp-toast-figure {
+    margin-top: var(--tm-space-3);
+  }
+  .pp-alerts .kit-card-head {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+  .pp-alerts .kit-card-meta {
+    white-space: normal;
+  }
+}
+
+/*
+ * The card's own width decides these, not the window's: a momentum card or the
+ * preferences card can be narrow on a wide screen, beside its neighbours.
+ */
+.pp-momentum .kit-card-body,
+.pp-alerts .kit-card-body {
+  container-type: inline-size;
+}
+
+/* A narrow momentum card: dates and rates move under their titles. */
+@container (max-width: 16rem) {
+  .pp-miles li {
+    grid-template-columns: var(--tm-space-5) minmax(0, 1fr);
+  }
+  .pp-mile-date {
+    grid-column: 2;
+  }
+}
+
+/* A narrow preferences card: each alert takes its own row, its channels named beside their boxes. */
+@container (max-width: 32rem) {
+  .pp-prefs,
+  .pp-prefs tbody,
+  .pp-prefs tr,
+  .pp-prefs th,
+  .pp-prefs td {
+    display: block;
+  }
+  .pp-prefs thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .pp-prefs tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--tm-space-5);
+    padding-block: var(--tm-space-4) var(--tm-space-2);
+    border-top: 1px solid var(--kit-line);
+  }
+  .pp-prefs tbody tr:first-child {
+    border-top: 0;
+    padding-top: var(--tm-space-2);
+  }
+  .pp-prefs th,
+  .pp-prefs td {
+    padding: 0;
+    border: 0;
+  }
+  .pp-prefs tbody th {
+    flex: 1 0 100%;
+    padding: 0 0 var(--tm-space-1);
+  }
+  .pp-prefs-cell {
+    justify-content: flex-start;
+  }
+  .pp-prefs-channel {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+    color: var(--kit-ink-2);
+  }
+  .pp-prefs-cell[data-disabled="true"] .pp-prefs-channel {
+    color: var(--kit-ink-3);
+  }
+}

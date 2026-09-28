@@ -1,0 +1,389 @@
+/*
+ * A path a lot travels, in the home page's paper-trail language: stations on a
+ * hairline, and the logo's dot travelling it. Horizontal on wide screens, down
+ * the page on phones. Themes: paper (default) and night.
+ */
+
+.tm-track {
+  /* Local tokens. */
+  --tm-hairline: 1px;
+  --tm-track-node: 0.6875rem; /* a station, as on the home trail */
+  --tm-track-halo: 3px; /* ground-coloured ring that lifts the dot off the line */
+  --tm-track-leg: 720ms; /* one leg: travel for two thirds, hold at the station for one */
+  --tm-track-lead-in: 500ms; /* the pause before the dot sets off */
+  --tm-track-fade: 16%; /* the hairline fades over this share of its length at the page edge */
+  --tm-track-label-track: 0.14em; /* nano capitals, as the home labels */
+  --tm-track-title-track: -0.01em; /* Poppins at lead size, as the home trail's steps */
+
+  /* Paper theme. */
+  --tm-track-ground: var(--tm-paper);
+  --tm-track-line: var(--tm-line-strong);
+  --tm-track-rest: var(--tm-ink-4);
+  --tm-track-lit: var(--tm-ink);
+  --tm-track-signal: var(--tm-signal);
+  --tm-track-kicker: var(--tm-ink-3);
+  --tm-track-title: var(--tm-ink-3);
+  --tm-track-title-lit: var(--tm-ink);
+  --tm-track-text: var(--tm-ink-2);
+
+  position: relative;
+}
+.tm-track-night {
+  --tm-track-ground: var(--tm-night);
+  --tm-track-line: var(--tm-night-line);
+  --tm-track-rest: var(--tm-glow-4);
+  --tm-track-lit: var(--tm-glow);
+  --tm-track-signal: var(--tm-signal-night);
+  --tm-track-kicker: var(--tm-glow-3);
+  --tm-track-title: var(--tm-glow-3);
+  --tm-track-title-lit: var(--tm-glow);
+  --tm-track-text: var(--tm-glow-2);
+}
+
+/* ---------- The hairline ---------- */
+
+.tm-track::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--tm-track-node) / 2);
+  height: var(--tm-hairline);
+}
+/* Onward: from the first station out past the page edge, as on the home trail. */
+.tm-track-from-end::before {
+  left: calc(var(--tm-track-node) / 2);
+  right: calc(var(--tm-pad) * -1);
+  background: linear-gradient(90deg, var(--tm-track-line) calc(100% - var(--tm-track-fade)), transparent);
+}
+/* Arriving: in from the page edge, ending at the last station. */
+.tm-track-from-start::before {
+  left: calc(var(--tm-pad) * -1);
+  right: calc(
+    100% - (100% + var(--tm-gutter)) * (var(--tm-track-stops) - 1) / var(--tm-track-stops) -
+      var(--tm-track-node) / 2
+  );
+  background: linear-gradient(90deg, transparent, var(--tm-track-line) var(--tm-track-fade));
+}
+
+/* ---------- Stations ---------- */
+
+.tm-track-stops {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--tm-track-stops), minmax(0, 1fr));
+  gap: var(--tm-gutter);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-track-stop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.tm-track-node {
+  flex: none;
+  width: var(--tm-track-node);
+  height: var(--tm-track-node);
+  margin-bottom: var(--tm-space-5);
+  border: var(--tm-hairline) solid var(--tm-track-rest);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-track-ground);
+}
+.tm-track-kicker {
+  margin-bottom: var(--tm-space-3);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label-track);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-track-kicker);
+}
+.tm .tm-track-title {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.2 var(--tm-font-display);
+  letter-spacing: var(--tm-track-title-track);
+  color: var(--tm-track-title);
+  text-wrap: balance;
+}
+.tm .tm-track-text {
+  margin: var(--tm-space-3) 0 0;
+  max-width: var(--tm-measure-tight);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-track-text);
+  text-wrap: pretty;
+}
+
+/* ---------- The lot, travelling ---------- */
+
+.tm-track-progress {
+  position: absolute;
+  z-index: 2;
+  top: calc(var(--tm-track-node) / 2);
+  left: calc(var(--tm-track-node) / 2);
+  width: 0;
+  height: var(--tm-hairline);
+  background: var(--tm-track-lit);
+}
+/* The lot itself: the logo's dot, lit by the brand gradient. */
+.tm-track-progress::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(var(--tm-track-node) * -0.5 - var(--tm-hairline));
+  width: calc(var(--tm-track-node) + var(--tm-hairline) * 2);
+  height: calc(var(--tm-track-node) + var(--tm-hairline) * 2);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-gradient);
+  box-shadow: 0 0 0 var(--tm-track-halo) var(--tm-track-ground);
+  transform: translateY(-50%) scale(0);
+}
+.tm-track.is-visible .tm-track-progress {
+  animation-duration: calc(var(--tm-track-leg) * (var(--tm-track-stops) - 1));
+  animation-timing-function: var(--tm-ease-breathe);
+  animation-delay: var(--tm-track-lead-in);
+  animation-fill-mode: forwards;
+}
+.tm-track-5.is-visible .tm-track-progress {
+  animation-name: tm-track-run-5;
+}
+.tm-track-3.is-visible .tm-track-progress {
+  animation-name: tm-track-run-3;
+}
+.tm-track.is-visible .tm-track-progress::after {
+  animation: tm-track-tip var(--tm-dur-slow) var(--tm-ease-micro) calc(var(--tm-track-lead-in) - var(--tm-dur-base)) forwards;
+}
+/* A station lights as the lot arrives: each leg travels for two thirds of its time. */
+.tm-track.is-visible :is(.tm-track-node, .tm-track-title) {
+  animation-duration: var(--tm-dur-slow);
+  animation-timing-function: var(--tm-ease-enter);
+  animation-delay: calc(var(--tm-track-lead-in) + var(--tm-i) * var(--tm-track-leg) - var(--tm-track-leg) / 3);
+  animation-fill-mode: forwards;
+}
+.tm-track.is-visible .tm-track-node {
+  animation-name: tm-track-lit;
+}
+.tm-track.is-visible .tm-track-title {
+  animation-name: tm-track-title-lit;
+}
+.tm-track.is-visible .tm-track-stop:first-child :is(.tm-track-node, .tm-track-title) {
+  animation-delay: var(--tm-track-lead-in);
+}
+/* Release is the moment a lot is verified: its station takes the signal green. */
+.tm-track.is-visible .is-release .tm-track-node {
+  animation-name: tm-track-released;
+}
+
+/*
+ * Legs: travel for two thirds of a leg, then hold. Stations sit at the start of
+ * equal columns (gap included), so station k lies at k/n of the track plus k/n of a gap.
+ */
+@keyframes tm-track-run-5 {
+  0% {
+    width: 0;
+  }
+  16.667%,
+  25% {
+    width: calc((100% + var(--tm-gutter)) / 5);
+  }
+  41.667%,
+  50% {
+    width: calc((100% + var(--tm-gutter)) * 2 / 5);
+  }
+  66.667%,
+  75% {
+    width: calc((100% + var(--tm-gutter)) * 3 / 5);
+  }
+  91.667%,
+  100% {
+    width: calc((100% + var(--tm-gutter)) * 4 / 5);
+  }
+}
+@keyframes tm-track-run-3 {
+  0% {
+    width: 0;
+  }
+  33.333%,
+  50% {
+    width: calc((100% + var(--tm-gutter)) / 3);
+  }
+  83.333%,
+  100% {
+    width: calc((100% + var(--tm-gutter)) * 2 / 3);
+  }
+}
+@keyframes tm-track-tip {
+  to {
+    transform: translateY(-50%) scale(1);
+  }
+}
+@keyframes tm-track-lit {
+  to {
+    background-color: var(--tm-track-lit);
+    border-color: var(--tm-track-lit);
+  }
+}
+@keyframes tm-track-released {
+  to {
+    background-color: var(--tm-track-signal);
+    border-color: var(--tm-track-signal);
+  }
+}
+@keyframes tm-track-title-lit {
+  to {
+    color: var(--tm-track-title-lit);
+  }
+}
+
+/* ---------- Phones: the track runs down the page ---------- */
+
+@media (max-width: 960px) {
+  .tm-track {
+    /* The station sits on the centre of the first line beside it. */
+    --tm-track-first: calc(var(--tm-type-lead) * 1.2);
+    --tm-track-inset: calc((var(--tm-track-first) - var(--tm-track-node)) / 2);
+  }
+  .tm-track.has-kicker {
+    --tm-track-first: var(--tm-type-nano);
+  }
+  .tm-track::before {
+    left: calc(var(--tm-track-node) / 2);
+    width: var(--tm-hairline);
+    height: auto;
+  }
+  .tm-track-from-end::before {
+    top: calc(var(--tm-track-inset) + var(--tm-track-node) / 2);
+    right: auto;
+    bottom: 0;
+    background: linear-gradient(to bottom, var(--tm-track-line) calc(100% - var(--tm-track-fade)), transparent);
+  }
+  .tm-track-from-start::before {
+    top: calc(var(--tm-space-7) * -1);
+    right: auto;
+    bottom: calc(100% / var(--tm-track-stops) - var(--tm-track-inset) - var(--tm-track-node) / 2);
+    background: linear-gradient(to bottom, transparent, var(--tm-track-line) var(--tm-track-fade));
+  }
+  .tm-track-stops {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 0;
+  }
+  .tm-track-stop {
+    display: grid;
+    grid-template-columns: var(--tm-track-node) minmax(0, 1fr);
+    column-gap: var(--tm-space-4);
+    align-content: start;
+    padding-bottom: var(--tm-space-6);
+  }
+  .tm-track-stop > * {
+    grid-column: 2;
+  }
+  .tm-track-stop > .tm-track-node {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    margin: var(--tm-track-inset) 0 0;
+  }
+  .tm-track-progress {
+    top: calc(var(--tm-track-inset) + var(--tm-track-node) / 2);
+    width: var(--tm-hairline);
+    height: 0;
+  }
+  .tm-track-progress::after {
+    top: auto;
+    right: auto;
+    bottom: calc(var(--tm-track-node) * -0.5 - var(--tm-hairline));
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+  }
+  .tm-track-5.is-visible .tm-track-progress {
+    animation-name: tm-track-run-5-down;
+  }
+  .tm-track-3.is-visible .tm-track-progress {
+    animation-name: tm-track-run-3-down;
+  }
+  .tm-track.is-visible .tm-track-progress::after {
+    animation-name: tm-track-tip-down;
+  }
+}
+@keyframes tm-track-run-5-down {
+  0% {
+    height: 0;
+  }
+  16.667%,
+  25% {
+    height: calc(100% / 5);
+  }
+  41.667%,
+  50% {
+    height: calc(100% * 2 / 5);
+  }
+  66.667%,
+  75% {
+    height: calc(100% * 3 / 5);
+  }
+  91.667%,
+  100% {
+    height: calc(100% * 4 / 5);
+  }
+}
+@keyframes tm-track-run-3-down {
+  0% {
+    height: 0;
+  }
+  33.333%,
+  50% {
+    height: calc(100% / 3);
+  }
+  83.333%,
+  100% {
+    height: calc(100% * 2 / 3);
+  }
+}
+@keyframes tm-track-tip-down {
+  to {
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+/* ---------- Reduced motion: the finished state, without the journey ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-track .tm-track-progress,
+  .tm-track.is-visible .tm-track-progress {
+    width: calc((100% + var(--tm-gutter)) * (var(--tm-track-stops) - 1) / var(--tm-track-stops));
+    animation: none;
+  }
+  .tm-track .tm-track-progress::after,
+  .tm-track.is-visible .tm-track-progress::after {
+    transform: translateY(-50%) scale(1);
+    animation: none;
+  }
+  .tm-track .tm-track-node,
+  .tm-track.is-visible .tm-track-node {
+    background-color: var(--tm-track-lit);
+    border-color: var(--tm-track-lit);
+    animation: none;
+  }
+  .tm-track .is-release .tm-track-node,
+  .tm-track.is-visible .is-release .tm-track-node {
+    background-color: var(--tm-track-signal);
+    border-color: var(--tm-track-signal);
+  }
+  .tm-track .tm-track-title,
+  .tm-track.is-visible .tm-track-title {
+    color: var(--tm-track-title-lit);
+    animation: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) and (max-width: 960px) {
+  .tm-track .tm-track-progress,
+  .tm-track.is-visible .tm-track-progress {
+    width: var(--tm-hairline);
+    height: calc(100% * (var(--tm-track-stops) - 1) / var(--tm-track-stops));
+  }
+  .tm-track .tm-track-progress::after,
+  .tm-track.is-visible .tm-track-progress::after {
+    transform: translateX(-50%) scale(1);
+  }
+}

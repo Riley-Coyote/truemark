@@ -1,0 +1,290 @@
+/* Handling: the client's page, in the client's order and words. */
+
+.tm-handling {
+  /* Local tokens. */
+  --tm-hairline: 1px;
+  --tm-handling-open-h: clamp(34rem, 50vw, 48rem); /* the frost opening's height */
+  --tm-handling-title: clamp(2.75rem, 5.2vw, 5rem);
+  --tm-handling-cold: clamp(4.5rem, 10.5vw, 9rem); /* the designed −20 °C */
+  --tm-handling-unit: 0.34em; /* °C, set small against the figure */
+  --tm-handling-unit-rise: 1.36em; /* lifts °C so its cap height meets the figure's */
+  --tm-handling-label-track: 0.14em; /* nano capitals, as the home labels */
+  /* Paper mist over the frost, so the type sits on the glass at full contrast. */
+  --tm-handling-scrim: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--tm-paper) 90%, transparent) 0%,
+    color-mix(in srgb, var(--tm-paper) 78%, transparent) 32%,
+    color-mix(in srgb, var(--tm-paper) 42%, transparent) 58%,
+    transparent 78%
+  );
+}
+
+/* Sections that can be linked to land below the sticky header. */
+.tm-handling-storage,
+.tm-handling-ship {
+  scroll-margin-top: var(--tm-header-height);
+}
+/* A section takes focus on arrival for screen readers; it is not a control, so no ring. */
+:is(.tm-handling-storage, .tm-handling-ship):focus {
+  outline: none;
+}
+
+/* ---------- Opening: frost on glass, the title written on its mist ---------- */
+
+.tm-handling-open {
+  --tm-bg: var(--tm-lilac-100);
+  isolation: isolate;
+  overflow: hidden;
+  min-height: var(--tm-handling-open-h);
+  align-content: end;
+  row-gap: var(--tm-space-5);
+  padding-block: var(--tm-space-9) var(--tm-space-8);
+}
+.tm-handling-open-photo {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 28%;
+  animation: tm-appear var(--tm-dur-scene) var(--tm-ease-enter) both;
+}
+.tm-handling-open::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: var(--tm-handling-scrim);
+}
+.tm-handling-open-head {
+  grid-column: 1 / span 7;
+  align-self: end;
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) both;
+}
+.tm .tm-handling-open-head .tm-eyebrow {
+  color: var(--tm-ink-2);
+}
+.tm .tm-handling-open-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-handling-title) / var(--tm-leading-display) var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  color: var(--tm-ink);
+}
+.tm .tm-handling-open-lead {
+  grid-column: 8 / -1;
+  align-self: end;
+  margin: 0;
+  max-width: 40ch;
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.55 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) var(--tm-stagger) both;
+}
+
+/* ---------- Storage ---------- */
+
+.tm-handling-storage {
+  row-gap: var(--tm-space-8);
+}
+.tm-handling-storage-head {
+  grid-column: 1 / span 6;
+  grid-row: 1;
+  align-self: start;
+}
+.tm-handling-cold {
+  grid-column: 1 / span 5;
+  grid-row: 2;
+  align-self: end;
+}
+.tm-handling-dry {
+  grid-column: 7 / -1;
+  grid-row: 1 / span 2;
+  align-self: end;
+}
+.tm-handling-cycle {
+  grid-column: 1 / span 5;
+  grid-row: 3;
+}
+.tm-handling-record {
+  grid-column: 7 / -1;
+  grid-row: 3;
+}
+.tm-handling-cycle,
+.tm-handling-record {
+  padding-top: var(--tm-space-5);
+  border-top: var(--tm-hairline) solid var(--tm-line-strong);
+}
+.tm .tm-handling-rule-label {
+  margin: 0 0 var(--tm-space-4);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-handling-label-track);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm .tm-handling-rule-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-h3) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+}
+.tm .tm-handling-rule-text {
+  margin: var(--tm-space-3) 0 0;
+  max-width: 46ch;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+
+/* The temperature, as a designed number. */
+.tm .tm-handling-cold-title {
+  margin: 0;
+  font-family: var(--tm-font-display);
+  font-weight: var(--tm-weight-light);
+  color: var(--tm-ink);
+}
+.tm-handling-cold-at {
+  display: block;
+  font-size: var(--tm-type-h3);
+  line-height: var(--tm-leading-heading);
+  letter-spacing: var(--tm-track-heading);
+}
+.tm-handling-cold-figure {
+  display: block;
+  margin-top: var(--tm-space-2);
+  font-size: var(--tm-handling-cold);
+  line-height: 1;
+  letter-spacing: var(--tm-track-monument);
+  font-variant-numeric: lining-nums;
+}
+.tm-handling-cold-unit {
+  font-size: var(--tm-handling-unit);
+  line-height: 1;
+  letter-spacing: 0;
+  vertical-align: var(--tm-handling-unit-rise);
+}
+.tm-handling-cold .tm-handling-rule-text {
+  margin-top: var(--tm-space-5);
+}
+
+/* Light and moisture, with the material itself. */
+.tm-handling-dry-photo {
+  overflow: hidden;
+  margin-bottom: var(--tm-space-6);
+  aspect-ratio: 16 / 10;
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-lilac-100);
+}
+.tm-handling-dry-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 55%;
+}
+
+/* ---------- Shipping and cold chain ---------- */
+
+.tm-handling-ship {
+  row-gap: var(--tm-space-8);
+}
+.tm-handling-ship-head {
+  grid-column: 1 / span 7;
+}
+.tm-handling-ship .tm-track {
+  grid-column: 1 / -1;
+}
+
+/* The client's closing lines. */
+.tm-handling-close {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--tm-space-6) var(--tm-space-8);
+  margin-top: var(--tm-space-5);
+  padding-top: var(--tm-space-7);
+  border-top: var(--tm-hairline) solid var(--tm-night-line);
+}
+.tm .tm-handling-close-line {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-h2) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-glow);
+}
+.tm .tm-handling-close-line span {
+  color: var(--tm-glow-3);
+}
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 1100px) {
+  /* Side by side still, so the type stays low on the mist. */
+  .tm-handling-open-head {
+    grid-column: 1 / span 6;
+  }
+  .tm .tm-handling-open-lead {
+    grid-column: 7 / -1;
+  }
+}
+@media (max-width: 960px) {
+  /* The frost comes first, then the title below it on paper. */
+  .tm-handling-open {
+    --tm-bg: var(--tm-paper);
+    min-height: 0;
+    align-content: start;
+    row-gap: 0;
+    padding-block: 0;
+  }
+  .tm-handling-open-photo {
+    position: static;
+    grid-column: 1 / -1;
+    width: calc(100% + var(--tm-pad) * 2);
+    height: auto;
+    aspect-ratio: 4 / 3;
+    margin-inline: calc(var(--tm-pad) * -1);
+    -webkit-mask-image: linear-gradient(to bottom, var(--tm-ink) 76%, transparent);
+    mask-image: linear-gradient(to bottom, var(--tm-ink) 76%, transparent);
+  }
+  .tm-handling-open::before {
+    display: none;
+  }
+  .tm-handling-open-head,
+  .tm .tm-handling-open-lead {
+    grid-column: 1 / -1;
+  }
+  .tm-handling-open-head {
+    margin-top: var(--tm-space-4);
+  }
+  .tm .tm-handling-open-lead {
+    margin-top: var(--tm-space-5);
+  }
+  .tm-handling-storage-head,
+  .tm-handling-cold,
+  .tm-handling-dry,
+  .tm-handling-cycle,
+  .tm-handling-record {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .tm-handling-ship-head {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 640px) {
+  .tm-handling-close {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* ---------- Motion preferences ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-handling-open-photo,
+  .tm-handling-open-head,
+  .tm .tm-handling-open-lead {
+    animation: none;
+  }
+}

@@ -1,0 +1,302 @@
+/* Verify: the client's page in their order. Lookup, certificate, how it works, what results mean. */
+
+.tm-vhero {
+  padding-block: var(--tm-space-9);
+  align-items: center;
+  overflow: hidden;
+}
+.tm-vhero-copy {
+  grid-column: 1 / span 7;
+}
+.tm.tm-vhero .tm-display {
+  font-size: clamp(2.75rem, 5.2vw, 4.5rem);
+  line-height: var(--tm-leading-display);
+}
+.tm-night .tm-display span {
+  color: var(--tm-glow-3);
+}
+.tm.tm-vhero .tm-section-note {
+  max-width: 46ch;
+  margin-top: var(--tm-space-7);
+}
+.tm-vhero-form.tm-lookup {
+  max-width: 34rem;
+}
+.tm .tm-vhero-try {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-3);
+  margin: var(--tm-space-5) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  color: var(--tm-glow-3);
+}
+.tm-vhero-chip {
+  padding: var(--tm-space-2) var(--tm-space-3);
+  border: 1px solid var(--tm-night-line);
+  border-radius: var(--tm-radius-pill);
+  background: transparent;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  letter-spacing: 0.02em;
+  color: var(--tm-glow);
+  cursor: pointer;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-vhero-chip:hover {
+  border-color: var(--tm-glow-4);
+}
+.tm-vhero-chip:active {
+  transform: scale(0.97);
+}
+.tm-vhero-chip:focus-visible {
+  outline: none;
+  border-color: var(--tm-glow-2);
+}
+
+/* Where the number is: the vial, and a loupe over the LOT line of its label.
+   The cut-out is 578 x 1103; the lot line is centred at 17.5% across, 57.9% down. */
+.tm-lothint {
+  --tm-lh-w: clamp(10rem, 15vw, 13.5rem);
+  --tm-lh-k: 2;
+  --tm-lh-l: calc(var(--tm-lh-w) * 0.62);
+  --tm-lh-ratio: 1.9083;
+  --tm-lh-x: 0.175;
+  --tm-lh-y: 0.579;
+  grid-column: 9 / -1;
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--tm-space-6);
+  margin: 0;
+}
+.tm-lothint-vial {
+  position: relative;
+  width: var(--tm-lh-w);
+  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) both;
+}
+.tm-lothint-vial > img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+.tm-lothint-glow {
+  position: absolute;
+  z-index: 0;
+  left: 6%;
+  right: 6%;
+  bottom: -5%;
+  height: 16%;
+  border-radius: var(--tm-radius-pill);
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--tm-lilac-300) 42%, transparent) 0%, transparent 70%);
+  filter: blur(10px);
+}
+.tm-lothint-loupe {
+  position: absolute;
+  z-index: 2;
+  left: calc(var(--tm-lh-w) * var(--tm-lh-x) - var(--tm-lh-l) / 2);
+  top: calc(var(--tm-lh-w) * var(--tm-lh-ratio) * var(--tm-lh-y) - var(--tm-lh-l) / 2);
+  width: var(--tm-lh-l);
+  height: var(--tm-lh-l);
+  overflow: hidden;
+  border: 1px solid var(--tm-glow-3);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-night), 0 0 0 var(--tm-space-2) color-mix(in srgb, var(--tm-glow) 7%, transparent);
+  animation: tm-loupe-in 700ms var(--tm-ease-micro) 700ms both;
+}
+.tm-lothint-loupe img {
+  position: absolute;
+  max-width: none;
+  width: calc(var(--tm-lh-w) * var(--tm-lh-k));
+  height: auto;
+  left: calc(var(--tm-lh-l) / 2 - var(--tm-lh-w) * var(--tm-lh-k) * var(--tm-lh-x));
+  top: calc(var(--tm-lh-l) / 2 - var(--tm-lh-w) * var(--tm-lh-k) * var(--tm-lh-ratio) * var(--tm-lh-y));
+  user-select: none;
+}
+.tm .tm-lothint figcaption {
+  max-width: 24ch;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.45 var(--tm-font-sans);
+  color: var(--tm-glow-3);
+  text-align: center;
+}
+@keyframes tm-loupe-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+/* The certificate, where the page promised it would be. */
+.tm-vresult {
+  --tm-bg: var(--tm-lilac-50);
+  padding-block: var(--tm-space-9);
+  scroll-margin-top: calc(var(--tm-header-height) + var(--review-bar-height, 0px));
+}
+.tm-vresult-empty {
+  grid-column: 3 / span 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--tm-space-3);
+  padding: var(--tm-space-7) var(--tm-space-6);
+  border: 1px dashed var(--tm-line-strong);
+  border-radius: var(--tm-radius-lg);
+  text-align: center;
+}
+.tm .tm-vresult-kicker {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm .tm-vresult-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-h3) / 1.2 var(--tm-font-display);
+  letter-spacing: -0.015em;
+  color: var(--tm-ink);
+}
+.tm-vresult-missing .tm-section-note {
+  max-width: 46ch;
+}
+.tm-vresult-missing .tm-textlink {
+  margin-top: var(--tm-space-3);
+}
+.tm-vresult-found {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--tm-gutter);
+  row-gap: var(--tm-space-7);
+  align-items: center;
+}
+.tm-vresult-vial {
+  grid-column: 1 / span 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--tm-space-5);
+}
+.tm-vresult-vial .tm-pstage {
+  width: 100%;
+  max-width: 28rem;
+}
+.tm-vresult-cert {
+  grid-column: 7 / -1;
+}
+
+/* How it works, and what each result means. */
+.tm-vsteps,
+.tm-vmeans {
+  row-gap: var(--tm-space-7);
+}
+.tm-vmeans {
+  --tm-bg: var(--tm-lilac-50);
+}
+.tm-vsteps-head {
+  grid-column: 1 / span 8;
+}
+.tm-vsteps-head .tm-textlink {
+  margin-top: var(--tm-space-5);
+}
+.tm-vsteps-list {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--tm-gutter);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-vsteps-list li {
+  padding-top: var(--tm-space-5);
+  border-top: 1px solid var(--tm-line-strong);
+}
+.tm-vsteps-index {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  color: var(--tm-ink-3);
+}
+.tm .tm-vsteps-list h3 {
+  margin: var(--tm-space-4) 0 var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.3 var(--tm-font-display);
+  letter-spacing: -0.01em;
+  color: var(--tm-ink);
+}
+.tm .tm-vsteps-list p {
+  max-width: 34ch;
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm .tm-vmeans-list {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--tm-gutter);
+  margin: 0;
+}
+.tm-vmeans-list div {
+  padding: var(--tm-space-5);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-paper);
+}
+.tm .tm-vmeans-list dt {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.3 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink);
+}
+.tm .tm-vmeans-list dd {
+  margin: var(--tm-space-3) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-lothint-vial,
+  .tm-lothint-loupe {
+    animation: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .tm-vmeans-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 960px) {
+  .tm-vhero-copy,
+  .tm-lothint,
+  .tm-vresult-empty,
+  .tm-vresult-vial,
+  .tm-vresult-cert,
+  .tm-vsteps-head {
+    grid-column: 1 / -1;
+  }
+  .tm-lothint {
+    --tm-lh-w: 9rem;
+    margin-top: var(--tm-space-8);
+  }
+  .tm-vsteps-list {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--tm-space-6);
+  }
+  /* On a phone the certificate is what was asked for; the vial follows it. */
+  .tm-vresult-cert {
+    order: -1;
+  }
+  .tm-vresult-vial .tm-pstage {
+    max-width: 18rem;
+  }
+}
+@media (max-width: 560px) {
+  .tm .tm-vmeans-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

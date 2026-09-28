@@ -45,6 +45,8 @@ export type Product = {
   colorInk: string;
   form: "Lyophilized powder" | "Research diluent";
   lot: string;
+  /** A merchandising tag on the product card. The client decides these; the two set here are placeholders. */
+  tag?: "Best seller" | "New";
 };
 
 // Names, sizes, label colors and first-batch references come from the client brand kit.
@@ -145,6 +147,7 @@ export const products: Product[] = [
     colorInk: "#005658",
     form: "Lyophilized powder",
     lot: "TM-BPC10-2609-01",
+    tag: "Best seller",
   },
   {
     id: "bpc-tb-1010-mg",
@@ -193,6 +196,7 @@ export const products: Product[] = [
     colorInk: "#7C1830",
     form: "Lyophilized powder",
     lot: "TM-GLW70-2609-01",
+    tag: "New",
   },
   {
     id: "tesamorelin-10-mg",
@@ -400,21 +404,30 @@ export const articles = [
   },
 ];
 
+// The client's own questions and answers, as published on their current home page (2026-09-25).
 export const faqs = [
   [
-    "Where do I find my lot number?",
-    "Look for the lot identifier on your vial label. Enter it on the Verify a lot page to find the corresponding record. The sample record in this prototype is BP10-2611A.",
+    "Why does the material arrive as a dry powder?",
+    "Lyophilization removes water from a frozen solution under vacuum, leaving a dry cake. Peptide bonds hydrolyze slowly in water and faster at room temperature; removing the water largely stops that. The dry form also ships and stores for years at −20 °C.",
   ],
   [
-    "What does the Certificate of Analysis include?",
-    "The certificate associates a compound and lot identifier with the testing methods, reported results, and release information for that lot.",
+    "Why doesn’t the vial weight match the certificate?",
+    "Fill weight is gross. Lyophilized peptides carry a counterion, usually acetate, plus residual water, so net peptide content typically runs 80 to 90 percent of the labeled weight. The certificate reports both figures. Compare net content, not label weight.",
   ],
   [
-    "Who is the catalog intended for?",
-    "The catalog is intended for qualified laboratory and institutional research buyers. Products are supplied for research use only, not for human or veterinary use.",
+    "How is the material stored, and what changes once it’s in solution?",
+    "Sealed vials are held at −20 °C, protected from light. Once dissolved, hydrolysis and oxidation resume and stability is measured in weeks under refrigeration rather than years frozen. Solution stability is compound-specific and stated per product.",
   ],
   [
-    "Where can I find handling information?",
-    "Use the Handling page to locate receiving and documentation guidance. Product-specific documentation and your laboratory’s procedures govern the handling of each material.",
+    "What is a retest date?",
+    "Not an expiry. It is the date by which material still in storage should be re-analyzed to confirm it meets its original specification. Correctly stored lyophilized peptides frequently pass well beyond it. Nothing becomes unusable on that date. It becomes unverified.",
+  ],
+  [
+    "What is the lot number for?",
+    "Every vial carries a lot number, printed beside a QR code that opens the Verify page. Entering the number there returns the certificate for that specific batch. A certificate that names no lot describes no particular vial.",
+  ],
+  [
+    "What does research use only mean?",
+    "A legal classification, not a comment on quality. These materials are supplied for in vitro laboratory work. They are not drugs, are not approved for use in humans or animals, and are not produced to pharmaceutical manufacturing standards.",
   ],
 ];
