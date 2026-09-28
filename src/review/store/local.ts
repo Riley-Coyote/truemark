@@ -67,9 +67,7 @@ export function createLocalStore(project: string): ReviewStore {
       const current = read();
       const found = current.find((n) => n.id === id);
       if (!found) return null;
-      const next: Note = { ...found, updatedAt: new Date().toISOString() };
-      if (patch.status) next.status = patch.status;
-      if (patch.body !== undefined) next.body = patch.body;
+      const next: Note = { ...found, status: patch.status, updatedAt: new Date().toISOString() };
       if (patch.resolvedBy === null) delete next.resolvedBy;
       else if (patch.resolvedBy !== undefined) next.resolvedBy = patch.resolvedBy;
       commit(current.map((n) => (n.id === id ? next : n)));

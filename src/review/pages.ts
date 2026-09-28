@@ -5,7 +5,7 @@
 import { products } from "../data";
 
 /** The layer's own query parameters; they never become part of a note's page. */
-const REVIEW_PARAMS = ["note", "question", "as"];
+const REVIEW_PARAMS = ["note", "question", "as", "key"];
 
 function split(route: string): { path: string; params: URLSearchParams } {
   const index = route.indexOf("?");

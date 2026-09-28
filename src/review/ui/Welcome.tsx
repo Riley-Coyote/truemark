@@ -5,11 +5,14 @@ import { useFocusReturn, usePhone } from "./bits";
 /** Who is reviewing: asked once, the first time anyone opens the layer. */
 export function Welcome({
   current,
+  notice = null,
   onDone,
   onClose,
 }: {
   /** Set when changing an existing name. */
   current: Identity | null;
+  /** Why notes will stay on this device, when the build could share them. */
+  notice?: string | null;
   onDone: (name: string, role: string) => void;
   onClose: () => void;
 }) {
@@ -71,6 +74,7 @@ export function Welcome({
             Leave a note anywhere, answer Riley’s questions, and he’ll see everything.
           </p>
         )}
+        {notice && <p className="rl-notice rl-welcome-notice">{notice}</p>}
         <form
           className="rl-welcome-form"
           noValidate

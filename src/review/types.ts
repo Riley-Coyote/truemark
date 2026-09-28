@@ -52,12 +52,14 @@ export type Note = {
 /** What a caller supplies; the store adds the id, project and times. */
 export type NewNote = Omit<Note, "id" | "project" | "createdAt" | "updatedAt"> & { id?: string };
 
-/** The fields that may change after a note is written. `null` clears. */
+/** What may change after a note is written: resolving or reopening it. `null` clears. */
 export type NotePatch = {
-  status?: NoteStatus;
+  status: NoteStatus;
   resolvedBy?: string | null;
-  body?: string;
 };
+
+/** A shared store's connection: "live" once the notes have loaded and the channel has joined. */
+export type LiveState = "connecting" | "live";
 
 export type Identity = Author;
 
@@ -85,6 +87,10 @@ export interface ReviewStore {
   add(note: NewNote): Promise<Note>;
   update(id: string, patch: NotePatch): Promise<Note | null>;
   presence?(me: Identity, route: string, onPeople: (people: Person[]) => void): PresenceHandle;
+  /** Shared stores: hear where the connection stands (and once now). */
+  state?(onChange: (state: LiveState) => void): () => void;
+  /** Shared stores: leave the live channel. */
+  close?(): void;
 }
 
 export type Question = {

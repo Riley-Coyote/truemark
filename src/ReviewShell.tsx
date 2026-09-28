@@ -1,7 +1,7 @@
 import { Suspense, useEffect } from "react";
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { IN_FRAME, REVIEW_MODE, ReviewLayer } from "./review/index";
+import { IN_FRAME, ReviewLayer, useReviewStatus } from "./review/index";
 import "./review/review.css";
 import "./review.css";
 
@@ -15,6 +15,8 @@ const links = [
 export default function ReviewShell({ children }: { children: ReactNode }) {
   const { pathname, state } = useLocation();
   const keepScroll = (state as { keepScroll?: boolean } | null)?.keepScroll;
+  // "Live" only once shared notes have loaded and the live channel has joined.
+  const review = useReviewStatus();
   const section =
     pathname === "/review" || pathname.startsWith("/review/")
       ? "overview"
@@ -45,9 +47,12 @@ export default function ReviewShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </div>
-          <span className="review-live" data-mode={REVIEW_MODE}>
+          {/* data-mode="supabase" is the bar's live look (src/review.css); data-status says which state. */}
+          <span className="review-live" data-mode={review === "live" ? "supabase" : "local"} data-status={review}>
             <span className="review-live-dot" aria-hidden="true" />
-            <span className="review-live-text">{REVIEW_MODE === "supabase" ? "Live" : "On this device"}</span>
+            <span className="review-live-text">
+              {review === "live" ? "Live" : review === "connecting" ? "Connecting…" : "On this device"}
+            </span>
           </span>
         </nav>
       )}

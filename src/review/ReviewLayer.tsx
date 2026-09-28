@@ -18,7 +18,10 @@ import { beginVisit, designerIdentity, loadIdentity, loadPrefs, newId, saveIdent
 import type { Prefs } from "./identity";
 import { onRoute, pageLabel, pageTitleNow, routeOf, withParam } from "./pages";
 import { questionById, questions } from "./questions";
-import { getStore } from "./store";
+import { keyFromSearch, storedKey, storeKey } from "./key";
+import { SUPABASE_CONFIGURED } from "./mode";
+import { setReviewStatus, useReviewStatus } from "./status";
+import { localStore, sharedStore } from "./store";
 import { useNow } from "./time";
 import { spotAtCorner, spotBox, spotIn, track } from "./tracker";
 import type { Anchor, Category, Identity, Note, Person, PresenceHandle, Question, ReviewStore } from "./types";
@@ -40,6 +43,10 @@ type Draft = { element: Element; anchor: Anchor; what: string };
 type Pending = { type: "note" | "question"; id: string; at: number };
 
 const byCreated = (a: Note, b: Note) => a.createdAt.localeCompare(b.createdAt);
+
+/** Why notes stay on this device in a build that could share them (said once, quietly). */
+const NO_KEY = "Your notes stay on this device. To share them with Riley, open the review link he sent you.";
+const BAD_KEY = "This review link isn’t valid. Your notes stay on this device.";
 const excerpt = (text: string) => (text.length > 80 ? `${text.slice(0, 77).trimEnd()}…` : text);
 const sameSet = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].every((x) => b.has(x));
 const typing = (target: EventTarget | null) =>
@@ -51,6 +58,7 @@ export default function ReviewLayer() {
   const phone = usePhone();
   const reduced = useReducedMotion();
   const now = useNow();
+  const status = useReviewStatus();
   const { pathname, search } = location;
   const route = routeOf(pathname, search);
   const here = useCallback((r: string) => onRoute(r, pathname, search), [pathname, search]);
@@ -82,31 +90,118 @@ export default function ReviewLayer() {
   const routeEnteredAt = useRef(Date.now());
   const rootRef = useRef<HTMLDivElement>(null);
 
-  /* ---------- Store ---------- */
+  /* ---------- The address: the layer's own parameters ---------- */
+
+  /**
+   * Take the layer's own parameters out of the address once they have done their job, with
+   * replaceState, so no history entry is added and every other parameter stays. Requests made
+   * in the same moment (a link can carry key= and note= together) go out together, so one
+   * never puts another back.
+   */
+  const locationRef = useLatest(location);
+  const navigateRef = useLatest(navigate);
+  const stripQueue = useRef<Set<string> | null>(null);
+  const stripParams = useCallback(
+    (keys: string[]) => {
+      if (!stripQueue.current) {
+        const queue = new Set<string>();
+        stripQueue.current = queue;
+        queueMicrotask(() => {
+          stripQueue.current = null;
+          const drop = [...queue];
+          const at = locationRef.current;
+          const params = new URLSearchParams(at.search);
+          if (drop.some((k) => params.has(k))) {
+            drop.forEach((k) => params.delete(k));
+            const rest = params.toString();
+            navigateRef.current(
+              { pathname: at.pathname, search: rest ? `?${rest}` : "", hash: at.hash },
+              { replace: true, state: { ...((at.state as object | null) ?? {}), keepScroll: true } },
+            );
+          }
+          // In the published site a query can also sit before the hash.
+          const outer = new URLSearchParams(window.location.search);
+          if (drop.some((k) => outer.has(k)) && window.location.hash) {
+            drop.forEach((k) => outer.delete(k));
+            const rest = outer.toString();
+            window.history.replaceState(window.history.state, "", `${window.location.pathname}${rest ? `?${rest}` : ""}${window.location.hash}`);
+          }
+        });
+      }
+      keys.forEach((k) => stripQueue.current?.add(k));
+    },
+    [locationRef, navigateRef],
+  );
+
+  /* ---------- The review key, and the store it opens ---------- */
+
+  // Riley's link carries ?key=… (in the hash route, so it never reaches a server). Keep it on
+  // this device and take it out of the address. Read it at once, so the first store opened
+  // is already the shared one and a deep link in the same address waits for its notes.
+  const [reviewKey, setReviewKey] = useState<string | null>(() => keyFromSearch(search) ?? storedKey());
+  useEffect(() => {
+    const fromLink = keyFromSearch(search);
+    if (!fromLink) return;
+    storeKey(fromLink);
+    setReviewKey(fromLink);
+    stripParams(["key"]);
+  }, [search, stripParams]);
+
+  // Why notes are staying on this device, when the build could share them.
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
-    let off = () => {};
-    getStore()
-      .then((s) => {
+    const offs: Array<() => void> = [];
+    let shared: ReviewStore | null = null;
+
+    const use = async (next: ReviewStore) => {
+      offs.push(next.subscribe((list) => alive && setNotes([...list])));
+      setStore(next);
+      const list = await next.list();
+      if (alive) setNotes([...list]);
+    };
+    const stayLocal = async (why: string | null) => {
+      setReviewStatus("local");
+      setNotice(why);
+      await use(localStore());
+    };
+
+    (async () => {
+      if (!SUPABASE_CONFIGURED) return stayLocal(null);
+      if (!reviewKey) return stayLocal(NO_KEY);
+      setReviewStatus("connecting");
+      setNotice(null);
+      try {
+        shared = await sharedStore(reviewKey);
+        if (!alive || !shared) return;
+        // "Live" only once the notes have loaded and the channel has joined.
+        const off = shared.state?.((state) => alive && setReviewStatus(state === "live" ? "live" : "connecting"));
+        if (off) offs.push(off);
+        await use(shared);
+      } catch (error) {
         if (!alive) return;
-        setStore(s);
-        off = s.subscribe((list) => setNotes([...list]));
-        return s.list().then((list) => {
-          if (alive) setNotes([...list]);
-        });
-      })
+        shared?.close?.();
+        shared = null;
+        offs.splice(0).forEach((off) => off());
+        const invalid = error instanceof Error && error.name === "InvalidKeyError";
+        if (!invalid) setToast("Couldn’t reach the shared review, so notes stay on this device for now. Reload to try again.");
+        await stayLocal(invalid ? BAD_KEY : null);
+      }
+    })()
       .catch(() => {
         if (alive) setToast("The review notes couldn’t load. Reload to try again.");
       })
       .finally(() => {
         if (alive) setReady(true);
       });
+
     return () => {
       alive = false;
-      off();
+      offs.forEach((off) => off());
+      shared?.close?.();
     };
-  }, []);
+  }, [reviewKey]);
 
   /* ---------- Who is reviewing ---------- */
 
@@ -119,29 +214,6 @@ export default function ReviewLayer() {
 
   useEffect(() => savePrefs(prefs), [prefs]);
 
-  /** Remove the layer's own parameters from the address once they have done their job. */
-  const strip = useCallback(
-    (keys: string[]) => {
-      const params = new URLSearchParams(location.search);
-      if (keys.some((k) => params.has(k))) {
-        keys.forEach((k) => params.delete(k));
-        const next = params.toString();
-        navigate(
-          { pathname: location.pathname, search: next ? `?${next}` : "", hash: location.hash },
-          { replace: true, state: { ...((location.state as object | null) ?? {}), keepScroll: true } },
-        );
-      }
-      // In the published site the query can sit before the hash.
-      const outer = new URLSearchParams(window.location.search);
-      if (keys.some((k) => outer.has(k)) && window.location.hash) {
-        keys.forEach((k) => outer.delete(k));
-        const rest = outer.toString();
-        window.history.replaceState(window.history.state, "", `${window.location.pathname}${rest ? `?${rest}` : ""}${window.location.hash}`);
-      }
-    },
-    [location, navigate],
-  );
-
   useEffect(() => {
     const asDesigner =
       new URLSearchParams(search).get("as") === "designer" || new URLSearchParams(window.location.search).get("as") === "designer";
@@ -149,8 +221,8 @@ export default function ReviewLayer() {
     const next = designerIdentity(loadIdentity());
     saveIdentity(next);
     setMe(next);
-    strip(["as"]);
-  }, [search, strip]);
+    stripParams(["as"]);
+  }, [search, stripParams]);
 
   const meRef = useLatest(me);
   const ensureIdentity = useCallback(
@@ -460,7 +532,7 @@ export default function ReviewLayer() {
     const noteId = params.get("note");
     const questionId = params.get("question");
     if (!noteId && !questionId) return;
-    strip(["note", "question"]);
+    stripParams(["note", "question"]);
     if (noteId) {
       const note = listsRef.current.notes.find((n) => n.id === noteId);
       if (!note) {
@@ -476,7 +548,7 @@ export default function ReviewLayer() {
       const q = questionById(questionId);
       if (q) ensureIdentity(() => goToQuestion(q));
     }
-  }, [ready, search, strip, listsRef, ensureIdentity, goToNote, goToQuestion, store]);
+  }, [ready, search, stripParams, listsRef, ensureIdentity, goToNote, goToQuestion, store]);
 
   const toggleComment = useCallback(() => {
     if (commenting) {
@@ -645,7 +717,9 @@ export default function ReviewLayer() {
 
   const openRoot = open?.type === "thread" ? notes.find((n) => n.id === open.id) ?? null : null;
   const openQuestion = open?.type === "question" ? questionById(open.id) ?? null : null;
-  const linkHref = useHref(openRoot ? withParam(openRoot.route, "note", openRoot.id) : "/");
+  // A note's link opens its page and thread; it carries the review key when this browser holds one.
+  const notePath = openRoot ? withParam(openRoot.route, "note", openRoot.id) : "/";
+  const linkHref = useHref(openRoot && reviewKey ? withParam(notePath, "key", reviewKey) : notePath);
   const link = new URL(linkHref, window.location.href).toString();
 
   const pins: PinView[] = [
@@ -764,7 +838,8 @@ export default function ReviewLayer() {
           unread={unread}
           moved={moved}
           isHere={here}
-          mode={store?.mode ?? "local"}
+          status={status}
+          notice={notice}
           people={people}
           me={me}
           now={now}
@@ -859,6 +934,7 @@ export default function ReviewLayer() {
       {welcome && (
         <Welcome
           current={welcome.editing ? me : null}
+          notice={welcome.editing ? null : notice}
           onClose={closeWelcome}
           onDone={(name, role) => {
             const next: Identity = { id: me?.id ?? newId(), name, role: role || undefined, kind: me?.kind ?? "client" };

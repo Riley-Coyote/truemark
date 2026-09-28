@@ -1,12 +1,45 @@
 /**
- * Notes shared live through Supabase: the `review_notes` table (see supabase/review.sql),
- * its realtime changes, and a presence channel (`review:<project>`) for who is here now.
- * Columns are snake_case; this adapter maps them to the layer's shapes.
+ * Notes shared through Supabase, for people holding the review key. The database is reached
+ * only through its functions (supabase/review.sql) — review_list, review_add and
+ * review_set_status, each given the key, which the server checks; the tables themselves are
+ * closed to the public key. Live updates travel on one Broadcast channel per review, named
+ * from the key's hash: after each write this browser says {type: "changed", id}, and every
+ * other open review reads the list again. Presence (who is here, on which page) shares that
+ * channel, so names never sit on a channel anyone could guess.
  */
-import { createClient } from "@supabase/supabase-js";
-import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { newId } from "../identity";
-import type { Anchor, Answer, Category, NewNote, Note, NotePatch, Person, ReviewStore } from "../types";
+import type { Anchor, Answer, Category, Identity, LiveState, NewNote, Note, NotePatch, Person, PresenceHandle, ReviewStore } from "../types";
+
+/* ---------- What the adapter needs from a Supabase client (the real one, or a test's) ---------- */
+
+export type RpcError = { code?: string; message: string };
+export type RpcResult = { data: unknown; error: RpcError | null };
+
+export interface ChannelLike {
+  on(type: "broadcast", filter: { event: string }, callback: (message: { payload?: unknown }) => void): ChannelLike;
+  on(type: "presence", filter: { event: "sync" }, callback: () => void): ChannelLike;
+  subscribe(callback?: (status: string, error?: Error) => void): ChannelLike;
+  send(message: { type: "broadcast"; event: string; payload: Record<string, unknown> }): Promise<unknown>;
+  track(payload: Record<string, unknown>): Promise<unknown>;
+  untrack(): Promise<unknown>;
+  presenceState(): Record<string, Array<Record<string, unknown>>>;
+}
+
+export interface ClientLike {
+  rpc(fn: string, args: Record<string, unknown>): PromiseLike<RpcResult>;
+  channel(name: string, options: { config: { broadcast: { self: boolean }; presence: { key: string } } }): ChannelLike;
+  removeChannel(channel: ChannelLike): Promise<unknown>;
+}
+
+/** The server refused the key (SQLSTATE 28000): the link is not (or no longer) valid. */
+export class InvalidKeyError extends Error {
+  constructor() {
+    super("invalid review key");
+    this.name = "InvalidKeyError";
+  }
+}
+
+/* ---------- Rows ---------- */
 
 type Row = {
   id: string;
@@ -49,9 +82,9 @@ const fromRow = (row: Row): Note => ({
   updatedAt: row.updated_at,
 });
 
-const toRow = (note: NewNote & { id: string }, project: string) => ({
+/** A new note as the server takes it. The project and the times are the server's to set. */
+const toNote = (note: NewNote & { id: string }) => ({
   id: note.id,
-  project,
   kind: note.kind,
   thread_id: note.threadId ?? null,
   question_id: note.questionId ?? null,
@@ -66,56 +99,118 @@ const toRow = (note: NewNote & { id: string }, project: string) => ({
   author_role: note.author.role ?? null,
   author_kind: note.author.kind,
   status: note.status,
-  resolved_by: note.resolvedBy ?? null,
 });
 
-type Presence = Omit<Person, "id"> & { id: string };
+const one = (data: unknown): Row => (Array.isArray(data) ? data[0] : data) as Row;
+const byCreated = (a: Note, b: Note) => a.createdAt.localeCompare(b.createdAt);
 
-export function createSupabaseStore(url: string, anonKey: string, project: string): ReviewStore {
-  const client = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+type Here = { id: string; name: string; role: string | null; kind: Identity["kind"]; route: string };
+
+/** Everyone on the channel, one entry per person however many tabs they have open. */
+function peopleIn(state: Record<string, Array<Record<string, unknown>>>): Person[] {
+  const byPerson = new Map<string, Person>();
+  for (const entries of Object.values(state)) {
+    for (const entry of entries) {
+      const { id, name, role, kind, route } = entry as Partial<Here>;
+      if (typeof id !== "string" || typeof name !== "string") continue;
+      byPerson.set(id, { id, name, role: role ?? undefined, kind: kind === "designer" ? "designer" : "client", route: typeof route === "string" ? route : "/" });
+    }
+  }
+  return [...byPerson.values()];
+}
+
+/* ---------- The store ---------- */
+
+export function createSupabaseStore(client: ClientLike, key: string, channelName: string): ReviewStore {
   const byId = new Map<string, Note>();
   const listeners = new Set<(notes: Note[]) => void>();
-  let loaded: Promise<void> | null = null;
+  const stateListeners = new Set<(state: LiveState) => void>();
+  let listed = false;
+  let joined = false;
+  let closed = false;
+  let loading: Promise<void> | null = null;
+  let again = false;
+  let reloadTimer = 0;
+  let mine: Here | null = null;
+  let onPeople: ((people: Person[]) => void) | null = null;
 
-  const all = () => Array.from(byId.values()).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const all = () => [...byId.values()].sort(byCreated);
   const notify = () => {
     const notes = all();
     listeners.forEach((listener) => listener(notes));
   };
-  const keep = (note: Note) => {
-    byId.set(note.id, note);
-    notify();
+  const current = (): LiveState => (listed && joined ? "live" : "connecting");
+  let reported = current();
+  const report = () => {
+    const next = current();
+    if (next === reported) return;
+    reported = next;
+    stateListeners.forEach((listener) => listener(next));
   };
 
-  const load = () => {
-    loaded ??= (async () => {
-      const { data, error } = await client
-        .from("review_notes")
-        .select("*")
-        .eq("project", project)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      for (const row of (data ?? []) as Row[]) byId.set(row.id, fromRow(row));
-      notify();
-    })();
-    return loaded;
+  /** Keep the newer of two copies; nothing is ever deleted, so lists only add or refresh. */
+  const keep = (row: Row) => {
+    const next = fromRow(row);
+    const known = byId.get(next.id);
+    if (!known || known.updatedAt <= next.updatedAt) byId.set(next.id, next);
   };
 
-  client
-    .channel(`review-notes:${project}`)
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "review_notes", filter: `project=eq.${project}` },
-      (payload: RealtimePostgresChangesPayload<Row>) => {
-        if (payload.eventType === "DELETE") {
-          const id = (payload.old as Partial<Row>).id;
-          if (id && byId.delete(id)) notify();
-          return;
+  async function call(fn: string, args: Record<string, unknown>): Promise<unknown> {
+    const { data, error } = await client.rpc(fn, args);
+    if (error) throw error.code === "28000" ? new InvalidKeyError() : new Error(error.message);
+    return data;
+  }
+
+  function load(): Promise<void> {
+    loading ??= (async () => {
+      try {
+        const data = await call("review_list", { p_key: key });
+        (Array.isArray(data) ? (data as Row[]) : []).forEach(keep);
+        listed = true;
+        notify();
+        report();
+      } finally {
+        loading = null;
+        if (again && !closed) {
+          again = false;
+          void load().catch(() => {});
         }
-        keep(fromRow(payload.new));
-      },
-    )
-    .subscribe();
+      }
+    })();
+    return loading;
+  }
+
+  /** Someone changed something: read the list again, once, shortly. */
+  function reloadSoon() {
+    if (closed) return;
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(() => {
+      if (loading) again = true;
+      else void load().catch(() => {});
+    }, 150);
+  }
+
+  const channel = client.channel(channelName, { config: { broadcast: { self: false }, presence: { key: newId() } } });
+  channel.on("broadcast", { event: "changed" }, () => reloadSoon());
+  channel.on("presence", { event: "sync" }, () => onPeople?.(peopleIn(channel.presenceState())));
+  channel.subscribe((status) => {
+    if (closed) return;
+    if (status === "SUBSCRIBED") {
+      joined = true;
+      report();
+      if (mine) void channel.track(mine);
+      // After a reconnect, catch up on anything said while away.
+      if (listed) reloadSoon();
+    } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+      joined = false;
+      report();
+    }
+  });
+
+  /** Tell everyone else holding the key to read the list again. */
+  const announce = (id: string) => {
+    void channel.send({ type: "broadcast", event: "changed", payload: { type: "changed", id } }).catch(() => {});
+  };
 
   return {
     mode: "supabase",
@@ -125,72 +220,58 @@ export function createSupabaseStore(url: string, anonKey: string, project: strin
     },
     subscribe(onChange) {
       listeners.add(onChange);
-      load().catch(() => {
-        /* The layer shows what it has; a failed load is retried on the next list(). */
-        loaded = null;
-      });
       return () => listeners.delete(onChange);
     },
     async add(input: NewNote) {
-      const id = input.id ?? newId();
-      const now = new Date().toISOString();
-      // Shown at once; the database's own copy replaces it when it arrives.
-      keep({ ...input, id, project, createdAt: now, updatedAt: now });
-      const { data, error } = await client.from("review_notes").insert(toRow({ ...input, id }, project)).select().single();
-      if (error) {
-        byId.delete(id);
-        notify();
-        throw error;
-      }
-      const saved = fromRow(data as Row);
-      keep(saved);
-      return saved;
+      const data = await call("review_add", { p_key: key, p_note: toNote({ ...input, id: input.id ?? newId() }) });
+      const row = one(data);
+      keep(row);
+      notify();
+      announce(row.id);
+      return fromRow(row);
     },
     async update(id: string, patch: NotePatch) {
-      const change: Record<string, unknown> = {};
-      if (patch.status) change.status = patch.status;
-      if (patch.body !== undefined) change.body = patch.body;
-      if (patch.resolvedBy !== undefined) change.resolved_by = patch.resolvedBy;
-      const { data, error } = await client
-        .from("review_notes")
-        .update(change)
-        .eq("id", id)
-        .eq("project", project)
-        .select()
-        .single();
-      if (error) throw error;
-      const saved = fromRow(data as Row);
-      keep(saved);
-      return saved;
+      const data = await call("review_set_status", {
+        p_key: key,
+        p_id: id,
+        p_status: patch.status,
+        p_by: patch.status === "resolved" ? (patch.resolvedBy ?? null) : null,
+      });
+      const row = one(data);
+      keep(row);
+      notify();
+      announce(row.id);
+      return fromRow(row);
     },
-    presence(me, route, onPeople) {
-      const channel = client.channel(`review:${project}`, { config: { presence: { key: me.id } } });
-      let current: Presence = { id: me.id, name: me.name, role: me.role, kind: me.kind, route };
-      let joined = false;
-      channel.on("presence", { event: "sync" }, () => {
-        const state = channel.presenceState<Presence>();
-        const people = Object.values(state)
-          .map((entries) => entries[entries.length - 1])
-          .filter((p): p is Presence & { presence_ref: string } => Boolean(p?.id))
-          .map(({ id, name, role, kind, route: at }) => ({ id, name, role, kind, route: at }));
-        onPeople(people);
-      });
-      channel.subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          joined = true;
-          void channel.track(current);
-        }
-      });
+    presence(me, route, listener): PresenceHandle {
+      mine = { id: me.id, name: me.name, role: me.role ?? null, kind: me.kind, route };
+      onPeople = listener;
+      if (joined) void channel.track(mine);
+      listener(peopleIn(channel.presenceState()));
       return {
         move(next) {
-          current = { ...current, route: next };
-          if (joined) void channel.track(current);
+          if (!mine) return;
+          mine = { ...mine, route: next };
+          if (joined) void channel.track(mine);
         },
         leave() {
-          void channel.untrack();
-          void client.removeChannel(channel);
+          mine = null;
+          onPeople = null;
+          if (joined) void channel.untrack();
         },
       };
+    },
+    state(onChange) {
+      stateListeners.add(onChange);
+      onChange(current());
+      return () => stateListeners.delete(onChange);
+    },
+    close() {
+      closed = true;
+      clearTimeout(reloadTimer);
+      listeners.clear();
+      stateListeners.clear();
+      void client.removeChannel(channel);
     },
   };
 }

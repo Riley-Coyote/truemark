@@ -1146,6 +1146,21 @@
 .rl-root .rl-live-where {
   color: var(--rl-ink-2);
 }
+/* Why notes stay on this device: said once, quietly. */
+.rl-root .rl-notice {
+  display: block;
+  margin-top: var(--rl-space-1);
+  max-width: var(--rl-measure-note);
+  color: var(--rl-ink-2);
+  font-size: var(--rl-text-xs);
+  line-height: var(--rl-leading);
+}
+.rl-root .rl-welcome-notice {
+  margin-top: 0;
+  padding-left: var(--rl-space-3);
+  border-left: 1px solid var(--rl-line-strong);
+  font-size: var(--rl-text-sm);
+}
 .rl-root .rl-whoami {
   display: flex;
   align-items: center;

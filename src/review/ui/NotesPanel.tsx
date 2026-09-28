@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Copy, Download, FilePlus2, Search } from "lucide-react";
 import { categoryLabel } from "../export";
 import { pageLabel } from "../pages";
+import type { ReviewStatus } from "../status";
 import type { Identity, Note, Person } from "../types";
 import { Dot, When } from "./bits";
 import { Panel } from "./Panel";
@@ -24,7 +25,8 @@ export function NotesPanel({
   unread,
   moved,
   isHere,
-  mode,
+  status,
+  notice,
   people,
   me,
   now,
@@ -46,7 +48,9 @@ export function NotesPanel({
   unread: (note: Note) => boolean;
   moved: Set<string>;
   isHere: (route: string) => boolean;
-  mode: "local" | "supabase";
+  status: ReviewStatus;
+  /** Why notes stay on this device, when the build could share them. */
+  notice: string | null;
   people: Person[];
   me: Identity;
   now: number;
@@ -87,29 +91,33 @@ export function NotesPanel({
     all: threads.length,
   };
 
-  const live =
-    mode === "supabase" ? (
-      <span className="rl-live">
-        <span className="rl-live-dot" aria-hidden="true" />
-        Live
-        {people.length > 0 && (
-          <span className="rl-live-people">
-            {" · "}
-            {people.map((p, i) => (
-              <span key={p.id}>
-                {i > 0 && ", "}
-                {p.name} <span className="rl-live-where">on {pageLabel(p.route)}</span>
-              </span>
-            ))}
-          </span>
-        )}
-      </span>
-    ) : (
-      <span className="rl-live rl-live-local">
-        <span className="rl-live-dot" aria-hidden="true" />
-        On this device only
-      </span>
-    );
+  const live = (
+    <>
+      {status === "live" ? (
+        <span className="rl-live">
+          <span className="rl-live-dot" aria-hidden="true" />
+          Live
+          {people.length > 0 && (
+            <span className="rl-live-people">
+              {" · "}
+              {people.map((p, i) => (
+                <span key={p.id}>
+                  {i > 0 && ", "}
+                  {p.name} <span className="rl-live-where">on {pageLabel(p.route)}</span>
+                </span>
+              ))}
+            </span>
+          )}
+        </span>
+      ) : (
+        <span className="rl-live rl-live-local">
+          <span className="rl-live-dot" aria-hidden="true" />
+          {status === "connecting" ? "Connecting…" : "On this device only"}
+        </span>
+      )}
+      {notice && <span className="rl-notice">{notice}</span>}
+    </>
+  );
 
   return (
     <Panel
