@@ -2,8 +2,8 @@
  * The orders pipeline, in the tracker's language: five stages on one hairline, a
  * node per stage. Open stages count the orders in them now and say how long the
  * oldest has waited; a stage whose oldest order has waited past its mark takes the
- * pending tone and says so. Delivered counts the last 30 days, and cancellations are
- * a quiet count at the end. Every stage opens the Orders page filtered to it.
+ * pending tone and says so. Delivered and the quiet cancelled count at the end cover the
+ * orders placed in the last 30 days, as the Orders page's 30-day filter does. Every stage opens the Orders page filtered to it.
  */
 import { useId } from "react";
 import { Link } from "react-router-dom";
@@ -18,7 +18,7 @@ const NAMES: Record<Stage, string> = { placed: "Placed", paid: "Paid", packed: "
 /** What the stage says under its count, and the same said in full for a screen reader. */
 function describe(s: StageFigures) {
   if (s.stage === "delivered") {
-    return { wait: "last 30 days", late: null, spoken: `${orderCount(s.count)} delivered in the last 30 days` };
+    return { wait: "from the last 30 days", late: null, spoken: `${orderCount(s.count)} delivered, of the orders placed in the last 30 days` };
   }
   const limit = formatLimit(STAGE_LIMIT[s.stage as OpenStage]);
   const late = s.late > 0 ? `past ${limit}` : null;
@@ -35,7 +35,11 @@ function StageItem({ s }: { s: StageFigures }) {
   const { wait, late, spoken } = describe(s);
   return (
     <li className="cc-stage" data-late={late ? "" : undefined} data-empty={s.count === 0 ? "" : undefined}>
-      <Link className="cc-stage-link" to={`${HOME}/orders?status=${s.stage}`} aria-label={`${NAMES[s.stage]}: ${spoken}. Show these orders.`}>
+      <Link
+        className="cc-stage-link"
+        to={`${HOME}/orders?status=${s.stage}${s.stage === "delivered" ? "&days=30" : ""}`}
+        aria-label={`${NAMES[s.stage]}: ${spoken}. Show these orders.`}
+      >
         <span className="cc-stage-node" aria-hidden="true" />
         <span className="cc-stage-name">{NAMES[s.stage]}</span>
         <span className="cc-stage-count">
@@ -63,7 +67,7 @@ export function Pipeline({ figures, className }: { figures: { stages: StageFigur
         <h2 id={titleId} className="kit-card-title">
           Pipeline
         </h2>
-        <p className="kit-card-meta">Open orders now · delivered in the last 30 days</p>
+        <p className="kit-card-meta">Open orders now · delivered and cancelled from the last 30 days</p>
       </header>
       <div className="cc-pipe-body">
         <ol className="cc-pipe-track" aria-label={figures ? "Orders by stage" : "Loading orders by stage"}>
@@ -87,13 +91,13 @@ export function Pipeline({ figures, className }: { figures: { stages: StageFigur
         {figures && (
           <Link
             className="cc-pipe-cancelled"
-            to={`${HOME}/orders?status=cancelled`}
-            aria-label={`${orderCount(figures.cancelled)} cancelled in the last 30 days. Show cancelled orders.`}
+            to={`${HOME}/orders?status=cancelled&days=30`}
+            aria-label={`${orderCount(figures.cancelled)} cancelled, of the orders placed in the last 30 days. Show them.`}
           >
             <span className="cc-pipe-cancelled-count">
               <CountingCount value={figures.cancelled} /> cancelled
             </span>
-            <span className="cc-stage-wait">last 30 days</span>
+            <span className="cc-stage-wait">from the last 30 days</span>
           </Link>
         )}
       </div>

@@ -1,13 +1,19 @@
 /**
- * Figures for the overview, computed from orders. The sample data runs to
- * TODAY in seed.ts, so every window counts back from the end of that day.
- * Cancelled and refunded orders are left out of revenue and order counts.
- * Every figure is read from the same orders the Orders page lists.
+ * Figures for the command center (the Overview, Orders and Partners), computed
+ * from orders. The sample data runs to TODAY in seed.ts, so every window counts
+ * back from the end of that day. Cancelled and refunded orders are left out of
+ * revenue and order counts. Every figure is read from the same orders the Orders
+ * page lists, and every order's status reads in one language (orderTone).
  */
 import { TODAY } from "../platform/seed";
-import type { Buyer, Order, OrderStatus, Partner, Referral } from "../platform/types";
+import type { Buyer, Order, OrderStatus, Partner, PaymentStatus, Referral } from "../platform/types";
+import { monthToDate } from "../partners/metrics";
 import { productById } from "../shop/catalog";
 import { formatCount, formatDay, formatMoney } from "../app-kit";
+import type { Tone } from "../app-kit";
+import type { PayoutBatch } from "./preview";
+import { NEXT_PAYOUT, awaitingPayout } from "./program";
+import type { PartnerRow } from "./program";
 
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
@@ -16,6 +22,9 @@ export const END = Date.parse(`${TODAY}T00:00:00Z`) + DAY;
 /** Midnight at the start of the sample world's today. */
 export const TODAY_START = END - DAY;
 export const TODAY_ISO = `${TODAY}T12:00:00.000Z`;
+const TODAY_DATE = new Date(TODAY_START);
+/** Midnight at the start of the sample month, where "this month" begins, as the partner portal counts it. */
+export const MONTH_START = Date.UTC(TODAY_DATE.getUTCFullYear(), TODAY_DATE.getUTCMonth(), 1);
 
 const OPEN: OrderStatus[] = ["placed", "paid", "packed", "shipped"];
 export const isOpen = (status: OrderStatus) => OPEN.includes(status);
@@ -27,6 +36,12 @@ const at = (iso: string) => Date.parse(iso);
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const sum = (values: number[]) => round2(values.reduce((total, v) => total + v, 0));
 export const units = (order: Order) => order.lines.reduce((total, line) => total + line.quantity, 0);
+
+/**
+ * An order placed in the last `days` days, counted back from the end of the sample day as
+ * every window here is. The Orders page's `?days=` and the pipeline's closed counts both use it.
+ */
+export const placedWithin = (order: Order, days: number) => at(order.createdAt) >= END - days * DAY;
 
 /** Counted orders created from `from` days ago up to `to` days ago (0 = now, open-ended). */
 function between(orders: Order[], from: number, to: number) {
@@ -163,15 +178,17 @@ export type PartnerFigures = {
   partnerRevenue: number;
   share: number | null;
   top: PartnerLine[];
+  /** Commission earned on the period's partner orders and not yet paid: pending, and approved for a payout. */
+  earned: { pending: number; approved: number; total: number };
 };
 
-/** The period's partner revenue and share, and its top three partners by revenue. */
+/** The period's partner revenue and share, the commission earned on it, and its top three partners by revenue. */
 export function partnerFigures(orders: Order[], referrals: Referral[], partners: Partner[], days: Period): PartnerFigures {
   const list = between(orders, days, 0);
   const via = list.filter(viaPartner);
   const revenue = totals(list).revenue;
   const partnerRevenue = sum(via.map((o) => o.total));
-  const commission = new Map(referrals.filter((r) => r.status !== "void").map((r) => [r.orderId, r.commission]));
+  const referralFor = new Map(referrals.filter((r) => r.status !== "void").map((r) => [r.orderId, r]));
   const lines = partners
     .map((partner) => {
       const own = via.filter((o) => o.discount?.partnerId === partner.id);
@@ -179,12 +196,62 @@ export function partnerFigures(orders: Order[], referrals: Referral[], partners:
         partner,
         orders: own.length,
         revenue: sum(own.map((o) => o.total)),
-        commission: sum(own.map((o) => commission.get(o.id) ?? 0)),
+        commission: sum(own.map((o) => referralFor.get(o.id)?.commission ?? 0)),
       };
     })
     .filter((line) => line.orders > 0)
     .sort((a, b) => b.revenue - a.revenue || b.orders - a.orders || a.partner.name.localeCompare(b.partner.name));
-  return { revenue, partnerRevenue, share: revenue ? partnerRevenue / revenue : null, top: lines.slice(0, 3) };
+  const commissionIn = (status: Referral["status"]) =>
+    sum(via.map((o) => referralFor.get(o.id)).flatMap((r) => (r?.status === status ? [r.commission] : [])));
+  const pending = commissionIn("pending");
+  const approved = commissionIn("approved");
+  return {
+    revenue,
+    partnerRevenue,
+    share: revenue ? partnerRevenue / revenue : null,
+    top: lines.slice(0, 3),
+    earned: { pending, approved, total: round2(pending + approved) },
+  };
+}
+
+export type NextPayout = { date: string; amount: number; partners: number };
+
+/**
+ * The next payout as the Partners screen states it: approved commission waiting for
+ * a batch, and any batch already scheduled for the same day.
+ */
+export function nextPayout(rows: PartnerRow[], batches: PayoutBatch[]): NextPayout {
+  const waiting = awaitingPayout(rows, batches);
+  const scheduled = batches.filter((batch) => batch.scheduledFor === NEXT_PAYOUT).flatMap((batch) => batch.lines);
+  return {
+    date: NEXT_PAYOUT,
+    amount: sum([...waiting.map((line) => line.amount), ...scheduled.map((line) => line.amount)]),
+    partners: new Set([...waiting.map((line) => line.partner.id), ...scheduled.map((line) => line.partnerId)]).size,
+  };
+}
+
+export type PartnerMonth = { revenue: number; orders: number; commission: number };
+
+/**
+ * Each partner's month so far: the totals of their orders placed since the 1st of the sample
+ * month (cancelled and refunded orders left out, as from every revenue figure here), and the
+ * commission on them exactly as the partner's own portal counts "This month".
+ */
+export function partnerMonths(orders: Order[], referrals: Referral[], partners: Partner[]): Map<string, PartnerMonth> {
+  const month = orders.filter((o) => viaPartner(o) && isCounted(o) && at(o.createdAt) >= MONTH_START && at(o.createdAt) < END);
+  return new Map(
+    partners.map((partner) => {
+      const own = month.filter((o) => o.discount?.partnerId === partner.id);
+      return [
+        partner.id,
+        {
+          revenue: sum(own.map((o) => o.total)),
+          orders: own.length,
+          commission: monthToDate(referrals.filter((r) => r.partnerId === partner.id)).current,
+        },
+      ];
+    }),
+  );
 }
 
 /* ---------- The pipeline ---------- */
@@ -211,32 +278,66 @@ function enteredStage(order: Order): number {
   return steps.length ? Math.max(...steps) : at(order.createdAt);
 }
 
-/** Closed in the last 30 days: the step's event falls inside the window. */
-function closedWithin(orders: Order[], status: OrderStatus): number {
-  const since = END - 30 * DAY;
-  return orders.filter((o) => o.status === status && o.events.some((e) => e.status === status && at(e.at) >= since)).length;
+/**
+ * How long an open order has waited in its stage, never less than zero (a step stamped later
+ * in the day than the sample clock counts as just taken); null once the order is closed.
+ */
+export function waitInStage(order: Order, now: string): number | null {
+  return isOpen(order.status) ? Math.max(0, at(now) - enteredStage(order)) : null;
 }
 
+/** An open order that has waited past its stage's limit: late for the next step. */
+export function isLate(order: Order, now: string): boolean {
+  const wait = waitInStage(order, now);
+  return wait !== null && wait > STAGE_LIMIT[order.status as OpenStage] * DAY;
+}
+
+/** The last 30 days' delivered or cancelled orders: placed in the window, as the Orders page lists them for `?days=30`. */
+const closedWithin = (orders: Order[], status: OrderStatus) => orders.filter((o) => o.status === status && placedWithin(o, 30)).length;
+
 /**
- * Open orders now, stage by stage, with how long the oldest has waited (never less than
- * zero: a step stamped later in the day than the sample clock counts as just taken).
- * Delivered and cancelled count the last 30 days.
+ * Open orders now, stage by stage, with how long the oldest has waited and how many
+ * have waited past the stage's limit. Delivered and cancelled count the last 30 days.
  */
 export function pipeline(orders: Order[], now: string): { stages: StageFigures[]; cancelled: number } {
-  const time = at(now);
   const open = (["placed", "paid", "packed", "shipped"] as OpenStage[]).map((stage) => {
-    const waits = orders.filter((o) => o.status === stage).map((o) => Math.max(0, time - enteredStage(o)));
+    const here = orders.filter((o) => o.status === stage);
+    const waits = here.map((o) => waitInStage(o, now) ?? 0);
     return {
       stage,
-      count: waits.length,
+      count: here.length,
       oldest: waits.length ? Math.max(...waits) : null,
-      late: waits.filter((wait) => wait > STAGE_LIMIT[stage] * DAY).length,
+      late: here.filter((o) => isLate(o, now)).length,
     };
   });
   return {
     stages: [...open, { stage: "delivered", count: closedWithin(orders, "delivered"), oldest: null, late: 0 }],
     cancelled: closedWithin(orders, "cancelled"),
   };
+}
+
+/* ---------- One status language ---------- */
+
+/**
+ * An order's status dot, the same on Orders, in its drawer, in the pipeline and in the Live
+ * stream: an open order in the quiet tone, delivered in the signal tone, cancelled (or
+ * refunded) in the danger tone, and an open order past its stage's limit in the pending tone.
+ */
+export function orderTone(order: Order, now: string): Tone {
+  if (!isOpen(order.status)) return stepTone(order.status);
+  return isLate(order, now) ? "pending" : "neutral";
+}
+
+/** A step an order took, on its timeline or in the Live stream: the same tones, without lateness. */
+export function stepTone(status: OrderStatus): Tone {
+  if (status === "delivered") return "signal";
+  return status === "cancelled" || status === "refunded" ? "danger" : "neutral";
+}
+
+/** Payment follows suit: captured in the signal tone, authorized quiet, refunded (or failed) in the danger tone. */
+export function paymentTone(payment: PaymentStatus): Tone {
+  if (payment === "captured") return "signal";
+  return payment === "refunded" || payment === "failed" ? "danger" : "neutral";
 }
 
 /** A wait as a person says it: "under an hour", "26 hours", "3 days". Hours until two days. */

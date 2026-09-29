@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Button,
@@ -12,29 +13,44 @@ import {
   SampleTag,
   Section,
   Segmented,
+  Skeleton,
   StatusChip,
   formatCount,
   formatDate,
+  formatDateTime,
+  formatDay,
   formatMoney,
   plural,
   statusLabel,
 } from "../app-kit";
 import type { Column, RowGroup, Tone } from "../app-kit";
+import { CountingMoney } from "../app-kit/motion";
+import { monthToDate } from "../partners/metrics";
+import { goalProgress, milestones, roundMoney } from "../partners/momentum";
+import type { Milestone } from "../partners/momentum";
+import { usePartnerPrefs } from "../partners/prefs";
 import { store, useResource } from "../platform/store";
 import type { PartnerStatus, Payout, Referral } from "../platform/types";
+import { ago, useWorldNow } from "./alerts";
 import { Mark, PreviewTag, keepTogether } from "./fields";
-import { TODAY_ISO } from "./metrics";
+import { MONTH_START, TODAY_ISO, nextPayout, partnerFigures, partnerMonths, percentOf } from "./metrics";
+import type { NextPayout, PartnerFigures, PartnerMonth } from "./metrics";
 import { HOME } from "./nav";
 import { DrawerLoading } from "./OrderDrawer";
 import { preview, usePreview } from "./preview";
 import type { PayoutBatch } from "./preview";
 import { NEXT_PAYOUT, PAYOUT_METHOD, awaitingPayout, partnerRows, payoutHistory, percent } from "./program";
 import type { AwaitingLine, PartnerRow, PayoutLine } from "./program";
+import { CountingMoneyText, CountingPercent } from "./pulse";
 import { matches, useQueryParam, useSearchQuery } from "./state";
 
 const PARTNER_TONE: Record<PartnerStatus, Tone> = { active: "signal", pending: "pending", paused: "neutral" };
 const STATUS_ORDER: PartnerStatus[] = ["pending", "active", "paused"];
 const round2 = (n: number) => Math.round(n * 100) / 100;
+/** The summary band's window: the Overview's default period. */
+const BAND_DAYS = 30;
+/** "1 Sep": where the sample month, and every "This month" figure, begins. */
+const MONTH_FROM = formatDay(new Date(MONTH_START).toISOString());
 
 function PartnerChip({ status }: { status: PartnerStatus }) {
   return <StatusChip status={status} tone={PARTNER_TONE[status]} />;
@@ -50,105 +66,246 @@ function Count({ value, one, many }: { value: number; one: string; many: string 
   );
 }
 
-/** Everything the partner pages read: partners, referrals and payouts, with this preview's changes. */
+/** Everything the partner pages read: partners, referrals, payouts and orders, with this preview's changes. */
 function useProgram() {
   const partners = useResource(() => store.partners.list(), []);
   const referrals = useResource(() => store.partners.referrals(), []);
   const payouts = useResource(() => store.partners.payouts(), []);
+  const orders = useResource(() => store.orders.list(), []);
   const changes = usePreview();
   const rows = useMemo(
     () => (partners.data && referrals.data ? partnerRows(partners.data, referrals.data, changes) : undefined),
     [partners.data, referrals.data, changes],
   );
+  const months = useMemo(
+    () => (orders.data && referrals.data && partners.data ? partnerMonths(orders.data, referrals.data, partners.data) : undefined),
+    [orders.data, referrals.data, partners.data],
+  );
+  // The Overview's partner panel figures, from the same code: the band restates them, never recomputes them.
+  const band = useMemo(
+    () =>
+      orders.data && referrals.data && partners.data && rows
+        ? { figures: partnerFigures(orders.data, referrals.data, partners.data, BAND_DAYS), payout: nextPayout(rows, changes.batches) }
+        : null,
+    [orders.data, referrals.data, partners.data, rows, changes.batches],
+  );
   return {
     rows,
+    months,
+    band,
     referrals: referrals.data,
     payouts: payouts.data,
     batches: changes.batches,
-    loading: partners.loading || referrals.loading || payouts.loading,
-    error: partners.error ?? referrals.error ?? payouts.error,
+    loading: partners.loading || referrals.loading || payouts.loading || orders.loading,
+    error: partners.error ?? referrals.error ?? payouts.error ?? orders.error,
     reload: () => {
       partners.reload();
       referrals.reload();
       payouts.reload();
+      orders.reload();
     },
   };
 }
 
-const partnerColumns: Column<PartnerRow>[] = [
-  {
-    key: "name",
-    header: "Partner",
-    width: "17%",
-    mobile: "primary",
-    sortValue: (r) => r.name,
-    cell: (r) => (
+/** The program at a glance, above the tabs: the Overview partner panel's last 30 days, and the next payout. */
+function ProgramBand({ figures, payout }: { figures: PartnerFigures | null; payout: NextPayout | null }) {
+  const share = figures?.share ?? 0;
+  const loading = (
+    <>
+      <p className="kit-figure" aria-hidden="true">
+        <Skeleton width="44%" height="0.7em" />
+      </p>
+      <p className="cc-program-note" aria-hidden="true">
+        <Skeleton width="72%" />
+      </p>
+    </>
+  );
+  return (
+    <section className="kit-stats cc-program kit-span-12" aria-label={`The partner program, last ${BAND_DAYS} days`}>
+      <div className="kit-stat">
+        <p className="kit-label">Through partners, {BAND_DAYS} days</p>
+        {figures ? (
+          <>
+            <p className="kit-figure">
+              <CountingPercent value={percentOf(share)} />
+            </p>
+            <p className="cc-program-note">
+              of revenue came through partners ·{" "}
+              <span className="kit-num">
+                <CountingMoneyText value={figures.partnerRevenue} />
+              </span>
+            </p>
+            <span className="cc-share-bar" aria-hidden="true">
+              <span style={{ "--cc-share": share } as CSSProperties} />
+            </span>
+          </>
+        ) : (
+          loading
+        )}
+      </div>
+      <div className="kit-stat">
+        <p className="kit-label">Commission earned, {BAND_DAYS} days</p>
+        {figures ? (
+          <>
+            <p className="kit-figure">
+              <CountingMoney value={figures.earned.total} />
+            </p>
+            <p className="cc-program-note kit-num">
+              {formatMoney(figures.earned.approved)} approved · {formatMoney(figures.earned.pending)} pending
+            </p>
+          </>
+        ) : (
+          loading
+        )}
+      </div>
+      <div className="kit-stat">
+        <p className="kit-label">Next payout</p>
+        {payout ? (
+          <>
+            <p className="kit-figure">
+              <CountingMoney value={payout.amount} />
+            </p>
+            <p className="cc-program-note">
+              {payout.partners
+                ? `${formatDate(payout.date)} · to ${plural(payout.partners, "partner")} by bank transfer, a sample schedule`
+                : `${formatDate(payout.date)} · nothing approved to pay yet`}
+            </p>
+          </>
+        ) : (
+          loading
+        )}
+      </div>
+    </section>
+  );
+}
+
+/** A partner's name, with their handle beneath in the quiet ink. */
+function Who({ row }: { row: PartnerRow }) {
+  return (
+    <span className="cc-who">
       <span className="cc-marked">
-        <span className="cc-marked-text">{r.name}</span>
-        {r.edited && <Mark>Edited</Mark>}
+        <span className="cc-marked-text">{row.name}</span>
+        {row.edited && <Mark>Edited</Mark>}
       </span>
-    ),
-  },
-  { key: "handle", header: "Handle", width: "17%", mobile: "secondary", sortValue: (r) => r.handle, cell: (r) => r.handle },
-  { key: "code", header: "Code", width: "12%", mobile: "meta", sortValue: (r) => r.code, cell: (r) => <span className="kit-mono">{r.code}</span> },
-  { key: "rate", header: "Rate", width: "8%", align: "end", mobile: "hidden", sortValue: (r) => r.rate, sortFirst: "desc", cell: (r) => percent(r.rate) },
-  {
-    key: "status",
-    header: "Status",
-    width: "12%",
-    mobile: "meta",
-    sortValue: (r) => STATUS_ORDER.indexOf(r.status),
-    cell: (r) => <PartnerChip status={r.status} />,
-  },
-  {
-    key: "referrals",
-    header: "Referrals",
-    width: "11%",
-    align: "end",
-    mobile: "hidden",
-    sortValue: (r) => r.count,
-    sortFirst: "desc",
-    cell: (r) => <Count value={r.count} one="referral" many="referrals" />,
-  },
-  {
-    key: "revenue",
-    header: "Revenue",
-    width: "12%",
-    align: "end",
-    mobile: "hidden",
-    sortValue: (r) => r.revenue,
-    sortFirst: "desc",
-    cell: (r) => (r.revenue ? formatMoney(r.revenue) : <span className="kit-quiet">{formatMoney(0)}</span>),
-  },
-  {
-    key: "owed",
-    header: "Owed",
-    width: "11%",
-    align: "end",
-    mobile: "aside",
-    sortValue: (r) => r.owed,
-    sortFirst: "desc",
-    cell: (r) => (
-      <span className={r.owed ? undefined : "kit-quiet"}>
-        {formatMoney(r.owed)}
-        <span className="cc-unit"> owed</span>
-      </span>
-    ),
-  },
-];
+      <span className="cc-who-sub">{row.handle}</span>
+    </span>
+  );
+}
+
+function partnerColumns(months: Map<string, PartnerMonth> | undefined, now: string): Column<PartnerRow>[] {
+  const month = (r: PartnerRow): PartnerMonth => months?.get(r.id) ?? { revenue: 0, orders: 0, commission: 0 };
+  const lastSale = (r: PartnerRow) => r.referrals[0]?.createdAt;
+  return [
+    { key: "name", header: "Partner", width: "20%", mobile: "primary", sortValue: (r) => r.name, cell: (r) => <Who row={r} /> },
+    { key: "code", header: "Code", width: "11%", mobile: "meta", sortValue: (r) => r.code, cell: (r) => <span className="kit-mono">{r.code}</span> },
+    { key: "rate", header: "Rate", width: "7%", align: "end", mobile: "hidden", sortValue: (r) => r.rate, sortFirst: "desc", cell: (r) => percent(r.rate) },
+    {
+      key: "status",
+      header: "Status",
+      width: "11%",
+      mobile: "meta",
+      sortValue: (r) => STATUS_ORDER.indexOf(r.status),
+      cell: (r) => <PartnerChip status={r.status} />,
+    },
+    {
+      key: "month",
+      header: "This month",
+      width: "17%",
+      align: "end",
+      mobile: "secondary",
+      sortValue: (r) => month(r).revenue,
+      sortFirst: "desc",
+      cell: (r) => {
+        const m = month(r);
+        return (
+          <span className="cc-month">
+            <span className={m.revenue ? undefined : "kit-quiet"}>
+              {formatMoney(m.revenue)}
+              <span className="cc-unit"> this month</span>
+            </span>
+            <span className="cc-month-sub">{formatMoney(m.commission)} earned</span>
+          </span>
+        );
+      },
+    },
+    {
+      key: "last",
+      header: "Last sale",
+      width: "12%",
+      mobile: "meta",
+      sortValue: (r) => lastSale(r) ?? "",
+      sortFirst: "desc",
+      cell: (r) => {
+        const at = lastSale(r);
+        return (
+          <>
+            <span className="cc-unit">Last sale </span>
+            {at ? (
+              <time dateTime={at} title={formatDateTime(at)}>
+                {ago(at, now)}
+              </time>
+            ) : (
+              <>
+                <span className="kit-quiet" aria-hidden="true">
+                  —
+                </span>
+                <span className="kit-sr">none yet</span>
+              </>
+            )}
+          </>
+        );
+      },
+    },
+    {
+      key: "referrals",
+      header: "Referrals",
+      width: "10%",
+      align: "end",
+      mobile: "meta",
+      sortValue: (r) => r.count,
+      sortFirst: "desc",
+      cell: (r) => <Count value={r.count} one="referral" many="referrals" />,
+    },
+    {
+      key: "owed",
+      header: "Owed",
+      width: "12%",
+      align: "end",
+      mobile: "aside",
+      sortValue: (r) => r.owed,
+      sortFirst: "desc",
+      cell: (r) => (
+        <span className={r.owed ? undefined : "kit-quiet"}>
+          {formatMoney(r.owed)}
+          <span className="cc-unit"> owed</span>
+        </span>
+      ),
+    },
+  ];
+}
 
 export default function Partners() {
   const program = useProgram();
   const query = useSearchQuery();
+  const now = useWorldNow();
   const [viewParam, setView] = useQueryParam("view");
   const [openId, setOpenId] = useQueryParam("partner");
   const [batchParam, setBatch] = useQueryParam("batch");
   const view = viewParam === "payouts" ? "payouts" : "partners";
-  const { rows, batches } = program;
+  const { rows, months, batches } = program;
+  const columns = useMemo(() => partnerColumns(months, now), [months, now]);
 
+  // Applicants awaiting approval first, then whoever is selling most this month.
   const sorted = useMemo(
-    () => rows && [...rows].sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) || b.revenue - a.revenue),
-    [rows],
+    () =>
+      rows &&
+      [...rows].sort(
+        (a, b) =>
+          STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status) ||
+          (months?.get(b.id)?.revenue ?? 0) - (months?.get(a.id)?.revenue ?? 0) ||
+          b.revenue - a.revenue,
+      ),
+    [rows, months],
   );
   const shown = useMemo(
     () => sorted?.filter((r) => matches(query, r.name, r.handle, r.code, r.email, r.audience)),
@@ -159,11 +316,11 @@ export default function Partners() {
   const waiting = rows?.filter((r) => r.status === "pending").length ?? 0;
 
   return (
-    <div className="kit-grid">
+    <div className="kit-grid cc-partner-page">
       <PageHeader
         description={
           view === "partners"
-            ? "Partners who refer buyers with their code or link. Revenue counts referred subtotals after the code's discount; owed is approved commission not yet paid. Rates are sample terms."
+            ? `Partners who refer buyers with their code or link. This month counts the orders placed through each partner since ${MONTH_FROM}: their totals, and the commission earned on them. Owed is approved commission not yet paid. Rates are sample terms.`
             : "Approved commission waiting to be paid, and every payout sent. Payouts go out by bank transfer on the 5th of each month, a sample schedule."
         }
         meta={
@@ -179,6 +336,7 @@ export default function Partners() {
           </>
         }
       />
+      {!program.error && <ProgramBand figures={program.band?.figures ?? null} payout={program.band?.payout ?? null} />}
       <div className="kit-toolbar">
         <Segmented
           label="Partners or payouts"
@@ -197,10 +355,10 @@ export default function Partners() {
       </div>
 
       {view === "partners" ? (
-        <div className="kit-card kit-span-12">
+        <div className="kit-card kit-span-12 cc-partner-table">
           <DataTable
             caption="Partners"
-            columns={partnerColumns}
+            columns={columns}
             rows={shown}
             rowKey={(r) => r.id}
             loading={program.loading}
@@ -575,13 +733,95 @@ function changeFor(row: PartnerRow): Change {
   };
 }
 
-/** A fixed list, newest first, like the orders in a customer's drawer. */
+/** A fixed list, newest first, like the orders in a customer's drawer. Each row says how the order came: via link or via code. */
 const referralColumns: Column<Referral>[] = [
-  { key: "order", header: "Order", width: "22%", mobile: "primary", cell: (r) => <span className="kit-mono">{r.orderNumber}</span> },
-  { key: "placed", header: "Placed", width: "26%", mobile: "meta", cell: (r) => formatDate(r.createdAt) },
-  { key: "commission", header: "Earned", width: "22%", align: "end", mobile: "aside", cell: (r) => formatMoney(r.commission) },
-  { key: "status", header: "Status", width: "30%", mobile: "secondary", cell: (r) => <StatusChip status={r.status} /> },
+  { key: "order", header: "Order", width: "21%", mobile: "primary", cell: (r) => <span className="kit-mono">{r.orderNumber}</span> },
+  { key: "placed", header: "Placed", width: "24%", mobile: "meta", cell: (r) => formatDate(r.createdAt) },
+  {
+    key: "via",
+    header: "Via",
+    width: "13%",
+    mobile: "meta",
+    cell: (r) => (
+      <>
+        <span className="cc-unit">via </span>
+        {r.via}
+      </>
+    ),
+  },
+  { key: "commission", header: "Earned", width: "18%", align: "end", mobile: "aside", cell: (r) => formatMoney(r.commission) },
+  { key: "status", header: "Status", width: "24%", mobile: "secondary", cell: (r) => <StatusChip status={r.status} /> },
 ];
+
+/** A thin line filled to a share (0–1), as the partner portal draws its goal. Decorative: the words beside it carry the figures. */
+function Meter({ share }: { share: number }) {
+  return (
+    <span className="cc-share-bar" aria-hidden="true">
+      <span style={{ "--cc-share": Math.max(0, Math.min(share, 1)) } as CSSProperties} />
+    </span>
+  );
+}
+
+/** How far a partner is from a milestone, in the portal's own words. */
+function howFar(m: Milestone) {
+  return m.kind === "orders"
+    ? `${formatCount(m.current)} of ${formatCount(m.target)} orders · ${formatCount(m.target - m.current)} to go`
+    : `${formatMoney(m.current)} of ${roundMoney(m.target)} · ${formatMoney(m.target - m.current)} to go`;
+}
+
+/**
+ * This month as the partner sees it in their own portal: the monthly goal they set (or the
+ * default) and how far along it they are, and the next milestone, from the same functions the
+ * portal uses, over the same referrals.
+ */
+function PortalMonth({ row, referrals }: { row: PartnerRow; referrals: Referral[] }) {
+  const [prefs] = usePartnerPrefs(row.id);
+  const first = row.name.split(" ")[0];
+  if (row.status === "pending") {
+    return (
+      <Section title="This month">
+        <p className="cc-portal-note">{first}’s partner portal opens once the partner is approved.</p>
+      </Section>
+    );
+  }
+  const month = monthToDate(referrals);
+  const goal = goalProgress(referrals, month.current, prefs.goal);
+  const { list, next } = milestones(referrals);
+  const past = round2(month.current - goal.goal);
+  return (
+    <Section title="This month">
+      <p className="cc-portal-note">As {first} sees it in the partner portal</p>
+      <div className="cc-portal">
+        <div className="cc-portal-item">
+          <p className="kit-label">Monthly goal · {month.month}</p>
+          <p className="cc-portal-figure kit-num">
+            {Math.round(goal.share * 100)}
+            <small>%</small>
+            <span className="cc-portal-of"> of {roundMoney(goal.goal)}</span>
+          </p>
+          <Meter share={goal.share} />
+          <p className="cc-portal-line kit-num">
+            {goal.reached
+              ? `Goal reached${goal.reachedAt ? ` ${formatDay(goal.reachedAt)}` : ""}${past > 0 ? ` · ${formatMoney(past)} past it` : ""}`
+              : `${formatMoney(month.current)} so far · ${formatMoney(goal.remaining)} to go`}
+          </p>
+        </div>
+        <div className="cc-portal-item">
+          <p className="kit-label">Next milestone</p>
+          {next ? (
+            <>
+              <p className="cc-portal-title">{next.title}</p>
+              <Meter share={next.current / next.target} />
+              <p className="cc-portal-line kit-num">{howFar(next)}</p>
+            </>
+          ) : (
+            <p className="cc-portal-line">All {list.length} milestones reached</p>
+          )}
+        </div>
+      </div>
+    </Section>
+  );
+}
 
 const payoutColumns: Column<PayoutLine>[] = [
   { key: "period", header: "Period", width: "22%", mobile: "primary", cell: (l) => l.period },
@@ -629,6 +869,8 @@ function PartnerDrawer({
     () => (payouts && referrals ? payoutHistory(payouts, batches, referrals).filter((line) => line.partnerId === id) : []),
     [payouts, referrals, batches, id],
   );
+  // Every referral of theirs, as their portal loads them.
+  const own = useMemo(() => (referrals ?? []).filter((r) => r.partnerId === id), [referrals, id]);
 
   if (!row) {
     return (
@@ -712,6 +954,8 @@ function PartnerDrawer({
           </dd>
         </div>
       </dl>
+
+      <PortalMonth row={row} referrals={own} />
 
       <Section title="Terms">
         <Facts

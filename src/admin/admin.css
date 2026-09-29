@@ -437,10 +437,16 @@
   background: var(--kit-panel);
   transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
 }
-/* A stage holding orders is lit; one waiting past its mark takes the pending tone. */
+/* A stage holding orders is lit in the orders' own status language (metrics.ts): open stages in
+   the quiet tone, Delivered (the track's last stage) in the signal tone; one waiting past its
+   mark takes the pending tone. */
 .cc-stage:not([data-empty]) .cc-stage-node {
-  border-color: var(--kit-ink-2);
-  background: var(--kit-ink-2);
+  border-color: var(--kit-tone-neutral);
+  background: var(--kit-tone-neutral);
+}
+.cc-stage:last-child:not([data-empty]) .cc-stage-node {
+  border-color: var(--kit-tone-signal);
+  background: var(--kit-tone-signal);
 }
 .cc-stage[data-late] .cc-stage-node {
   border-color: var(--kit-tone-pending);
@@ -1812,6 +1818,200 @@
   gap: var(--tm-space-3);
 }
 
+/* ---------- One status language: an order reads the same on every screen ---------- */
+
+/* A quiet status keeps a filled dot, as the Live stream and the drawer's timeline draw it. */
+.kit-chip.cc-state[data-tone="neutral"]::before {
+  background: var(--kit-tone-neutral);
+  box-shadow: none;
+}
+.kit-chip.cc-state {
+  max-width: 100%;
+}
+.kit-chip.cc-state > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* An open order past its stage's limit says so, lit as the pipeline lights it. */
+.cc-state-late {
+  color: var(--kit-ink);
+}
+
+/* ---------- Orders: via, and the filters ---------- */
+
+/* A partner's code, as a quiet chip; the information face, as every identifier. */
+.cc-via {
+  display: inline-flex;
+  align-items: center;
+  height: var(--tm-space-5);
+  padding-inline: var(--tm-space-2);
+  border: 1px solid var(--kit-line-strong);
+  border-radius: var(--tm-radius-pill);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  letter-spacing: 0.02em;
+  color: var(--kit-ink-2);
+  vertical-align: middle;
+}
+.cc-via-none {
+  color: var(--kit-ink-3);
+}
+.cc-filters {
+  flex-wrap: wrap;
+}
+.cc-filters-set {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-3);
+  min-width: 0;
+}
+/* A filter that came with the link ("Last 30 days"), removed in one press. */
+.cc-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  flex: none;
+  height: var(--kit-control);
+  padding-inline: var(--tm-space-4) var(--tm-space-3);
+  border: 1px solid var(--kit-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-wash);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-display);
+  color: var(--kit-ink);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.cc-filter-chip svg {
+  width: var(--tm-space-4);
+  height: var(--tm-space-4);
+  color: var(--kit-ink-3);
+  transition: color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.cc-filter-chip:hover:not(:disabled) {
+  background: var(--kit-wash-strong);
+  border-color: var(--kit-ink-4);
+}
+.cc-filter-chip:hover:not(:disabled) svg {
+  color: var(--kit-ink);
+}
+.cc-filter-chip:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.cc-filter-chip:focus-visible {
+  border-color: var(--kit-focus);
+}
+.cc-filter-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---------- The order drawer: through a partner ---------- */
+
+.cc-commission {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-1) var(--tm-space-4);
+}
+
+/* ---------- Partners: the program at a glance, the table, the drawer ---------- */
+
+.kit .cc-program {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.kit .cc-program-note {
+  margin-top: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+  text-wrap: pretty;
+}
+.cc-program-note .kit-num {
+  color: var(--kit-ink-2);
+}
+.cc-program .cc-share-bar {
+  margin-top: var(--tm-space-3);
+}
+/* Two lines to a row: a partner's name over their handle, a month's revenue over its commission. */
+.cc-partner-table .kit-table td {
+  height: calc(var(--kit-row) + var(--tm-space-3));
+}
+.cc-who,
+.cc-month {
+  display: inline-flex;
+  flex-direction: column;
+  gap: calc(var(--tm-space-1) / 2);
+  max-width: 100%;
+}
+.cc-month {
+  align-items: flex-end;
+}
+.cc-who-sub,
+.cc-month-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+/* This month, as the partner's portal shows it. */
+.kit .cc-portal-note {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.cc-portal {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--tm-gutter);
+  padding-top: var(--tm-space-4);
+  border-top: 1px solid var(--kit-line);
+}
+/* Label, figure, line and words share rows across both, so the two lines sit level. */
+.cc-portal-item {
+  display: grid;
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  align-content: start;
+  min-width: 0;
+}
+.kit .cc-portal-figure {
+  align-self: end;
+  margin-top: var(--tm-space-3);
+  font: var(--tm-weight-light) var(--tm-type-h3) / 1 var(--tm-font-sans);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--kit-ink);
+  white-space: nowrap;
+}
+.cc-portal-figure small {
+  margin-left: 0.04em;
+  font-size: 0.5em;
+  letter-spacing: 0;
+  color: var(--kit-ink-3);
+}
+.cc-portal-of {
+  font-size: var(--tm-type-ui);
+  letter-spacing: 0;
+  color: var(--kit-ink-3);
+}
+.kit .cc-portal-title {
+  align-self: end;
+  margin-top: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.cc-portal .cc-share-bar {
+  margin-top: var(--tm-space-3);
+}
+.kit .cc-portal-line {
+  margin-top: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+
 @media (max-width: 75rem) {
   .cc-alerts-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -1859,6 +2059,14 @@
   .cc-day {
     gap: var(--tm-space-5);
     padding-top: 0;
+  }
+  /* The program's three figures keep one row, a hairline between each, until phones stack them. */
+  .kit .cc-program .kit-stat {
+    border-top: 0;
+    border-left: 1px solid var(--kit-line);
+  }
+  .kit .cc-program .kit-stat:first-child {
+    border-left: 0;
   }
 }
 
@@ -2048,6 +2256,82 @@
     content: "";
     position: absolute;
     inset: calc((var(--cc-tap-reach) - 100%) / -2) calc(var(--tm-space-1) * -1);
+  }
+
+  /* Orders and Partners on phones: the same 44px reach for every filter and tab, and for the
+     drawers' inline links, which keep their look. */
+  :is(.cc-orders, .cc-partner-page) .kit-segment {
+    min-height: var(--cc-tap);
+  }
+  .cc-filters-set .kit-segmented {
+    flex: 1 1 100%;
+  }
+  .cc-filters-set .kit-select {
+    flex: 1 1 auto;
+    height: var(--cc-tap);
+  }
+  .cc-filters-set .kit-select select {
+    width: 100%;
+  }
+  .cc-filter-chip {
+    height: var(--cc-tap);
+  }
+  .kit-drawer .cc-inline-link,
+  .kit[data-theme="night"] :is(.kit-drawer-head .kit-iconbutton, .kit-drawer-foot .kit-button, .cc-partner-page .cc-card-foot .kit-button) {
+    position: relative;
+  }
+  .kit-drawer .cc-inline-link::after,
+  .kit[data-theme="night"] :is(.kit-drawer-foot .kit-button, .cc-partner-page .cc-card-foot .kit-button)::after {
+    content: "";
+    position: absolute;
+    inset: calc((var(--cc-tap-reach) - 100%) / -2) 0;
+  }
+  .kit[data-theme="night"] .kit-drawer-head .kit-iconbutton::after {
+    content: "";
+    position: absolute;
+    inset: calc((var(--cc-tap-reach) - 100%) / -2);
+  }
+  /* A direct order says nothing on the meta line; a partner's code joins it. */
+  .kit-table td[data-mobile="meta"]:has(> .cc-via-none) {
+    display: none;
+  }
+  .cc-via {
+    height: auto;
+    padding: 0 var(--tm-space-2);
+    font-size: var(--tm-type-micro);
+    line-height: var(--tm-leading-body);
+  }
+  /* The program at a glance stacks, one figure to a row. */
+  .kit .cc-program {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .kit .cc-program .kit-stat {
+    border-left: 0;
+  }
+  .kit .cc-program .kit-stat + .kit-stat {
+    border-top: 1px solid var(--kit-line);
+  }
+  .cc-partner-table .kit-table td {
+    height: auto;
+  }
+  /* The month reads on one line: "$1,215.50 this month · $113.62 earned". */
+  .cc-month {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--tm-space-2);
+  }
+  .cc-month-sub::before {
+    content: "·";
+    margin-right: var(--tm-space-2);
+  }
+  .cc-portal {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--tm-space-5);
+  }
+  .cc-portal-item {
+    grid-row: auto;
+    grid-template-rows: none;
   }
 }
 

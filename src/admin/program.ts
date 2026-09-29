@@ -4,7 +4,9 @@
  * top. Partners and Discount codes both read from here, so pausing a partner
  * also stops their code.
  */
-import { formatDate } from "../app-kit";
+import { formatDate, formatDay } from "../app-kit";
+import type { Tone } from "../app-kit";
+import { payoutFor } from "../partners/metrics";
 import { TODAY } from "../platform/seed";
 import type { Discount, Order, Partner, PartnerStatus, Payout, Referral } from "../platform/types";
 import type { PayoutBatch, PreviewState } from "./preview";
@@ -59,6 +61,31 @@ export function partnerRows(partners: Partner[], referrals: Referral[], changes:
       edited: status !== partner.status,
     };
   });
+}
+
+export type CommissionState = { tone: Tone; text: string };
+
+/**
+ * A referral's commission as the owner reads it on the order: its state, with one line that
+ * explains it in the program's words. Commission is pending until 14 days after delivery, is
+ * then approved for the next payout on the 5th, and is paid in that payout.
+ */
+export function commissionState(referral: Referral, order: Order, payouts: Payout[]): CommissionState {
+  switch (referral.status) {
+    case "pending":
+      return {
+        tone: "pending",
+        text: order.status === "delivered" ? "Pending until 14 days after delivery" : "Pending until delivered",
+      };
+    case "approved":
+      return { tone: "signal", text: `Approved for the ${formatDay(NEXT_PAYOUT)} payout` };
+    case "paid": {
+      const payout = payoutFor(referral, payouts.filter((p) => p.partnerId === referral.partnerId));
+      return { tone: "signal", text: payout?.paidAt ? `Paid on ${formatDay(`${payout.paidAt}T12:00:00Z`)}` : "Paid" };
+    }
+    case "void":
+      return { tone: "danger", text: "Void, the order did not complete" };
+  }
 }
 
 /** Referral ids that a payout batch in this preview already holds. */

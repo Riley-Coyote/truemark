@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Check } from "lucide-react";
 import {
@@ -10,23 +11,64 @@ import {
   SampleTag,
   Section,
   Skeleton,
-  StatusChip,
   formatDateTime,
   formatMoney,
   statusLabel,
-  toneFor,
 } from "../app-kit";
+import type { Tone } from "../app-kit";
 import { estimatedDelivery, paymentOf, weekdayDate } from "../brand/Tracker";
 import { store, useResource } from "../platform/store";
-import type { Address, OrderStatus } from "../platform/types";
+import type { Address, Order, OrderStatus, Partner, PaymentStatus, Payout, Referral } from "../platform/types";
 import { productById } from "../shop/catalog";
 import { BuyerEmail, buyerEmailsFor } from "../shop/pages/account/emails";
 import type { BuyerEmailKind } from "../shop/pages/account/emails";
+import { useWorldNow } from "./alerts";
 import { Fulfilment, NEXT } from "./fulfilment";
 import { HOME } from "./nav";
-import { units } from "./metrics";
+import { STAGE_LIMIT, formatLimit, formatWait, isLate, orderTone, paymentTone, stepTone, units, waitInStage } from "./metrics";
+import type { OpenStage } from "./metrics";
+import { commissionState } from "./program";
 
 const MINUS = "−";
+
+/* ---------- One status language ---------- */
+
+/**
+ * A status as a dot and a word, with the tone metrics.ts gives it. Unlike the kit's chip, a
+ * quiet status keeps a filled dot, as the Live stream and the timeline draw it, so an order
+ * reads the same on every screen.
+ */
+export function StateChip({ tone, label, title }: { tone: Tone; label: ReactNode; title?: string }) {
+  return (
+    <span className="kit-chip cc-state" data-tone={tone} title={title}>
+      {label}
+    </span>
+  );
+}
+
+/** An order's status. An open order past its stage's limit takes the pending tone and says so, in the pipeline's words. */
+export function OrderStatusChip({ order, now }: { order: Order; now: string }) {
+  const label = statusLabel(order.status);
+  if (!isLate(order, now)) return <StateChip tone={orderTone(order, now)} label={label} />;
+  const limit = formatLimit(STAGE_LIMIT[order.status as OpenStage]);
+  return (
+    <StateChip
+      tone="pending"
+      title={`${label} for ${formatWait(waitInStage(order, now) ?? 0)}, past its ${limit} mark`}
+      label={
+        <span>
+          {label}
+          <span className="cc-state-late"> · past {limit}</span>
+        </span>
+      }
+    />
+  );
+}
+
+/** Payment follows suit: captured in the signal tone, authorized quiet, refunded in the danger tone. */
+export function PaymentChip({ payment, label }: { payment: PaymentStatus; label?: string }) {
+  return <StateChip tone={paymentTone(payment)} label={label ?? statusLabel(payment)} />;
+}
 
 /** The steps that email the customer, and the email each one sends. */
 const EMAIL_FOR: Partial<Record<OrderStatus, BuyerEmailKind>> = {
@@ -61,12 +103,73 @@ export function AddressLines({ address }: { address: Address }) {
   );
 }
 
+/**
+ * The partner an order came through: who, with which code, by link or code, and the
+ * commission it earned with the line that explains where that commission stands.
+ */
+function ThroughPartner({
+  order,
+  partner,
+  referral,
+  payouts,
+  loading,
+}: {
+  order: Order;
+  partner: Partner | undefined;
+  referral: Referral | undefined;
+  payouts: Payout[];
+  loading: boolean;
+}) {
+  const state = referral && commissionState(referral, order, payouts);
+  return (
+    <Section title="Through a partner">
+      {loading ? (
+        <div className="cc-drawer-loading" aria-label="Loading the partner">
+          <Skeleton width="56%" />
+          <Skeleton width="40%" />
+        </div>
+      ) : (
+        <Facts
+          items={[
+            {
+              label: "Partner",
+              value: partner ? (
+                <Link className="cc-inline-link" to={`${HOME}/partners?partner=${partner.id}`}>
+                  {partner.name}
+                </Link>
+              ) : (
+                "Not on file"
+              ),
+            },
+            { label: "Code", value: <span className="kit-mono">{order.discount?.code}</span> },
+            ...(referral ? [{ label: "Via", value: referral.via === "link" ? "Their link" : "Their code, typed at checkout" }] : []),
+            {
+              label: "Commission",
+              value:
+                referral && state ? (
+                  <span className="cc-commission">
+                    <span className="kit-num">{formatMoney(referral.commission)}</span>
+                    <StateChip tone={state.tone} label={state.text} />
+                  </span>
+                ) : (
+                  <span className="kit-quiet">{order.status === "cancelled" ? "None, the order was cancelled" : "Not recorded"}</span>
+                ),
+            },
+          ]}
+        />
+      )}
+    </Section>
+  );
+}
+
 export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }) {
   const order = useResource(() => store.orders.get(id), [id]);
   const context = useResource(
     () => Promise.all([store.buyers.list(), store.partners.list(), store.catalog.shippingMethods(), store.lots.list()]),
     [],
   );
+  const program = useResource(() => Promise.all([store.partners.referrals(), store.partners.payouts()]), []);
+  const now = useWorldNow();
   const [message, setMessage] = useState<string | null>(null);
   const [openEmail, setOpenEmail] = useState<BuyerEmailKind | null>(null);
   const liveRef = useRef<HTMLParagraphElement>(null);
@@ -108,8 +211,10 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
   }
 
   const [buyers, partners, methods, lots] = context.data ?? [[], [], [], undefined];
+  const [referrals, payouts] = program.data ?? [[], []];
   const buyer = buyers.find((b) => b.id === o.buyerId);
   const partner = o.discount?.partnerId ? partners.find((p) => p.id === o.discount?.partnerId) : undefined;
+  const referral = o.discount?.partnerId ? referrals.find((r) => r.orderId === o.id) : undefined;
   const method = methods.find((m) => m.id === o.shipping.method);
   const events = [...o.events].sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
   const count = units(o);
@@ -125,8 +230,8 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
       subtitle={`Placed ${formatDateTime(o.createdAt)} · ${count} ${count === 1 ? "item" : "items"} · ${formatMoney(o.total)}`}
       tags={
         <>
-          <StatusChip status={o.status} />
-          <StatusChip status={payment} label={`Payment ${statusLabel(payment).toLowerCase()}`} />
+          <OrderStatusChip order={o} now={now} />
+          <PaymentChip payment={payment} label={`Payment ${statusLabel(payment).toLowerCase()}`} />
         </>
       }
       footer={next ? <Fulfilment order={o} onDone={setMessage} /> : undefined}
@@ -151,7 +256,7 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
             const open = Boolean(email && openEmail === email);
             return (
               <li key={`${event.status}-${i}`}>
-                <Dot tone={toneFor(event.status)} />
+                <Dot tone={stepTone(event.status)} />
                 <div className="kit-timeline-text">
                   <span className="kit-timeline-title">{statusLabel(event.status)}</span>
                   <span className="kit-timeline-meta">
@@ -247,6 +352,16 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
         </dl>
       </Section>
 
+      {o.discount?.partnerId && (
+        <ThroughPartner
+          order={o}
+          partner={partner}
+          referral={referral}
+          payouts={payouts}
+          loading={!context.data || !program.data}
+        />
+      )}
+
       <Section title="Buyer">
         <Facts
           items={[
@@ -277,26 +392,6 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
           ]}
         />
       </Section>
-
-      {o.discount && (
-        <Section title="Partner">
-          <Facts
-            items={[
-              { label: "Code", value: <span className="kit-mono">{o.discount.code}</span> },
-              {
-                label: "Partner",
-                value: partner ? (
-                  <>
-                    {partner.name} <span className="kit-quiet">{partner.handle}</span>
-                  </>
-                ) : (
-                  "Promotional code, no partner"
-                ),
-              },
-            ]}
-          />
-        </Section>
-      )}
     </Drawer>
   );
 }

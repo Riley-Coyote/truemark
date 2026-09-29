@@ -9,7 +9,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
-import { Button, Dot, EmptyState, Skeleton, formatCount, formatDate, formatDateTime, formatDifference, formatMoney, toneFor } from "../app-kit";
+import { Button, Dot, EmptyState, Skeleton, formatCount, formatDate, formatDateTime, formatDifference, formatMoney } from "../app-kit";
 import type { Tone } from "../app-kit";
 import { CountingMoney, useCountUp } from "../app-kit/motion";
 import { onPlatformEvent } from "../platform/events";
@@ -26,6 +26,7 @@ import {
   referralKey,
   sortPulse,
   stepKey,
+  stepTone,
   todayFigures,
 } from "./metrics";
 import type { Change, DayFigures, PulseEvent, PulseKind } from "./metrics";
@@ -264,7 +265,8 @@ function fromPlatform(event: PlatformEvent, { partners, buyers }: Lookups): Puls
   }
 }
 
-const toneOf = (e: PulseEvent): Tone => (e.kind === "partner" ? "signal" : toneFor(e.kind));
+// One status language: a step reads as it does on Orders and in the drawer (metrics.ts); a partner's sale is good news.
+const toneOf = (e: PulseEvent): Tone => (e.kind === "partner" ? "signal" : stepTone(e.kind));
 
 const Mono = ({ children }: { children: ReactNode }) => <span className="kit-mono">{children}</span>;
 

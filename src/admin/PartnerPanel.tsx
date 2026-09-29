@@ -9,30 +9,13 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Skeleton, formatDate, formatMoney, plural } from "../app-kit";
 import { orderCount, percentOf } from "./metrics";
-import type { PartnerFigures } from "./metrics";
+import type { NextPayout, PartnerFigures } from "./metrics";
 import { HOME } from "./nav";
-import type { PayoutBatch } from "./preview";
-import { NEXT_PAYOUT, awaitingPayout } from "./program";
-import type { PartnerRow } from "./program";
 import { CountingMoneyText, CountingPercent } from "./pulse";
 
-export type NextPayout = { date: string; amount: number; partners: number };
-
-const round2 = (n: number) => Math.round(n * 100) / 100;
-
-/**
- * The next payout as the Partners screen states it: approved commission waiting for
- * a batch, and any batch already scheduled for the same day.
- */
-export function nextPayout(rows: PartnerRow[], batches: PayoutBatch[]): NextPayout {
-  const waiting = awaitingPayout(rows, batches);
-  const scheduled = batches.filter((batch) => batch.scheduledFor === NEXT_PAYOUT).flatMap((batch) => batch.lines);
-  return {
-    date: NEXT_PAYOUT,
-    amount: round2([...waiting.map((line) => line.amount), ...scheduled.map((line) => line.amount)].reduce((sum, v) => sum + v, 0)),
-    partners: new Set([...waiting.map((line) => line.partner.id), ...scheduled.map((line) => line.partnerId)]).size,
-  };
-}
+/** The next payout's figures live in metrics.ts, which the Partners screen shares. */
+export { nextPayout } from "./metrics";
+export type { NextPayout } from "./metrics";
 
 export function PartnerPanel({
   figures,
