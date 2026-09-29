@@ -9,57 +9,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, X } from "lucide-react";
 import { Dot, MoneyFigure, formatMoney } from "../../app-kit";
+import { CountingMoney } from "../../app-kit/motion";
 import { onPlatformEvent } from "../../platform/events";
 import { readPrefs } from "../prefs";
 import { ALERTS_OPEN } from "./Alerts";
 import { HOME } from "./nav";
 
-/** How long a figure takes to travel to its value, and how long a toast stays. */
-const COUNT_MS = 900;
+/** The count-up lives in the app kit, shared with the command center; the portal's screens read it from here. */
+export { CountingMoney, useCountUp } from "../../app-kit/motion";
+
+/** How long a toast stays, and how many stack at once. */
 const STAY_MS = 8000;
 const MAX_TOASTS = 3;
-
-const prefersReducedMotion = () =>
-  typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-/**
- * A number that travels to its value. It starts at `from` when given (the toast counts
- * up from zero), otherwise at the value itself; after that, each rise counts up from the
- * figure last shown. Falls land at once, and with reduced motion every change does.
- */
-export function useCountUp(value: number, from?: number): number {
-  const [shown, setShown] = useState(() => (from !== undefined && !prefersReducedMotion() ? from : value));
-  const current = useRef(shown);
-  useEffect(() => {
-    const start = current.current;
-    if (start === value) return;
-    if (value < start || prefersReducedMotion()) {
-      current.current = value;
-      setShown(value);
-      return;
-    }
-    let frame = 0;
-    let began: number | null = null;
-    const step = (now: number) => {
-      began ??= now;
-      const t = Math.min(1, (now - began) / COUNT_MS);
-      const eased = 1 - (1 - t) ** 3;
-      const next = t === 1 ? value : start + (value - start) * eased;
-      current.current = next;
-      setShown(next);
-      if (t < 1) frame = window.requestAnimationFrame(step);
-    };
-    frame = window.requestAnimationFrame(step);
-    return () => window.cancelAnimationFrame(frame);
-  }, [value]);
-  return shown;
-}
-
-/** A money figure with quiet cents that counts up to each new value. */
-export function CountingMoney({ value, from }: { value: number; from?: number }) {
-  const shown = useCountUp(value, from);
-  return <MoneyFigure value={Math.round(shown * 100) / 100} />;
-}
 
 type Sale = { referralId: string; orderNumber: string; commission: number; via: "link" | "code" };
 

@@ -26,7 +26,8 @@
 
 .kit[data-theme="night"] {
   color-scheme: dark;
-  --kit-bg: var(--tm-night);
+  /* The canvas and sidebar sit a step below the night; panels stay raised above it. */
+  --kit-bg: var(--tm-night-deep);
   --kit-panel: var(--tm-night-raised);
   --kit-field: color-mix(in srgb, var(--tm-glow) 3%, transparent);
   --kit-lift: color-mix(in srgb, var(--tm-glow) 9%, transparent);
@@ -40,10 +41,11 @@
   --kit-wash: color-mix(in srgb, var(--tm-glow) 5%, transparent);
   --kit-wash-strong: color-mix(in srgb, var(--tm-glow) 9%, transparent);
   --kit-grid: color-mix(in srgb, var(--tm-glow) 6%, transparent);
-  --kit-edge: inset 0 1px 0 color-mix(in srgb, var(--tm-glow) 5%, transparent);
+  /* A panel's lit top edge: clearly brighter than its border. */
+  --kit-edge: inset 0 1px 0 color-mix(in srgb, var(--tm-glow) 14%, transparent);
   --kit-shadow: var(--tm-shadow-night);
-  --kit-scrim: color-mix(in srgb, var(--tm-night) 64%, transparent);
-  --kit-glass: color-mix(in srgb, var(--tm-night) 86%, transparent);
+  --kit-scrim: color-mix(in srgb, var(--tm-night-deep) 64%, transparent);
+  --kit-glass: color-mix(in srgb, var(--tm-night-deep) 86%, transparent);
   --kit-series: var(--tm-glow-2);
   --kit-series-soft: color-mix(in srgb, var(--tm-glow) 30%, transparent);
   --kit-series-fill: color-mix(in srgb, var(--tm-glow) 4%, transparent);

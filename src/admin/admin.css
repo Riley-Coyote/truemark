@@ -19,6 +19,24 @@
   --cc-panel-layer: 40;
   --cc-toast-lift: calc(var(--tm-space-3) * -1); /* how far a toast drops in from */
   --cc-bell-swing: 14deg; /* the bell's first swing when an order lands; each swing after is smaller */
+  /* The Overview's pulse. */
+  --cc-lead: var(--tm-type-display); /* today's revenue, the page's headline */
+  --cc-tap: 44px; /* the smallest tap target on phones: a device measure, so pixels (the root type here is 15px) */
+  --cc-tap-reach: calc(var(--cc-tap) + var(--tm-space-1) / 2); /* how far a small link reaches, with room for its underline */
+  --cc-pulse-row: calc(var(--cc-tap) + 1px); /* one row of the Live stream: a full tap target above its hairline */
+  --cc-pulse-rows: 8; /* how many events the stream shows */
+  --cc-arrive: 700ms; /* a new event rises into the stream */
+  --cc-glow-fade: 2600ms; /* its light fades, as the live demo's frames do */
+  --cc-glow-peak: 0.7;
+  --cc-glow-blur: 12px;
+  --cc-node: 0.6875rem; /* a pipeline stage, as a station on the tracker */
+  --cc-node-halo: 3px;
+  --cc-trace-min: 14.5rem; /* the trace's least height; it grows with its panel */
+  --cc-trace-grid: color-mix(in srgb, var(--tm-glow) 4%, transparent); /* the chart's near-invisible gridlines */
+  --cc-trace-fill: 0.16; /* the luminous fill at its brightest, under the line */
+  --cc-trace-halo: 0.3; /* the line's glow */
+  --cc-trace-dot-glow: color-mix(in srgb, var(--tm-purple) 70%, transparent); /* the peak dot's bloom */
+  --cc-bar: 0.1875rem; /* a thin bar: the partner share, a compound's revenue */
 }
 
 .cc-result-count {
@@ -79,26 +97,17 @@
   font-size: var(--tm-type-h3);
   vertical-align: -0.12em;
 }
-.cc-breathe {
-  animation: kit-breathe var(--tm-cycle-5) var(--tm-ease-breathe) infinite;
-}
-.cc-attention li:nth-child(2) .cc-breathe {
-  animation-duration: var(--tm-cycle-7);
-}
-.cc-attention li:nth-child(3) .cc-breathe {
-  animation-duration: var(--tm-cycle-11);
-}
 
-/* Top compounds */
+/* Top compounds, compact: name and revenue on one line, a thin bar beneath. */
 .cc-top li {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: baseline;
-  row-gap: var(--tm-space-2);
-  padding-block: var(--tm-space-3);
+  row-gap: var(--tm-space-1);
+  padding-block: var(--tm-space-2);
 }
 .cc-top li:first-child {
-  padding-top: var(--tm-space-2);
+  padding-top: 0;
 }
 .cc-top-name {
   display: inline-flex;
@@ -114,7 +123,7 @@
 }
 .cc-top-bar {
   grid-column: 1 / -1;
-  height: var(--tm-space-1);
+  height: var(--cc-bar);
   border-radius: var(--tm-radius-pill);
   background: var(--kit-wash);
   overflow: hidden;
@@ -124,6 +133,595 @@
   height: 100%;
   border-radius: inherit;
   background: var(--kit-series-soft);
+}
+
+/* ---------- Depth: panels rise off the deeper night canvas ---------- */
+
+.kit[data-theme="night"] :is(.kit-card, .kit-stats) {
+  box-shadow: var(--kit-edge), var(--kit-shadow);
+}
+/* Overscroll shows the canvas, not the lighter night. */
+:root:has(.kit[data-theme="night"]) {
+  background: var(--tm-night-deep);
+}
+
+/* ---------- Overview: the band (the day, and Live) ---------- */
+
+.cc-band {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--tm-gutter);
+  row-gap: var(--tm-gutter);
+  align-items: stretch;
+}
+
+/* The day sits on the canvas itself: the page's headline, where the eye lands. Its parts
+   spread to the height of the Live panel beside it. */
+.cc-day {
+  grid-column: 1 / span 7;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--tm-space-6);
+  min-width: 0;
+  padding-top: var(--tm-space-3);
+}
+.kit .cc-day-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--tm-space-2);
+  font: var(--tm-weight-light) var(--tm-type-lead) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--kit-ink-2);
+}
+.cc-day-date {
+  color: var(--kit-ink);
+}
+.cc-day-sep {
+  color: var(--kit-ink-3);
+}
+.kit .cc-day-figure {
+  margin-top: var(--tm-space-4);
+  font: var(--tm-weight-light) var(--cc-lead) / 1 var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  color: var(--kit-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cc-day-figure small {
+  margin-left: 0.04em;
+  font-size: 0.42em;
+  letter-spacing: 0;
+  color: var(--kit-ink-3);
+}
+.cc-day-lead .kit-delta {
+  margin-top: var(--tm-space-4);
+}
+/* The three others share one baseline, whatever their labels do. */
+.cc-day-row,
+.cc-period-figures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: var(--tm-gutter);
+}
+.cc-day-row {
+  padding-top: var(--tm-space-5);
+  border-top: 1px solid var(--kit-line);
+}
+.cc-day-item,
+.cc-period-figures > div {
+  display: grid;
+  grid-row: span 3;
+  grid-template-rows: subgrid;
+  align-content: start;
+  min-width: 0;
+}
+.cc-day-item .kit-figure,
+.cc-period-figures .kit-figure {
+  margin-top: var(--tm-space-3);
+  font-size: var(--tm-type-h3);
+}
+.kit .cc-day-note {
+  max-width: var(--tm-measure-base);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+  text-wrap: pretty;
+}
+
+/* ---------- Live: the business's pulse ---------- */
+
+.cc-pulse {
+  grid-column: 8 / -1;
+  display: flex;
+  flex-direction: column;
+}
+.cc-pulse-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+}
+/* The one thing on the page that moves on its own. */
+.cc-pulse-dot {
+  width: var(--kit-dot);
+  height: var(--kit-dot);
+  flex: none;
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-tone-signal);
+  animation: kit-breathe var(--tm-cycle-5) var(--tm-ease-breathe) infinite;
+}
+.cc-pulse-window {
+  position: relative;
+  height: calc(var(--cc-pulse-row) * var(--cc-pulse-rows));
+  margin-top: var(--tm-space-1);
+  overflow: hidden;
+}
+.cc-pulse-sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+}
+.cc-pulse-item {
+  height: var(--cc-pulse-row);
+  overflow: hidden;
+  border-top: 1px solid var(--kit-line);
+}
+.cc-pulse-item:first-child {
+  border-top-color: transparent;
+}
+.cc-pulse-row {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: var(--kit-dot) minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--tm-space-3);
+  width: 100%;
+  height: 100%;
+  padding: 0 var(--tm-space-5);
+  border: 0;
+  background: transparent;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  text-align: left;
+  color: var(--kit-ink-2);
+  cursor: pointer;
+  transition: background-color var(--tm-dur-quick) var(--tm-ease-enter), box-shadow var(--tm-dur-quick) var(--tm-ease-enter);
+}
+.cc-pulse-row:hover {
+  background: var(--kit-wash);
+  color: var(--kit-ink);
+}
+.cc-pulse-row:active {
+  background: var(--kit-wash-strong);
+}
+.cc-pulse-row:focus-visible {
+  background: var(--kit-wash);
+  box-shadow: inset 0 0 0 1px var(--kit-focus);
+  color: var(--kit-ink);
+}
+.cc-pulse-row[aria-disabled="true"],
+.cc-pulse-row[aria-disabled="true"]:hover {
+  background: transparent;
+  cursor: default;
+}
+.cc-pulse-text {
+  display: flex;
+  gap: 0.3em;
+  min-width: 0;
+  white-space: nowrap;
+}
+.cc-pulse-fixed {
+  flex: none;
+}
+.cc-pulse-flex {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cc-pulse-text .kit-mono {
+  color: var(--kit-ink);
+}
+.cc-pulse-time {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--kit-ink-3);
+  white-space: nowrap;
+}
+/* An arrival: its row opens at the top of the stream and the event rises into it... */
+.cc-pulse-item[data-arrived] {
+  animation: cc-pulse-open var(--cc-arrive) var(--tm-ease-enter) both;
+}
+.cc-pulse-item[data-arrived] .cc-pulse-row > :not(.cc-pulse-glow) {
+  animation: cc-pulse-rise var(--cc-arrive) var(--tm-ease-enter) both;
+}
+/* ...lit from beneath with the brand's light, which fades once. Its brightest band sits
+   just below the row's edge, so the light rises into the row. */
+.cc-pulse-glow {
+  position: absolute;
+  z-index: -1;
+  left: 6%;
+  right: 6%;
+  bottom: -40%;
+  height: 90%;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-gradient);
+  filter: blur(var(--cc-glow-blur));
+  opacity: 0;
+  pointer-events: none;
+  animation: cc-pulse-glow var(--cc-glow-fade) var(--tm-ease-enter) both;
+}
+@keyframes cc-pulse-open {
+  from {
+    height: 0;
+  }
+}
+@keyframes cc-pulse-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--tm-space-3));
+  }
+}
+@keyframes cc-pulse-glow {
+  0% {
+    opacity: 0;
+  }
+  18% {
+    opacity: var(--cc-glow-peak);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.cc-pulse-foot {
+  margin-top: auto;
+  padding: var(--tm-space-3) var(--tm-space-5) var(--tm-space-4);
+  border-top: 1px solid var(--kit-line);
+}
+/* While the stream is on screen it shows each order as it lands, so the order toasts
+   step aside, as they do for the open bell. */
+.kit:has(.cc-pulse[data-in-view]) .cc-toasts {
+  visibility: hidden;
+}
+
+/* ---------- The pipeline: five stages on one hairline ---------- */
+
+.cc-pipe-body {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tm-space-5);
+  padding: 0 var(--tm-space-3) var(--tm-space-4);
+}
+.cc-pipe-track {
+  position: relative;
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  min-width: 0;
+}
+/* The hairline, from the first stage's node to the last: four of five equal columns. */
+.cc-pipe-track::before {
+  content: "";
+  position: absolute;
+  top: calc(1px + var(--tm-space-3) + var(--cc-node) / 2);
+  left: calc(1px + var(--tm-space-3) + var(--cc-node) / 2);
+  width: 80%;
+  height: 1px;
+  background: var(--kit-line-strong);
+}
+.cc-stage-link,
+.cc-pipe-cancelled {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding: var(--tm-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-sm);
+  color: var(--kit-ink);
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.cc-stage-node {
+  position: relative;
+  z-index: 1;
+  width: var(--cc-node);
+  height: var(--cc-node);
+  flex: none;
+  border: 1px solid var(--kit-ink-4);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-panel);
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+/* A stage holding orders is lit; one waiting past its mark takes the pending tone. */
+.cc-stage:not([data-empty]) .cc-stage-node {
+  border-color: var(--kit-ink-2);
+  background: var(--kit-ink-2);
+}
+.cc-stage[data-late] .cc-stage-node {
+  border-color: var(--kit-tone-pending);
+  background: var(--kit-tone-pending);
+  box-shadow: 0 0 0 var(--cc-node-halo) color-mix(in srgb, var(--kit-tone-pending) 22%, transparent);
+}
+.cc-stage-name {
+  margin-top: var(--tm-space-4);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-display);
+  color: var(--kit-ink-2);
+}
+.cc-stage-count {
+  margin-top: var(--tm-space-3);
+  font: var(--tm-weight-light) var(--tm-type-h3) / 1 var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  font-variant-numeric: tabular-nums;
+  color: var(--kit-ink);
+}
+.cc-stage[data-empty] .cc-stage-count {
+  color: var(--kit-ink-3);
+}
+.cc-stage-wait {
+  margin-top: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.cc-stage-late {
+  color: var(--kit-ink);
+}
+.cc-pipe-cancelled {
+  flex: none;
+  gap: var(--tm-space-1);
+  padding-top: calc(var(--tm-space-3) + var(--cc-node) + var(--tm-space-4));
+  color: var(--kit-ink-2);
+}
+.cc-pipe-cancelled-count {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.cc-pipe-cancelled .cc-stage-wait {
+  margin-top: 0;
+}
+:is(.cc-stage-link, .cc-pipe-cancelled):hover {
+  background: var(--kit-wash);
+}
+.cc-stage-link:hover .cc-stage-node {
+  border-color: var(--kit-ink);
+}
+:is(.cc-stage-link, .cc-pipe-cancelled):active {
+  background: var(--kit-wash-strong);
+  transform: scale(0.985);
+}
+:is(.cc-stage-link, .cc-pipe-cancelled):focus-visible {
+  border-color: var(--kit-focus);
+}
+.cc-stage-link[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ---------- Revenue: the period's figures and its trace ---------- */
+
+.cc-period-figures {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding-bottom: var(--tm-space-5);
+  border-bottom: 1px solid var(--kit-line);
+}
+.cc-period-chart-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-3) var(--tm-space-4);
+  margin: var(--tm-space-5) 0 var(--tm-space-3);
+}
+/* The trace takes whatever height the row gives the panel, never less than its minimum. */
+.cc-period {
+  display: flex;
+  flex-direction: column;
+}
+.cc-period > .kit-card-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.cc-trace {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: var(--cc-trace-min);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-sm);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.cc-trace:focus-visible {
+  border-color: var(--kit-focus);
+}
+.cc-trace[aria-disabled="true"] {
+  opacity: 0.4;
+}
+.cc-trace svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  overflow: visible;
+  touch-action: pan-y;
+}
+.cc-trace-grid {
+  stroke: var(--cc-trace-grid);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.cc-trace-base {
+  stroke: var(--kit-line);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.cc-trace-tick {
+  font-family: var(--tm-font-sans);
+  font-size: var(--tm-type-micro);
+  font-variant-numeric: tabular-nums;
+  fill: var(--kit-ink-3);
+}
+.cc-trace-fill-top {
+  stop-color: var(--tm-glow);
+  stop-opacity: var(--cc-trace-fill);
+}
+.cc-trace-fill-end {
+  stop-color: var(--tm-glow);
+  stop-opacity: 0;
+}
+.cc-trace-halo {
+  fill: none;
+  stroke: var(--kit-ink);
+  stroke-width: 4;
+  stroke-opacity: var(--cc-trace-halo);
+}
+.cc-trace-line {
+  fill: none;
+  stroke: var(--kit-ink);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.cc-trace-cross {
+  stroke: var(--kit-line-strong);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.cc-trace[data-pressing] .cc-trace-cross {
+  stroke: var(--kit-ink-3);
+}
+.cc-trace-point {
+  fill: var(--kit-panel);
+  stroke: var(--kit-ink);
+  stroke-width: 1.5;
+}
+/* The highest day wears the logo's dot, the one place the gradient touches the chart. */
+.kit .cc-trace-dot {
+  position: absolute;
+  width: var(--tm-space-2);
+  height: var(--tm-space-2);
+  margin: 0;
+  box-shadow: 0 0 0 var(--cc-node-halo) var(--kit-panel), 0 0 var(--tm-space-4) var(--cc-trace-dot-glow);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.cc-trace-peak {
+  position: absolute;
+  margin-top: calc(var(--tm-space-2) * -1);
+  font: var(--tm-weight-medium) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--kit-ink-2);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ---------- Partners ---------- */
+
+.cc-partners {
+  display: flex;
+  flex-direction: column;
+}
+.cc-partners-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-6);
+}
+.kit .cc-share-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--tm-space-1) var(--tm-space-3);
+}
+.kit .cc-share-figure {
+  margin-top: 0;
+}
+.cc-share-text {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+}
+.cc-share-text .kit-num {
+  color: var(--kit-ink);
+}
+.cc-share-bar {
+  display: block;
+  height: var(--cc-bar);
+  margin-top: var(--tm-space-4);
+  overflow: hidden;
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-wash-strong);
+}
+.cc-share-bar span {
+  display: block;
+  width: calc(var(--cc-share, 0) * 100%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--kit-series);
+  transition: width var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.cc-partners-section .kit-label {
+  margin-bottom: var(--tm-space-2);
+}
+.cc-partner-list li,
+.cc-payout-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: var(--tm-space-3);
+  row-gap: var(--tm-space-1);
+  padding-block: var(--tm-space-3);
+  border-top: 1px solid var(--kit-line);
+}
+.cc-partner-name,
+.cc-payout-date {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink);
+}
+.cc-partner-name .kit-mono {
+  margin-left: var(--tm-space-1);
+}
+.cc-partner-revenue,
+.cc-payout-amount {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--kit-ink);
+  white-space: nowrap;
+}
+.cc-partner-meta {
+  grid-column: 1 / -1;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.kit .cc-partners-empty {
+  padding-block: var(--tm-space-3);
+  border-top: 1px solid var(--kit-line);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.cc-partners-all {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+/* ---------- Recent orders and the right column ---------- */
+
+.cc-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-gutter);
+  min-width: 0;
+}
+/* The column's last panel takes up any difference, so both columns end on one line. */
+.cc-side > .kit-card:last-child {
+  flex: 1 1 auto;
 }
 
 /* Drawer: order lines and totals */
@@ -1218,6 +1816,12 @@
   .cc-alerts-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+  .cc-day {
+    grid-column: 1 / span 6;
+  }
+  .cc-pulse {
+    grid-column: 7 / -1;
+  }
 }
 
 @media (max-width: 56.25rem) {
@@ -1246,6 +1850,15 @@
     left: var(--tm-space-3);
     right: var(--tm-space-3);
     width: auto;
+  }
+  /* The band stacks: the day's figures, then Live. */
+  .cc-day,
+  .cc-pulse {
+    grid-column: 1 / -1;
+  }
+  .cc-day {
+    gap: var(--tm-space-5);
+    padding-top: 0;
   }
 }
 
@@ -1305,6 +1918,136 @@
   }
   .cc-alerts-previews {
     padding: var(--tm-space-4);
+  }
+
+  /* Overview on phones. */
+  .kit {
+    --cc-trace-min: 13rem;
+  }
+  .cc-period-figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: var(--tm-space-5);
+  }
+  /* The gap is between the two lines of figures, never inside one. */
+  .cc-period-figures > div {
+    row-gap: 0;
+  }
+  /* The period switch takes its own line under the title, its segments sharing the width. */
+  .cc-period > .kit-card-head {
+    flex-wrap: wrap;
+    padding-bottom: var(--tm-space-2);
+  }
+  .cc-period > .kit-card-head .kit-card-title {
+    display: flex;
+    align-items: center;
+    min-height: var(--kit-row);
+  }
+  .cc-period > .kit-card-head .kit-card-meta {
+    flex: 1 1 100%;
+  }
+  .cc-period .kit-card-meta .kit-segmented {
+    width: 100%;
+  }
+  .cc-period .kit-card-meta .kit-segment {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+  /* Six recent orders are enough on a phone. */
+  .cc-recent .kit-table tbody tr:nth-child(n + 7) {
+    display: none;
+  }
+  .cc-pulse-row {
+    padding-inline: var(--tm-space-4);
+  }
+  .cc-pulse-foot {
+    padding-inline: var(--tm-space-4);
+  }
+  /* The pipeline runs down the panel, as the tracker does on phones; every stage a full-width row. */
+  .cc-pipe-body {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0 var(--tm-space-2) var(--tm-space-3);
+  }
+  .cc-pipe-track {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: 1fr;
+  }
+  .cc-pipe-track::before {
+    top: calc(1px + var(--tm-space-3) + var(--tm-space-5) / 2);
+    width: 1px;
+    height: 80%;
+  }
+  .cc-stage-link {
+    display: grid;
+    grid-template-columns: var(--cc-node) minmax(0, 1fr) auto;
+    grid-template-rows: var(--tm-space-5) auto;
+    grid-template-areas:
+      "node name count"
+      ". wait count";
+    align-items: center;
+    column-gap: var(--tm-space-4);
+    height: 100%;
+    min-height: calc(var(--cc-tap) + var(--tm-space-3));
+  }
+  .cc-stage-node {
+    grid-area: node;
+  }
+  .cc-stage-name {
+    grid-area: name;
+    margin: 0;
+  }
+  .cc-stage-count {
+    grid-area: count;
+    margin: 0;
+    align-self: center;
+  }
+  .cc-stage-wait {
+    grid-area: wait;
+    margin: 0;
+  }
+  .cc-pipe-cancelled {
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--tm-space-3);
+    min-height: var(--cc-tap);
+    padding: var(--tm-space-3) var(--tm-space-3) var(--tm-space-3) calc(var(--tm-space-3) + var(--cc-node) + var(--tm-space-4));
+  }
+  /* Tap targets of at least 44px: the command center's bar, its search and menu, the
+     period and chart switches, and every text link. Links and icon buttons keep their
+     look and reach further than they draw. */
+  .kit[data-theme="night"] .kit-search {
+    height: calc(var(--cc-tap) + 2px); /* the input inside its 1px border is a full target */
+  }
+  /* Card heads keep a link's reach clear of the table beneath. */
+  .cc-overview .kit-card-head {
+    padding-bottom: var(--tm-space-1);
+  }
+  .kit[data-theme="night"] .kit-mmenu .kit-nav-link {
+    height: var(--cc-tap);
+  }
+  /* Room between the bell and the menu for both their reaches. */
+  .kit[data-theme="night"] .kit-mbar-tools {
+    gap: var(--tm-space-4);
+  }
+  .kit[data-theme="night"] :is(.kit-mbar .kit-iconbutton, .kit-mbar .kit-brand-link, .kit-search-clear) {
+    position: relative;
+  }
+  .kit[data-theme="night"] :is(.kit-mbar .kit-iconbutton, .kit-mbar .kit-brand-link, .kit-search-clear)::after {
+    content: "";
+    position: absolute;
+    inset: calc((var(--cc-tap-reach) - 100%) / -2);
+  }
+  .cc-overview .kit-segment {
+    min-height: var(--cc-tap);
+  }
+  .cc-overview .kit-link {
+    position: relative;
+  }
+  .cc-overview .kit-link::after {
+    content: "";
+    position: absolute;
+    inset: calc((var(--cc-tap-reach) - 100%) / -2) calc(var(--tm-space-1) * -1);
   }
 }
 

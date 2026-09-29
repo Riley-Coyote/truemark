@@ -88,6 +88,23 @@ export default function ProductPage() {
           <span aria-current="page">{product.name}</span>
         </nav>
 
+        {/* The name comes first, so a phone shows what it is (and its price) before the photograph. */}
+        <div className="tm-buy-head">
+          <p className="tm-eyebrow">{categoryName(product.category)}</p>
+          <h1 id="tm-product-title" className="tm-display tm-product-name" data-review="cjc-dose">
+            {product.name}
+          </h1>
+          <p className="tm-product-sub">
+            {product.size} <span>·</span> {product.form}
+            {product.price !== undefined && (
+              <span className="tm-product-sub-price" aria-hidden="true">
+                {" "}
+                <span>·</span> {money(product.price)}
+              </span>
+            )}
+          </p>
+        </div>
+
         <div className="tm-product-stage">
           <ProductStage items={siblings} index={slide.index} prev={slide.prev} zoomed={zoomed} />
           <div className="tm-stage-tools">
@@ -106,13 +123,6 @@ export default function ProductPage() {
         </div>
 
         <div className="tm-buy">
-          <p className="tm-eyebrow">{categoryName(product.category)}</p>
-          <h1 id="tm-product-title" className="tm-display tm-product-name" data-review="cjc-dose">
-            {product.name}
-          </h1>
-          <p className="tm-product-sub">
-            {product.size} <span>·</span> {product.form}
-          </p>
           <p className="tm-product-desc">{describe(product)}</p>
 
           {siblings.length > 1 && (

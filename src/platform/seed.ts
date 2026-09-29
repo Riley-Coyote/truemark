@@ -209,10 +209,12 @@ function buildOrder(i: number, buyer: Buyer, offset: number): Order {
   // Newer orders are earlier in their journey.
   const stage = offset === 0 ? 0 : offset <= 1 ? 1 : offset <= 3 ? 2 : offset <= 6 ? 3 : 4;
   const cancelled = i % 29 === 11;
-  const events: OrderEvent[] = statusFlow.slice(0, stage + 1).map((status, k) => ({
-    status,
-    at: day(Math.max(0, offset - k * (k < 3 ? 0 : 2)), 10 + k * 2),
-  }));
+  const events: OrderEvent[] = statusFlow.slice(0, stage + 1).map((status, k) => {
+    const on = Math.max(0, offset - k * (k < 3 ? 0 : 2));
+    // A step that lands on the last sample day happens in its morning, before the sample clock's
+    // afternoon begins (storage.ts), so the Live feed and the pipeline tell the same story.
+    return { status, at: day(on, on === 0 ? 10 + k : 10 + k * 2) };
+  });
   // A cancelled order stops where it was cancelled: placed and paid at most, then refunded. The
   // later steps' dates are still drawn above, so every other order's draws are unchanged.
   if (cancelled) {
@@ -242,7 +244,7 @@ function buildOrder(i: number, buyer: Buyer, offset: number): Order {
   };
 }
 
-export const orders: Order[] = (() => {
+const history: Order[] = (() => {
   const list: Order[] = [];
   let i = 0;
   // Roughly twelve weeks of orders, busier toward the present.
@@ -259,7 +261,58 @@ export const orders: Order[] = (() => {
   return list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 })();
 
-export const referrals: Referral[] = orders
+/**
+ * The last sample day's morning: three orders, so the command center opens on a working day.
+ * They are written out rather than drawn, so no random draw moves and every earlier figure,
+ * referral and payout stays exactly as it was.
+ */
+function morningOrder(
+  n: number,
+  buyerId: string,
+  time: string,
+  items: [string, number][],
+  partnerCode: string | undefined,
+  paid: boolean,
+): Order {
+  const buyer = buyers.find((b) => b.id === buyerId)!;
+  const lines = items.map(([productId, quantity]) => {
+    const product = products.find((p) => p.id === productId)!;
+    return { productId, quantity, unitPrice: product.price!, lot: product.lot };
+  });
+  const subtotal = round2(lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0));
+  const partner = partnerCode ? partners.find((p) => p.code === partnerCode) : undefined;
+  const discountAmount = partner ? round2(subtotal * partner.codeDiscount) : 0;
+  const method = shippingMethods[0];
+  const at = (clock: string) => `${TODAY}T${clock}:00.000Z`;
+  const [h, m] = time.split(":").map(Number);
+  const events: OrderEvent[] = [{ status: "placed", at: at(time) }];
+  if (paid) events.push({ status: "paid", at: at(`${String(h).padStart(2, "0")}:${String(m + 12).padStart(2, "0")}`) });
+  return {
+    id: `o-${10421 + n}`,
+    number: `TM-${10421 + n}`,
+    buyerId,
+    createdAt: at(time),
+    status: paid ? "paid" : "placed",
+    payment: paid ? "captured" : "authorized",
+    lines,
+    address: buyer.addresses[0],
+    shipping: { method: method.id, price: method.price },
+    subtotal,
+    discount: partner ? { code: partner.code, amount: discountAmount, partnerId: partner.id } : undefined,
+    total: round2(subtotal - discountAmount + method.price),
+    events,
+  };
+}
+
+const morning: Order[] = [
+  morningOrder(history.length + 2, "b-1004", "13:37", [["ghk-cu-100-mg", 2], ["semax-10-mg", 2]], "VALE10", false),
+  morningOrder(history.length + 1, "b-1002", "11:02", [["bpc-157-10-mg", 2]], "BENCH10", false),
+  morningOrder(history.length, "b-1007", "09:14", [["retatrutide-20-mg", 1], ["bacteriostatic-water-10-ml", 2]], undefined, true),
+];
+
+export const orders: Order[] = [...morning, ...history];
+
+const historyReferrals: Referral[] = history
   .filter((o) => o.discount?.partnerId && o.status !== "cancelled")
   .map((o, i) => {
     const partner = partners.find((p) => p.id === o.discount!.partnerId)!;
@@ -277,6 +330,28 @@ export const referrals: Referral[] = orders
       via: rand() < 0.55 ? "code" : "link",
     };
   });
+
+/** The morning's two partner orders, written out like the orders themselves. */
+const morningVia: Record<string, Referral["via"]> = { VALE10: "link", BENCH10: "code" };
+const morningReferrals: Referral[] = morning
+  .filter((o) => o.discount?.partnerId)
+  .map((o, k) => {
+    const partner = partners.find((p) => p.id === o.discount!.partnerId)!;
+    const base = round2(o.subtotal - o.discount!.amount);
+    return {
+      id: `r-${5901 + k}`,
+      partnerId: partner.id,
+      orderId: o.id,
+      orderNumber: o.number,
+      createdAt: o.createdAt,
+      orderSubtotal: base,
+      commission: round2(base * partner.rate),
+      status: "pending",
+      via: morningVia[o.discount!.code],
+    };
+  });
+
+export const referrals: Referral[] = [...morningReferrals, ...historyReferrals];
 
 for (const d of discounts) {
   d.uses = orders.filter((o) => o.discount?.code === d.code).length;

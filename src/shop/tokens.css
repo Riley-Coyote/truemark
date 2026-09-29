@@ -35,6 +35,9 @@
   --tm-paper: #fdfdfe;
   --tm-night: #241a4a;
   --tm-night-raised: #2e2458;
+  /* One tonal step below the night, as far as the night sits below raised (OKLCH L 0.22 · 0.26 · 0.30, one hue):
+     the command center's canvas, so its panels rise off it. */
+  --tm-night-deep: #1a1239;
   --tm-night-line: rgba(255, 255, 255, 0.12);
 
   /* Ink cascade: the brand's ink, ink soft and a darkened muted (AA on surface grey). */

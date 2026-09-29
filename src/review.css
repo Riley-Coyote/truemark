@@ -200,3 +200,23 @@
     animation: none;
   }
 }
+
+/* The dock floats over the foot of every page. While it shows, each page keeps room for it at its
+   end, in the page's own colour, so the last lines can always be read. */
+html:has(.rl-root :is(.rl-dock, .rl-dock-pill)) :is(.tm-footer, .kit-content, .rv, .tm-live)::after {
+  content: "";
+  display: block;
+  height: calc(var(--rl-dock-room) + env(safe-area-inset-bottom, 0px));
+}
+@media (max-width: 960px) {
+  /* The sign-in panel lays its form out in a row, so it takes the room as padding instead. */
+  html:has(.rl-root :is(.rl-dock, .rl-dock-pill)) .tm-gate-panel {
+    padding-bottom: calc(var(--tm-space-8) + var(--rl-dock-room) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* While the page has a modal open (the bag, an order's drawer), the dock steps aside, so it never
+   covers the modal's own actions. It returns when the modal closes. */
+html:has(:is(.modal-panel, .kit-drawer)[aria-modal="true"]) .rl-root :is(.rl-dock, .rl-dock-pill) {
+  visibility: hidden;
+}

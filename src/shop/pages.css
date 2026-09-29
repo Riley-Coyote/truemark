@@ -322,8 +322,14 @@
 .tm-crumbs [aria-current="page"] {
   color: var(--tm-ink);
 }
+/* The stage spans the name and the buying column beside it; any extra height falls to the last
+   row, so the name and the rest of the column stay together. */
+.tm-product-top {
+  grid-template-rows: auto auto 1fr;
+}
 .tm-product-stage {
   grid-column: 1 / span 7;
+  grid-row: 2 / span 2;
   display: grid;
   grid-template-columns: min(100%, 72svh);
 }
@@ -357,9 +363,17 @@
   font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
   color: var(--tm-ink-3);
 }
+.tm-buy-head {
+  grid-column: 8 / -1;
+  grid-row: 2;
+  padding-top: var(--tm-space-7);
+}
 .tm-buy {
   grid-column: 8 / -1;
-  padding-top: var(--tm-space-7);
+  grid-row: 3;
+}
+.tm-product-sub-price {
+  display: none;
 }
 .tm .tm-product-name {
   overflow-wrap: anywhere;
@@ -755,6 +769,7 @@
   .tm-band-copy,
   .tm-band-action,
   .tm-product-stage,
+  .tm-buy-head,
   .tm-buy,
   .tm-spec-head,
   .tm-spec-table,
@@ -785,11 +800,27 @@
   .tm-band-action {
     margin-top: var(--tm-space-6);
   }
+  /* One column: the name and its price first, then the photograph, then the rest. */
+  .tm-product-top {
+    grid-template-rows: none;
+  }
   .tm-product-stage {
+    grid-row: auto;
     grid-template-columns: 100%;
+    margin-top: var(--tm-space-5);
+  }
+  .tm-buy-head {
+    grid-row: auto;
+    padding-top: 0;
   }
   .tm-buy {
-    padding-top: var(--tm-space-7);
+    grid-row: auto;
+  }
+  .tm-product-sub-price {
+    display: inline;
+  }
+  .tm .tm-product-sub .tm-product-sub-price {
+    color: var(--tm-ink);
   }
   .tm-spec-table {
     margin-top: var(--tm-space-7);
