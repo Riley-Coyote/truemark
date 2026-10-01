@@ -337,7 +337,10 @@
   --tm-bag-pad: var(--tm-space-6);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* The lines take only the height they need, so the total sits right under them;
+     a long bag still scrolls its lines and keeps the total in view. */
+  grid-template-rows: auto minmax(0, auto) auto;
+  align-content: start;
   column-gap: var(--tm-space-3);
   padding: var(--tm-space-5) 0 0;
   overflow: hidden;
