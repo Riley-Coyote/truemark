@@ -221,6 +221,50 @@
   text-wrap: pretty;
 }
 
+/* ---------- The team gate (live): one quiet card, centred, in the command center's theme ---------- */
+
+.cc-gate {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--tm-space-6) var(--tm-space-4);
+  background: var(--kit-bg);
+  color: var(--kit-ink);
+}
+.cc-gate-card {
+  display: grid;
+  gap: var(--tm-space-3);
+  width: min(26rem, 100%);
+  padding: var(--tm-space-7) var(--tm-space-6);
+  border: 1px solid var(--kit-line);
+  border-radius: var(--tm-radius-lg);
+  background: var(--kit-panel);
+  box-shadow: var(--kit-edge), var(--kit-shadow);
+}
+.cc-gate-lockup {
+  width: 9rem;
+  height: auto;
+  margin-bottom: var(--tm-space-4);
+}
+.cc-gate-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-h2) / 1.1 var(--tm-font-display);
+  letter-spacing: -0.01em;
+}
+.cc-gate-note {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-3);
+}
+.cc-gate-form {
+  display: grid;
+  gap: var(--tm-space-4);
+  margin-top: var(--tm-space-4);
+}
+.cc-gate-form .kit-button {
+  justify-self: stretch;
+}
+
 /* ---------- Live: the business's pulse ---------- */
 
 .cc-pulse {
