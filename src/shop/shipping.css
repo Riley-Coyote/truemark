@@ -1,0 +1,26 @@
+.tm-shipping-progress {
+  margin-block: var(--tm-space-4);
+  color: var(--tm-ink-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+}
+.tm .tm-shipping-progress p, .tm-shipping-progress p {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  margin: 0 0 var(--tm-space-2);
+  font: inherit;
+  color: inherit;
+}
+.tm-shipping-track {
+  height: var(--tm-space-1);
+  background: var(--tm-line);
+}
+.tm-shipping-track span {
+  display: block;
+  height: 100%;
+  background: var(--tm-ink);
+  transition: width var(--tm-dur-base) var(--tm-ease-enter);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tm-shipping-track span { transition: none; }
+}

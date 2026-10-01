@@ -1,3 +1,6 @@
+import { stockProblem } from "../../../platform/commerce";
+import { InsuranceRow, useInsuranceChoice } from "../../Insurance";
+import { LIVE, storageKey } from "../../../platform/mode";
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -9,33 +12,52 @@ import type { Discount } from "../../../platform/types";
 import { productCutout } from "../../catalog";
 import { readReferral, useShop } from "../../context";
 import { Quantity } from "../../ui";
+import { ShippingProgress, useShipping } from "../../ShippingProgress";
+import { priceQuote, defaultSettings, roundMoney } from "../../../platform/pricing";
 import "./checkout.css";
 
 /* ---------- Shared by the bag, checkout and confirmation ---------- */
 
-export const roundMoney = (n: number) => Math.round(n * 100) / 100;
+export { roundMoney };
 
 /** A discount shown as a negative amount, with a true minus sign. */
 export const minus = (n: number) => `−${money(n)}`;
 
 /** The store's own formula, so the preview shows exactly what the order will record. */
 export const discountOn = (subtotal: number, discount: Discount) =>
-  Math.round(subtotal * discount.percent) / 100;
+  priceQuote(subtotal, discount.percent, null, defaultSettings).discountAmount;
 
 export type BagLine = { product: Product; quantity: number; total: number };
 
 export function useBagLines() {
-  const { cart } = useShop();
+  const { cart, catalogChecking, catalogError, reloadCatalog } = useShop();
   const lines: BagLine[] = cart.flatMap((item) => {
     const product = products.find((p) => p.id === item.id);
     if (!product || product.price === undefined) return [];
     return [{ product, quantity: item.quantity, total: roundMoney(product.price * item.quantity) }];
   });
+  const issues = cart.flatMap((item) => {
+    const product = products.find((p) => p.id === item.id);
+    const message = product ? stockProblem(product, item.quantity) : `Product ${item.id} is no longer available. Remove it to continue.`;
+    return message ? [{ id: item.id, message }] : [];
+  });
   return {
+    issues, catalogChecking, catalogError, reloadCatalog,
     lines,
     count: lines.reduce((sum, line) => sum + line.quantity, 0),
     subtotal: roundMoney(lines.reduce((sum, line) => sum + line.total, 0)),
   };
+}
+
+export function StockNotice({ issues, checking, error, onRetry }: {
+  issues: { id: string; message: string }[]; checking?: boolean; error?: string | null; onRetry?: () => void;
+}) {
+  const { change } = useShop();
+  return <div className="tm-stock-notice" aria-live="polite">
+    {checking && <p className="tm-summary-note">Checking availability…</p>}
+    {error && <p role="alert">Availability could not be checked. <button type="button" className="tm-text-button" onClick={onRetry}>Try again</button></p>}
+    {issues.map((issue) => <p key={issue.id} role="alert">{issue.message} <button type="button" className="tm-text-button" onClick={() => change(issue.id, 0)}>Remove item</button></p>)}
+  </div>;
 }
 
 export const itemCount = (n: number) => `${n} ${n === 1 ? "item" : "items"}`;
@@ -50,7 +72,7 @@ export function Thumb({ product, size = "sm" }: { product: Product; size?: "xs" 
 }
 
 /* The discount code travels from the bag to checkout within this browser session. */
-const CODE_KEY = "tm-preview-bag-code";
+const CODE_KEY = storageKey("tm-preview-bag-code");
 
 export type CodeSource = "typed" | "link";
 type Stored = { discount: Discount | null; source: CodeSource };
@@ -70,6 +92,7 @@ function writeStored(value: Stored | null) {
   } catch {
     /* Without storage the code still applies on this page. */
   }
+  window.dispatchEvent(new CustomEvent("tm-bag-code", { detail: value }));
 }
 function readRef(): string | null {
   return readReferral()?.trim().toUpperCase() || null;
@@ -102,6 +125,15 @@ export function useBagCode(): BagCode {
   });
 
   useEffect(() => {
+    const sync = (event: Event) => {
+      const stored = (event as CustomEvent<Stored | null>).detail;
+      setState({ discount: stored?.discount ?? null, source: stored?.discount ? stored.source : null, checking: false, error: null });
+    };
+    window.addEventListener("tm-bag-code", sync);
+    return () => window.removeEventListener("tm-bag-code", sync);
+  }, []);
+
+  useEffect(() => {
     let live = true;
     const stored = readStored();
     if (stored) {
@@ -110,7 +142,14 @@ export function useBagCode(): BagCode {
       if (code) {
         store.catalog.validateCode(code).then(
           (discount) => {
-            if (!live || discount) return;
+            if (!live) return;
+            if (discount) {
+              if (LIVE) {
+                writeStored({ discount, source: stored.source });
+                setState({ discount, source: stored.source, checking: false, error: null });
+              }
+              return;
+            }
             writeStored({ discount: null, source: stored.source });
             setState({ discount: null, source: null, checking: false, error: `Code ${code} is no longer active.` });
           },
@@ -302,10 +341,17 @@ function useRemovalFocus(length: number) {
 
 export function BagContents() {
   const { change, closeCart } = useShop();
-  const { lines, count, subtotal } = useBagLines();
+  const { lines, count, subtotal, issues, catalogChecking, catalogError, reloadCatalog } = useBagLines();
+  const [insured] = useInsuranceChoice();
+  const blocked = issues.length > 0 || catalogChecking || Boolean(catalogError);
   const focus = useRemovalFocus(lines.length);
+  const code = useBagCode();
+  const shipping = useShipping();
+  const discount = code.discount ? discountOn(subtotal, code.discount) : 0;
+  const method = shipping.data?.methods.find((m) => m.id === "cold-2day") ?? null;
+  const priced = shipping.data ? priceQuote(subtotal, code.discount?.percent ?? 0, method, shipping.data.settings, insured) : null;
 
-  if (!lines.length) {
+  if (!lines.length && !issues.length) {
     return (
       <div className="tm tm-bag is-empty">
         <div className="tm-bag-empty">
@@ -361,8 +407,16 @@ export function BagContents() {
           <span>Subtotal</span>
           <span>{money(subtotal)}</span>
         </p>
-        <p className="tm-bag-note">Shipping and tax are calculated at checkout.</p>
-        <Link className="tm-button tm-button-primary" to="/checkout" onClick={closeCart}>
+        <StockNotice issues={issues} checking={catalogChecking} error={catalogError} onRetry={reloadCatalog} />
+        <dl className="tm-totals">
+          <DiscountRow discount={code.discount} amount={priced?.discountAmount ?? discount} />
+          <InsuranceRow amount={priced?.insurance} applied={priced?.insuranceApplied} />
+          <div className="tm-totals-row"><dt>{method?.label ?? "Shipping"}</dt><dd>{priced && method ? priced.shipping === 0 ? "Free" : money(priced.shipping) : "…"}</dd></div>
+          <div className="tm-totals-row tm-totals-total"><dt>Total</dt><dd>{priced && method ? money(priced.total) : "…"}</dd></div>
+        </dl>
+        <ShippingProgress base={priced?.base ?? subtotal} count={count} settings={shipping.data?.settings} />
+        {shipping.error && <p role="alert" className="tm-bag-note">Shipping could not be loaded. <button className="tm-text-button" onClick={shipping.reload}>Try again</button></p>}
+        <Link className="tm-button tm-button-primary" to="/checkout" aria-disabled={blocked || undefined} tabIndex={blocked ? -1 : undefined} onClick={(event) => { if (blocked) event.preventDefault(); else closeCart(); }}>
           Check out
         </Link>
         <Link className="tm-textlink" to="/cart" onClick={closeCart}>
@@ -377,13 +431,17 @@ export function BagContents() {
 
 export function CartPage() {
   const { change } = useShop();
-  const { lines, count, subtotal } = useBagLines();
+  const { lines, count, subtotal, issues, catalogChecking, catalogError, reloadCatalog } = useBagLines();
+  const [insured] = useInsuranceChoice();
+  const blocked = issues.length > 0 || catalogChecking || Boolean(catalogError);
   const code = useBagCode();
   const focus = useRemovalFocus(lines.length);
+  const shipping = useShipping();
+  const method = shipping.data?.methods.find((m) => m.id === "cold-2day") ?? null;
   const discount = code.discount ? discountOn(subtotal, code.discount) : 0;
-  const total = roundMoney(subtotal - discount);
+  const priced = shipping.data ? priceQuote(subtotal, code.discount?.percent ?? 0, method, shipping.data.settings, insured) : null;
 
-  if (!lines.length) {
+  if (!lines.length && !issues.length) {
     return (
       <div className="tm-page tm-purchase">
         <section className="tm tm-purchase-empty" aria-labelledby="tm-cart-title">
@@ -458,20 +516,24 @@ export function CartPage() {
           <h2 id="tm-cart-summary-title" className="tm-summary-title">
             Summary
           </h2>
+          <StockNotice issues={issues} checking={catalogChecking} error={catalogError} onRetry={reloadCatalog} />
           <dl className="tm-totals">
             <div className="tm-totals-row">
               <dt>Subtotal</dt>
               <dd>{money(subtotal)}</dd>
             </div>
             <DiscountRow discount={code.discount} amount={discount} />
+            <InsuranceRow amount={priced?.insurance} applied={priced?.insuranceApplied} />
+            <div className="tm-totals-row"><dt>{method?.label ?? "Shipping"}</dt><dd>{priced && method ? priced.shipping === 0 ? "Free" : money(priced.shipping) : "…"}</dd></div>
           </dl>
           <CodeControl code={code} />
           <div className="tm-totals-row tm-totals-total">
             <span>Total</span>
-            <span>{money(total)}</span>
+            <span>{priced && method ? money(priced.total) : "…"}</span>
           </div>
-          <p className="tm-summary-note">Shipping and tax are calculated at checkout.</p>
-          <Link className="tm-button tm-button-primary tm-button-block" to="/checkout">
+          <ShippingProgress base={priced?.base ?? roundMoney(subtotal - discount)} count={count} settings={shipping.data?.settings} />
+          {shipping.error && <p role="alert" className="tm-summary-note">Shipping could not be loaded. <button className="tm-text-button" onClick={shipping.reload}>Try again</button></p>}
+          <Link aria-disabled={blocked || undefined} tabIndex={blocked ? -1 : undefined} onClick={(event) => { if (blocked) event.preventDefault(); }} className="tm-button tm-button-primary tm-button-block" to="/checkout">
             Check out
           </Link>
         </aside>

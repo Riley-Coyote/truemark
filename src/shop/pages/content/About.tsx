@@ -143,8 +143,7 @@ export default function About() {
           <p className="tm-section-note">
             Accounts are opened to educational institutions, hospitals,
             pharmaceutical and biotech companies, government laboratories, and
-            private and contract research organizations. Orders ship to
-            institutional addresses.
+            private and contract research organizations.
           </p>
           <div className="tm-actions">
             <Link className="tm-button tm-button-primary" to="/products">

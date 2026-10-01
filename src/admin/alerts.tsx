@@ -1,3 +1,4 @@
+import { storageKey } from "../platform/mode";
 /**
  * The owner feels every order land: a bell in the top bar holding the owner's
  * alerts, and a toast whenever an order is placed anywhere in the preview (this
@@ -59,7 +60,7 @@ export function useNarrow(): boolean {
 
 /* ---------- The chime ---------- */
 
-const CHIME_KEY = "tm-command-chime";
+const CHIME_KEY = storageKey("tm-command-chime");
 const chimeListeners = new Set<() => void>();
 
 function readChime(): boolean {

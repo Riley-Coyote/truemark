@@ -55,7 +55,7 @@ const f = (n: number) => n.toFixed(1);
  * A monotone cubic through the points (Steffen's method, as d3's monotoneX): each
  * segment stays between its two days, so a quiet day is never drawn below zero.
  */
-function monotone(points: [number, number][]): string {
+export function monotone(points: [number, number][]): string {
   const n = points.length;
   if (!n) return "";
   if (n === 1) return `M${f(points[0][0])},${f(points[0][1])}`;
@@ -106,9 +106,12 @@ export function TraceChart({
 }) {
   const [ref, { width, height }] = useSize<HTMLDivElement>();
   const id = useId().replace(/:/g, "");
-  const [active, setActive] = useState<number | null>(null);
+  const [reading, setActive] = useState<number | null>(null);
   const [pressing, setPressing] = useState(false);
+  const focused = useRef(false);
   const count = data.length;
+  // Period switches and live refreshes may shorten or empty the series mid-read.
+  const active = count && reading !== null ? Math.max(0, Math.min(count - 1, reading)) : null;
   const ready = width > 0 && height > 0;
 
   const values = data.map((d) => d.value);
@@ -117,7 +120,7 @@ export function TraceChart({
   const right = width - PAD.right;
   const top = PAD.top;
   const bottom = height - PAD.bottom;
-  const step = count > 1 ? (right - left - PAD.inset * 2) / (count - 1) : 0;
+  const step = count > 1 ? Math.max(1, right - left - PAD.inset * 2) / (count - 1) : 0;
   const x = (i: number) => left + PAD.inset + i * step;
   const y = (v: number) => bottom - (v / maxValue) * (bottom - top);
   const points = data.map((d, i) => [x(i), y(d.value)] as [number, number]);
@@ -170,8 +173,15 @@ export function TraceChart({
       tabIndex={count ? 0 : -1}
       data-pressing={pressing ? "" : undefined}
       onKeyDown={onKeyDown}
-      onFocus={() => setActive((a) => a ?? last)}
-      onBlur={() => setActive(null)}
+      onFocus={() => {
+        focused.current = true;
+        if (count) setActive((a) => a ?? last);
+      }}
+      onBlur={() => {
+        focused.current = false;
+        setActive(null);
+        setPressing(false);
+      }}
     >
       {ready && count > 0 && (
         <svg
@@ -180,11 +190,12 @@ export function TraceChart({
           aria-hidden="true"
           onPointerMove={onPointerMove}
           onPointerLeave={() => {
-            setActive(null);
+            if (!focused.current) setActive(null);
             setPressing(false);
           }}
           onPointerDown={() => setPressing(true)}
           onPointerUp={() => setPressing(false)}
+          onPointerCancel={() => setPressing(false)}
         >
           <defs>
             <linearGradient id={`fill${id}`} x1="0" x2="0" y1={top} y2={bottom} gradientUnits="userSpaceOnUse">
@@ -226,7 +237,7 @@ export function TraceChart({
       )}
       {ready && hasPeak && (
         <>
-          <span className="tm-brand-dot cc-trace-dot" aria-hidden="true" style={{ left: points[peak][0], top: points[peak][1] }} />
+          <span className="cc-trace-dot" aria-hidden="true" style={{ left: points[peak][0], top: points[peak][1] }} />
           {peakLabelShown && (
             <span
               className="cc-trace-peak"
@@ -248,6 +259,9 @@ export function TraceChart({
           <strong>{formatValue(data[active].value)}</strong>
         </div>
       )}
+      <p className="kit-sr" role="status" aria-live="polite" aria-atomic="true">
+        {active !== null ? `${weekdayDate(data[active].iso)} · ${formatValue(data[active].value)}` : ""}
+      </p>
       <table className="kit-sr">
         <caption>{label}</caption>
         <tbody>

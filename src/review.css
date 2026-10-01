@@ -215,8 +215,8 @@ html:has(.rl-root :is(.rl-dock, .rl-dock-pill)) :is(.tm-footer, .kit-content, .r
   }
 }
 
-/* While the page has a modal open (the bag, an order's drawer), the dock steps aside, so it never
-   covers the modal's own actions. It returns when the modal closes. */
-html:has(:is(.modal-panel, .kit-drawer)[aria-modal="true"]) .rl-root :is(.rl-dock, .rl-dock-pill) {
+/* While the page has a modal or a phone menu open (the bag, an order's drawer, the menu), the
+   dock steps aside, so it never covers their own actions. It returns when they close. */
+html:has(:is(.modal-panel, .kit-drawer)[aria-modal="true"], .tm-mmenu, .kit-mmenu) .rl-root :is(.rl-dock, .rl-dock-pill) {
   visibility: hidden;
 }

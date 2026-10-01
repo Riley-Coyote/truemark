@@ -5,6 +5,7 @@
 .tm-trail {
   --tm-node: 0.6875rem;
   --tm-leg: 720ms;
+  padding-top: var(--tm-space-9);
   row-gap: var(--tm-space-5);
 }
 .tm-trail-head {
@@ -387,8 +388,8 @@
 .tm-vband {
   row-gap: var(--tm-space-8);
   padding-bottom: 0;
-  overflow: hidden;
 }
+.tm-vband > * { min-width: 0; }
 .tm-vband-copy {
   grid-column: 1 / span 5;
   align-self: center;
@@ -463,7 +464,7 @@
 }
 .tm-vband-trace {
   grid-column: 1 / -1;
-  margin: calc(var(--tm-space-7) * -1) calc(var(--tm-pad) * -1) 0;
+  margin: calc(var(--tm-space-7) * -1) 0 0;
 }
 .tm-vband-trace:not(.is-visible) :is(.tm-trace-line, .tm-trace-peak, .tm-trace-caption) {
   animation-play-state: paused;
@@ -472,30 +473,8 @@
 /* ---------- Who we supply ---------- */
 
 .tm-supply {
-  --tm-bg: var(--tm-bench);
-  isolation: isolate;
-  overflow: hidden;
-  min-height: clamp(38rem, 58vw, 56rem);
-  align-content: end;
+  --tm-bg: var(--tm-lilac-50);
   row-gap: var(--tm-space-7);
-  padding-bottom: var(--tm-space-9);
-}
-.tm-supply-photo {
-  position: absolute;
-  z-index: -2;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 50% 30%;
-}
-/* A little paper light over the bench keeps the type at full contrast. */
-.tm-supply::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  background: linear-gradient(to top, color-mix(in srgb, var(--tm-paper) 72%, transparent), color-mix(in srgb, var(--tm-paper) 30%, transparent) 42%, transparent 64%);
 }
 .tm-supply-copy {
   grid-column: 1 / span 5;
@@ -668,23 +647,9 @@
   .tm-trail-record.is-visible .tm-trail-progress::after {
     animation-name: tm-bead-down;
   }
-  .tm-supply {
-    min-height: 0;
-    padding-top: 0;
-  }
-  .tm-supply-photo {
-    position: static;
-    grid-column: 1 / -1;
-    width: calc(100% + var(--tm-pad) * 2);
-    height: auto;
-    aspect-ratio: 4 / 3;
-    margin-inline: calc(var(--tm-pad) * -1);
-    -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent);
-    mask-image: linear-gradient(to bottom, #000 80%, transparent);
-  }
-  .tm-supply::before {
-    display: none;
-  }
+  .tm-trail { padding-top: calc(var(--tm-space-7) + var(--tm-space-2)); }
+  .tm-supply-list { grid-template-columns: minmax(0, 1fr); }
+
 }
 @keyframes tm-trail-run-down {
   0% {
@@ -773,4 +738,17 @@
   .tm-spec-table .tm-chain-bead + .tm-chain-bead::before {
     width: var(--tm-space-1);
   }
+}
+
+/* Allow the document's intrinsic text widths to shrink inside the twelve-column grid. */
+.tm-vband-cert .tm-coa-rows > div { min-width: 0; }
+.tm-vband-cert .tm-coa-rows dd { min-width: 0; overflow-wrap: anywhere; }
+.tm-vband-cert .tm-coa-rows dd svg { flex: none; }
+.tm-vband-trace .tm-trace-caption { left: auto !important; right: 0; max-width: 100%; white-space: normal; text-align: right; }
+.tm-vband-trace svg { max-width: 100%; }
+@media (max-width: 560px) {
+  .tm-vband { --tm-pad: var(--tm-space-4); }
+  .tm-vband-cert .tm-coa { padding: var(--tm-space-5) var(--tm-space-4); }
+  .tm-vband-cert .tm-coa-head { flex-wrap: wrap; }
+  .tm-vband-cert .tm-coa-rows > div { gap: var(--tm-space-2); }
 }

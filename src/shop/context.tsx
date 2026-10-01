@@ -1,10 +1,14 @@
+import { LIVE, storageKey } from "../platform/mode";
+import { rememberLink } from "../platform/live/bootstrap";
 import { createContext, useContext } from "react";
-import { products } from "../data";
 
 export type CartItem = { id: string; quantity: number };
 
 export type ShopContextValue = {
   cart: CartItem[];
+  catalogChecking?: boolean;
+  catalogError?: string | null;
+  reloadCatalog?: () => void;
   add: (id: string, quantity: number) => void;
   change: (id: string, quantity: number) => void;
   clear: () => void;
@@ -20,7 +24,7 @@ export function useShop(): ShopContextValue {
   return value;
 }
 
-export const CART_STORAGE_KEY = "truemark-preview-cart";
+export const CART_STORAGE_KEY = storageKey("truemark-preview-cart");
 
 export function loadCart(): CartItem[] {
   try {
@@ -32,7 +36,7 @@ export function loadCart(): CartItem[] {
       (item): item is CartItem =>
         typeof item === "object" &&
         item !== null &&
-        products.some((p) => p.id === item.id && p.price !== undefined) &&
+        typeof item.id === "string" && /^[a-z0-9-]+$/.test(item.id) &&
         Number.isInteger(item.quantity) &&
         item.quantity > 0 &&
         item.quantity <= 99,
@@ -43,9 +47,13 @@ export function loadCart(): CartItem[] {
 }
 
 /** A partner code carried in on a link (?ref=CODE); checkout offers it as the code. */
-export const REFERRAL_KEY = "tm-preview-ref";
+export const REFERRAL_KEY = storageKey("tm-preview-ref");
 
 export function rememberReferral(code: string) {
+  if (LIVE) {
+    void rememberLink(code).catch(() => { /* A visit must not prevent browsing. */ });
+    return;
+  }
   const clean = code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 24);
   if (!clean) return;
   try {

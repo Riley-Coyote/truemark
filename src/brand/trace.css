@@ -29,7 +29,7 @@
   font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  white-space: nowrap;
+  text-wrap: balance;
   opacity: 0;
   animation: tm-appear-to 900ms var(--tm-ease-enter) 1900ms forwards;
 }

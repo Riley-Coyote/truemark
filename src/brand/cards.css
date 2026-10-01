@@ -303,3 +303,6 @@
 .brand-refinement .tm-product-stage .tm-stage-tools {
   border-top: 0;
 }
+
+.tm-card-plus:disabled, .tm-card-sizes button:disabled { opacity: .45; cursor: not-allowed; }
+.tm-card-plus:disabled { transform: none; }

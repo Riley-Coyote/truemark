@@ -9,7 +9,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
-import { Button, Dot, EmptyState, Skeleton, formatCount, formatDate, formatDateTime, formatDifference, formatMoney } from "../app-kit";
+import { Button, Dot, EmptyState, Skeleton, formatCount, formatDate, formatDateTime, formatDay, formatDifference, formatMoney } from "../app-kit";
 import type { Tone } from "../app-kit";
 import { CountingMoney, useCountUp } from "../app-kit/motion";
 import { onPlatformEvent } from "../platform/events";
@@ -270,7 +270,26 @@ const toneOf = (e: PulseEvent): Tone => (e.kind === "partner" ? "signal" : stepT
 
 const Mono = ({ children }: { children: ReactNode }) => <span className="kit-mono">{children}</span>;
 
-/** The row's one line. A new order keeps its number, total and code in view; only the institution gives way. */
+const DAY_MS = 86_400_000;
+const dayOf = (iso: string) => Math.floor(Date.parse(iso) / DAY_MS);
+
+/** ago(), short enough for a narrow Live panel: "Now", "12m", "3h", "1d", then the date. */
+function agoShort(iso: string, now: string): string {
+  const seconds = Math.max(0, (Date.parse(now) - Date.parse(iso)) / 1000);
+  if (seconds < 45) return "Now";
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = dayOf(now) - dayOf(iso);
+  return days < 7 ? `${Math.max(1, days)}d` : formatDay(iso);
+}
+
+/**
+ * The row's one line. A new order keeps its number and total in view. The
+ * institution gives way first, with its separator, and leaves a narrow panel;
+ * the partner's code is the last to give way.
+ */
 function PulseLine({ e }: { e: PulseEvent }) {
   switch (e.kind) {
     case "placed":
@@ -280,11 +299,10 @@ function PulseLine({ e }: { e: PulseEvent }) {
           <span className="cc-pulse-fixed">
             New order <Mono>{e.number}</Mono>
             {e.total !== undefined && <> · {formatMoney(e.total)}</>}
-            {e.institution && " ·"}
           </span>
-          {e.institution && <span className="cc-pulse-flex">{e.institution}</span>}
+          {e.institution && <span className="cc-pulse-flex cc-pulse-who">· {e.institution}</span>}
           {e.code && (
-            <span className="cc-pulse-fixed">
+            <span className="cc-pulse-code">
               · via <Mono>{e.code}</Mono>
             </span>
           )}
@@ -437,7 +455,8 @@ export function LivePanel({
                       <Dot tone={toneOf(e)} />
                       <PulseLine e={e} />
                       <time className="cc-pulse-time" dateTime={e.at} title={formatDateTime(e.at)}>
-                        {ago(e.at, now)}
+                        <span className="cc-pulse-ago">{ago(e.at, now)}</span>
+                        <span className="cc-pulse-ago-short">{agoShort(e.at, now)}</span>
                       </time>
                     </button>
                   </li>

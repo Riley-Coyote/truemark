@@ -1,3 +1,4 @@
+import { storageKey } from "../platform/mode";
 /**
  * New-order alerts for the team: who hears about every order, by email or by
  * text message, and exactly what they receive, previewed with the latest order in
@@ -25,7 +26,7 @@ import type { Operator } from "./team";
 export type Channel = "email" | "text";
 type Prefs = Record<string, Record<Channel, boolean>>;
 
-const KEY = "tm-command-alerts";
+const KEY = storageKey("tm-command-alerts");
 /** Sample choices: the owner by email and text, fulfilment by email. The client sets the real ones. */
 const DEFAULTS: Prefs = {
   "op-1": { email: true, text: true },
@@ -108,6 +109,7 @@ export function NewOrderEmail({ context, to }: { context: OrderContext; to: Oper
           }),
           ["Buyer", buyer?.name ?? order.address.attention],
           ["Shipping", method?.label ?? "Cold chain"],
+          ...((order.insuranceApplied || (order.insurance ?? 0) > 0) ? [["Insurance", formatMoney(order.insurance ?? 0)] as [string, string]] : []),
           ["Placed", formatDateTime(order.createdAt)],
         ]}
       />

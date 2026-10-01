@@ -65,7 +65,7 @@ const names: Record<string, string> = {
   "/type-study": "Typography",
 };
 
-/** A plain name for a route: "Home", "Lot verification · BP10-2611A", a product's name. */
+/** A plain name for a route: "Home", "Lot verification · TM-BPC10-2609-01", a product's name. */
 export function pageLabel(route: string): string {
   const { path, params } = split(route);
   let name = names[path];

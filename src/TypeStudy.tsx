@@ -185,7 +185,7 @@ function Record() {
         </div>
         <h3 className="ts-record-title">BPC-157</h3>
         <p className="ts-lot">
-          10 mg <span>/</span> Lot BP10-2611A
+          10 mg <span>/</span> Lot TM-BPC10-2609-01
         </p>
         <div className="ts-result">
           <span className="ts-data-number">
@@ -200,7 +200,7 @@ function Record() {
           </div>
           <div>
             <dt>Lot identifier</dt>
-            <dd>BP10-2611A</dd>
+            <dd>TM-BPC10-2609-01</dd>
           </div>
           <div>
             <dt>Intended use</dt>

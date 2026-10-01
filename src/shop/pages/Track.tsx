@@ -53,7 +53,7 @@ function headline(order: Order): [string, string] {
       return ["Packed cold.", "Held cold until it ships."];
     case "shipped": {
       const estimate = estimatedDelivery(order);
-      return ["On its way.", estimate ? `Estimated ${weekdayDate(estimate)}.` : "Cold chain, to your institutional address."];
+      return ["On its way.", estimate ? `Estimated ${weekdayDate(estimate)}.` : "Shipped with temperature control when applicable."];
     }
     case "delivered": {
       const at = eventAt(order, "delivered");

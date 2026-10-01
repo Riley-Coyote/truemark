@@ -1,8 +1,9 @@
+import { LIVE } from "./mode";
 /**
  * Sample data for the design preview. Every person, institution, order and
  * partner here is fictional (emails use the reserved .example domain).
- * Lots from the client's first batch use their real identifiers but carry no
- * results; fictional sample lots exist only to show each state.
+ * First-batch identifiers carry no results except the explicitly illustrative
+ * BPC-157 preview record; other sample lots exist only to show each state.
  * Rates and prices marked "sample" are placeholders for the client to set.
  */
 import { products } from "../data";
@@ -37,7 +38,7 @@ const rand = rng(2609);
 const pick = <T,>(list: T[]) => list[Math.floor(rand() * list.length)];
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export const TODAY = "2026-09-25";
+export const TODAY = LIVE ? new Date().toISOString().slice(0, 10) : "2026-09-25";
 const day = (offset: number, hour = 10) => {
   const d = new Date(`${TODAY}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() - offset);
@@ -54,8 +55,8 @@ export function upsTracking(parcel: number, service: "01" | "02" = "02") {
 }
 
 export const shippingMethods: ShippingMethod[] = [
-  { id: "cold-2day", label: "Cold chain · 2 business days", detail: "Shipped with temperature control", price: 24 },
-  { id: "cold-overnight", label: "Cold chain · overnight", detail: "Shipped with temperature control, next business day", price: 42 },
+  { id: "cold-2day", label: "Cold chain · 2 business days", detail: "Shipped with temperature control when applicable", price: 24 },
+  { id: "cold-overnight", label: "Cold chain · overnight", detail: "Shipped with temperature control when applicable, next business day", price: 42 },
 ];
 
 const institutions = [
@@ -401,9 +402,9 @@ export function visitsFor(partnerId: string): Visit[] {
   return visitShape.map((v) => ({ date: v.date, clicks: Math.max(1, Math.round(v.clicks * scale)) }));
 }
 
-/** The illustrative record from the client's original mockup. Not a real lot. */
+/** Preview-only illustrative results on the client's BPC-157 first-batch identifier. */
 export const sampleRecord = {
-  lot: "BP10-2611A",
+  lot: "TM-BPC10-2609-01",
   productId: "bpc-157-10-mg",
   compound: "BPC-157",
   presentation: "10 mg · Lyophilized powder",
@@ -431,18 +432,20 @@ export const sampleRecord = {
   ],
 };
 
+// Build every first-batch row before merging so its seeded inventory and PRNG order stay intact.
+const firstBatchLots: Lot[] = products.map((p, i) => ({
+  lot: p.lot,
+  productId: p.id,
+  status: "testing",
+  receivedAt: day(20 - (i % 5)),
+  results: [],
+  units: 80 + (i % 4) * 40,
+  sample: false,
+}));
+
 export const lots: Lot[] = [
-  // The client's first batch: real identifiers, results not yet supplied.
-  ...products.map((p, i) => ({
-    lot: p.lot,
-    productId: p.id,
-    status: "testing" as const,
-    receivedAt: day(20 - (i % 5)),
-    results: [],
-    units: 80 + (i % 4) * 40,
-    sample: false,
-  })),
-  // Fictional lots that show the other states. The first is the client mockup's record.
+  ...firstBatchLots.filter((lot) => lot.lot !== sampleRecord.lot),
+  // The client mockup's illustrative evidence, merged with its first-batch identifier.
   {
     lot: sampleRecord.lot,
     productId: sampleRecord.productId,
@@ -452,7 +455,7 @@ export const lots: Lot[] = [
     releasedAt: sampleRecord.releasedAt,
     results: sampleRecord.results,
     reference: sampleRecord.reference,
-    units: 0,
+    units: firstBatchLots.find((lot) => lot.lot === sampleRecord.lot)!.units,
     sample: true,
   },
   { lot: "SAMPLE-RT30-A", productId: "retatrutide-30-mg", status: "released", receivedAt: day(70), releasedAt: day(61), results: [{ label: "Purity", method: "HPLC", value: "99.12", unit: "%" }, { label: "Identity", method: "Mass spectrometry", value: "Confirmed", unit: "" }], reference: "TM-COA-0109", units: 0, sample: true },

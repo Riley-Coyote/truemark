@@ -1,3 +1,4 @@
+import { LIVE } from "../platform/mode";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
@@ -8,10 +9,11 @@ import { quote } from "../platform/store";
 import { BrandDot } from "./HeroShelf";
 import "./review-live.css";
 
+function previewNotices() {
 const order = quote(demoDraft);
 
 /** The three notices the demo order sends, in the order they arrive. */
-const notices = [
+return [
   {
     who: "You · the command center",
     title: "New order",
@@ -31,12 +33,17 @@ const notices = [
     body: `${order.method.label}, tracked to the door`,
   },
 ];
+}
+const notices = LIVE ? [] : previewNotices();
 
 /**
  * 04 on the Overview: the live demo's door. One order's three notices arrive in
  * turn as the card comes into view, the way the demo itself plays out.
  */
 export function ReviewLive() {
+  return LIVE ? <Link className="rv-live" to="/review/live">This demo needs the preview world.</Link> : <PreviewReviewLive />;
+}
+function PreviewReviewLive() {
   const root = useRef<HTMLAnchorElement>(null);
   const [shown, setShown] = useState(false);
 

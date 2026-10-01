@@ -13,7 +13,7 @@ const NEXT = [
   { title: "Packed and held cold", text: "Your vials are packed and held cold until they ship." },
   {
     title: "Shipped",
-    text: "Sent with temperature control to your institutional address. Tracking appears in your account once it ships.",
+    text: "Sent with temperature control when applicable. Tracking appears in your account once it ships.",
   },
   { title: "Certificates in your account", text: "The certificate for each lot you receive is kept in your account." },
 ];
@@ -211,6 +211,7 @@ function Placed({ order, method }: { order: Order; method?: ShippingMethod }) {
               </dt>
               <dd>{money(order.shipping.price)}</dd>
             </div>
+            {(order.insuranceApplied || (order.insurance ?? 0) > 0) && <div className="tm-totals-row"><dt>Insurance</dt><dd>{money(order.insurance ?? 0)}</dd></div>}
             <div className="tm-totals-row">
               <dt>Tax</dt>
               <dd className="tm-totals-quiet">Calculated at launch</dd>

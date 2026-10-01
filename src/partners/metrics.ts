@@ -5,6 +5,7 @@
  */
 import { formatDay } from "../app-kit";
 import { TODAY } from "../platform/seed";
+import { worldNow } from "../platform/storage";
 import type { Payout, Referral, Visit } from "../platform/types";
 import { SAMPLE_TERMS } from "./program";
 
@@ -38,11 +39,24 @@ export function monthToDate(referrals: Referral[]) {
   return {
     current: total(current),
     currentCount: current.length,
+    viaLink: current.filter((r) => r.via === "link").length,
+    viaCode: current.filter((r) => r.via === "code").length,
     previous: total(previous),
     month: MONTHS[month],
     comparison: `1–${day} ${previousMonth.slice(0, 3)}`,
     cumulative,
   };
+}
+
+/** Relative time inside the sample world, including older referrals in the feed. */
+export function saleAge(iso: string, now = worldNow()): string {
+  const minutes = Math.floor(Math.max(0, at(now) - at(iso)) / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} ${days === 1 ? "day" : "days"} ago`;
 }
 
 /** Everything paid out so far, with a 60-day running total for the tile's trace. */

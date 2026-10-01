@@ -1,5 +1,11 @@
-import { useId, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import { AssistantSettings } from "../assistant/Settings";
+import { CommerceSettings } from "./Commerce";
+import { AppearanceControl } from "./appearance";
+import { LIVE } from "../platform/mode";
+import { live } from "../platform/live/runtime";
+import { useResource } from "../platform/store";
+import { useId } from "react";
+import type { ReactNode } from "react";
 import { Check, Minus } from "lucide-react";
 import {
   Button,
@@ -10,13 +16,9 @@ import {
   PageHeader,
   SampleTag,
   Section,
-  Skeleton,
-  formatMoney,
 } from "../app-kit";
 import type { Column } from "../app-kit";
-import { store, useResource } from "../platform/store";
-import type { ShippingMethod, ShippingMethodId } from "../platform/types";
-import { PreviewTag, SwitchRow, TextField, parseDollars } from "./fields";
+import { PreviewTag, SwitchRow } from "./fields";
 import { NewOrderAlerts } from "./notify";
 import { preview, usePreview } from "./preview";
 import { useQueryParam } from "./state";
@@ -40,16 +42,23 @@ function Block({ title, note, children }: { title: string; note: ReactNode; chil
 }
 
 export default function Settings() {
-  const methods = useResource(() => store.catalog.shippingMethods(), []);
   const changes = usePreview();
   const [openId, setOpenId] = useQueryParam("operator");
+  const profile = useResource(() => LIVE ? live().auth.profile() : Promise.resolve(null));
+  if (LIVE && !profile.data && profile.loading) return <p className="kit-note" role="status">Checking settings access…</p>;
+  if (LIVE && profile.error) return <EmptyState title="Settings access could not be checked." note={profile.error.message} action={<Button onClick={profile.reload}>Try again</Button>} />;
+  if (LIVE && profile.data?.role !== "owner") return <EmptyState title="Owner access required." note="Only the owner can change the shop settings." />;
 
   return (
     <div className="kit-grid">
       <PageHeader
-        description="The rules the shop runs on. Shipping rates are samples for you to set; payments and team invitations connect at launch."
-        meta={<PreviewTag />}
+        description="The rules the shop runs on. The owner sets free shipping and insurance; payments and team invitations connect at launch."
+        meta={LIVE ? undefined : <PreviewTag />}
       />
+
+      <Block title="Appearance" note="Applies to this device.">
+        <div className="kit-card cc-setting-card cc-appearance-card"><AppearanceControl /></div>
+      </Block>
 
       <Block title="Store" note="How the shop names itself and where it lives.">
         <div className="kit-card cc-setting-card">
@@ -64,24 +73,15 @@ export default function Settings() {
         </div>
       </Block>
 
-      <Block title="Shipping" note="The cold-chain methods offered at checkout. Rates are samples for you to set.">
-        <div className="kit-card cc-setting-card">
-          {methods.data ? (
-            <RatesForm methods={methods.data} rates={changes.rates} />
-          ) : methods.error ? (
-            <EmptyState
-              compact
-              title="Shipping methods could not be loaded."
-              note={methods.error.message}
-              action={<Button onClick={methods.reload}>Try again</Button>}
-            />
-          ) : (
-            <div className="cc-list-loading" aria-label="Loading">
-              <Skeleton width="64%" />
-              <Skeleton width="58%" />
-            </div>
-          )}
-        </div>
+      <Block title="Shipping" note="When standard delivery is free. The threshold applies after discounts.">
+        <div className="kit-card cc-setting-card"><CommerceSettings kind="shipping" /></div>
+      </Block>
+      <Block title="Insurance" note="Shipment insurance, ready when the client decides.">
+        <div className="kit-card cc-setting-card"><CommerceSettings kind="insurance" /></div>
+      </Block>
+
+      <Block title="Assistant" note="Choose models that support tool use.">
+        <AssistantSettings />
       </Block>
 
       <Block title="Payments" note="Card payments run through your processor, which connects at launch.">
@@ -161,90 +161,6 @@ export default function Settings() {
 
       {openId && <OperatorDrawer key={openId} operator={TEAM.find((o) => o.id === openId)} onClose={() => setOpenId(null, { replace: true })} />}
     </div>
-  );
-}
-
-/* ---------- Shipping rates ---------- */
-
-const parseRate = (text: string) => parseDollars(text, { allowZero: true });
-
-function RatesForm({ methods, rates }: { methods: ShippingMethod[]; rates: Partial<Record<ShippingMethodId, number>> }) {
-  const current = (m: ShippingMethod) => rates[m.id] ?? m.price;
-  const [drafts, setDrafts] = useState<Record<string, string>>(() =>
-    Object.fromEntries(methods.map((m) => [m.id, current(m).toFixed(2)])),
-  );
-  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
-  const [message, setMessage] = useState<string | null>(null);
-
-  const parsed = methods.map((m) => ({ method: m, ...parseRate(drafts[m.id] ?? "") }));
-  const changed = parsed.some((p) => p.value === undefined || p.value !== current(p.method));
-  const edited = methods.some((m) => current(m) !== m.price);
-
-  function save(event: FormEvent) {
-    event.preventDefault();
-    const next = Object.fromEntries(parsed.map((p) => [p.method.id, p.error]));
-    setErrors(next);
-    if (parsed.some((p) => p.error)) {
-      setMessage(null);
-      return;
-    }
-    preview.setRates(Object.fromEntries(parsed.map((p) => [p.method.id, p.value as number])));
-    setDrafts(Object.fromEntries(parsed.map((p) => [p.method.id, (p.value as number).toFixed(2)])));
-    setMessage("Shipping rates changed in this preview.");
-  }
-
-  function restore() {
-    preview.setRates(Object.fromEntries(methods.map((m) => [m.id, m.price])));
-    setDrafts(Object.fromEntries(methods.map((m) => [m.id, m.price.toFixed(2)])));
-    setErrors({});
-    setMessage("Sample rates restored.");
-  }
-
-  return (
-    <form className="cc-rates" onSubmit={save} noValidate>
-      <ul>
-        {methods.map((m) => (
-          <li key={m.id} className="cc-rate">
-            <div className="cc-rate-text">
-              <p className="cc-rate-name">{m.label}</p>
-              <p className="cc-rate-detail">
-                {m.detail}. Sample rate {formatMoney(m.price)}.
-              </p>
-            </div>
-            <div className="cc-rate-field">
-              <TextField
-                label={`Rate for ${m.label}`}
-                srLabel="in US dollars"
-                hideLabel
-                prefix="$"
-                inputMode="decimal"
-                value={drafts[m.id] ?? ""}
-                onChange={(value) => {
-                  setDrafts((d) => ({ ...d, [m.id]: value }));
-                  setMessage(null);
-                  if (errors[m.id]) setErrors((e) => ({ ...e, [m.id]: parseRate(value).error }));
-                }}
-                error={errors[m.id]}
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
-      <div className="cc-live" aria-live="polite">
-        {message && <p className="kit-note">{message}</p>}
-      </div>
-      <div className="cc-confirm-actions cc-foot-row">
-        <Button type="submit" variant="primary" disabled={!changed}>
-          Save rates
-        </Button>
-        {edited && (
-          <Button variant="text" onClick={restore}>
-            Restore sample rates
-          </Button>
-        )}
-        <SampleTag>Sample rates</SampleTag>
-      </div>
-    </form>
   );
 }
 

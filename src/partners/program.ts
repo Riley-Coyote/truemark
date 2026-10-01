@@ -1,3 +1,4 @@
+import { LIVE } from "../platform/mode";
 /**
  * The partner program's words and rules, in one place: the public pages, the
  * application and the portal all read from here, so a partner is held to the
@@ -23,7 +24,10 @@ export function ordinal(day: number): string {
 
 /** A link that carries a partner's code; the shop remembers `?ref=` and checkout applies it. */
 export function partnerLink(path: string, code: string): string {
-  return `${SITE}${path}?ref=${encodeURIComponent(code)}`;
+  // The review site shows the brand's own address. A live link must land on the
+  // deployment it came from, which routes by hash inside its own folder.
+  if (!LIVE) return `${SITE}${path}?ref=${encodeURIComponent(code)}`;
+  return `${location.origin}${location.pathname}#${path}?ref=${encodeURIComponent(code)}`;
 }
 
 export type DestinationKind = "home" | "shop" | "compound" | "verify";

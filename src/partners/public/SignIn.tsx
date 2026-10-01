@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { LIVE } from "../../platform/mode";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
@@ -13,6 +14,15 @@ const PORTAL = "/partners/app";
 
 /** Signing out forgets the preview session and lands on the sign-in page. */
 export function SignOut() {
+  return LIVE ? <LiveSignOut /> : <PreviewSignOut />;
+}
+function LiveSignOut() {
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState<string>();
+  useEffect(() => { Promise.resolve(signOut()).then(() => setDone(true), (failure: Error) => setError(failure.message)); }, []);
+  return done ? <Navigate to="/partners/sign-in" replace state={{ signedOut: true }} /> : <p className="pp-preview-note" role={error ? "alert" : "status"}>{error ?? "Signing out…"}</p>;
+}
+function PreviewSignOut() {
   useState(() => {
     signOut();
     return true;
@@ -27,10 +37,11 @@ export default function SignIn() {
   const location = useLocation();
   const state = location.state as { from?: string; signedOut?: boolean } | null;
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
     if (!EMAIL.test(email.trim())) {
       setError(email.trim() ? "Enter a full email address." : "Enter the email address you applied with.");
@@ -38,9 +49,15 @@ export default function SignIn() {
       return;
     }
     setBusy(true);
-    signIn(email.trim());
-    const from = state?.from;
-    navigate(from && from.startsWith(PORTAL) ? from : PORTAL, { replace: true });
+    try {
+      if (LIVE) await signIn(email.trim(), password);
+      else signIn(email.trim());
+      const from = state?.from;
+      navigate(from && from.startsWith(PORTAL) ? from : PORTAL, { replace: true });
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Sign-in could not be completed.");
+      setBusy(false);
+    }
   }
 
   return (
@@ -80,11 +97,12 @@ export default function SignIn() {
                 if (error) setError(undefined);
               }}
             />
+            {LIVE && <Field id="pp-signin-password" label="Password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} />}
             <button className="tm-button tm-button-primary" type="submit" disabled={busy}>
               {busy ? "One moment" : "Continue"}
             </button>
           </form>
-          <p className="pp-preview-note">Design preview: any email opens the sample partner portal.</p>
+          {!LIVE && <p className="pp-preview-note">Design preview: any email opens the sample partner portal.</p>}
           <p className="pp-signin-switch">
             <span>Not a partner yet?</span>
             <Link className="tm-textlink" to="/partners/apply">

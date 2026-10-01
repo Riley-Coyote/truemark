@@ -345,6 +345,7 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
             </dt>
             <dd>{formatMoney(o.shipping.price)}</dd>
           </div>
+            {(o.insuranceApplied || (o.insurance ?? 0) > 0) && <div><dt>Insurance</dt><dd>{formatMoney(o.insurance ?? 0)}</dd></div>}
           <div className="is-total">
             <dt>Total</dt>
             <dd className="kit-figure">{formatMoney(o.total)}</dd>

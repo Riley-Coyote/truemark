@@ -6,6 +6,7 @@ import { money } from "../data";
 import { productCutout } from "../shop/catalog";
 import type { Compound } from "../shop/catalog";
 import { useShop } from "../shop/context";
+import { announceMobileAdd } from "../shop/MobileAdd";
 import { tone } from "../shop/ui";
 import { sheenMask } from "./light";
 import "./cards.css";
@@ -17,11 +18,12 @@ import "./cards.css";
  */
 export function ProductCard({ compound, listItem = false }: { compound: Compound; listItem?: boolean }) {
   const { lead, variants, fromPrice, name } = compound;
-  const { add } = useShop();
+  const { add, closeCart, cart } = useShop();
   const [picking, setPicking] = useState(false);
   const menuId = useId();
   const root = useRef<HTMLElement>(null);
   const multi = variants.length > 1;
+  const outOfStock = variants.every((product) => product.stock === 0);
   const tag = variants.find((v) => v.tag)?.tag;
   const sizes = multi ? `${variants.map((v) => v.size.replace(/ mg$/, "")).join(" · ")} mg` : lead.size;
   const detail = lead.category === "lab-supplies" ? "Sterile solution" : "Lyophilized powder · ≥99% (HPLC)";
@@ -32,8 +34,17 @@ export function ProductCard({ compound, listItem = false }: { compound: Compound
   }, [picking]);
 
   function choose(id: string) {
+    const phone = window.matchMedia("(max-width: 760px)").matches;
+    const product = variants.find((item) => item.id === id);
+    const current = cart.find((item) => item.id === id)?.quantity ?? 0;
+    if (!product || current >= 99 || (product.stock != null && current + 1 > product.stock)) return;
     add(id, 1);
+    if (phone) {
+      closeCart();
+      announceMobileAdd(id, root.current?.querySelector<HTMLImageElement>(".tm-card-vial img"));
+    }
     setPicking(false);
+    if (phone && picking) root.current?.querySelector<HTMLButtonElement>(".tm-card-plus")?.focus();
   }
 
   function closeOnLeave(event: FocusEvent<HTMLDivElement>) {
@@ -51,7 +62,7 @@ export function ProductCard({ compound, listItem = false }: { compound: Compound
   return (
     <article ref={root} role={listItem ? "listitem" : undefined} className="tm-card" style={tone(lead)}>
       <div className="tm-card-stage">
-        {tag && <span className="tm-card-tag">{tag}</span>}
+        {(tag || outOfStock) && <span className="tm-card-tag">{outOfStock ? "Out of stock" : tag}</span>}
         <span className="tm-card-shadow" aria-hidden="true" />
         <span className="tm-card-vial" data-sheen>
           <img
@@ -88,8 +99,8 @@ export function ProductCard({ compound, listItem = false }: { compound: Compound
           {picking && (
             <div className="tm-card-sizes" id={menuId} role="group" aria-label={`Choose a size of ${name}`}>
               {buyable.map((v) => (
-                <button key={v.id} type="button" onClick={() => choose(v.id)}>
-                  {v.size}
+                <button key={v.id} type="button" disabled={v.stock === 0 || (v.stock != null && (cart.find((item) => item.id === v.id)?.quantity ?? 0) >= v.stock)} onClick={() => choose(v.id)}>
+                  {v.size}{v.stock === 0 ? " · Out of stock" : ""}
                   <span>{money(v.price!)}</span>
                 </button>
               ))}
@@ -98,6 +109,7 @@ export function ProductCard({ compound, listItem = false }: { compound: Compound
           <button
             type="button"
             className="tm-card-plus"
+            disabled={outOfStock || buyable.every((v) => (cart.find((item) => item.id === v.id)?.quantity ?? 0) >= Math.min(99, v.stock ?? 99))}
             aria-label={multi ? `Add ${name} to bag, choose a size` : `Add ${name} ${lead.size} to bag`}
             aria-expanded={multi ? picking : undefined}
             aria-controls={multi && picking ? menuId : undefined}

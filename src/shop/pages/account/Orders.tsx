@@ -348,6 +348,7 @@ export function OrderDetail() {
               </dt>
               <dd>{money(found.shipping.price)}</dd>
             </div>
+            {(found.insuranceApplied || (found.insurance ?? 0) > 0) && <div><dt>Insurance</dt><dd>{money(found.insurance ?? 0)}</dd></div>}
             <div className="is-total">
               <dt>Total</dt>
               <dd>{money(found.total)}</dd>

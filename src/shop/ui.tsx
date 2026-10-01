@@ -88,7 +88,7 @@ export function CompoundTile({ compound, listItem = false }: { compound: Compoun
 export const proofFigures = [
   { label: "Purity specification", figure: "≥99", unit: "%", text: "Measured by HPLC on every lot before it is released." },
   { label: "Identity", figure: "MS", unit: "", text: "Confirmed by mass spectrometry, lot by lot." },
-  { label: "Storage", figure: "−20", unit: "°C", text: "Held cold, then shipped with temperature control." },
+  { label: "Storage", figure: "−20", unit: "°C", text: "Held cold, then shipped with temperature control when applicable." },
   { label: "Release", figure: "0", unit: "", text: "Lots released without an approved certificate." },
 ];
 

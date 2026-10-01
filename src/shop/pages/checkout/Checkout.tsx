@@ -1,3 +1,6 @@
+import { InsuranceRow, useInsuranceChoice, clearInsuranceChoice } from "../../Insurance";
+import { priceQuote, shippingPrice, insurancePrice } from "../../../platform/pricing";
+import { LIVE } from "../../../platform/mode";
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -8,6 +11,7 @@ import type { Address, Buyer, BuyerStatus, ShippingMethod, ShippingMethodId } fr
 import { useShop } from "../../context";
 import { usePrefersReducedMotion } from "../../motion";
 import {
+  StockNotice,
   CodeControl,
   DiscountRow,
   Thumb,
@@ -126,6 +130,9 @@ function VerifiedMark({ status }: { status: BuyerStatus }) {
 /* ---------- 01 Research account ---------- */
 
 function SignInForm({ onSignedIn }: { onSignedIn: () => void }) {
+  return LIVE ? <div className="tm-signin"><p className="tm-step-lead">Sign in to your research account to place an order.</p><Link className="tm-button tm-button-primary" to="/access" state={{ from: "/checkout" }}>Sign in</Link></div> : <PreviewSignInForm onSignedIn={onSignedIn} />;
+}
+function PreviewSignInForm({ onSignedIn }: { onSignedIn: () => void }) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -402,6 +409,8 @@ function OrderSummary({
   subtotal,
   code,
   discountAmount,
+  insurance,
+  insuranceApplied,
   method,
   total,
   titleId,
@@ -410,6 +419,8 @@ function OrderSummary({
   subtotal: number;
   code: BagCode;
   discountAmount: number;
+  insurance: number;
+  insuranceApplied: boolean;
   method: ShippingMethod | null;
   total: number;
   titleId: string;
@@ -448,11 +459,12 @@ function OrderSummary({
           <dd>{money(subtotal)}</dd>
         </div>
         <DiscountRow discount={code.discount} amount={discountAmount} />
+        <InsuranceRow amount={insurance} applied={insuranceApplied} />
         <div className="tm-totals-row">
           <dt>
             Shipping<span className="tm-totals-sub"> · sample rate</span>
           </dt>
-          <dd>{method ? money(method.price) : "Choose delivery"}</dd>
+          <dd>{method ? method.price === 0 ? "Free" : money(method.price) : "Choose delivery"}</dd>
         </div>
         <div className="tm-totals-row">
           <dt>Tax</dt>
@@ -473,10 +485,12 @@ export default function Checkout() {
   const navigate = useNavigate();
   const reduced = usePrefersReducedMotion();
   const { clear } = useShop();
-  const { lines, count, subtotal } = useBagLines();
+  const { lines, count, subtotal, issues, catalogChecking, catalogError, reloadCatalog } = useBagLines();
+  const [insured, setInsured] = useInsuranceChoice();
   const code = useBagCode();
   const session = useResource(() => store.session.get(), []);
   const methods = useResource(() => store.catalog.shippingMethods(), []);
+  const settings = useResource(() => store.settings.get(), []);
 
   const buyer = session.data ?? null;
   const verified = buyer?.status === "verified";
@@ -504,7 +518,10 @@ export default function Checkout() {
 
   const addresses = [...(buyer?.addresses ?? []), ...added];
   const address = addresses.find((a) => a.id === addressId) ?? null;
-  const method = methods.data?.find((m) => m.id === methodId) ?? null;
+  const discountAmount = code.discount ? discountOn(subtotal, code.discount) : 0;
+  const selectedMethod = methods.data?.find((m) => m.id === methodId) ?? null;
+  const priced = settings.data ? priceQuote(subtotal, code.discount?.percent ?? 0, selectedMethod, settings.data, insured) : null;
+  const method = selectedMethod ? { ...selectedMethod, price: priced?.shipping ?? selectedMethod.price } : null;
 
   // Preselect the account's first saved address once it is known; drop a selection that left.
   const addressIds = addresses.map((a) => a.id).join(" ");
@@ -557,14 +574,16 @@ export default function Checkout() {
     }
   }
 
-  const discountAmount = code.discount ? discountOn(subtotal, code.discount) : 0;
-  const total = roundMoney(subtotal - discountAmount + (method?.price ?? 0));
+  const total = priced?.total ?? roundMoney(subtotal - discountAmount + (method?.price ?? 0));
 
   const needs: string[] = [];
   if (!buyer) needs.push("a research account");
   else if (!verified) needs.push("a verified research account");
   if (!address || adding) needs.push("a shipping address");
   if (!method) needs.push("a delivery method");
+  if (!settings.data || settings.loading || settings.error) needs.push("shipping settings");
+  if (issues.length || catalogChecking || catalogError) needs.push("available stock");
+  if (code.checking) needs.push("code verification");
   if (!attested) needs.push("the research-use confirmation");
   const canPlace = needs.length === 0 && lines.length > 0 && !placing;
 
@@ -577,19 +596,22 @@ export default function Checkout() {
         lines: lines.map((line) => ({ productId: line.product.id, quantity: line.quantity })),
         address,
         shipping: method.id,
+        insurance: insured,
         discountCode: code.discount?.code,
         via: code.source === "link" ? "link" : "code",
       });
       clearBagCode();
+      clearInsuranceChoice();
       navigate(`/checkout/confirmation/${order.id}`, { replace: true });
       clear();
-    } catch {
+    } catch (error) {
       setPlacing(false);
-      setPlaceError("The order could not be placed. Try again.");
+      reloadCatalog?.();
+      setPlaceError(error instanceof Error ? error.message : "The order could not be placed. Try again.");
     }
   }
 
-  if (!lines.length) {
+  if (!lines.length && !issues.length) {
     return (
       <div className="tm-page tm-purchase">
         <section className="tm tm-purchase-empty" aria-labelledby="tm-checkout-title">
@@ -607,7 +629,7 @@ export default function Checkout() {
     );
   }
 
-  const summaryProps = { lines, subtotal, code, discountAmount, method, total };
+  const summaryProps = { lines, subtotal, code, discountAmount, method, total, insurance: priced?.insurance ?? 0, insuranceApplied: priced?.insuranceApplied ?? false };
   const listFormat = new Intl.ListFormat("en", { style: "long", type: "conjunction" });
 
   return (
@@ -619,7 +641,7 @@ export default function Checkout() {
             Place your order.
           </h1>
         </header>
-        <p className="tm-purchase-preview">Design preview · sample data</p>
+        {!LIVE && <p className="tm-purchase-preview">Design preview · sample data</p>}
 
         {/* Narrow screens: the summary folds into a bar above the four parts. */}
         <div className="tm-summary-sheet">
@@ -726,7 +748,6 @@ export default function Checkout() {
             }}
             summary={address && <span>{addressLine(address)}</span>}
           >
-            <p className="tm-step-lead">We ship to institutional addresses only.</p>
             {!buyer && !added.length && (
               <p className="tm-step-note">Your saved addresses appear here once you sign in.</p>
             )}
@@ -789,11 +810,12 @@ export default function Checkout() {
             summary={
               method && (
                 <span>
-                  {method.label} · {money(method.price)} <span className="tm-step-summary-quiet">sample rate</span>
+                  {method.label} · {method.price === 0 ? "Free" : money(method.price)} <span className="tm-step-summary-quiet">sample rate</span>
                 </span>
               )
             }
           >
+            {settings.error && <p className="tm-step-lead" role="alert">Shipping settings could not be loaded. <button type="button" className="tm-text-button" onClick={settings.reload}>Try again</button></p>}
             {methods.data === undefined && methods.error ? (
               <div className="tm-step-state" role="alert">
                 <p className="tm-step-lead">Delivery methods could not be loaded.</p>
@@ -825,10 +847,15 @@ export default function Checkout() {
                         <span className="tm-choice-mark" aria-hidden="true" />
                       </span>
                       <span className="tm-choice-text">{m.detail}</span>
-                      <span className="tm-choice-price">{money(m.price)}</span>
+                      <span className="tm-choice-price">{settings.data && shippingPrice(roundMoney(subtotal - discountAmount), m, settings.data) === 0 ? "Free" : money(m.price)}</span>
                     </label>
                   ))}
                 </fieldset>
+                {settings.data?.insuranceMode === "optional" && <label className="tm-check">
+                  <input type="checkbox" className="tm-check-input" checked={insured} onChange={(event) => setInsured(event.target.checked)} />
+                  <span className="tm-check-box" aria-hidden="true"><Check size={14} strokeWidth={2.2} /></span>
+                  <span className="tm-check-text">Insure this shipment · {money(insurancePrice(roundMoney(subtotal - discountAmount), settings.data, true))}</span>
+                </label>}
                 <div className="tm-step-actions">
                   <button
                     type="button"
@@ -857,8 +884,9 @@ export default function Checkout() {
             <div className="tm-secure" role="group" aria-labelledby="tm-secure-title" aria-describedby="tm-secure-note">
               <p id="tm-secure-title" className="tm-secure-title">
                 <LockKeyhole size={16} strokeWidth={1.6} aria-hidden="true" />
-                Secure payment form
+                {LIVE ? "Payment" : "Secure payment form"}
               </p>
+              {!LIVE && <>
               <div className="tm-fields">
                 <div className="tm-field is-wide is-inert">
                   <label htmlFor="tm-card-number">Card number</label>
@@ -873,10 +901,11 @@ export default function Checkout() {
                   <input id="tm-card-code" disabled placeholder="CVC" />
                 </div>
               </div>
+              </>}
             </div>
             <p id="tm-secure-note" className="tm-step-note">
-              Card details are entered in your payment partner’s secure form and never touch
-              TrueMark’s servers. Connected at launch.
+              {LIVE ? "Payments connect at launch; this order is placed and held as authorized." : <>Card details are entered in your payment partner’s secure form and never touch
+              TrueMark’s servers. Connected at launch.</>}
             </p>
 
             <label className="tm-check">
@@ -896,6 +925,7 @@ export default function Checkout() {
               </span>
             </label>
 
+            <StockNotice issues={issues} checking={catalogChecking} error={catalogError} onRetry={reloadCatalog} />
             <div className="tm-place">
               <p className="tm-totals-row tm-totals-total tm-place-total">
                 <span>Total</span>
@@ -915,7 +945,7 @@ export default function Checkout() {
               </p>
               {placeError && <FieldError id="tm-place-error">{placeError}</FieldError>}
               <p className="tm-step-fine">
-                Design preview. No payment is collected; the order is kept in this browser.
+                {LIVE ? "No payment is collected at this step." : "Design preview. No payment is collected; the order is kept in this browser."}
               </p>
             </div>
           </Step>

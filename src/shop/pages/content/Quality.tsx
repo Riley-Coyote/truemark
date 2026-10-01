@@ -48,7 +48,7 @@ const process: TrackStop[] = [
   {
     kicker: "Step 05",
     title: "Cold-chain storage",
-    text: "Released vials are stored at −20 °C and shipped with temperature control to institutional addresses.",
+    text: "Released vials are stored at −20 °C and shipped with temperature control when applicable.",
   },
 ];
 

@@ -197,6 +197,13 @@
 .tm .tm-article-body h2:focus {
   outline: none;
 }
+.tm .tm-article-body h3 { margin: var(--tm-space-6) 0 var(--tm-space-3); font: var(--tm-weight-medium) var(--tm-type-lead) / var(--tm-leading-heading) var(--tm-font-display); color: var(--tm-ink); }
+.tm-article-figure img { display: block; max-width: 100%; height: auto; }
+.tm .tm-article-body a { color: var(--tm-ink); text-decoration: underline; text-decoration-color: var(--tm-ink-3); text-underline-offset: var(--tm-space-1); }
+.tm .tm-article-body a:hover { color: var(--tm-ink-2); }
+.tm .tm-article-body a:focus-visible { outline: none; color: var(--tm-ink); text-decoration-color: var(--tm-ink); }
+.tm .tm-article-body a:active { color: var(--tm-ink-3); }
+.tm .tm-article-body code { font-family: var(--tm-font-mono); overflow-wrap: anywhere; }
 
 /* Lists: hairline rows, as on the legal pages. A defined term reads in full ink. */
 .tm .tm-article-list {

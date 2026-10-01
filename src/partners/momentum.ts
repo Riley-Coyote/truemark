@@ -7,6 +7,7 @@
  */
 import { formatDay, formatMoney } from "../app-kit";
 import type { Payout, Referral, Visit } from "../platform/types";
+import { worldNow } from "../platform/storage";
 import { END, MONTHS, periodLabel } from "./metrics";
 
 const DAY = 86_400_000;
@@ -38,6 +39,41 @@ export function goalProgress(referrals: Referral[], current: number, goal: numbe
     reached: current >= goal,
     reachedAt,
   };
+}
+
+/** A projection from the average across calendar days so far, never a promise of earnings. */
+export function goalPace(referrals: Referral[], current: number, goal: number, now = worldNow()): string {
+  const progress = goalProgress(referrals, current, goal);
+  if (progress.reached) return `Goal reached${progress.reachedAt ? ` on ${formatDay(progress.reachedAt)}` : ""}`;
+  const date = new Date(now);
+  const average = current / date.getUTCDate();
+  const projectedDay = average > 0 ? Math.ceil(goal / average) : Infinity;
+  const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+  if (projectedDay <= lastDay) {
+    const projected = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), projectedDay)).toISOString();
+    return `At ${MONTHS[date.getUTCMonth()]}'s pace you'll pass it on ${formatDay(projected)}`;
+  }
+  if (average <= 0) return `No sales yet this ${MONTHS[date.getUTCMonth()]}`;
+  // Out of reach this month: say where the pace lands instead of repeating what's left to go.
+  const monthEnd = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), lastDay)).toISOString();
+  return `At ${MONTHS[date.getUTCMonth()]}'s pace, about ${formatMoney(Math.round(average * lastDay)).replace(/\.00$/, "")} by ${formatDay(monthEnd)}`;
+}
+
+/** Thresholds crossed by one live referral. Loading history or changing a goal is not a sale. */
+export function crossedAchievements(before: Referral[], after: Referral[], goal: number, now = worldNow()) {
+  const previous = milestones(before);
+  const next = milestones(after);
+  const achievements = next.list
+    .filter((m) => m.reachedAt && !previous.list.find((p) => p.id === m.id)?.reachedAt)
+    .map((m) => ({ id: m.id, title: m.kind === "earned" ? `You passed ${m.title}` : `You reached ${m.title.toLowerCase()}` }));
+  const month = now.slice(0, 7);
+  const monthEarnings = (list: Referral[]) => round2(list
+    .filter((r) => r.status !== "void" && r.createdAt.startsWith(month))
+    .reduce((sum, r) => sum + r.commission, 0));
+  if (monthEarnings(before) < goal && monthEarnings(after) >= goal) {
+    achievements.push({ id: `goal-${month}`, title: `${MONTHS[new Date(now).getUTCMonth()]} goal reached` });
+  }
+  return achievements;
 }
 
 /**

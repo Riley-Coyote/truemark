@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { LIVE } from "../platform/mode";
+import { useEffect, useId, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ArrowUpRight, Menu, Search } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Menu, Search, X } from "lucide-react";
 import "@fontsource/poppins/300.css";
 import "@fontsource/poppins/400.css";
 import "@fontsource/poppins/500.css";
@@ -9,6 +10,8 @@ import { categoryName, products } from "../data";
 import { productCutout } from "./catalog";
 import { useShop } from "./context";
 import { Modal } from "./Modal";
+import { MobileAdd } from "./MobileAdd";
+import { StorefrontAssistant } from "../assistant/Assistant";
 import "./tokens.css";
 import "./chrome.css";
 import "./shop.css";
@@ -32,12 +35,35 @@ export function Header() {
   const [query, setQuery] = useState("");
   const location = useLocation();
   const { cart, openCart } = useShop();
+  const menuId = useId();
+  const header = useRef<HTMLElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     setMenuOpen(false);
     setSearchOpen(false);
   }, [location.pathname, location.search]);
+  // The phone menu drops from the header, as the command center's does: Escape or a tap
+  // anywhere outside the header closes it, and Escape hands focus back to the button.
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        menuButton.current?.focus();
+      }
+    }
+    function onPointer(event: PointerEvent) {
+      if (header.current && event.target instanceof Node && !header.current.contains(event.target)) setMenuOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+    };
+  }, [menuOpen]);
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const matches = products
+  const matches = products.filter((product) => product.active !== false)
     .filter((p) =>
       `${p.name} ${p.size} ${categoryName(p.category)}`
         .toLowerCase()
@@ -51,7 +77,7 @@ export function Header() {
           <p>Research use only · Not for human consumption</p>
         </div>
       </div>
-      <header className="tm-header">
+      <header className="tm-header" ref={header}>
         <div className="tm-header-inner">
           <Link className="tm-logo" to="/" aria-label="TrueMark BioLabs home">
             <BrandLogo />
@@ -72,36 +98,57 @@ export function Header() {
             </Link>
             <button
               className="tm-textool"
+              data-cart-target
               aria-label={`Open cart, ${count} ${count === 1 ? "item" : "items"}`}
               onClick={openCart}
             >
               Cart ({count})
             </button>
             <button
+              ref={menuButton}
+              type="button"
               className="tm-icon tm-menu-trigger"
-              aria-label="Open navigation"
-              onClick={() => setMenuOpen(true)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              aria-controls={menuId}
+              onClick={() => setMenuOpen((open) => !open)}
             >
-              <Menu size={20} strokeWidth={1.6} />
+              {menuOpen ? <X size={20} strokeWidth={1.6} aria-hidden="true" /> : <Menu size={20} strokeWidth={1.6} aria-hidden="true" />}
             </button>
           </div>
         </div>
-      </header>
-      {menuOpen && (
-        <Modal title="TrueMark" onClose={() => setMenuOpen(false)} side>
-          <nav className="tm-mobile-nav" aria-label="Mobile navigation">
-            {[...primaryNav, { label: "Research account", to: "/account" }].map(
-              (item) => (
-                <Link key={item.to} to={item.to}>
+        {menuOpen && (
+          <div id={menuId} className="tm-mmenu">
+            <nav className="tm-mobile-nav" aria-label="Menu">
+              {primaryNav.map((item) => (
+                <NavLink key={item.to} to={item.to}>
                   {item.label}
-                  <ArrowUpRight size={20} strokeWidth={1.5} />
-                </Link>
-              ),
-            )}
-          </nav>
-          <p className="tm-mobile-note">For laboratory research use only.</p>
-        </Modal>
-      )}
+                  <ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" />
+                </NavLink>
+              ))}
+            </nav>
+            <div className="tm-mmenu-foot">
+              <button
+                type="button"
+                className="tm-mmenu-tool"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setSearchOpen(true);
+                }}
+              >
+                <Search size={16} strokeWidth={1.6} aria-hidden="true" />
+                Search
+              </button>
+              <Link className="tm-mmenu-tool" to="/account">
+                Research account
+              </Link>
+            </div>
+            <p className="tm-mobile-note">For laboratory research use only.</p>
+          </div>
+        )}
+      </header>
+      <MobileAdd />
+      <StorefrontAssistant />
       {searchOpen && (
         <Modal title="Find a compound" onClose={() => setSearchOpen(false)}>
           <div className="search-input-wrap">
@@ -223,7 +270,7 @@ export function Footer() {
           </p>
           <div className="tm-footer-meta">
             <span>© 2026 TrueMark BioLabs · Research use only · Not for human consumption</span>
-            <span className="tm-preview-tag">Design preview · sample data</span>
+            {!LIVE && <span className="tm-preview-tag">Design preview · sample data</span>}
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 /*
- * TrueMark app kit. The command center (night) and the partner portal (studio)
+ * TrueMark app kit. The command center (night/day) and the partner portal (studio)
  * share every component; each reads its colours from the --kit-* theme tokens,
  * which are mapped from the platform's --tm-* tokens below.
  */
@@ -7,7 +7,13 @@
 /* ---------- Themes ---------- */
 
 .kit {
-  /* Dimensions shared by both themes. */
+  /* Preserve the studio's component depth; command themes override these below. */
+  --kit-shadow-whisper: var(--tm-shadow-whisper);
+  --kit-primary-shadow: var(--tm-shadow-whisper), inset 0 1px 0 color-mix(in srgb, var(--tm-glow) 14%, transparent);
+  --kit-hover-line: var(--kit-ink-4);
+  --kit-brand-light: var(--tm-gradient);
+  --kit-peak-glow: color-mix(in srgb, var(--tm-purple) 70%, transparent);
+  /* Dimensions shared by all themes. */
   --kit-sidebar: 15rem;
   --kit-rail: var(--tm-space-8);
   --kit-topbar: var(--tm-space-8);
@@ -24,41 +30,87 @@
   --kit-offset: var(--review-bar-height, 0px);
 }
 
-.kit[data-theme="night"] {
+.kit[data-theme="night"],
+html[data-command-theme="night"] {
   color-scheme: dark;
-  /* The canvas and sidebar sit a step below the night; panels stay raised above it. */
-  --kit-bg: var(--tm-night-deep);
-  --kit-panel: var(--tm-night-raised);
-  --kit-field: color-mix(in srgb, var(--tm-glow) 3%, transparent);
-  --kit-lift: color-mix(in srgb, var(--tm-glow) 9%, transparent);
+  --kit-bg: var(--tm-instrument);
+  --kit-panel: var(--tm-instrument-raised);
+  --kit-field: rgba(255, 255, 255, 0.03);
+  --kit-lift: rgba(255, 255, 255, 0.06);
   --kit-ink: var(--tm-glow);
   --kit-ink-2: var(--tm-glow-2);
   --kit-ink-3: var(--tm-glow-3);
   --kit-ink-4: var(--tm-glow-4);
-  --kit-line: var(--tm-night-line);
-  --kit-line-strong: color-mix(in srgb, var(--tm-glow) 17%, transparent);
+  --kit-hover-line: var(--kit-ink-3);
+  --kit-line: rgba(255, 255, 255, 0.07);
+  --kit-line-strong: rgba(255, 255, 255, 0.14);
   --kit-focus: var(--tm-glow-2);
-  --kit-wash: color-mix(in srgb, var(--tm-glow) 5%, transparent);
-  --kit-wash-strong: color-mix(in srgb, var(--tm-glow) 9%, transparent);
-  --kit-grid: color-mix(in srgb, var(--tm-glow) 6%, transparent);
-  /* A panel's lit top edge: clearly brighter than its border. */
-  --kit-edge: inset 0 1px 0 color-mix(in srgb, var(--tm-glow) 14%, transparent);
-  --kit-shadow: var(--tm-shadow-night);
-  --kit-scrim: color-mix(in srgb, var(--tm-night-deep) 64%, transparent);
-  --kit-glass: color-mix(in srgb, var(--tm-night-deep) 86%, transparent);
+  --kit-wash: rgba(255, 255, 255, 0.035);
+  --kit-wash-strong: rgba(255, 255, 255, 0.06);
+  --kit-grid: rgba(255, 255, 255, 0.05);
+  --kit-edge: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --kit-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 24px 60px -32px rgba(0, 0, 0, 0.7);
+  --kit-shadow-whisper: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --kit-primary-shadow: var(--kit-shadow-whisper);
+  --kit-scrim: color-mix(in srgb, var(--tm-instrument) 64%, transparent);
+  --kit-glass: color-mix(in srgb, var(--tm-instrument) 86%, transparent);
   --kit-series: var(--tm-glow-2);
   --kit-series-soft: color-mix(in srgb, var(--tm-glow) 30%, transparent);
   --kit-series-fill: color-mix(in srgb, var(--tm-glow) 4%, transparent);
   --kit-primary: var(--tm-glow);
   --kit-primary-hover: var(--tm-glow-hover);
-  --kit-primary-ink: var(--tm-night);
+  --kit-primary-ink: var(--tm-instrument);
   --kit-primary-focus: var(--tm-ink-3);
   --kit-selection: color-mix(in srgb, var(--tm-glow) 22%, transparent);
   /* Status tones, defined here (the platform has no amber or red). */
   --kit-tone-signal: var(--tm-signal-night);
+  --kit-tone-signal-ink: var(--kit-tone-signal);
   --kit-tone-pending: #c99a4e;
   --kit-tone-danger: #d9776e;
   --kit-tone-neutral: var(--tm-glow-3);
+  --kit-logo: url("/images/brand/kit/lockup-white.svg");
+}
+
+/* Independent of studio: the partner portal keeps its original palette and depth. */
+.kit[data-theme="day"],
+html[data-command-theme="day"] {
+  color-scheme: light;
+  --kit-bg: var(--tm-surface-grey);
+  --kit-panel: var(--tm-paper);
+  --kit-field: var(--tm-paper);
+  --kit-lift: var(--tm-paper);
+  --kit-ink: var(--tm-ink);
+  --kit-ink-2: var(--tm-ink-2);
+  --kit-ink-3: var(--tm-ink-3);
+  --kit-ink-4: var(--tm-ink-4);
+  --kit-hover-line: var(--kit-ink-3);
+  --kit-line: color-mix(in srgb, var(--tm-ink) 8%, transparent);
+  --kit-line-strong: color-mix(in srgb, var(--tm-ink) 14%, transparent);
+  --kit-focus: var(--tm-ink-2);
+  --kit-wash: var(--tm-wash);
+  --kit-wash-strong: color-mix(in srgb, var(--tm-ink) 7%, transparent);
+  --kit-grid: color-mix(in srgb, var(--tm-ink) 6%, transparent);
+  --kit-edge: inset 0 0 0 transparent;
+  --kit-shadow: 0 1px 2px color-mix(in srgb, var(--tm-ink) 4%, transparent), 0 8px 24px -16px color-mix(in srgb, var(--tm-ink) 12%, transparent);
+  --kit-shadow-whisper: 0 1px 2px color-mix(in srgb, var(--tm-ink) 4%, transparent);
+  --kit-primary-shadow: var(--kit-shadow-whisper);
+  --kit-scrim: var(--tm-scrim);
+  --kit-glass: color-mix(in srgb, var(--tm-surface-grey) 86%, transparent);
+  --kit-series: var(--tm-ink-2);
+  --kit-series-soft: color-mix(in srgb, var(--tm-ink) 26%, transparent);
+  --kit-series-fill: color-mix(in srgb, var(--tm-ink) 4%, transparent);
+  --kit-primary: var(--tm-ink);
+  --kit-primary-hover: var(--tm-ink-hover);
+  --kit-primary-ink: var(--tm-paper);
+  --kit-primary-focus: var(--tm-glow-3);
+  --kit-selection: color-mix(in srgb, var(--tm-ink) 14%, transparent);
+  --kit-tone-signal: var(--tm-signal);
+  /* The specified signal is AA for dots (4.29:1 on paper); text needs a darker ink. */
+  --kit-tone-signal-ink: color-mix(in srgb, var(--tm-signal) 88%, var(--tm-ink));
+  --kit-tone-pending: #9a6b12;
+  --kit-tone-danger: #b8463d;
+  --kit-tone-neutral: var(--tm-ink-3);
+  --kit-logo: url("/images/brand/kit/lockup-black.svg");
 }
 
 .kit[data-theme="studio"] {
@@ -96,12 +148,12 @@
 }
 
 /* The page behind the shell takes the theme, so overscroll never shows warm paper. */
-html:has(.kit[data-theme="night"]) {
-  background: var(--tm-night);
-  color-scheme: dark;
+html[data-command-theme] {
+  background: var(--kit-bg);
 }
 html:has(.kit[data-theme="studio"]) {
-  background: var(--tm-studio);
+  --kit-document-bg: var(--tm-studio);
+  background: var(--kit-document-bg);
 }
 
 /* ---------- Base (overrides the prototype's global element styles) ---------- */
@@ -613,7 +665,7 @@ html:has(.kit[data-theme="studio"]) {
 .kit-button-primary {
   background: var(--kit-primary);
   color: var(--kit-primary-ink);
-  box-shadow: var(--tm-shadow-whisper), inset 0 1px 0 color-mix(in srgb, var(--tm-glow) 14%, transparent);
+  box-shadow: var(--kit-primary-shadow);
 }
 .kit-button-primary:hover:not(:disabled) {
   background: var(--kit-primary-hover);
@@ -628,7 +680,7 @@ html:has(.kit[data-theme="studio"]) {
 }
 .kit-button-quiet:hover:not(:disabled) {
   background: var(--kit-wash);
-  border-color: var(--kit-ink-4);
+  border-color: var(--kit-hover-line);
 }
 .kit-button-quiet:active:not(:disabled) {
   background: var(--kit-wash-strong);
@@ -782,7 +834,7 @@ html:has(.kit[data-theme="studio"]) {
   color: var(--kit-ink);
   background: var(--kit-lift);
   border-color: var(--kit-line);
-  box-shadow: var(--kit-edge), var(--tm-shadow-whisper);
+  box-shadow: var(--kit-edge), var(--kit-shadow-whisper);
 }
 .kit-segment[aria-pressed="true"] .kit-segment-count {
   color: var(--kit-ink-2);
@@ -947,7 +999,7 @@ html:has(.kit[data-theme="studio"]) {
   opacity: 1;
 }
 .kit-textarea:hover:not(:disabled) {
-  border-color: var(--kit-ink-4);
+  border-color: var(--kit-hover-line);
 }
 .kit-textarea:focus-visible,
 .kit-textarea:focus {

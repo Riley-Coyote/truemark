@@ -32,10 +32,7 @@
   --cc-node: 0.6875rem; /* a pipeline stage, as a station on the tracker */
   --cc-node-halo: 3px;
   --cc-trace-min: 14.5rem; /* the trace's least height; it grows with its panel */
-  --cc-trace-grid: color-mix(in srgb, var(--tm-glow) 4%, transparent); /* the chart's near-invisible gridlines */
-  --cc-trace-fill: 0.16; /* the luminous fill at its brightest, under the line */
   --cc-trace-halo: 0.3; /* the line's glow */
-  --cc-trace-dot-glow: color-mix(in srgb, var(--tm-purple) 70%, transparent); /* the peak dot's bloom */
   --cc-bar: 0.1875rem; /* a thin bar: the partner share, a compound's revenue */
 }
 
@@ -137,12 +134,8 @@
 
 /* ---------- Depth: panels rise off the deeper night canvas ---------- */
 
-.kit[data-theme="night"] :is(.kit-card, .kit-stats) {
+.kit.kit-command :is(.kit-card, .kit-stats) {
   box-shadow: var(--kit-edge), var(--kit-shadow);
-}
-/* Overscroll shows the canvas, not the lighter night. */
-:root:has(.kit[data-theme="night"]) {
-  background: var(--tm-night-deep);
 }
 
 /* ---------- Overview: the band (the day, and Live) ---------- */
@@ -234,6 +227,8 @@
   grid-column: 8 / -1;
   display: flex;
   flex-direction: column;
+  /* The rows answer to the panel's width, which is narrow on a laptop as well as a phone. */
+  container: cc-pulse / inline-size;
 }
 .cc-pulse-title {
   display: inline-flex;
@@ -309,16 +304,38 @@
   display: flex;
   gap: 0.3em;
   min-width: 0;
+  overflow: hidden; /* nothing runs under the time */
   white-space: nowrap;
 }
 .cc-pulse-fixed {
   flex: none;
 }
-.cc-pulse-flex {
+.cc-pulse-flex,
+.cc-pulse-code {
   flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+/* The institution gives way long before the partner's code does. */
+.cc-pulse-who {
+  flex-shrink: 999;
+}
+.cc-pulse-ago-short {
+  display: none;
+}
+@container cc-pulse (width < 28rem) {
+  .cc-pulse-who {
+    display: none;
+  }
+}
+@container cc-pulse (width < 26rem) {
+  .cc-pulse-ago {
+    display: none;
+  }
+  .cc-pulse-ago-short {
+    display: inline;
+  }
 }
 .cc-pulse-text .kit-mono {
   color: var(--kit-ink);
@@ -346,7 +363,7 @@
   bottom: -40%;
   height: 90%;
   border-radius: var(--tm-radius-pill);
-  background: var(--tm-gradient);
+  background: var(--kit-brand-light);
   filter: blur(var(--cc-glow-blur));
   opacity: 0;
   pointer-events: none;
@@ -544,6 +561,15 @@
 .cc-trace:focus-visible {
   border-color: var(--kit-focus);
 }
+.cc-trace:hover:not([aria-disabled="true"]) {
+  border-color: var(--kit-line-strong);
+}
+.cc-trace[data-pressing] {
+  border-color: var(--kit-ink-3);
+}
+.cc-trace:focus-visible:hover {
+  border-color: var(--kit-focus);
+}
 .cc-trace[aria-disabled="true"] {
   opacity: 0.4;
 }
@@ -556,7 +582,7 @@
   touch-action: pan-y;
 }
 .cc-trace-grid {
-  stroke: var(--cc-trace-grid);
+  stroke: var(--kit-grid);
   stroke-width: 1;
   shape-rendering: crispEdges;
 }
@@ -572,37 +598,36 @@
   fill: var(--kit-ink-3);
 }
 .cc-trace-fill-top {
-  stop-color: var(--tm-glow);
-  stop-opacity: var(--cc-trace-fill);
+  stop-color: var(--kit-series-fill);
 }
 .cc-trace-fill-end {
-  stop-color: var(--tm-glow);
+  stop-color: var(--kit-series-fill);
   stop-opacity: 0;
 }
 .cc-trace-halo {
   fill: none;
-  stroke: var(--kit-ink);
+  stroke: var(--kit-series);
   stroke-width: 4;
   stroke-opacity: var(--cc-trace-halo);
 }
 .cc-trace-line {
   fill: none;
-  stroke: var(--kit-ink);
+  stroke: var(--kit-series);
   stroke-width: 1.25;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
 .cc-trace-cross {
-  stroke: var(--kit-line-strong);
+  stroke: var(--kit-ink-3);
   stroke-width: 1;
   shape-rendering: crispEdges;
 }
 .cc-trace[data-pressing] .cc-trace-cross {
-  stroke: var(--kit-ink-3);
+  stroke: var(--kit-ink);
 }
 .cc-trace-point {
   fill: var(--kit-panel);
-  stroke: var(--kit-ink);
+  stroke: var(--kit-series);
   stroke-width: 1.5;
 }
 /* The highest day wears the logo's dot, the one place the gradient touches the chart. */
@@ -611,9 +636,15 @@
   width: var(--tm-space-2);
   height: var(--tm-space-2);
   margin: 0;
-  box-shadow: 0 0 0 var(--cc-node-halo) var(--kit-panel), 0 0 var(--tm-space-4) var(--cc-trace-dot-glow);
+  border-radius: var(--tm-radius-pill);
+  background: var(--kit-brand-light);
+  box-shadow: 0 0 0 var(--cc-node-halo) var(--kit-panel), 0 0 var(--tm-space-4) var(--kit-peak-glow);
   transform: translate(-50%, -50%);
   pointer-events: none;
+}
+.cc-trace-tip {
+  max-width: 100%;
+  white-space: normal;
 }
 .cc-trace-peak {
   position: absolute;
@@ -914,7 +945,7 @@
 }
 .cc-public-link:hover {
   background: var(--kit-wash);
-  border-color: var(--kit-ink-4);
+  border-color: var(--kit-hover-line);
 }
 .cc-public-link:active {
   background: var(--kit-wash-strong);
@@ -1089,6 +1120,18 @@
   flex-direction: column;
   gap: var(--tm-space-5);
 }
+.cc-content-fields { padding: 0; margin: 0; border: 0; min-width: 0; }
+.cc-content-file { width: 100%; padding: var(--tm-space-3); border: 1px solid var(--kit-line-strong); border-radius: var(--tm-radius-sm); background: var(--kit-field); color: var(--kit-ink); font: inherit; }
+.cc-content-file:hover { border-color: var(--kit-focus); }
+.kit .cc-content-file:focus-visible { outline: none; border-color: var(--kit-focus); }
+.cc-content-file:active { background: var(--kit-wash); }
+.cc-content-file:disabled { opacity: 0.4; cursor: not-allowed; }
+.cc-content-file::file-selector-button { font: inherit; color: var(--kit-primary-ink); background: var(--kit-primary); border: 0; border-radius: var(--tm-radius-sm); padding: var(--tm-space-2) var(--tm-space-3); margin-right: var(--tm-space-3); cursor: pointer; }
+.cc-content-picker { display: flex; align-items: center; flex-wrap: wrap; gap: var(--tm-space-3); }
+.cc-content-filename { min-width: 0; overflow-wrap: anywhere; color: var(--kit-ink-2); font-size: var(--tm-type-ui); }
+.cc-markdown-preview { display: block; padding: var(--tm-space-5); background: var(--kit-bg); border-radius: var(--tm-radius-sm); }
+.cc-markdown-preview .tm-article-body { max-width: 100%; }
+.cc-content-fields .kit-textarea { min-height: var(--tm-space-10); }
 /* Short values get a short control; their hints keep the full measure. */
 .cc-field-short .cc-control {
   max-width: calc(var(--tm-space-9) + var(--tm-space-6));
@@ -1113,12 +1156,12 @@
   transition: border-color var(--tm-dur-base) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-enter);
 }
 .cc-control:hover:not([data-disabled]) {
-  border-color: var(--kit-ink-4);
+  border-color: var(--kit-hover-line);
 }
 .cc-control:active:not([data-disabled]) {
   background: var(--kit-wash);
 }
-.cc-control:focus-within {
+.cc-control:focus-within:not([data-disabled]) {
   border-color: var(--kit-focus);
 }
 .cc-control[data-invalid="true"] {
@@ -1169,9 +1212,9 @@
   border-radius: var(--tm-radius-sm);
 }
 .cc-select select:hover:not(:disabled) {
-  border-color: var(--kit-ink-4);
+  border-color: var(--kit-hover-line);
 }
-.cc-select select:focus-visible {
+.cc-select select:focus-visible:not(:disabled) {
   border-color: var(--kit-focus);
 }
 .cc-select select[aria-invalid="true"] {
@@ -1205,7 +1248,7 @@
   height: var(--cc-switch-thumb);
   border-radius: var(--tm-radius-pill);
   background: var(--kit-ink-2);
-  box-shadow: var(--tm-shadow-whisper);
+  box-shadow: var(--kit-shadow-whisper);
   transform: translate(0, -50%);
   transition: transform var(--tm-dur-base) var(--tm-ease-micro), background-color var(--tm-dur-base) var(--tm-ease-enter);
 }
@@ -1321,7 +1364,7 @@
   flex: 1 1 auto;
   margin-bottom: 0;
 }
-/* The vial stands in a small plate of the lilac studio, as it does in the shop. */
+/* The product image sits on a plate in the current command theme. */
 .cc-vial {
   position: relative;
   flex: none;
@@ -1329,7 +1372,7 @@
   height: var(--cc-vial-h);
   overflow: hidden;
   border-radius: var(--tm-radius-sm);
-  background: var(--tm-lilac-studio);
+  background: var(--kit-wash);
 }
 .cc-vial img {
   position: absolute;
@@ -1500,7 +1543,7 @@
   height: var(--cc-badge);
   padding: 0 var(--tm-space-1);
   border-radius: var(--tm-radius-pill);
-  background: var(--kit-tone-signal);
+  background: var(--kit-tone-signal-ink);
   box-shadow: 0 0 0 var(--cc-badge-ring) var(--kit-bg);
   font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
   font-variant-numeric: tabular-nums;
@@ -1694,7 +1737,7 @@
 .cc-notified-text svg {
   width: var(--tm-space-3);
   height: var(--tm-space-3);
-  color: var(--kit-tone-signal);
+  color: var(--kit-tone-signal-ink);
 }
 .cc-notified-toggle {
   padding: 0;
@@ -1721,7 +1764,7 @@
   width: var(--kit-icon);
   height: var(--kit-icon);
   margin-top: calc(var(--tm-space-1) / 2);
-  color: var(--kit-tone-signal);
+  color: var(--kit-tone-signal-ink);
 }
 .cc-landed:focus {
   outline: none;
@@ -1895,7 +1938,7 @@
 }
 .cc-filter-chip:hover:not(:disabled) {
   background: var(--kit-wash-strong);
-  border-color: var(--kit-ink-4);
+  border-color: var(--kit-hover-line);
 }
 .cc-filter-chip:hover:not(:disabled) svg {
   color: var(--kit-ink);
@@ -1903,7 +1946,7 @@
 .cc-filter-chip:active:not(:disabled) {
   transform: scale(0.97);
 }
-.cc-filter-chip:focus-visible {
+.cc-filter-chip:focus-visible:not(:disabled) {
   border-color: var(--kit-focus);
 }
 .cc-filter-chip:disabled {
@@ -2071,6 +2114,15 @@
 }
 
 @media (max-width: 45rem) {
+  /* The pipeline's sentence-long meta goes under its title on a phone, and wraps. */
+  .cc-pipe .kit-card-head {
+    flex-wrap: wrap;
+    row-gap: var(--tm-space-1);
+  }
+  .cc-pipe .kit-card-meta {
+    flex-basis: 100%;
+    white-space: normal;
+  }
   .cc-lines li {
     grid-template-columns: auto minmax(0, 1fr) auto;
     row-gap: var(--tm-space-1);
@@ -2224,24 +2276,24 @@
   /* Tap targets of at least 44px: the command center's bar, its search and menu, the
      period and chart switches, and every text link. Links and icon buttons keep their
      look and reach further than they draw. */
-  .kit[data-theme="night"] .kit-search {
+  .kit.kit-command .kit-search {
     height: calc(var(--cc-tap) + 2px); /* the input inside its 1px border is a full target */
   }
   /* Card heads keep a link's reach clear of the table beneath. */
   .cc-overview .kit-card-head {
     padding-bottom: var(--tm-space-1);
   }
-  .kit[data-theme="night"] .kit-mmenu .kit-nav-link {
+  .kit.kit-command .kit-mmenu .kit-nav-link {
     height: var(--cc-tap);
   }
   /* Room between the bell and the menu for both their reaches. */
-  .kit[data-theme="night"] .kit-mbar-tools {
+  .kit.kit-command .kit-mbar-tools {
     gap: var(--tm-space-4);
   }
-  .kit[data-theme="night"] :is(.kit-mbar .kit-iconbutton, .kit-mbar .kit-brand-link, .kit-search-clear) {
+  .kit.kit-command :is(.kit-mbar .kit-iconbutton, .kit-mbar .kit-brand-link, .kit-search-clear) {
     position: relative;
   }
-  .kit[data-theme="night"] :is(.kit-mbar .kit-iconbutton, .kit-mbar .kit-brand-link, .kit-search-clear)::after {
+  .kit.kit-command :is(.kit-mbar .kit-iconbutton, .kit-mbar .kit-brand-link, .kit-search-clear)::after {
     content: "";
     position: absolute;
     inset: calc((var(--cc-tap-reach) - 100%) / -2);
@@ -2277,16 +2329,16 @@
     height: var(--cc-tap);
   }
   .kit-drawer .cc-inline-link,
-  .kit[data-theme="night"] :is(.kit-drawer-head .kit-iconbutton, .kit-drawer-foot .kit-button, .cc-partner-page .cc-card-foot .kit-button) {
+  .kit.kit-command :is(.kit-drawer-head .kit-iconbutton, .kit-drawer-foot .kit-button, .cc-partner-page .cc-card-foot .kit-button) {
     position: relative;
   }
   .kit-drawer .cc-inline-link::after,
-  .kit[data-theme="night"] :is(.kit-drawer-foot .kit-button, .cc-partner-page .cc-card-foot .kit-button)::after {
+  .kit.kit-command :is(.kit-drawer-foot .kit-button, .cc-partner-page .cc-card-foot .kit-button)::after {
     content: "";
     position: absolute;
     inset: calc((var(--cc-tap-reach) - 100%) / -2) 0;
   }
-  .kit[data-theme="night"] .kit-drawer-head .kit-iconbutton::after {
+  .kit.kit-command .kit-drawer-head .kit-iconbutton::after {
     content: "";
     position: absolute;
     inset: calc((var(--cc-tap-reach) - 100%) / -2);
@@ -2343,4 +2395,179 @@
   .cc-bell-button[data-ringing] svg {
     animation: none;
   }
+}
+
+/* ---------- Command appearance; studio retains its original shell ---------- */
+
+.kit-command :is(.kit-button-quiet, .kit-textarea):focus-visible {
+  border-color: var(--kit-focus);
+}
+.kit-command .cc-public-link[aria-disabled="true"] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.kit-command .kit-command-lockup {
+  display: block;
+  width: var(--tm-logo-width);
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+}
+.kit-command .kit-mbar .kit-brand-link {
+  min-width: 0;
+}
+.kit-command .kit-command-monogram {
+  display: none;
+}
+.kit-command .kit-brand-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.kit-command .kit-shell[data-collapsed="true"] .kit-sidebar .kit-command-lockup {
+  display: none;
+}
+.kit-command .kit-shell[data-collapsed="true"] .kit-sidebar .kit-command-monogram {
+  display: block;
+}
+.kit-command :is(.kit-brand a, .kit-brand-link)[aria-disabled="true"] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.kit-command .kit-mbar .kit-brand-link:hover {
+  background: var(--kit-wash);
+}
+.kit-command .kit-mbar .kit-brand-link:active {
+  background: var(--kit-wash-strong);
+}
+.kit-command :is(.kit-card-title, .kit-label, .kit-nav-label) {
+  font-size: var(--tm-type-ui);
+  color: var(--kit-ink-3);
+}
+/* This includes secondary values, tags and identifiers, on phones as well as tables. */
+.kit-command .kit-table tbody :is(td, th, span, a, small, button) {
+  font-size: var(--tm-type-ui);
+}
+.kit-command .cc-alerts-table tbody :is(td, th, span) {
+  font-size: var(--tm-type-ui);
+}
+
+.cc-account {
+  position: relative;
+}
+.cc-account-trigger {
+  cursor: pointer;
+  transition: background-color var(--tm-dur-quick) var(--tm-ease-enter), border-color var(--tm-dur-quick) var(--tm-ease-enter);
+}
+.cc-account-trigger:hover:not(:disabled) {
+  color: var(--kit-ink);
+  background: var(--kit-wash-strong);
+  border-color: var(--kit-ink-3);
+}
+.cc-account-trigger:active:not(:disabled),
+.cc-account-trigger[aria-expanded="true"] {
+  background: var(--kit-lift);
+  border-color: var(--kit-ink-2);
+}
+.cc-account-trigger:focus-visible:not(:disabled) {
+  border-color: var(--kit-focus);
+}
+.cc-account-trigger:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.cc-account-panel {
+  position: absolute;
+  top: calc(100% + var(--tm-space-3));
+  right: 0;
+  z-index: var(--cc-panel-layer);
+  display: grid;
+  gap: var(--tm-space-3);
+  width: max-content;
+  max-width: calc(100vw - var(--tm-space-6));
+  padding: var(--tm-space-4);
+  border: 1px solid var(--kit-line-strong);
+  border-radius: var(--tm-radius-md);
+  background: var(--kit-panel);
+  box-shadow: var(--kit-shadow);
+}
+.kit-mmenu-foot .cc-account-panel {
+  top: auto;
+  bottom: calc(100% + var(--tm-space-3));
+}
+.cc-appearance-card {
+  padding-block: var(--tm-space-5);
+}
+@media (max-width: 600px) {
+  .cc-account-trigger {
+    width: var(--cc-tap);
+    height: var(--cc-tap);
+  }
+  :is(.cc-account-panel, .cc-appearance-card) .kit-segment {
+    min-height: var(--cc-tap);
+  }
+}
+
+/* Shared content renderers inherit command colours only inside the command shell.
+   The inherited kit values are already resolved before these local tm aliases apply. */
+.kit-command :is(.cc-markdown-preview, .tm-email, .tm-sms) {
+  --tm-ink: var(--kit-ink);
+  --tm-ink-2: var(--kit-ink-2);
+  --tm-ink-3: var(--kit-ink-3);
+  --tm-ink-4: var(--kit-ink-4);
+  --tm-paper: var(--kit-panel);
+  --tm-studio: var(--kit-bg);
+  --tm-line: var(--kit-line);
+  --tm-line-strong: var(--kit-line-strong);
+  --tm-wash: var(--kit-wash);
+  --tm-lilac-50: var(--kit-wash);
+  --tm-lilac-100: var(--kit-wash-strong);
+  --tm-lilac-studio: var(--kit-bg);
+  --tm-shadow-whisper: var(--kit-shadow-whisper);
+  color-scheme: inherit;
+}
+.kit-command .tm-email-head .brand-logo {
+  content: var(--kit-logo);
+}
+.kit-command .cc-markdown-preview a[aria-disabled="true"] {
+  color: var(--kit-ink-3);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* The review overlay is the sole existing body portal. Give its own token names
+   the command theme while /admin is mounted; the review and shop routes stay intact. */
+html[data-command-theme] .rl-root {
+  --rl-floor: var(--kit-bg);
+  --rl-raised: var(--kit-panel);
+  --rl-raised-2: var(--kit-panel);
+  --rl-ink: var(--kit-ink);
+  --rl-ink-1: var(--kit-ink);
+  --rl-ink-2: var(--kit-ink-2);
+  --rl-ink-3: var(--kit-ink-3);
+  --rl-ink-4: var(--kit-ink-3);
+  --rl-ink-5: var(--kit-ink-3);
+  --rl-line: var(--kit-line);
+  --rl-line-mid: var(--kit-line);
+  --rl-line-strong: var(--kit-line-strong);
+  --rl-line-on-ink: var(--kit-primary-focus);
+  --rl-border: var(--kit-line-strong);
+  --rl-focus: var(--kit-focus);
+  --rl-fill: var(--kit-field);
+  --rl-fill-hover: var(--kit-wash);
+  --rl-fill-active: var(--kit-wash-strong);
+  --rl-edge: var(--kit-edge);
+  --rl-inset: var(--kit-shadow-whisper);
+  --rl-whisper: var(--kit-shadow-whisper);
+  --rl-lift: var(--kit-shadow);
+  --rl-scrim: var(--kit-scrim);
+  --rl-signal: var(--kit-series);
+  --rl-pin-ring: var(--kit-line-strong);
+  --rl-pin-shadow: var(--kit-shadow-whisper);
+  --rl-trace-dark: var(--kit-panel);
+  --rl-trace-light: var(--kit-ink-2);
+  --rl-trace-fill: var(--kit-wash);
 }

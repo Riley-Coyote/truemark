@@ -1,3 +1,5 @@
+import { LIVE } from "../platform/mode";
+import { OwnerPayments } from "../platform/live/OwnerPayments";
 import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -406,6 +408,7 @@ export default function Partners() {
           onClose={() => setBatch(null, { replace: true })}
         />
       )}
+      {LIVE && <div className="kit-card kit-span-12"><Section title="Commissions and payouts"><OwnerPayments /></Section></div>}
     </div>
   );
 }

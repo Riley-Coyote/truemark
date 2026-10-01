@@ -16,8 +16,8 @@ import "./tracker.css";
 
 /** The client's own words: Handling (shipping and cold chain) and the Shipping Policy. */
 export const COLD_CHAIN = [
-  "Vials ship in insulated packs sized to the transit time, with gel packs rated for the route.",
-  "Orders ship to verified institutional addresses with signature on delivery.",
+  "When applicable, vials ship in insulated packs sized to the transit time, with gel packs rated for the route.",
+  "Orders ship with signature on delivery.",
 ] as const;
 export const ON_ARRIVAL = "Move vials to −20 °C promptly, check seals, and verify each lot number against its CoA.";
 export const ESTIMATES_NOTE = "Delivery times are estimates and are not guaranteed.";

@@ -1,21 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { stockProblem } from "../../platform/commerce";
 import { categoryName, money, products } from "../../data";
 import { compoundsForBrowsing, describe, specFor } from "../catalog";
 import { useShop } from "../context";
 import { useReveal } from "../motion";
 import { ProofFigures, Quantity, tone } from "../ui";
 import { useLight } from "../../brand/light";
-import { ProductCard } from "../../brand/ProductCard";
+import { ContinueExploring } from "../../brand/ContinueExploring";
 import { ProductStage } from "../../brand/ProductStage";
 import { SequenceChain } from "../../brand/SequenceChain";
 
 export default function ProductPage() {
   const { id } = useParams();
-  const product = products.find((p) => p.id === id);
+  const product = products.find((p) => p.id === id && p.active !== false);
   const navigate = useNavigate();
-  const { add } = useShop();
+  const { add, cart } = useShop();
   const [quantity, setQuantity] = useState(1);
   const [zoomed, setZoomed] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -25,7 +26,7 @@ export default function ProductPage() {
   useLight(top, { firstPass: 900, pass: 2450, repeat: false });
   useLight(more, { ambient: false });
 
-  const siblings = product ? products.filter((p) => p.name === product.name) : [];
+  const siblings = product ? products.filter((p) => p.name === product.name && p.active !== false) : [];
   const index = product ? siblings.indexOf(product) : 0;
   const [slide, setSlide] = useState({ index, prev: -1, name: product?.name });
   if (slide.index !== index || slide.name !== product?.name) {
@@ -58,6 +59,7 @@ export default function ProductPage() {
     );
   }
 
+  const unavailable = stockProblem(product, quantity + (cart.find((item) => item.id === product.id)?.quantity ?? 0));
   const spec = specFor(product);
   const others = compoundsForBrowsing.filter((c) => c.name !== product.name);
   const rows: [string, string | undefined][] = [
@@ -152,11 +154,14 @@ export default function ProductPage() {
                 <span className="tm-price">{money(product.price)}</span>
                 <span className="tm-price-note">per vial</span>
               </p>
+              {product.stock === 0 && <p className="tm-price-note" role="status">Out of stock</p>}
+              {unavailable && product.stock !== 0 && <p className="tm-field-error" role="status">{unavailable}</p>}
               <div className="tm-buy-row">
                 <Quantity value={quantity} onChange={setQuantity} label="Quantity" />
                 <button
                   type="button"
                   className="tm-button tm-button-primary tm-button-wide"
+                  disabled={Boolean(unavailable)}
                   onClick={() => add(product.id, quantity)}
                 >
                   Add to bag
@@ -166,7 +171,7 @@ export default function ProductPage() {
           )}
 
           <ul className="tm-buy-notes">
-            <li>Shipped cold to verified research addresses</li>
+            <li>Shipped with temperature control when applicable</li>
             <li>Certificate of analysis for every lot</li>
             <li>For laboratory research use only</li>
           </ul>
@@ -223,20 +228,7 @@ export default function ProductPage() {
       </section>
 
       <section className="tm tm-product-more" aria-labelledby="tm-more-title" ref={more}>
-        <header className="tm-section-head" data-reveal>
-          <p className="tm-eyebrow">The collection</p>
-          <h2 id="tm-more-title" className="tm-heading">
-            Continue exploring.
-          </h2>
-          <Link className="tm-textlink" to="/products">
-            Shop all compounds <ArrowRight size={16} strokeWidth={1.6} />
-          </Link>
-        </header>
-        <div className="tm-rail" role="list">
-          {others.map((compound) => (
-            <ProductCard key={compound.key} compound={compound} listItem />
-          ))}
-        </div>
+        <ContinueExploring compounds={others} />
       </section>
     </div>
   );

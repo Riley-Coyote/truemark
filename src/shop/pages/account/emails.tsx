@@ -46,7 +46,7 @@ export function buyerEmailsFor(order: Order): BuyerEmailEntry[] {
       kind: "confirmed",
       at: eventAt(order, "placed") ?? order.createdAt,
       subject: `Order confirmed · ${order.number}`,
-      preheader: "We'll write again when it ships, cold, to your institutional address.",
+      preheader: "We'll write again when it ships.",
     },
   ];
   const shipped = eventAt(order, "shipped");
@@ -116,10 +116,11 @@ export function BuyerEmail({
             ]),
             ...(order.discount ? [[`Code ${order.discount.code}`, `−${money(order.discount.amount)}`] as [string, string]] : []),
             ["Shipping", money(order.shipping.price)],
+            ...((order.insuranceApplied || (order.insurance ?? 0) > 0) ? [["Insurance", money(order.insurance ?? 0)] as [string, string]] : []),
             ["Total", money(order.total)],
           ]}
         />
-        <EmailText>We&rsquo;ll write again when it ships, cold, to your institutional address.</EmailText>
+        <EmailText>We&rsquo;ll write again when it ships.</EmailText>
         <EmailButton>View your order</EmailButton>
       </EmailPreview>
     );

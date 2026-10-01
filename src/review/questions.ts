@@ -124,7 +124,7 @@ export const questions: Question[] = [
   },
   {
     id: "lab-name",
-    route: "/verify?lot=BP10-2611A",
+    route: "/verify?lot=TM-BPC10-2609-01",
     title: "Name the laboratory?",
     prompt:
       "Certificates say “Contracted laboratory”. Can we name the testing lab, or should it stay unnamed?",

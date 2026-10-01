@@ -6,6 +6,8 @@ import { categoryLabel } from "./articles";
 import type { Article, SceneName } from "./articles";
 import "./journal.css";
 
+export type ArticlePresentation = Article & { kicker?: string; coverUrl?: string | null };
+
 /** Full widths of the scene photographs; each also exists at half width as `-sm`. */
 const sceneSize: Record<SceneName, { width: number; height: number }> = {
   collection: { width: 2400, height: 1357 },
@@ -23,10 +25,11 @@ export function ArticlePhoto({
   sizes,
   eager = false,
 }: {
-  article: Article;
+  article: ArticlePresentation;
   sizes: string;
   eager?: boolean;
 }) {
+  if ("coverUrl" in article) return article.coverUrl ? <img src={article.coverUrl} alt="" loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : "auto"} draggable={false} /> : null;
   const { scene, focus } = article.image;
   const { width, height } = sceneSize[scene];
   const small = assetUrl(`images/scenes/${scene}-sm.webp`);
@@ -59,7 +62,7 @@ export function JournalCard({
   showDek = true,
   sizes,
 }: {
-  article: Article;
+  article: ArticlePresentation;
   lead?: boolean;
   level?: 2 | 3;
   showDek?: boolean;
@@ -74,7 +77,7 @@ export function JournalCard({
       </div>
       <div className="tm-jcard-body">
         <div className="tm-jcard-text">
-          <p className="tm-jcard-kicker">{categoryLabel(article.category)}</p>
+          <p className="tm-jcard-kicker">{article.kicker ?? categoryLabel(article.category)}</p>
           <Title className="tm-jcard-title">
             <Link className="tm-jcard-link" to={`/research-blog/${article.id}`}>
               {article.title}

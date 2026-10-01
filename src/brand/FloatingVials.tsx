@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import type { Product } from "../data";
 import { productById, productCutout } from "../shop/catalog";
 import { tone } from "../shop/ui";
 import { sheenMask } from "./light";
@@ -29,7 +28,8 @@ export function FloatingVials({ layout, className = "" }: { layout: Float[]; cla
   return (
     <div className={`tm-floats ${className}`} aria-hidden="true">
       {layout.map((f, i) => {
-        const product = productById(f.id) as Product;
+        const product = productById(f.id);
+        if (!product) return null;
         const src = productCutout(product, f.depth === 0 ? "lg" : "sm");
         return (
           <span

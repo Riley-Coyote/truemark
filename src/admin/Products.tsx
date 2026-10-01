@@ -1,5 +1,8 @@
+import { LIVE } from "../platform/mode";
+import { ProductEditor, ClassesEditor } from "./Commerce";
+import { compareNullable, sumTracked } from "../platform/inventory";
 import { useMemo, useState } from "react";
-import type { FormEvent, KeyboardEvent, ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowDown, ArrowUp, ArrowUpRight, ChevronsUpDown } from "lucide-react";
 import {
@@ -20,15 +23,14 @@ import {
   plural,
 } from "../app-kit";
 import type { Column, MobileRole } from "../app-kit";
-import { categories, categoryName, products } from "../data";
-import type { Product } from "../data";
+import { categoryName, products } from "../data";
+import type { Product, Category } from "../data";
 import { store, useResource } from "../platform/store";
 import type { Lot, LotStatus } from "../platform/types";
 import { productCutout } from "../shop/catalog";
-import { Mark, PreviewTag, TextField, keepTogether, parseDollars } from "./fields";
+import { Mark, keepTogether } from "./fields";
 import { HOME } from "./nav";
 import { DrawerLoading } from "./OrderDrawer";
-import { preview, usePreview } from "./preview";
 import { matches, useQueryParam, useSearchQuery } from "./state";
 
 /** Lots whose units count as on hand. Rejected and archived lots do not. */
@@ -38,33 +40,30 @@ const position = new Map(products.map((p, i) => [p.id, i]));
 
 type Row = {
   product: Product;
-  /** The price with this preview's change, if any. */
+  /** The current catalog price. */
   price: number | undefined;
-  edited: boolean;
   /** The record of the lot new orders are assigned. */
   current: Lot | undefined;
   /** Every lot of this product, the current one first. */
   lots: Lot[];
   /** The lots that count toward units on hand. */
   counted: Lot[];
-  onHand: number;
+  onHand: number | null;
 };
 
-function buildRows(lots: Lot[], prices: Record<string, number>): Row[] {
-  return products.map((product) => {
+function buildRows(catalog: Product[], lots: Lot[]): Row[] {
+  return catalog.map((product) => {
     const own = lots
       .filter((lot) => lot.productId === product.id)
-      .sort((a, b) => Number(b.lot === product.lot) - Number(a.lot === product.lot) || b.receivedAt.localeCompare(a.receivedAt));
+      .sort((a, b) => Number(b.lot === product.lot) - Number(a.lot === product.lot) || compareNullable(a.receivedAt, b.receivedAt, "desc"));
     const counted = own.filter((lot) => ON_HAND.includes(lot.status));
-    const override = prices[product.id];
     return {
       product,
-      price: override ?? product.price,
-      edited: override !== undefined && override !== product.price,
+      price: product.price,
       current: own.find((lot) => lot.lot === product.lot),
       lots: own,
       counted,
-      onHand: counted.reduce((sum, lot) => sum + lot.units, 0),
+      onHand: LIVE ? product.stock ?? null : sumTracked(counted.map((lot) => lot.units)),
     };
   });
 }
@@ -79,7 +78,7 @@ const COLUMNS: { key: SortKey; header: string; width: string; mobile: MobileRole
   { key: "size", header: "Size", width: "14%", mobile: "hidden", first: "asc" },
   { key: "price", header: "Price", width: "12%", mobile: "aside", end: true, first: "desc" },
   { key: "lot", header: "Current lot", width: "21%", mobile: "secondary", first: "asc" },
-  { key: "units", header: "On hand", width: "12%", mobile: "meta", end: true, first: "desc" },
+  { key: "units", header: LIVE ? "Stock" : "On hand", width: "12%", mobile: "meta", end: true, first: "desc" },
   { key: "status", header: "Lot status", width: "16%", mobile: "meta", first: "asc" },
 ];
 
@@ -87,7 +86,7 @@ const sizeValue = (size: string) => Number.parseFloat(size) || 0;
 const byName = (a: Row, b: Row) => a.product.name.localeCompare(b.product.name);
 const bySize = (a: Row, b: Row) => (position.get(a.product.id) ?? 0) - (position.get(b.product.id) ?? 0);
 
-const VALUES: Record<Exclude<SortKey, "compound">, (row: Row) => number | string> = {
+const VALUES: Record<Exclude<SortKey, "compound">, (row: Row) => number | string | null> = {
   size: (row) => sizeValue(row.product.size),
   price: (row) => row.price ?? -1,
   lot: (row) => row.product.lot,
@@ -102,8 +101,7 @@ function sortRows(rows: Row[], sort: Sort): Row[] {
     if (sort.key === "compound") return byName(a, b) * factor || bySize(a, b);
     const va = VALUES[sort.key](a);
     const vb = VALUES[sort.key](b);
-    const order = typeof va === "number" && typeof vb === "number" ? va - vb : String(va).localeCompare(String(vb));
-    return order * factor || byName(a, b) || bySize(a, b);
+    return compareNullable(va, vb, sort.dir) || byName(a, b) || bySize(a, b);
   });
 }
 
@@ -268,7 +266,7 @@ function ProductRow({
             {product.name}
             <span className="kit-cell-sub cc-size-sub">{product.size}</span>
           </span>
-          {row.edited && <Mark>Edited</Mark>}
+          {product.active === false && <Mark>Inactive</Mark>}
         </span>
       </td>
       <td data-mobile="hidden">{product.size}</td>
@@ -279,8 +277,10 @@ function ProductRow({
         <span className="kit-mono">{product.lot}</span>
       </td>
       <td className="is-end" data-mobile="meta">
-        {formatCount(row.onHand)}
-        <span className="cc-unit"> on hand</span>
+        {row.onHand === null ? <span className="kit-note">Not tracked</span> : <>
+          {formatCount(row.onHand)}
+          <span className="cc-unit"> on hand</span>
+        </>}
       </td>
       <td data-mobile="meta">
         {row.current ? <StatusChip status={row.current.status} /> : <span className="kit-quiet">No lot on file</span>}
@@ -293,12 +293,14 @@ function ProductRow({
 
 export default function Products() {
   const lots = useResource(() => store.lots.list(), []);
-  const changes = usePreview();
+  const catalog = useResource(() => store.catalog.products(true));
+  const classes = useResource(() => store.catalog.categories());
+  const reload = () => { catalog.reload(); lots.reload(); classes.reload(); };
   const query = useSearchQuery();
   const [category, setCategory] = useState("all");
   const [openId, setOpenId] = useQueryParam("product");
 
-  const all = useMemo(() => (lots.data ? buildRows(lots.data, changes.prices) : undefined), [lots.data, changes.prices]);
+  const all = useMemo(() => (lots.data && catalog.data ? buildRows(catalog.data, lots.data) : undefined), [lots.data, catalog.data]);
   const rows = useMemo(
     () =>
       all?.filter(
@@ -308,14 +310,14 @@ export default function Products() {
       ),
     [all, category, query],
   );
-  const onHand = all?.reduce((sum, row) => sum + row.onHand, 0) ?? 0;
-  const compoundCount = new Set(products.map((p) => p.name)).size;
+  const onHand = sumTracked((all ?? []).map((row) => row.onHand));
+  const compoundCount = new Set((catalog.data ?? []).map((p) => p.name)).size;
 
   const options = [
-    { value: "all", label: `All categories (${products.length})` },
-    ...categories
+    { value: "all", label: `All categories (${catalog.data?.length ?? 0})` },
+    ...(classes.data ?? [])
       .filter((c) => c.id !== "all")
-      .map((c) => ({ id: c.id, name: c.name, count: products.filter((p) => p.category === c.id).length }))
+      .map((c) => ({ id: c.id, name: c.name, count: (catalog.data ?? []).filter((p) => p.category === c.id).length }))
       .filter((c) => c.count > 0)
       .map((c) => ({ value: c.id, label: `${c.name} (${c.count})` })),
   ];
@@ -323,11 +325,11 @@ export default function Products() {
   return (
     <div className="kit-grid">
       <PageHeader
-        description="Everything the shop sells, grouped by compound. The current lot is the one new orders are assigned; units on hand count every lot in quarantine, testing or released."
+        description={LIVE ? "Everything the shop sells, grouped by compound. Stock is the quantity available to order; blank means not tracked." : "Everything the shop sells, grouped by compound. The current lot is the one new orders are assigned; units on hand count every lot in quarantine, testing or released."}
         meta={
           <>
-            {all && <span>{`${plural(products.length, "product")} · ${plural(compoundCount, "compound")} · ${formatCount(onHand)} units on hand`}</span>}
-            <PreviewTag />
+            {all && <span>{`${plural(catalog.data?.length ?? 0, "product")} · ${plural(compoundCount, "compound")} · ${onHand === null ? "Not tracked" : `${formatCount(onHand)} units on hand`}`}</span>}
+            {!LIVE && <span className="kit-note">Saving works in the live platform.</span>}
           </>
         }
       />
@@ -342,9 +344,9 @@ export default function Products() {
       <div className="kit-card kit-span-12">
         <ProductTable
           rows={rows}
-          loading={lots.loading}
-          error={lots.error}
-          onRetry={lots.reload}
+          loading={lots.loading || catalog.loading || classes.loading}
+          error={lots.error ?? catalog.error ?? classes.error}
+          onRetry={reload}
           onOpen={(row) => setOpenId(row.product.id)}
           activeId={openId}
           empty={{
@@ -353,14 +355,16 @@ export default function Products() {
           }}
         />
       </div>
+      {classes.data && <ClassesEditor classes={classes.data} onSaved={classes.reload} />}
       {openId && (
         <ProductDrawer
           key={openId}
           productId={openId}
+          classes={classes.data ?? []}
           row={all?.find((row) => row.product.id === openId)}
-          loading={!all && !lots.error}
-          failed={lots.error}
-          onRetry={lots.reload}
+          loading={!all && !lots.error && !catalog.error}
+          failed={lots.error ?? catalog.error}
+          onRetry={reload}
           onClose={() => setOpenId(null, { replace: true })}
         />
       )}
@@ -392,7 +396,7 @@ const lotColumns = (currentLot: string): Column<Lot>[] => [
     align: "end",
     mobile: "aside",
     cell: (lot) =>
-      ON_HAND.includes(lot.status) ? (
+      lot.units === null ? <span className="kit-note">Not tracked</span> : ON_HAND.includes(lot.status) ? (
         <>
           {formatCount(lot.units)}
           <span className="cc-unit"> units</span>
@@ -407,76 +411,9 @@ const lotColumns = (currentLot: string): Column<Lot>[] => [
   },
 ];
 
-/** Price is edited in the preview only; the catalog price stays as the client set it. */
-function PriceForm({ row }: { row: Row }) {
-  const { product } = row;
-  const catalogPrice = product.price;
-  const [draft, setDraft] = useState(row.price !== undefined ? row.price.toFixed(2) : "");
-  const [error, setError] = useState<string>();
-  const [message, setMessage] = useState<string | null>(null);
-  const parsed = parseDollars(draft);
-  const changed = parsed.value === undefined || parsed.value !== row.price;
-
-  function save(event: FormEvent) {
-    event.preventDefault();
-    const result = parseDollars(draft);
-    if (result.value === undefined) {
-      setError(result.error);
-      setMessage(null);
-      return;
-    }
-    setError(undefined);
-    setDraft(result.value.toFixed(2));
-    if (result.value === catalogPrice) preview.restorePrice(product.id);
-    else preview.setPrice(product.id, result.value);
-    setMessage(`Price changed to ${formatMoney(result.value)} in this preview.`);
-  }
-
-  function restore() {
-    preview.restorePrice(product.id);
-    setDraft(catalogPrice !== undefined ? catalogPrice.toFixed(2) : "");
-    setError(undefined);
-    setMessage(catalogPrice !== undefined ? `Catalog price of ${formatMoney(catalogPrice)} restored.` : "Catalog price restored.");
-  }
-
-  return (
-    <>
-      <form className="cc-inline-form" onSubmit={save} noValidate>
-        <TextField
-          label="Price per vial"
-          srLabel="in US dollars"
-          prefix="$"
-          inputMode="decimal"
-          value={draft}
-          onChange={(value) => {
-            setDraft(value);
-            setMessage(null);
-            if (error) setError(parseDollars(value).error);
-          }}
-          error={error}
-          hint={catalogPrice !== undefined ? `Catalog price ${formatMoney(catalogPrice)}.` : "Not priced in the catalog."}
-        />
-        <Button type="submit" variant="primary" disabled={!changed}>
-          Save price
-        </Button>
-      </form>
-      <div className="cc-live" aria-live="polite">
-        {message && <p className="kit-note">{message}</p>}
-      </div>
-      <div className="cc-preview-line">
-        <PreviewTag />
-        {row.edited && (
-          <Button variant="text" onClick={restore}>
-            Restore catalog price
-          </Button>
-        )}
-      </div>
-    </>
-  );
-}
-
 function ProductDrawer({
   productId,
+  classes,
   row,
   loading,
   failed,
@@ -484,6 +421,7 @@ function ProductDrawer({
   onClose,
 }: {
   productId: string;
+  classes: Category[];
   row: Row | undefined;
   loading: boolean;
   failed: Error | null;
@@ -516,10 +454,12 @@ function ProductDrawer({
   }
 
   const { product, current } = row;
-  const sum = keepTogether(
-    row.counted.length > 1
-      ? `${row.counted.map((lot) => formatCount(lot.units)).join(" + ")} = ${formatCount(row.onHand)} units`
-      : `${formatCount(row.onHand)} units`,
+  const tracked = row.counted.filter((lot) => lot.units !== null);
+  const lotUnits = sumTracked(row.counted.map((lot) => lot.units));
+  const sum = lotUnits === null ? <span className="kit-note">Not tracked</span> : keepTogether(
+    tracked.length > 1
+      ? `${tracked.map((lot) => formatCount(lot.units!)).join(" + ")} = ${formatCount(lotUnits!)} units`
+      : `${formatCount(lotUnits!)} units`,
   );
 
   return (
@@ -530,7 +470,7 @@ function ProductDrawer({
       tags={
         <>
           {current ? <StatusChip status={current.status} label={`Current lot ${current.status}`} /> : <StatusChip status="none" label="No current lot" />}
-          {row.edited && <Mark>Edited</Mark>}
+          {product.active === false && <Mark>Inactive</Mark>}
         </>
       }
       onClose={onClose}
@@ -545,14 +485,14 @@ function ProductDrawer({
             <dd className="kit-figure">{row.price !== undefined ? <MoneyFigure value={row.price} /> : "None"}</dd>
           </div>
           <div>
-            <dt className="kit-label">Units on hand</dt>
-            <dd className="kit-figure">{formatCount(row.onHand)}</dd>
+            <dt className="kit-label">{LIVE ? "Available stock" : "Units on hand"}</dt>
+            <dd className="kit-figure">{row.onHand === null ? <span className="kit-note">Not tracked</span> : formatCount(row.onHand)}</dd>
           </div>
         </dl>
       </div>
 
-      <Section title="Change the price">
-        <PriceForm row={row} />
+      <Section title="Edit product">
+        <ProductEditor product={product} classes={classes} onSaved={onRetry} />
       </Section>
 
       <Section title="Record">
@@ -594,7 +534,7 @@ function ProductDrawer({
             empty={{ title: "No lots on file." }}
           />
         </div>
-        <p className="cc-footnote">On hand counts lots in quarantine, testing or released: {sum}.</p>
+        <p className="cc-footnote">{LIVE ? "Lot counts are separate from available product stock" : "On hand counts lots in quarantine, testing or released"}: {sum}.</p>
       </Section>
 
       <Section title="In the shop">

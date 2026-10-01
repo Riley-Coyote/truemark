@@ -1,3 +1,4 @@
+import { LIVE } from "../platform/mode";
 /**
  * Changes the command center can make before the backend exists: product
  * prices, partner status, discount codes, payout batches and settings. The
@@ -8,7 +9,7 @@
 import { useSyncExternalStore } from "react";
 import type { Discount, PartnerStatus, ShippingMethodId } from "../platform/types";
 
-export const PREVIEW_NOTE = "Preview: changes are not saved";
+export const PREVIEW_NOTE = LIVE ? "Saving arrives next" : "Preview: changes are not saved";
 
 export type BatchLine = { partnerId: string; referralIds: string[]; amount: number };
 

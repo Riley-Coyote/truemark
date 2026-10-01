@@ -1,10 +1,12 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { assetUrl } from "../../../assetUrl";
 import { Track } from "../../../brand/Track";
 import type { TrackStop } from "../../../brand/Track";
 import { useReveal } from "../../motion";
+import { productById, productCutout } from "../../catalog";
+import "../../../brand/hero.css";
 import "../../../brand/handling.css";
 
 /*
@@ -24,11 +26,11 @@ function scene(name: string, width: number) {
 const coldChain: TrackStop[] = [
   {
     title: "Insulated packaging",
-    text: "Vials ship in insulated packs sized to the transit time, with gel packs rated for the route.",
+    text: "When applicable, vials ship in insulated packs sized to the transit time, with gel packs rated for the route.",
   },
   {
-    title: "Institutional delivery",
-    text: "Orders ship to verified institutional addresses with signature on delivery.",
+    title: "Delivery",
+    text: "Orders ship with signature on delivery.",
   },
   {
     title: "On arrival",
@@ -37,19 +39,45 @@ const coldChain: TrackStop[] = [
 ];
 
 function Opening() {
-  const frost = scene("frost", 1600);
+  const backdrop = scene("cold-storage", 1344);
+  const art = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState<{ width: number; height: number }>();
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) => {
+      const width = Math.max(entry.contentRect.width, entry.contentRect.height * 1344 / 752);
+      setBox({ width, height: width * 752 / 1344 });
+    });
+    if (art.current) observer.observe(art.current);
+    return () => observer.disconnect();
+  }, []);
+  const vials = [
+    { id: "ghk-cu-100-mg", x: 42, phone: 40 },
+    { id: "melanotan-ii-10-mg", x: 51 },
+    { id: "nad-500-mg", x: 60 },
+    { id: "bpc-157-10-mg", x: 69, phone: 50 },
+    { id: "tesamorelin-10-mg", x: 78, phone: 60 },
+  ];
   return (
     <section className="tm tm-handling-open" aria-labelledby="tm-handling-title">
-      <img
-        className="tm-handling-open-photo"
-        src={frost.src}
-        srcSet={frost.srcSet}
-        sizes="100vw"
-        width={1600}
-        height={1062}
-        alt=""
-        fetchPriority="high"
-      />
+      <div className="tm-handling-art" ref={art}>
+        <div className="tm-handling-scene" style={box}>
+          <img className="tm-handling-open-photo" src={backdrop.src} srcSet={backdrop.srcSet}
+            sizes="100vw" width={1344} height={752} alt="TrueMark vials on a cold-storage shelf." fetchPriority="high" />
+        </div>
+      </div>
+      {/* The vials stand above the paper mist, so their labels stay crisp; the mist only softens the steel. */}
+      <div className="tm-handling-cast" aria-hidden="true">
+        <div className="tm-handling-scene" style={box}>
+          {vials.map(({ id, x, phone }) => {
+            const product = productById(id);
+            return product && <span key={id} className={`tm-handling-vial${phone ? "" : " is-desktop"}`}
+              style={{ "--tm-cold-x": `${x}%`, "--tm-cold-phone-x": `${phone ?? x}%` } as CSSProperties}>
+              <span className="tm-shelf-shadow" aria-hidden="true" />
+              <img src={productCutout(product, "lg")} alt="" draggable={false} />
+            </span>;
+          })}
+        </div>
+      </div>
       <header className="tm-handling-open-head">
         <p className="tm-eyebrow">Handling</p>
         <h1 id="tm-handling-title" className="tm-handling-open-title">
@@ -139,7 +167,7 @@ function Shipping() {
         <h2 id="tm-handling-ship-title" className="tm-heading">
           Cold from our freezer
           <br />
-          <span>to your dock</span>
+          <span>to your dock, when applicable</span>
         </h2>
       </header>
       <Track stops={coldChain} labelledBy="tm-handling-ship-title" theme="night" extend="start" />

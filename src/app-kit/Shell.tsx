@@ -1,3 +1,4 @@
+import { storageKey as platformStorageKey } from "../platform/mode";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
@@ -7,17 +8,26 @@ import { assetUrl } from "../assetUrl";
 
 export type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean };
 export type NavGroup = { label: string; items: NavItem[] };
-export type Theme = "night" | "studio";
+export type Theme = "night" | "day" | "studio";
 
 function readCollapsed(key: string): boolean {
   try {
-    return localStorage.getItem(key) === "collapsed";
+    return localStorage.getItem(platformStorageKey(key)) === "collapsed";
   } catch {
     return false;
   }
 }
 
-function BrandMark() {
+function BrandMark({ theme }: { theme: Theme }) {
+  if (theme !== "studio") {
+    const variant = theme === "night" ? "white" : "black";
+    return (
+      <>
+        <img className="kit-command-lockup" src={assetUrl(`images/brand/kit/lockup-${variant}.svg`)} alt="TrueMark BioLabs" width="164" height="40" />
+        <img className="kit-mark kit-command-monogram" src={assetUrl(`images/brand/kit/monogram-${variant}.svg`)} alt="TrueMark BioLabs" width="24" height="19" />
+      </>
+    );
+  }
   return (
     <>
       <img className="kit-mark kit-mark-night" src={assetUrl("images/brand/monogram-white.svg")} alt="TrueMark" width="24" height="19" />
@@ -100,7 +110,7 @@ export function AppShell({
 
   useEffect(() => {
     try {
-      localStorage.setItem(storageKey, collapsed ? "collapsed" : "expanded");
+      localStorage.setItem(platformStorageKey(storageKey), collapsed ? "collapsed" : "expanded");
     } catch {
       /* The shell still works without storage; the choice just isn't remembered. */
     }
@@ -128,7 +138,7 @@ export function AppShell({
   }, [menuOpen]);
 
   return (
-    <div className="kit" data-theme={theme}>
+    <div className={theme === "studio" ? "kit" : "kit kit-command"} data-theme={theme}>
       <button type="button" className="kit-skip" onClick={() => content.current?.focus()}>
         Skip to content
       </button>
@@ -137,7 +147,7 @@ export function AppShell({
           <div className="kit-sidebar-inner">
             <div className="kit-brand">
               <Link to={home}>
-                <BrandMark />
+                <BrandMark theme={theme} />
                 <span className="kit-brand-label">{label}</span>
               </Link>
             </div>
@@ -169,7 +179,7 @@ export function AppShell({
         <div className="kit-main">
           <div ref={mbar} className="kit-mbar">
             <Link className="kit-brand-link" to={home}>
-              <BrandMark />
+              <BrandMark theme={theme} />
               <span className="kit-brand-label">{label}</span>
             </Link>
             <div className="kit-mbar-tools">

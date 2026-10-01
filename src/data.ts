@@ -1,37 +1,134 @@
-export const categories = [
+export type Category = {
+  id: string;
+  name: string;
+  short: string;
+  labelColor: string;
+  position: number;
+  onHome: boolean;
+  members: string;
+  vial?: string;
+  productIds?: string[];
+};
+
+/** The client's eight classes, in filter/homepage order. Label colours never alter images. */
+export const compoundClasses: Category[] = [
+  {
+    "id": "metabolic-peptides",
+    "name": "Metabolic peptides",
+    "short": "Metabolic",
+    "labelColor": "#7A39B1",
+    "members": "Retatrutide · Tirzepatide · Semaglutide · Cagrilintide",
+    "vial": "retatrutide-10-mg",
+    "productIds": [
+      "retatrutide-10-mg",
+      "retatrutide-20-mg",
+      "retatrutide-30-mg",
+      "retatrutide-60-mg",
+      "tirzepatide-30-mg",
+      "semaglutide-20-mg",
+      "cagrilintide-10-mg"
+    ]
+  },
+  {
+    "id": "peptide-fragments",
+    "name": "Peptide fragments",
+    "short": "Peptide fragments",
+    "labelColor": "#058F93",
+    "members": "BPC-157 · BPC-157 / TB-500 · KPV",
+    "vial": "bpc-157-10-mg",
+    "productIds": [
+      "bpc-157-10-mg",
+      "bpc-tb-1010-mg",
+      "kpv-10-mg"
+    ]
+  },
+  {
+    "id": "copper-peptides",
+    "name": "Copper peptides",
+    "short": "Copper peptides",
+    "labelColor": "#CC3358",
+    "members": "GHK-Cu · GLOW",
+    "vial": "ghk-cu-100-mg",
+    "productIds": [
+      "ghk-cu-100-mg",
+      "glow-70-mg"
+    ]
+  },
+  {
+    "id": "secretagogue-peptides",
+    "name": "Secretagogue peptides",
+    "short": "Secretagogues",
+    "labelColor": "#0273D0",
+    "members": "Tesamorelin · CJC (No DAC) / Ipamorelin",
+    "vial": "tesamorelin-10-mg",
+    "productIds": [
+      "tesamorelin-10-mg",
+      "cjc-ipa-1010-mg"
+    ]
+  },
+  {
+    "id": "mitochondrial-peptides",
+    "name": "Mitochondrial peptides",
+    "short": "Mitochondrial",
+    "labelColor": "#B97102",
+    "members": "MOTS-C",
+    "vial": "mots-c-10-mg",
+    "productIds": [
+      "mots-c-10-mg"
+    ]
+  },
+  {
+    "id": "coenzymes-cofactors",
+    "name": "Coenzymes & cofactors",
+    "short": "Coenzymes",
+    "labelColor": "#B97102",
+    "members": "NAD+",
+    "vial": "nad-500-mg",
+    "productIds": [
+      "nad-500-mg"
+    ]
+  },
+  {
+    "id": "neuropeptides",
+    "name": "Neuropeptides",
+    "short": "Neuropeptides",
+    "labelColor": "#4E762E",
+    "members": "Semax · Selank",
+    "vial": "semax-10-mg",
+    "productIds": [
+      "semax-10-mg",
+      "selank-10-mg"
+    ]
+  },
+  {
+    "id": "melanocortin-analogs",
+    "name": "Melanocortin analogs",
+    "short": "Melanocortins",
+    "labelColor": "#AB531A",
+    "members": "Melanotan II",
+    "vial": "melanotan-ii-10-mg",
+    "productIds": [
+      "melanotan-ii-10-mg"
+    ]
+  }
+].map((category, index) => ({ ...category, position: index + 1, onHome: true }));
+
+export const categories: { id: string; name: string; short: string }[] = [
   { id: "all", name: "All compounds", short: "All compounds" },
-  {
-    id: "peptide-fragments",
-    name: "Peptide fragments",
-    short: "Peptide fragments",
-  },
-  {
-    id: "secretagogue-peptides",
-    name: "Secretagogue peptides",
-    short: "Secretagogues",
-  },
-  { id: "neuropeptides", name: "Neuropeptides", short: "Neuropeptides" },
-  {
-    id: "mitochondrial-peptides",
-    name: "Mitochondrial peptides",
-    short: "Mitochondrial",
-  },
-  {
-    id: "copper-complexes",
-    name: "Copper complexes",
-    short: "Copper complexes",
-  },
-  {
-    id: "amino-acids",
-    name: "Amino acids & derivatives",
-    short: "Amino acids",
-  },
-  {
-    id: "melanocortin-analogs",
-    name: "Melanocortin analogs",
-    short: "Melanocortins",
-  },
+  ...compoundClasses,
   { id: "lab-supplies", name: "Lab supplies", short: "Lab supplies" },
+];
+
+/** The live bootstrap replaces metadata before screens import their catalog groupings. */
+export function setCategories(values: Category[]) {
+  const sorted = [...values].sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
+  compoundClasses.splice(0, compoundClasses.length, ...sorted.filter((category) => category.onHome));
+  categories.splice(1, categories.length - 1, ...sorted);
+}
+
+export const previewCategories = (): Category[] => [
+  ...compoundClasses,
+  { id: "lab-supplies", name: "Lab supplies", short: "Lab supplies", labelColor: "#486377", position: 9, onHome: false, members: "BAC Water" },
 ];
 
 export type Product = {
@@ -43,10 +140,13 @@ export type Product = {
   image?: string;
   color: string;
   colorInk: string;
-  form: "Lyophilized powder" | "Research diluent";
+  form: string;
   lot: string;
+  description?: string;
+  stock?: number | null;
+  active?: boolean;
   /** A merchandising tag on the product card. The client decides these; the two set here are placeholders. */
-  tag?: "Best seller" | "New";
+  tag?: string;
 };
 
 // Names, sizes, label colors and first-batch references come from the client brand kit.
@@ -56,7 +156,7 @@ export const products: Product[] = [
     id: "retatrutide-10-mg",
     name: "Retatrutide",
     size: "10 mg",
-    category: "peptide-fragments",
+    category: "metabolic-peptides",
     price: 50,
     image: "/images/products/retatrutide-10-mg.png",
     color: "#7A39B1",
@@ -68,7 +168,7 @@ export const products: Product[] = [
     id: "retatrutide-20-mg",
     name: "Retatrutide",
     size: "20 mg",
-    category: "peptide-fragments",
+    category: "metabolic-peptides",
     price: 80,
     image: "/images/products/retatrutide-20-mg.png",
     color: "#7A39B1",
@@ -80,7 +180,7 @@ export const products: Product[] = [
     id: "retatrutide-30-mg",
     name: "Retatrutide",
     size: "30 mg",
-    category: "peptide-fragments",
+    category: "metabolic-peptides",
     price: 100,
     image: "/images/products/retatrutide-30-mg.png",
     color: "#7A39B1",
@@ -92,7 +192,7 @@ export const products: Product[] = [
     id: "retatrutide-60-mg",
     name: "Retatrutide",
     size: "60 mg",
-    category: "peptide-fragments",
+    category: "metabolic-peptides",
     price: 155,
     image: "/images/products/retatrutide-60-mg.png",
     color: "#7A39B1",
@@ -104,7 +204,7 @@ export const products: Product[] = [
     id: "tirzepatide-30-mg",
     name: "Tirzepatide",
     size: "30 mg",
-    category: "peptide-fragments",
+    category: "metabolic-peptides",
     price: 70,
     image: "/images/products/tirzepatide-30-mg.png",
     color: "#7A39B1",
@@ -116,7 +216,7 @@ export const products: Product[] = [
     id: "semaglutide-20-mg",
     name: "Semaglutide",
     size: "20 mg",
-    category: "peptide-fragments",
+    category: "metabolic-peptides",
     price: 45,
     image: "/images/products/semaglutide-20-mg.png",
     color: "#7A39B1",
@@ -128,7 +228,7 @@ export const products: Product[] = [
     id: "cagrilintide-10-mg",
     name: "Cagrilintide",
     size: "10 mg",
-    category: "peptide-fragments",
+    category: "metabolic-peptides",
     price: 70,
     image: "/images/products/cagrilintide-10-mg.png",
     color: "#7A39B1",
@@ -177,7 +277,7 @@ export const products: Product[] = [
     id: "ghk-cu-100-mg",
     name: "GHK-Cu",
     size: "100 mg",
-    category: "copper-complexes",
+    category: "copper-peptides",
     price: 40,
     image: "/images/products/ghk-cu-100-mg.png",
     color: "#CC3358",
@@ -189,7 +289,7 @@ export const products: Product[] = [
     id: "glow-70-mg",
     name: "GLOW",
     size: "70 mg",
-    category: "peptide-fragments",
+    category: "copper-peptides",
     price: 75,
     image: "/images/products/glow-70-mg.png",
     color: "#CC3358",
@@ -214,7 +314,7 @@ export const products: Product[] = [
     id: "nad-500-mg",
     name: "NAD+",
     size: "500 mg",
-    category: "amino-acids",
+    category: "coenzymes-cofactors",
     price: 55,
     image: "/images/products/nad-plus-500-mg.png",
     color: "#B97102",
@@ -328,7 +428,7 @@ export const processSteps = [
   {
     title: "Store & ship",
     label: "Care through the last mile.",
-    text: "Released inventory remains under temperature control and is shipped to the receiving research organization.",
+    text: "Released inventory remains under temperature control and is shipped with temperature control when applicable.",
   },
 ];
 
@@ -408,7 +508,7 @@ export const articles = [
 export const faqs = [
   [
     "Why does the material arrive as a dry powder?",
-    "Lyophilization removes water from a frozen solution under vacuum, leaving a dry cake. Peptide bonds hydrolyze slowly in water and faster at room temperature; removing the water largely stops that. The dry form also ships and stores for years at −20 °C.",
+    "Lyophilization removes water from a frozen solution under vacuum, leaving a dry cake. Peptide bonds hydrolyze slowly in water and faster at room temperature; removing the water largely stops that. The dry form also stores for years at −20 °C and ships with temperature control when applicable.",
   ],
   [
     "Why doesn’t the vial weight match the certificate?",

@@ -143,6 +143,7 @@ export function SelectField<V extends string>({
   hint,
   error,
   selectRef,
+  disabled = false,
 }: {
   label: string;
   value: V | "";
@@ -153,6 +154,7 @@ export function SelectField<V extends string>({
   hint?: ReactNode;
   error?: string;
   selectRef?: Ref<HTMLSelectElement>;
+  disabled?: boolean;
 }) {
   const id = useId();
   const noteId = `${id}-note`;
@@ -164,6 +166,7 @@ export function SelectField<V extends string>({
       <div className="kit-select cc-select">
         <select
           ref={selectRef}
+          disabled={disabled}
           id={id}
           value={value}
           aria-invalid={error ? true : undefined}

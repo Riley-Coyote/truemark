@@ -87,7 +87,15 @@ export function Trace({
         </svg>
       )}
       {caption && width > 0 && (
-        <span className="tm-trace-caption" style={{ left: peakX + sigma * 3 + 10, bottom: height - baseline + peakH * 0.62 }}>
+        <span
+          className="tm-trace-caption"
+          style={{
+            left: peakX + sigma * 3 + 10,
+            bottom: height - baseline + peakH * 0.62,
+            // On a narrow screen the caption wraps beside the peak instead of running off the edge.
+            maxWidth: Math.max(0, width - (peakX + sigma * 3 + 10) - 8),
+          }}
+        >
           {caption}
         </span>
       )}

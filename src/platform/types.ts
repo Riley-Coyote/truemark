@@ -64,6 +64,13 @@ export type ShippingMethod = {
   price: Money;
 };
 
+export type StorefrontSettings = {
+  freeShippingThreshold: Money | null;
+  freeShippingMethod: string;
+  insuranceMode: "off" | "optional" | "automatic";
+  insuranceRate: number | null;
+};
+
 export type OrderStatus = "placed" | "paid" | "packed" | "shipped" | "delivered" | "cancelled" | "refunded";
 export type PaymentStatus = "authorized" | "captured" | "refunded" | "failed";
 
@@ -87,6 +94,9 @@ export type Order = {
   address: Address;
   shipping: { method: ShippingMethodId; price: Money; carrier?: string; tracking?: string };
   subtotal: Money;
+  /** Absent on legacy preview orders; equivalent to zero. */
+  insurance?: Money;
+  insuranceApplied?: boolean;
   discount?: { code: string; amount: Money; partnerId?: string };
   total: Money;
   events: OrderEvent[];
@@ -97,6 +107,7 @@ export type OrderDraft = {
   address: Address;
   shipping: ShippingMethodId;
   discountCode?: string;
+  insurance?: boolean;
   /** How a partner's code arrived: typed at checkout, or carried by their link. */
   via?: "link" | "code";
 };
@@ -106,19 +117,22 @@ export type LotStatus = "quarantine" | "testing" | "released" | "rejected" | "ar
 export type LotResult = { label: string; method: string; value: string; unit: string };
 
 /**
- * A production lot. Lots from the client's first batch are real identifiers with
- * no published results; `sample` lots are fictional and exist only to show states.
+ * A production lot. `sample` marks illustrative preview evidence, including the
+ * BPC-157 example on a real first-batch identifier. Live never fabricates results.
  */
 export type Lot = {
   lot: string;
   productId: string;
   status: LotStatus;
-  receivedAt: string;
+  receivedAt: string | null;
   testedAt?: string;
   releasedAt?: string;
   results: LotResult[];
   reference?: string;
-  units: number;
+  coaPath?: string;
+  coaUrl?: string;
+  rejectionNote?: string;
+  units: number | null;
   sample: boolean;
 };
 
@@ -166,6 +180,25 @@ export type Payout = {
 };
 
 export type Visit = { date: string; clicks: number };
+
+export type JournalArticle = {
+  id: string;
+  slug: string;
+  title: string;
+  kicker: string;
+  excerpt: string;
+  bodyMd: string;
+  coverPath?: string;
+  coverImage?: string;
+  coverUrl?: string;
+  readingMinutes: number;
+  status: "draft" | "published";
+  publishedAt?: string;
+  updatedAt: string;
+  author: string;
+};
+export type ArticleInput = Omit<JournalArticle, "id" | "updatedAt" | "coverUrl"> & { id?: string };
+export type LotRelease = { results: LotResult[]; reference: string; testedAt: string };
 
 export type Discount = {
   code: string;

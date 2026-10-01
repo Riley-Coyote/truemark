@@ -1,3 +1,5 @@
+import { LIVE } from "../../../platform/mode";
+import { live } from "../../../platform/live/runtime";
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -114,7 +116,11 @@ export default function Apply() {
   const [step, setStep] = useState(0);
   const [furthest, setFurthest] = useState(0);
   const [status, setStatus] = useState<"idle" | "busy" | "failed">("idle");
-  const [received, setReceived] = useState<Application | null>(null);
+  const [received, setReceived] = useState<(Pick<Application, "name" | "email" | "institution"> & { id?: string }) | null>(null);
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string>();
+  const [failure, setFailure] = useState<string>();
+  const [confirmationRequired, setConfirmationRequired] = useState(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const moved = useRef(false);
 
@@ -143,7 +149,14 @@ export default function Apply() {
     const { keys } = steps[step];
     setTouched((t) => ({ ...t, ...Object.fromEntries(keys.map((k) => [k, true])) }));
     const first = keys.find((k) => problem(k, values, confirmed));
-    if (!first) return true;
+    if (!first) {
+      if (LIVE && step === 0 && password.length < 8) {
+        setPasswordError("Use at least 8 characters.");
+        document.getElementById("tm-acct-password")?.focus();
+        return false;
+      }
+      return true;
+    }
     const target =
       first === "attestations"
         ? `tm-acct-attest-${attestations.find((a) => !confirmed.includes(a.id))?.id}`
@@ -183,10 +196,15 @@ export default function Apply() {
       documents,
     };
     try {
-      const application = await store.applications.submit(draft);
+      if (LIVE) {
+        const result = await live().auth.signUp(draft, password);
+        setConfirmationRequired(result.confirmationRequired);
+        setPassword("");
+        setReceived(draft);
+      } else setReceived(await store.applications.submit(draft));
       moved.current = true;
-      setReceived(application);
-    } catch {
+    } catch (error) {
+      setFailure(error instanceof Error ? error.message : "The application could not be sent.");
       setStatus("failed");
     }
   }
@@ -243,12 +261,12 @@ export default function Apply() {
         {received ? (
           <div className="tm-acct-step tm-acct-received tm-acct-rise">
             <p className="tm-eyebrow">
-              Application <span className="tm-mono">{received.id}</span>
+              Application {received.id && <span className="tm-mono">{received.id}</span>}
             </p>
             <h2 className="tm-heading" tabIndex={-1} ref={heading}>
               Application received.
               <br />
-              <span>We’ll email you when your account has been reviewed.</span>
+              <span>{LIVE ? (confirmationRequired ? "Check your email to confirm your account, then sign in." : "Your account awaits review. You can browse and verify lots while you wait.") : "We’ll email you when your account has been reviewed."}</span>
             </h2>
             <dl className="tm-acct-dl is-compact">
               <div>
@@ -290,6 +308,7 @@ export default function Apply() {
                 <>
                   <Field {...bind("name")} label="Full name" wide autoComplete="name" />
                   <Field {...bind("email")} label="Work email" wide type="email" autoComplete="email" inputMode="email" spellCheck={false} />
+                  {LIVE && <Field id="tm-acct-password" label="Password" wide type="password" autoComplete="new-password" value={password} error={passwordError} onChange={(event) => { setPassword(event.target.value); setPasswordError(undefined); }} />}
                   <Field {...bind("role")} label="Role" hint="For example, principal investigator or lab manager." wide autoComplete="organization-title" />
                 </>
               )}
@@ -413,7 +432,7 @@ export default function Apply() {
             </div>
             {status === "failed" && (
               <p className="tm-acct-error" role="alert">
-                The application could not be sent. Your answers are kept; try again.
+                {LIVE ? failure : "The application could not be sent. Your answers are kept; try again."}
               </p>
             )}
           </form>

@@ -257,7 +257,7 @@
 .tm-trust {
   --tm-bg: var(--tm-paper);
   padding-top: var(--tm-space-6);
-  padding-block: 0 var(--tm-space-9);
+  padding-block: 0;
   row-gap: var(--tm-space-6);
 }
 .tm-trust-item {
@@ -297,10 +297,7 @@
 
 @media (max-width: 960px) {
   .tm-bhero {
-    --tm-vial: 30vw;
-  }
-  .tm-lotchip {
-    display: none;
+    --tm-vial: clamp(8rem, 34vw, 14rem);
   }
   .tm-bhero-head,
   .tm-bhero-aside {
@@ -310,9 +307,10 @@
     margin-top: var(--tm-space-6);
   }
   .tm-shelf {
+    position: relative;
     justify-content: flex-start;
     overflow-x: auto;
-    padding-inline: var(--tm-pad);
+    padding: var(--tm-space-10) calc((100% + var(--tm-pad) * 2 - var(--tm-vial)) / 2) var(--tm-space-3);
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
   }
@@ -330,4 +328,61 @@
   .tm-trust-item {
     grid-column: 1 / -1;
   }
+}
+
+/* The phone shelf has exactly one front vial and two quieter neighbours. */
+.tm-lotchip-status.is-pending { color: var(--tm-ink-3); }
+.tm-lotchip-sample { color: var(--tm-ink-3); font: var(--tm-weight-regular) var(--tm-type-nano) / 1.4 var(--tm-font-sans); }
+@media (min-width: 961px) {
+  .tm-trust-item { padding-block: var(--tm-space-5); }
+  .tm .tm-trust-title { font-size: var(--tm-type-micro); }
+  .tm .tm-trust-text { font-size: var(--tm-type-body); color: var(--tm-ink-2); }
+}
+@media (max-width: 960px) {
+  /* A frame, not a scroller: the strip's snap would otherwise re-snap it sideways after each turn. */
+  .tm-shelf.is-carousel {
+    overflow: clip;
+    scroll-snap-type: none;
+    display: block;
+    height: calc(var(--tm-vial) * 1103 / 578 + var(--tm-space-10) + var(--tm-space-7));
+    padding: 0;
+    touch-action: pan-y;
+  }
+  .tm .is-carousel .tm-shelf-vial {
+    position: absolute;
+    left: 50%;
+    bottom: var(--tm-space-3);
+    transform: translateX(calc(-50% + var(--tm-offset) * 115%)) scale(0.78);
+    transform-origin: center bottom;
+    opacity: 0.5;
+    animation: none;
+    transition: transform var(--tm-dur-scene) var(--tm-ease-enter), opacity var(--tm-dur-scene) var(--tm-ease-enter);
+  }
+  .tm .is-carousel .tm-shelf-vial[data-front="true"] { transform: translateX(-50%) scale(1); opacity: 1; z-index: 2; }
+  .tm .is-carousel .tm-shelf-vial[aria-hidden="true"] { opacity: 0; visibility: hidden; pointer-events: none; }
+  .tm-shelf-name { white-space: normal; text-align: center; line-height: 1.4; }
+  .tm-shelf-name span { display: block; }
+  .tm-shelf .tm-lotchip {
+    width: max-content;
+    max-width: min(20rem, calc(100vw - var(--tm-space-6)));
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(calc(var(--tm-space-3) / 2));
+    animation: none;
+    transition: opacity var(--tm-dur-quick) var(--tm-ease-enter), transform var(--tm-dur-slow) var(--tm-ease-enter), visibility var(--tm-dur-quick);
+  }
+  .tm-shelf [data-front="true"] .tm-lotchip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    transition-delay: var(--tm-dur-scene);
+  }
+  .tm-lotchip-top { flex-wrap: wrap; }
+  .tm .is-carousel .tm-shelf-vial:is(:hover, :focus-visible, :active) :is(img, .tm-sheen) { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) and (max-width: 960px) {
+  .tm-shelf .tm-lotchip { transition: none; }
+  .tm-shelf [data-front="true"] .tm-lotchip { transition-delay: 0s; }
+  .tm-shelf .tm-shelf-vial :is(img, .tm-sheen) { transition: none; transform: none; }
 }

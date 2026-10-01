@@ -53,32 +53,7 @@
   letter-spacing: 0.01em;
 }
 
-/* Buttons: ink pills. The primary casts the brand gradient as light beneath it. */
-.brand-refinement .tm .tm-button-primary {
-  position: relative;
-  isolation: isolate;
-}
-.brand-refinement .tm .tm-button-primary::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  left: 14%;
-  right: 14%;
-  bottom: calc(var(--tm-space-2) * -1);
-  height: var(--tm-space-5);
-  border-radius: var(--tm-radius-pill);
-  background: var(--tm-gradient);
-  filter: blur(12px);
-  opacity: 0.38;
-  transition: opacity var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-base) var(--tm-ease-enter);
-}
-.brand-refinement .tm .tm-button-primary:hover::after {
-  opacity: 0.62;
-  transform: translateY(2px);
-}
-.brand-refinement .tm .tm-button-primary:active::after {
-  opacity: 0.3;
-}
+/* Buttons: ink pills, clean. The primary is plain ink; nothing glows beneath it. */
 .brand-refinement .tm .tm-button-outline {
   background: transparent;
   border-color: var(--tm-ink-4);

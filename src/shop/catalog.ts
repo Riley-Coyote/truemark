@@ -4,15 +4,17 @@ import { discounts } from "../platform/seed";
 import type { Product } from "../data";
 
 /** Web derivatives of the supplied renders; the original PNGs stay untouched. */
-export function productImage(product: Product, size: "sm" | "lg" = "lg") {
-  const file = (product.image ?? "").split("/").pop()?.replace(/\.png$/, "");
+export function productImage(product: Product | undefined, size: "sm" | "lg" = "lg") {
+  if (product?.image?.startsWith("https://")) return product.image;
+  const file = (product?.image ?? "").split("/").pop()?.replace(/\.png$/, "");
   if (!file) return assetUrl("images/brand/monogram.svg");
   return assetUrl(`images/web/${file}${size === "sm" ? "-640" : ""}.webp`);
 }
 
 /** The vial cut from its render (labels untouched, glass see-through): public/images/cutouts. */
-export function productCutout(product: Product, size: "sm" | "lg" = "lg") {
-  const file = (product.image ?? "").split("/").pop()?.replace(/\.png$/, "");
+export function productCutout(product: Product | undefined, size: "sm" | "lg" = "lg") {
+  if (product?.image?.startsWith("https://")) return product.image;
+  const file = (product?.image ?? "").split("/").pop()?.replace(/\.png$/, "");
   if (!file) return assetUrl("images/brand/monogram.svg");
   return assetUrl(`images/cutouts/${file}${size === "sm" ? "-sm" : ""}.webp`);
 }
@@ -25,7 +27,7 @@ export function studyImage(name: string, size: "sm" | "lg" = "lg") {
   return assetUrl(`images/web/study-${name}${size === "sm" ? "-960" : ""}.webp`);
 }
 
-export const productById = (id: string) => products.find((p) => p.id === id);
+export const productById = (id: string) => products.find((p) => p.id === id && p.active !== false);
 
 /** The first-order offer the shop advertises: the store's own promo code, so checkout honours it. */
 export const firstOrderOffer = discounts.find((d) => d.code === "FIRSTLOT")!;
@@ -35,7 +37,7 @@ function pick(ids: string[]): Product[] {
 }
 
 /** One vial per label colour, ordered around the colour wheel from the brand purple. */
-export const spectrum = pick([
+const spectrumIds = [
   "retatrutide-30-mg",
   "ghk-cu-100-mg",
   "melanotan-ii-10-mg",
@@ -43,7 +45,8 @@ export const spectrum = pick([
   "semax-10-mg",
   "bpc-157-10-mg",
   "tesamorelin-10-mg",
-]);
+];
+export let spectrum = pick(spectrumIds);
 
 export type Compound = {
   key: string;
@@ -54,14 +57,16 @@ export type Compound = {
 };
 
 /** Sizes of one compound share a product page; group them for browsing. */
-export const compounds: Compound[] = (() => {
+function groupCompounds(): Compound[] {
   const groups = new Map<string, Product[]>();
-  for (const product of products) {
-    const list = groups.get(product.name) ?? [];
+  for (const product of products.filter((p) => p.active !== false)) {
+    const group = `${product.category}/${product.name}`;
+    const list = groups.get(group) ?? [];
     list.push(product);
-    groups.set(product.name, list);
+    groups.set(group, list);
   }
   return Array.from(groups.values()).map((variants) => {
+    variants.sort((a, b) => a.size.localeCompare(b.size, "en", { numeric: true }));
     const prices = variants.flatMap((v) => (v.price === undefined ? [] : [v.price]));
     return {
       key: variants[0].id,
@@ -71,19 +76,25 @@ export const compounds: Compound[] = (() => {
       fromPrice: prices.length ? Math.min(...prices) : undefined,
     };
   });
-})();
+}
+export let compounds = groupCompounds();
 
-/** Browse order: one of each label colour first, then the rest by colour family. */
-export const compoundsForBrowsing: Compound[] = (() => {
-  const colourOrder = ["#7A39B1", "#058F93", "#CC3358", "#0273D0", "#B97102", "#4E762E", "#AB531A", "#486377"];
-  const first = colourOrder.slice(0, 7)
-    .map((colour) => compounds.find((c) => c.lead.color === colour))
-    .filter((c): c is Compound => Boolean(c));
-  const rest = compounds
-    .filter((c) => !first.includes(c))
-    .sort((a, b) => colourOrder.indexOf(a.lead.color) - colourOrder.indexOf(b.lead.color));
-  return [...first, ...rest];
-})();
+/** The artwork's colour order stays fixed even when a product changes class. */
+const rainbowColors = ["#CC3358", "#AB531A", "#B97102", "#4E762E", "#058F93", "#0273D0", "#7A39B1", "#486377"];
+const rainbowPosition = (product: Product) => {
+  const index = rainbowColors.indexOf(product.color.toUpperCase());
+  return index < 0 ? rainbowColors.length : index;
+};
+const sortRainbow = (values: Compound[]) => [...values].sort((a, b) =>
+  rainbowPosition(a.lead) - rainbowPosition(b.lead) ||
+  a.name.localeCompare(b.name, "en") || a.lead.size.localeCompare(b.lead.size, "en", { numeric: true }));
+
+export let compoundsForBrowsing = sortRainbow(compounds);
+export function refreshCatalog() {
+  compounds = groupCompounds();
+  compoundsForBrowsing = sortRainbow(compounds);
+  spectrum = pick(spectrumIds);
+}
 
 export type CompoundSpec = {
   cas?: string;
@@ -115,15 +126,15 @@ const specs: Record<string, CompoundSpec> = {
   "BAC Water": { form: "Sterile solution", storage: "Room temperature, protected from light" },
 };
 
-export const specFor = (product: Product): CompoundSpec => specs[product.name] ?? powder;
+export const specFor = (product: Product): CompoundSpec => ({ ...(specs[product.name] ?? powder), form: product.form === "Research diluent" ? "Sterile solution" : product.form });
 
 export function describe(product: Product): string {
+  if (product.description?.trim()) return product.description;
   if (product.category === "lab-supplies") {
     return "Bacteriostatic water, a sterile solution supplied for laboratory use. Traceable to its lot, like every TrueMark vial.";
   }
-  return `${product.name}, supplied as a lyophilized powder for laboratory research. Every vial is traceable to its lot and released with a certificate of analysis.`;
+  return `${product.name}, supplied as ${product.form === "Lyophilized powder" ? "a lyophilized powder" : product.form.toLowerCase()} for laboratory research. Every vial is traceable to its lot and released with a certificate of analysis.`;
 }
 
 /** The client mockup's sample lot lives with the platform data; re-exported for the storefront. */
 export { sampleRecord } from "../platform/seed";
-

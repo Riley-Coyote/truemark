@@ -129,7 +129,6 @@ export default function Addresses() {
         sub="Where your lots are received."
         aside={<SampleTag>Changes are kept in this preview only</SampleTag>}
       >
-        <p className="tm-acct-intro">We ship to institutional addresses only.</p>
       </PageHead>
       <p className="tm-acct-live" aria-live="polite">
         {note}

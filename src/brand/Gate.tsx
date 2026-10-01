@@ -1,3 +1,5 @@
+import { LIVE } from "../platform/mode";
+import { live } from "../platform/live/runtime";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -61,7 +63,8 @@ export default function Gate() {
   const [reveal, setReveal] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
-  const specimen = productById("bpc-157-10-mg")!;
+  const [failure, setFailure] = useState<string>();
+  const specimen = productById("bpc-157-10-mg");
   const scene = useRef<HTMLElement>(null);
   useLight(scene, { firstPass: 900, pass: 3200, period: 11000 });
 
@@ -96,11 +99,19 @@ export default function Gate() {
       return;
     }
     setBusy(true);
-    await store.session.signIn(values.email);
-    navigate(from ?? "/", { replace: true });
+    try {
+      if (LIVE) await live().auth.signIn(values.email.trim(), values.password);
+      else await store.session.signIn(values.email);
+      navigate(LIVE ? (from?.startsWith("/") && !from.startsWith("//") ? from : "/") : from ?? "/", { replace: true });
+    } catch (error) {
+      setFailure(error instanceof Error ? error.message : "Sign-in could not be completed.");
+      setBusy(false);
+    }
   }
 
   function switchMode(next: Mode) {
+    if (LIVE && next === "create") { navigate("/access/apply"); return; }
+    setFailure(undefined);
     setMode(next);
     setErrors({});
   }
@@ -128,7 +139,7 @@ export default function Gate() {
           </div>
           <div className="tm-gate-lotline">
             <span className="tm-gate-lot-label">Lot:</span>
-            <span className="tm-gate-lot">{specimen.lot}</span>
+            {specimen && <span className="tm-gate-lot">{specimen.lot}</span>}
             <span className="tm-gate-lot-note">
               Every label carries one. Sign in to read the certificate for yours.
             </span>
@@ -160,6 +171,7 @@ export default function Gate() {
             </div>
 
             <form noValidate onSubmit={submit}>
+              {failure && <p className="tm-field-error" role="alert">{failure}</p>}
               {mode === "create" && (
                 <>
                   <Field label="Full name" error={errors.name}>
@@ -220,13 +232,13 @@ export default function Gate() {
                 )}
               </Field>
 
-              {mode === "signin" ? (
+              {mode === "signin" ? (!LIVE && (
                 <label className="tm-check">
                   <input type="checkbox" checked={keep} onChange={(e) => setKeep(e.target.checked)} />
                   <span className="tm-check-box" aria-hidden="true" />
                   Keep me signed in
                 </label>
-              ) : (
+              )) : (
                 <div className={`tm-field${errors.attest ? " is-invalid" : ""}`}>
                   <label className="tm-check">
                     <input
@@ -257,7 +269,7 @@ export default function Gate() {
                 {mode === "signin" ? "Create an account" : "Sign in"}
               </button>
             </p>
-            <p className="tm-gate-preview">Design preview: any details open the sample research account.</p>
+            {!LIVE && <p className="tm-gate-preview">Design preview: any details open the sample research account.</p>}
           </div>
         </main>
       </div>

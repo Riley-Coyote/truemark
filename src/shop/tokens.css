@@ -33,6 +33,10 @@
   --tm-studio: #f4f7fa;
   --tm-studio-deep: #ecedf2;
   --tm-paper: #fdfdfe;
+  /* Command center only: its two instrument surfaces and the client's surface grey. */
+  --tm-instrument: #0b0a12;
+  --tm-instrument-raised: #13111c;
+  --tm-surface-grey: #f4f5f8;
   --tm-night: #241a4a;
   --tm-night-raised: #2e2458;
   /* One tonal step below the night, as far as the night sits below raised (OKLCH L 0.22 · 0.26 · 0.30, one hue):

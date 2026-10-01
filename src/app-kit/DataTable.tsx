@@ -1,3 +1,4 @@
+import { compareNullable } from "../platform/inventory";
 import { useMemo, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
@@ -14,7 +15,7 @@ export type Column<T> = {
   key: string;
   header: string;
   cell: (row: T) => ReactNode;
-  sortValue?: (row: T) => string | number;
+  sortValue?: (row: T) => string | number | null;
   /** Direction of the first click on this column. Dates and money read best newest or largest first. */
   sortFirst?: "asc" | "desc";
   align?: "start" | "end";
@@ -67,12 +68,10 @@ export function DataTable<T>({
     const column = sort && columns.find((c) => c.key === sort.key);
     if (!sort || !column?.sortValue) return list;
     const value = column.sortValue;
-    const factor = sort.dir === "asc" ? 1 : -1;
     return list.sort((a, b) => {
       const va = value(a);
       const vb = value(b);
-      const order = typeof va === "number" && typeof vb === "number" ? va - vb : String(va).localeCompare(String(vb));
-      return order * factor;
+      return compareNullable(va, vb, sort.dir);
     });
   }, [rows, sort, columns]);
 

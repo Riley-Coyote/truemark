@@ -31,7 +31,8 @@ export default function Catalog() {
   const grid = useRef<HTMLElement>(null);
   useLight(grid, { firstPass: 700, pass: 2950, repeat: false });
   const [params, setParams] = useSearchParams();
-  const active = params.get("class") ?? "all";
+  const requestedClass = params.get("class");
+  const active = categories.some((c) => c.id === requestedClass) ? requestedClass! : "all";
   const query = params.get("q") ?? "";
   const sort = (params.get("sort") as Sort) || "featured";
 
@@ -41,7 +42,7 @@ export default function Catalog() {
       map.set(c.lead.category, (map.get(c.lead.category) ?? 0) + 1);
     }
     return map;
-  }, []);
+  }, [compoundsForBrowsing]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -51,7 +52,7 @@ export default function Catalog() {
         (!q || `${c.name} ${c.variants.map((v) => v.size).join(" ")}`.toLowerCase().includes(q)),
     );
     return sortCompounds(filtered, sort);
-  }, [active, query, sort]);
+  }, [active, query, sort, compoundsForBrowsing]);
 
   const update = (key: string, value: string | null) => {
     const next = new URLSearchParams(params);
@@ -87,9 +88,7 @@ export default function Catalog() {
         </div>
         <div className="tm-filterbar">
           <div className="tm-chips" role="group" aria-label="Filter by class">
-            {categories
-              .filter((c) => c.id === "all" || counts.has(c.id))
-              .map((c) => (
+            {categories.map((c) => (
                 <button
                   key={c.id}
                   className="tm-chip"
@@ -97,7 +96,7 @@ export default function Catalog() {
                   onClick={() => update("class", c.id)}
                 >
                   {c.short}
-                  <span>{c.id === "all" ? compoundsForBrowsing.length : counts.get(c.id)}</span>
+                  <span>{c.id === "all" ? compoundsForBrowsing.length : counts.get(c.id) ?? 0}</span>
                 </button>
               ))}
           </div>

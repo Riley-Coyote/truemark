@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, FileUp } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import {
   Button,
   DataTable,
@@ -19,6 +19,10 @@ import {
   statusLabel,
 } from "../app-kit";
 import type { Column, RowGroup } from "../app-kit";
+import { LIVE } from "../platform/mode";
+import { live } from "../platform/live/runtime";
+import { LotCertificateDrawer } from "./LotCertificateDrawer";
+import { TextField } from "./fields";
 import { store, useResource } from "../platform/store";
 import type { Lot, LotStatus } from "../platform/types";
 import { productById } from "../shop/catalog";
@@ -26,6 +30,8 @@ import { DrawerLoading } from "./OrderDrawer";
 import { matches, useQueryParam, useSearchQuery } from "./state";
 
 const ORDER: LotStatus[] = ["quarantine", "testing", "released", "rejected", "archived"];
+// Select the mutation before the async handler so preview drops the live adapter.
+const rejectLiveLot = LIVE ? (lot: string, note: string) => live().content.rejectLot(lot, note) : null;
 
 type Kind = "all" | "batch" | "sample";
 
@@ -73,7 +79,7 @@ const columns: Column<Lot>[] = [
     width: "15%",
     sortValue: (lot) => lot.receivedAt,
     sortFirst: "desc",
-    cell: (lot) => formatDate(lot.receivedAt),
+    cell: (lot) => lot.receivedAt === null ? <span className="kit-note">Not tracked</span> : formatDate(lot.receivedAt),
   },
   {
     key: "released",
@@ -91,7 +97,7 @@ const columns: Column<Lot>[] = [
     mobile: "aside",
     sortValue: (lot) => lot.units,
     sortFirst: "desc",
-    cell: (lot) => (
+    cell: (lot) => lot.units === null ? <span className="kit-note">Not tracked</span> : (
       <>
         {formatCount(lot.units)}
         <span className="kit-sr"> units</span>
@@ -198,8 +204,10 @@ function confirmText(lot: Lot, to: LotStatus): string {
 }
 
 function LotDrawer({ lotId, onClose }: { lotId: string; onClose: () => void }) {
-  const lot = useResource(() => store.lots.get(lotId), [lotId]);
+  const lot = useResource(() => LIVE ? live().content.lot(lotId) : store.lots.get(lotId), [lotId]);
+  const [certificate, setCertificate] = useState(false);
   const [pending, setPending] = useState<Action | null>(null);
+  const [rejectionNote, setRejectionNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
@@ -227,17 +235,22 @@ function LotDrawer({ lotId, onClose }: { lotId: string; onClose: () => void }) {
     );
   }
 
+  if (certificate) return <LotCertificateDrawer lot={l} onClose={() => setCertificate(false)} onSaved={() => { setCertificate(false); lot.reload(); setDone("Certificate saved."); }} />;
+
   const product = productById(l.productId);
   const hasResults = l.results.length > 0;
-  const actions = ACTIONS[l.status];
-  const releaseBlocked = l.status === "testing" && !hasResults;
+  const actions = ACTIONS[l.status].filter((action) => action.to !== "released");
+  const canCertificate = ["quarantine", "testing", "released"].includes(l.status);
 
   async function apply(action: Action) {
     if (!l) return;
     setSaving(true);
     setFailed(null);
     try {
-      await store.lots.setStatus(l.lot, action.to);
+      if (rejectLiveLot && action.to === "rejected") {
+        await rejectLiveLot(l.lot, rejectionNote.trim());
+        lot.reload();
+      } else await store.lots.setStatus(l.lot, action.to);
       setDone(`${l.lot} is now ${statusLabel(action.to).toLowerCase()}.`);
       setPending(null);
     } catch (error) {
@@ -250,8 +263,9 @@ function LotDrawer({ lotId, onClose }: { lotId: string; onClose: () => void }) {
   const footer = pending ? (
     <div className="cc-confirm" role="group" aria-label="Confirm the change">
       <p className="cc-confirm-text">{confirmText(l, pending.to)}</p>
+      {LIVE && pending.to === "rejected" && <TextField label="Rejection note" value={rejectionNote} onChange={setRejectionNote} disabled={saving} />}
       <div className="cc-confirm-actions">
-        <Button variant={pending.variant === "danger" ? "danger" : "primary"} onClick={() => apply(pending)} disabled={saving}>
+        <Button variant={pending.variant === "danger" ? "danger" : "primary"} onClick={() => apply(pending)} disabled={saving || (LIVE && pending.to === "rejected" && !rejectionNote.trim())}>
           {saving ? "Saving" : `Confirm: ${pending.label.toLowerCase()}`}
         </Button>
         <Button onClick={() => setPending(null)} disabled={saving}>
@@ -259,15 +273,14 @@ function LotDrawer({ lotId, onClose }: { lotId: string; onClose: () => void }) {
         </Button>
       </div>
     </div>
-  ) : actions.length ? (
+  ) : actions.length || canCertificate ? (
     <div className="cc-actions">
       <div className="cc-confirm-actions">
+        {canCertificate && <Button variant="primary" onClick={() => setCertificate(true)}>{l.status === "released" ? "Replace certificate" : "Release with certificate"}</Button>}
         {actions.map((action) => (
           <Button
             key={action.to}
             variant={action.variant}
-            disabled={action.to === "released" && releaseBlocked}
-            aria-describedby={action.to === "released" && releaseBlocked ? "cc-release-note" : undefined}
             onClick={() => {
               setDone(null);
               setPending(action);
@@ -277,12 +290,7 @@ function LotDrawer({ lotId, onClose }: { lotId: string; onClose: () => void }) {
           </Button>
         ))}
       </div>
-      {releaseBlocked && (
-        <p id="cc-release-note" className="cc-footnote">
-          Release needs laboratory results attached first.{" "}
-          {l.sample ? "This sample lot has none on file." : "None have been supplied for this lot yet."}
-        </p>
-      )}
+
     </div>
   ) : (
     <p className="cc-footnote">Archived lots stay on file. There is nothing further to do.</p>
@@ -321,9 +329,9 @@ function LotDrawer({ lotId, onClose }: { lotId: string; onClose: () => void }) {
               ),
             },
             { label: "Status", value: <StatusChip status={l.status} /> },
-            { label: "Received", value: formatDate(l.receivedAt) },
+            { label: "Received", value: l.receivedAt === null ? <span className="kit-note">Not tracked</span> : formatDate(l.receivedAt) },
             { label: "Released", value: l.releasedAt ? formatDate(l.releasedAt) : <span className="kit-quiet">Not released</span> },
-            { label: "Units", value: <span className="kit-num">{formatCount(l.units)}</span> },
+            { label: "Units", value: l.units === null ? <span className="kit-note">Not tracked</span> : <span className="kit-num">{formatCount(l.units)}</span> },
             {
               label: "Certificate",
               value: l.reference ? <span className="kit-mono">{l.reference}</span> : <span className="kit-quiet">None on file</span>,
@@ -331,6 +339,8 @@ function LotDrawer({ lotId, onClose }: { lotId: string; onClose: () => void }) {
           ]}
         />
       </Section>
+
+      {l.rejectionNote && <Section title="Rejection note"><p className="kit-note">{l.rejectionNote}</p></Section>}
 
       <Section title="Results">
         {hasResults ? (
@@ -359,13 +369,8 @@ function LotDrawer({ lotId, onClose }: { lotId: string; onClose: () => void }) {
       </Section>
 
       <Section title="Certificate file">
-        <div className="cc-upload" aria-disabled="true">
-          <FileUp aria-hidden="true" strokeWidth={1.4} />
-          <div>
-            <p className="cc-upload-title">Certificate of analysis, PDF</p>
-            <p className="cc-footnote">PDF upload arrives with the backend.</p>
-          </div>
-        </div>
+        {l.coaUrl ? <a className="cc-public-link" href={l.coaUrl} target="_blank" rel="noopener noreferrer">View certificate <ArrowUpRight aria-hidden="true" /><span className="kit-sr">, opens in a new tab</span></a>
+          : <p className="kit-note">No PDF on file.</p>}
       </Section>
 
       {l.status === "released" && (

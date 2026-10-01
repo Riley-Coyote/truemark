@@ -1661,3 +1661,9 @@
     transition: none;
   }
 }
+
+.tm-stock-notice { font-size: var(--tm-type-ui); line-height: 1.5; }
+.tm-stock-notice:empty { display: none; }
+.tm-stock-notice p { margin: 0 0 var(--tm-space-3); overflow-wrap: anywhere; }
+.tm-stock-notice .tm-text-button { text-decoration: underline; }
+.tm-button[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }

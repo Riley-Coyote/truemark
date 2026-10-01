@@ -1,11 +1,16 @@
+import { LIVE } from "../platform/mode";
+import { TeamGate } from "../platform/live/TeamGate";
+import { OwnerAssistant } from "../assistant/Assistant";
 import { useEffect, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { AppShell, Avatar, SampleTag, SearchField, formatDate } from "../app-kit";
+import { AppShell, SampleTag, SearchField, formatDate } from "../app-kit";
+import { AccountMenu, AppearanceProvider, useAppearance } from "./appearance";
 import { OrderToasts, OwnerBell, useNarrow } from "./alerts";
 import Applications from "./Applications";
 import Customers from "./Customers";
 import Discounts from "./Discounts";
 import Lots from "./Lots";
+import Journal from "./Journal";
 import { TODAY_ISO } from "./metrics";
 import { Missing } from "./Missing";
 import { HOME, footerNav, navGroups, pageFor } from "./nav";
@@ -17,10 +22,14 @@ import Settings from "./Settings";
 import { SearchQuery } from "./state";
 import "./admin.css";
 
-const OPERATOR = { initials: "TM", label: "TrueMark operator, preview" };
+const OPERATOR = { initials: "TM", label: LIVE ? "TrueMark operator" : "TrueMark operator, preview" };
 
 /** The command center: where the client runs the business every day. */
 export default function AdminApp() {
+  return <AppearanceProvider>{LIVE ? <TeamGate><CommandCenter /></TeamGate> : <CommandCenter />}</AppearanceProvider>;
+}
+function CommandCenter() {
+  const { theme } = useAppearance();
   const location = useLocation();
   const navigate = useNavigate();
   const page = pageFor(location.pathname);
@@ -43,7 +52,7 @@ export default function AdminApp() {
       {today}
     </time>
   );
-  const operator = <Avatar initials={OPERATOR.initials} label={OPERATOR.label} />;
+  const operator = <AccountMenu initials={OPERATOR.initials} label={OPERATOR.label} />;
 
   const searchField = page.search ? (
     <SearchField
@@ -66,7 +75,7 @@ export default function AdminApp() {
 
   return (
     <AppShell
-      theme="night"
+      theme={theme}
       label="Command"
       home={HOME}
       nav={navGroups}
@@ -79,6 +88,7 @@ export default function AdminApp() {
           {date}
           <SampleTag />
           {!narrow && <OwnerBell />}
+          {!narrow && <OwnerAssistant />}
           {operator}
         </>
       }
@@ -86,6 +96,7 @@ export default function AdminApp() {
         <>
           <SampleTag />
           {narrow && <OwnerBell />}
+          {narrow && <OwnerAssistant />}
         </>
       }
       menuFooter={
@@ -100,6 +111,7 @@ export default function AdminApp() {
           <Route index element={<Overview />} />
           <Route path="orders" element={<Orders />} />
           <Route path="lots" element={<Lots />} />
+          <Route path="journal" element={<Journal />} />
           <Route path="applications" element={<Applications />} />
           <Route path="customers" element={<Customers />} />
           <Route path="products" element={<Products />} />

@@ -1,3 +1,8 @@
+import { LIVE } from "./platform/mode";
+import { store, useResource } from "./platform/store";
+import { setCategories } from "./data";
+import { refreshCatalog } from "./shop/catalog";
+import { stockProblem } from "./platform/commerce";
 import { useEffect, useRef, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { products } from "./data";
@@ -65,6 +70,14 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>(loadCart);
   const [cartOpen, setCartOpen] = useState(false);
   const location = useLocation();
+  const catalog = useResource(async () => {
+    if (!LIVE) return;
+    const [current, classes] = await Promise.all([store.catalog.products(), store.catalog.categories()]);
+    const retired = products.filter((old) => !current.some((product) => product.id === old.id)).map((product) => ({ ...product, active: false }));
+    products.splice(0, products.length, ...current, ...retired);
+    setCategories(classes.map((category) => ({ ...category, vial: current.find((product) => product.category === category.id)?.id })));
+    refreshCatalog();
+  }, [location.pathname]);
   useEffect(() => {
     try {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
@@ -76,6 +89,8 @@ export default function App() {
     setCartOpen(false);
   }, [location.pathname]);
   function add(id: string, quantity: number) {
+    const product = products.find((item) => item.id === id);
+    if (!product || stockProblem(product, quantity + (cart.find((item) => item.id === id)?.quantity ?? 0))) return;
     setCart((current) => {
       const existing = current.find((item) => item.id === id);
       return existing
@@ -103,6 +118,9 @@ export default function App() {
     <ShopContext.Provider
       value={{
         cart,
+        catalogChecking: LIVE && catalog.loading,
+        catalogError: LIVE ? catalog.error?.message : null,
+        reloadCatalog: catalog.reload,
         add,
         change,
         clear: () => setCart([]),

@@ -3,9 +3,12 @@ import type { CSSProperties, FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Plus } from "lucide-react";
 import { assetUrl } from "../assetUrl";
-import { faqs } from "../data";
+import { compoundClasses, faqs } from "../data";
+import { HomeAssistantEntry } from "../assistant/Assistant";
 import { productById, productCutout, sampleRecord, specFor } from "../shop/catalog";
-import { findRecord } from "../shop/records";
+import { findRecord, recordFromLot } from "../shop/records";
+import { LIVE } from "../platform/mode";
+import { store, useResource } from "../platform/store";
 import { Certificate } from "./Certificate";
 import { SequenceChain } from "./SequenceChain";
 import { Trace } from "./Trace";
@@ -23,8 +26,14 @@ function scene(name: string) {
 }
 
 export function PaperTrail() {
+  const current = useResource(() => LIVE ? store.lots.get(lot) : Promise.resolve(null));
   const product = productById(sampleRecord.productId);
   const sequence = product ? specFor(product).sequence : undefined;
+  const trail = LIVE ? [
+    { step: "Received", iso: current.data?.receivedAt, detail: "Batch logged" },
+    { step: "Tested", iso: current.data?.testedAt, detail: "HPLC · MS" },
+    { step: "Released", iso: current.data?.releasedAt, detail: "Certificate published" },
+  ].flatMap((stop) => stop.iso ? [{ ...stop, iso: stop.iso, date: new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "short", timeZone: "UTC" }).format(new Date(stop.iso)) }] : []) : sampleRecord.trail;
   return (
     <section className="tm tm-trail" aria-labelledby="tm-trail-title">
       <header className="tm-trail-head" data-reveal>
@@ -58,7 +67,7 @@ export function PaperTrail() {
         </div>
         <div className="tm-trail-rail">
           <ol className="tm-trail-track">
-            {sampleRecord.trail.map((stop, i) => (
+            {trail.map((stop, i) => (
               <li
                 key={stop.step}
                 className={stop.step === "Released" ? "is-release" : undefined}
@@ -73,7 +82,8 @@ export function PaperTrail() {
               </li>
             ))}
           </ol>
-          <span className="tm-trail-progress" aria-hidden="true" />
+          {trail.length > 0 && <span className="tm-trail-progress" aria-hidden="true" />}
+          {LIVE && trail.length === 0 && <p className="tm-section-note" role="status">{current.loading ? "Loading lot record…" : current.error ? "Lot record unavailable." : "Certificate on release"}</p>}
         </div>
       </div>
     </section>
@@ -81,18 +91,8 @@ export function PaperTrail() {
 }
 
 /** The client's eight classes, each shown by one of its vials: the colour lives in the bottles. */
-const classes = [
-  { id: "peptide-fragments", number: "Class 01", name: "Peptide fragments", members: "BPC-157 · TB-500 · KPV", vial: "bpc-157-10-mg" },
-  { id: "secretagogue-peptides", number: "Class 02", name: "Secretagogue peptides", members: "Tesamorelin · CJC/IPA", vial: "tesamorelin-10-mg" },
-  { id: "neuropeptides", number: "Class 03", name: "Neuropeptides", members: "Semax · Selank · DSIP", vial: "semax-10-mg" },
-  { id: "mitochondrial-peptides", number: "Class 04", name: "Mitochondrial peptides", members: "MOTS-C", vial: "mots-c-10-mg" },
-  { id: "copper-complexes", number: "Class 05", name: "Copper complexes", members: "GHK-Cu", vial: "ghk-cu-100-mg" },
-  { id: "amino-acids", number: "Class 06", name: "Amino acids & derivatives", members: "NAD+ · Glutathione", vial: "nad-500-mg" },
-  { id: "melanocortin-analogs", number: "Class 07", name: "Melanocortin analogs", members: "PT-141 · Melanotan", vial: "melanotan-ii-10-mg" },
-  { id: "lab-supplies", number: "Supplies", name: "Lab supplies", members: "Separate catalog", vial: "bacteriostatic-water-10-ml" },
-];
-
 export function Classes() {
+  const classes = compoundClasses.map((c) => ({ ...c, number: `Class ${String(c.position).padStart(2, "0")}` }));
   const photo = scene("collection");
   return (
     <section className="tm tm-classes" aria-labelledby="tm-classes-title">
@@ -127,7 +127,7 @@ export function Classes() {
       </div>
       <ul className="tm-class-grid">
         {classes.map((c, i) => {
-          const product = productById(c.vial);
+          const product = productById(c.vial ?? "");
           return (
             <li key={c.id} data-reveal style={{ "--tm-i": i % 4 } as CSSProperties}>
               <Link className="tm-class" to={`/products?class=${c.id}`}>
@@ -149,6 +149,8 @@ export function Classes() {
 }
 
 export function Verification() {
+  const current = useResource(() => LIVE ? store.lots.get(lot) : Promise.resolve(null));
+  const record = LIVE ? current.data ? recordFromLot(current.data) : null : findRecord(lot);
   const navigate = useNavigate();
   const [value, setValue] = useState("");
 
@@ -188,10 +190,13 @@ export function Verification() {
         </form>
       </div>
 
-      <Certificate record={findRecord(lot)!} reveal className="tm-vband-cert" />
+      {record ? <Certificate record={record} reveal className="tm-vband-cert" /> : <div className="tm-vband-cert" role="status">
+        {current.loading ? "Loading lot record…" : "Lot record unavailable."}
+        {current.error && <button type="button" className="tm-textlink" onClick={current.reload}>Try again</button>}
+      </div>}
 
       <div className="tm-vband-trace" data-reveal>
-        <Trace theme="night" peakAt={0.7} height={120} caption={`${lot} · HPLC`} />
+        <Trace theme="night" peakAt={0.7} height={120} caption={record?.status === "released" && record.results.length ? `${lot} · HPLC` : "HPLC · purity specification"} />
       </div>
     </section>
   );
@@ -207,10 +212,8 @@ const buyers = [
 ];
 
 export function WhoWeSupply() {
-  const photo = scene("lab");
   return (
     <section className="tm tm-supply" aria-labelledby="tm-supply-title">
-      <img className="tm-supply-photo" src={photo.src} srcSet={photo.srcSet} sizes="100vw" alt="" loading="lazy" />
       <div className="tm-supply-copy" data-reveal>
         <p className="tm-eyebrow">Who we supply</p>
         <h2 id="tm-supply-title" className="tm-heading">
@@ -219,8 +222,7 @@ export function WhoWeSupply() {
           institutional buyers
         </h2>
         <p className="tm-section-note">
-          Accounts are opened to verified research organizations. Orders ship
-          to institutional addresses.
+          Accounts are opened to verified research organizations.
         </p>
       </div>
       <ul className="tm-supply-list">
@@ -260,6 +262,7 @@ export function Questions() {
           </details>
         ))}
       </div>
+      <HomeAssistantEntry />
     </section>
   );
 }

@@ -1,3 +1,5 @@
+import { LIVE } from "../../../platform/mode";
+import { LiveJournal } from "../../../brand/LiveJournal";
 import { useRef } from "react";
 import type { CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -8,6 +10,10 @@ import { useReveal } from "../../motion";
 
 /** The client's Research Blog: their heading and lead, the featured article large, the rest as a grid. */
 export default function Journal() {
+  return LIVE ? <LiveJournal /> : <PreviewJournal />;
+}
+
+function PreviewJournal() {
   const root = useRef<HTMLDivElement>(null);
   const [params, setParams] = useSearchParams();
   const requested = params.get("category");

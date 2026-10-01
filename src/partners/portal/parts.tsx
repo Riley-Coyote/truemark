@@ -10,6 +10,17 @@ import { Check, Copy } from "lucide-react";
 import { Button } from "../../app-kit";
 import type { Column } from "../../app-kit";
 import { SITE } from "../program";
+import { worldNow } from "../../platform/storage";
+
+/** Keep the greeting and relative sale times on the sample world's clock. */
+export function useSampleNow() {
+  const [now, setNow] = useState(worldNow);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(worldNow()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  return now;
+}
 
 /** Copy text to the clipboard; falls back to a selection copy where the Clipboard API is unavailable. */
 export async function copyText(text: string): Promise<boolean> {
@@ -57,9 +68,9 @@ export function CopyButton({
   variant?: "primary" | "quiet";
   className?: string;
 }) {
-  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+  const [state, setState] = useState<"idle" | "copying" | "copied" | "failed">("idle");
   useEffect(() => {
-    if (state === "idle") return;
+    if (state === "idle" || state === "copying") return;
     const timer = window.setTimeout(() => setState("idle"), 2400);
     return () => window.clearTimeout(timer);
   }, [state]);
@@ -69,7 +80,12 @@ export function CopyButton({
       <Button
         variant={variant}
         data-state={state}
-        onClick={async () => setState((await copyText(text)) ? "copied" : "failed")}
+        disabled={state === "copying"}
+        aria-label={what === "Disclosure" ? (copied ? "Disclosure copied" : "Copy disclosure") : undefined}
+        onClick={async () => {
+          setState("copying");
+          setState((await copyText(text)) ? "copied" : "failed");
+        }}
       >
         {copied ? <Check aria-hidden="true" strokeWidth={1.8} /> : <Copy aria-hidden="true" strokeWidth={1.6} />}
         <span className="pp-copy-labels">
@@ -82,6 +98,7 @@ export function CopyButton({
       <span className="kit-sr" role="status">
         {copied ? `${what} copied.` : state === "failed" ? `${what} could not be copied. Select the text and copy it instead.` : ""}
       </span>
+      {state === "failed" && <span className="pp-copy-error">Couldn’t copy. Select the text to copy it.</span>}
     </span>
   );
 }

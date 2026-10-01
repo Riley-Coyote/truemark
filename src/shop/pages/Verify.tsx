@@ -3,9 +3,11 @@ import type { CSSProperties, FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Certificate } from "../../brand/Certificate";
+import { CertificateLibrary } from "../../brand/CertificateLibrary";
 import { ProductStage } from "../../brand/ProductStage";
 import { productById, productCutout, sampleRecord } from "../catalog";
 import { useReveal } from "../motion";
+import { LIVE } from "../../platform/mode";
 import { store, useResource } from "../../platform/store";
 import { normaliseLot, recordFromLot } from "../records";
 import "../../brand/verify.css";
@@ -105,7 +107,7 @@ export default function Verify() {
               id="tm-verify-lot"
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              placeholder={`Enter lot number — e.g. ${sampleRecord.lot}`}
+              placeholder={LIVE ? "Enter your lot number" : `Enter lot number — e.g. ${sampleRecord.lot}`}
               autoComplete="off"
               autoCapitalize="characters"
               spellCheck={false}
@@ -113,12 +115,15 @@ export default function Verify() {
             />
             <button type="submit">Look up</button>
           </form>
-          <p className="tm-vhero-try">
-            Try a released lot:
-            <button type="button" className="tm-vhero-chip tm-mono" onClick={() => lookUp(sampleRecord.lot)}>
-              {sampleRecord.lot}
-            </button>
-          </p>
+          {/* The sample lot exists only in the preview world; live has no released lot to offer yet. */}
+          {!LIVE && (
+            <p className="tm-vhero-try">
+              Try a released lot:
+              <button type="button" className="tm-vhero-chip tm-mono" onClick={() => lookUp(sampleRecord.lot)}>
+                {sampleRecord.lot}
+              </button>
+            </p>
+          )}
         </div>
         <LotHint />
       </section>
@@ -169,6 +174,8 @@ export default function Verify() {
           </div>
         )}
       </section>
+
+      <CertificateLibrary />
 
       <section className="tm tm-vsteps" aria-labelledby="tm-vsteps-title">
         <header className="tm-vsteps-head" data-reveal>

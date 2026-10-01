@@ -1,3 +1,4 @@
+import { LIVE } from "../platform/mode";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -29,13 +30,13 @@ const steps: { title: string; text: string; action: string }[] = [
     action: "Pack and ship it",
   },
   {
-    title: "It ships, cold",
-    text: "Packed with gel packs rated for the route, then shipped with tracking. The customer can follow it without calling anyone.",
+    title: "It ships",
+    text: "Packed for the route, with gel packs when applicable, then shipped with tracking. The customer can follow it without calling anyone.",
     action: "Deliver it",
   },
   {
     title: "It arrives, with its record",
-    text: "Delivered to an institutional address, with the certificate for every lot waiting in the customer's account.",
+    text: "Delivered, with the certificate for every lot waiting in the customer's account.",
     action: "Run it again",
   },
 ];
@@ -97,6 +98,9 @@ function Pill({ children }: { children: ReactNode }) {
  * store the apps use, so every view reacts exactly as it would to a real order.
  */
 export default function LiveOrder() {
+  return LIVE ? <div className="tm-page"><section className="tm"><h1 className="tm-heading">This demo needs the preview world.</h1><p className="tm-section-note">Open the review site to follow its sample order.</p></section></div> : <PreviewLiveOrder />;
+}
+function PreviewLiveOrder() {
   const [step, setStep] = useState<Step>(0);
   const [busy, setBusy] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
@@ -136,7 +140,7 @@ export default function LiveOrder() {
         setStep(1);
       } else if (step === 1 && order) {
         await store.orders.advance(order.id, "paid");
-        await store.orders.advance(order.id, "packed", { note: "Packed cold, with gel packs rated for the route" });
+        await store.orders.advance(order.id, "packed", { note: "Packed, with gel packs when applicable" });
         const shipped = await store.orders.advance(order.id, "shipped", { carrier: "UPS", tracking: upsTracking(Number(order.number.slice(3))) });
         setOrder(shipped);
         showCustomer(`/track/${order.number}`);
