@@ -1,3 +1,5 @@
+import { LIVE } from "../../platform/mode";
+import { PartnerPending } from "../../platform/live/PartnerPending";
 import { useEffect } from "react";
 import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
@@ -43,6 +45,8 @@ export default function Portal() {
   useEffect(() => {
     document.title = `${title} · Partner portal — TrueMark BioLabs`;
   }, [title]);
+
+  if (LIVE && !me.loading && me.data === null) return <PartnerPending onRefresh={me.reload} />;
 
   if (signedOut || me.data === null) {
     return <Navigate to="/partners/sign-in" replace state={{ from: `${location.pathname}${location.search}` }} />;

@@ -184,7 +184,7 @@ export default function Verify() {
             Three steps to the certificate
           </h2>
         </header>
-        <ol className="tm-vsteps-list" data-review="qr-or-nfc">
+        <ol className="tm-vsteps-list">
           {steps.map(([title, text], i) => (
             <li key={title} data-reveal style={{ "--tm-i": i } as CSSProperties}>
               <span className="tm-vsteps-index">0{i + 1}</span>

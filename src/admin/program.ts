@@ -8,6 +8,7 @@ import { formatDate, formatDay } from "../app-kit";
 import type { Tone } from "../app-kit";
 import { payoutFor } from "../partners/metrics";
 import { TODAY } from "../platform/seed";
+import { LIVE } from "../platform/mode";
 import type { Discount, Order, Partner, PartnerStatus, Payout, Referral } from "../platform/types";
 import type { PayoutBatch, PreviewState } from "./preview";
 
@@ -20,13 +21,13 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 const commission = (list: Referral[]) => round2(list.reduce((total, r) => total + r.commission, 0));
 
 /** 0.12 → "12%" */
-export const percent = (fraction: number) => `${Math.round(fraction * 1000) / 10}%`;
+export const percent = (fraction: number) => `${LIVE ? Math.round(fraction * 10000) / 100 : Math.round(fraction * 1000) / 10}%`;
 
 /** "1 Aug 2026" → "Aug 2026" */
 export const formatMonth = (iso: string) => formatDate(iso).split(" ").slice(1).join(" ");
 
 export function partnerStatus(partner: Partner, changes: PreviewState): PartnerStatus {
-  return changes.partnerStatus[partner.id] ?? partner.status;
+  return LIVE ? partner.status : changes.partnerStatus[partner.id] ?? partner.status;
 }
 
 export type PartnerRow = Partner & {
@@ -144,7 +145,7 @@ export function payoutHistory(payouts: Payout[], batches: PayoutBatch[], referra
     .map((payout) => ({
       key: payout.id,
       partnerId: payout.partnerId,
-      period: formatMonth(payout.periodStart),
+      period: LIVE ? `${formatDate(payout.periodStart)} to ${formatDate(payout.periodEnd)}` : formatMonth(payout.periodStart),
       referrals: payout.referrals,
       amount: payout.amount,
       status: payout.status === "paid" ? ("paid" as const) : ("scheduled" as const),
@@ -176,14 +177,14 @@ export type CodeRow = Discount & {
  * their partner's status, so their own switch starts on.
  */
 export function codeRows(discounts: Discount[], partners: Partner[], orders: Order[], changes: PreviewState): CodeRow[] {
-  const created = new Set(changes.codes.map((d) => d.code));
-  return [...changes.codes, ...discounts].map((discount) => {
+  const created = new Set((LIVE ? [] : changes.codes).map((d) => d.code));
+  return [...(LIVE ? [] : changes.codes), ...discounts].map((discount) => {
     const isNew = created.has(discount.code);
     const partner = discount.partnerId ? partners.find((p) => p.id === discount.partnerId) : undefined;
     const partnerState = partner ? partnerStatus(partner, changes) : undefined;
-    const base = isNew || discount.kind !== "partner" ? discount.active : true;
-    const enabled = changes.codeActive[discount.code] ?? base;
-    const expired = Boolean(discount.expiresAt && discount.expiresAt < END_OF_TODAY);
+    const base = LIVE || isNew || discount.kind !== "partner" ? discount.active : true;
+    const enabled = LIVE ? base : changes.codeActive[discount.code] ?? base;
+    const expired = Boolean(discount.expiresAt && (LIVE ? new Date(discount.expiresAt).getTime() <= Date.now() : discount.expiresAt < END_OF_TODAY));
 
     let locked: string | undefined;
     if (expired && discount.expiresAt) locked = `This code ended on ${formatDate(discount.expiresAt)}.`;

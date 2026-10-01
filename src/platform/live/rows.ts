@@ -2,6 +2,7 @@
 import type { Product, Category } from "../../data";
 import type { Application, Buyer, Discount, Lot, Order, Partner, Payout, Referral, ShippingMethod, StorefrontSettings, Visit } from "../types";
 import type { Notice } from "../notifications";
+import type { PartnerApplication } from "../accounts";
 
 export type Row = Record<string, unknown>;
 export function settings(row: Row): StorefrontSettings {
@@ -35,6 +36,15 @@ export function application(row: Row): Application {
 export function discount(row: Row): Discount {
   return { code: String(row.code), kind: row.kind as Discount["kind"], percent: Number(row.percent),
     partnerId: optional(row.partner_id), active: Boolean(row.active), uses: Number(row.uses), expiresAt: optional(row.expires_at) };
+}
+export function partnerApplication(row: Row): PartnerApplication {
+  return { id: String(row.id), userId: String(row.user_id), name: String(row.name), email: String(row.email),
+    channel: String(row.channel), otherChannels: row.other_channels as string[], audience: String(row.audience),
+    feature: String(row.feature), commitments: row.commitments as string[], status: row.status as PartnerApplication["status"],
+    submittedAt: String(row.submitted_at), reviewedAt: optional(row.reviewed_at), reviewedBy: optional(row.reviewed_by),
+    reviewNote: optional(row.review_note), partnerId: optional(row.partner_id), approvedCode: optional(row.approved_code),
+    approvedRate: row.approved_rate == null ? undefined : Number(row.approved_rate),
+    approvedPercent: row.approved_percent == null ? undefined : Number(row.approved_percent) };
 }
 export function partner(row: Row, codes: Discount[]): Partner {
   return { id: String(row.id), name: String(row.name), handle: String(row.handle), email: String(row.email), code: String(row.code),
@@ -72,10 +82,10 @@ export function payout(row: Row): Payout {
 }
 export const shipping = (row: Row): ShippingMethod => ({ id: row.id as ShippingMethod["id"], label: String(row.label), detail: String(row.detail), price: Number(row.price) });
 export const visit = (row: Row): Visit => ({ date: String(row.date), clicks: Number(row.clicks) });
-const noticeKinds = new Set(["order.placed", "order.packed", "order.shipped", "order.delivered", "referral.created", "commission.approved", "payout.sent"]);
+const noticeKinds = new Set(["order.placed", "order.packed", "order.shipped", "order.delivered", "referral.created", "commission.approved", "payout.sent", "partner.welcome"]);
 export function notice(row: Row): Notice | null {
   // Older database versions also write payment/cancellation alerts. The app's
-  // NoticeKind stays fixed; those transitions appear on the order's event line.
+  // Those transitions appear on the order's event line.
   if (!noticeKinds.has(String(row.kind))) return null;
   return { id: String(row.id), audience: row.audience as Notice["audience"], kind: row.kind as Notice["kind"],
     title: String(row.title), body: String(row.body), amount: row.amount == null ? undefined : Number(row.amount),

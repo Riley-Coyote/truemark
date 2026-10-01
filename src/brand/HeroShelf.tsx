@@ -146,7 +146,7 @@ export function HeroShelf() {
           </div>
         </div>
 
-        <div className={`tm-shelf${mobile && !reduced ? " is-carousel" : ""}`} ref={track} role="list" aria-label="The collection, arranged by colour" data-review="label-files"
+        <div className={`tm-shelf${mobile && !reduced ? " is-carousel" : ""}`} ref={track} role="list" aria-label="The collection, arranged by colour"
           onFocusCapture={(event) => { if (event.target.matches(":focus-visible")) setFocused(true); }}
           onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}
           onPointerDown={(event) => { if (!mobile) return; pause(); pointer.current = { x: event.clientX, y: event.clientY, swiped: false }; }}

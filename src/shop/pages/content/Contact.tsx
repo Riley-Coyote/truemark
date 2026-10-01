@@ -206,7 +206,7 @@ export default function Contact() {
 
       <section className="tm tm-contact-main">
         <div className="tm-contact-directory">
-          <ul className="tm-contact-routes" data-review="contact-emails">
+          <ul className="tm-contact-routes">
             {routes.map((item, i) => (
               <li key={item.id} className="tm-contact-route" data-reveal style={{ "--tm-i": i } as CSSProperties}>
                 <h2 className="tm-contact-route-title">{item.label}</h2>

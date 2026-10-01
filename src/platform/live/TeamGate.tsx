@@ -4,6 +4,7 @@ import { Button } from "../../app-kit";
 import { useAppearance } from "../../admin/appearance";
 import { assetUrl } from "../../assetUrl";
 import { useResource } from "../store";
+import { PasswordReset, useRecovery } from "../PasswordReset";
 import { live } from "./runtime";
 
 const TEAM = new Set(["owner", "staff"]);
@@ -22,6 +23,8 @@ function plain(message: string): string {
  */
 export function TeamGate({ children }: { children: ReactNode }) {
   const { theme } = useAppearance();
+  const recovery = useRecovery();
+  const [reset, setReset] = useState(false);
   const profile = useResource(() => live().auth.profile(), []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +33,7 @@ export function TeamGate({ children }: { children: ReactNode }) {
   const emailId = useId();
   const passwordId = useId();
 
-  if (profile.data && TEAM.has(profile.data.role)) return children;
+  if (!recovery && !reset && profile.data && TEAM.has(profile.data.role)) return children;
 
   const outsider = profile.data && !TEAM.has(profile.data.role);
 
@@ -61,7 +64,7 @@ export function TeamGate({ children }: { children: ReactNode }) {
 
   return (
     <div className="kit cc-gate" data-theme={theme}>
-      <main className="cc-gate-card" aria-labelledby="cc-gate-title">
+      <main className="cc-gate-card" aria-label="Command center sign in">
         <img
           className="cc-gate-lockup"
           src={assetUrl(`images/brand/kit/lockup-${theme === "night" ? "white" : "black"}.svg`)}
@@ -70,6 +73,7 @@ export function TeamGate({ children }: { children: ReactNode }) {
           height="40"
         />
         <p className="kit-label">Command center</p>
+        {reset || recovery ? <PasswordReset gate="team" email={email} onBack={() => setReset(false)} /> : <>
         <h1 id="cc-gate-title" className="cc-gate-title">
           Sign in
         </h1>
@@ -128,11 +132,13 @@ export function TeamGate({ children }: { children: ReactNode }) {
                 {error ?? profile.error?.message}
               </p>
             )}
+            <Button variant="text" onClick={() => setReset(true)} disabled={busy}>Forgot password?</Button>
             <Button type="submit" variant="primary" disabled={busy || !email.trim() || !password}>
               {busy ? "Signing in…" : "Sign in"}
             </Button>
           </form>
         )}
+        </>}
       </main>
     </div>
   );

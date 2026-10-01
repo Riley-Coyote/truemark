@@ -28,7 +28,9 @@ function remember(signedOut: boolean) {
 /** Preview only: any email opens the sample partner's portal. */
 export function signIn(email: string, password = "") {
   if (LIVE) return live().auth.signIn(email, password).then(async (profile) => {
-    if (profile?.role !== "partner" || !await live().store.partners.me()) throw new Error("This account does not have a linked partner profile.");
+    if (profile?.role === "partner" && await live().store.partners.me()) return;
+    if (profile && await live().partnerApplications.mine()) return;
+    throw new Error("This account does not have a linked partner profile.");
   });
   remember(false);
 }

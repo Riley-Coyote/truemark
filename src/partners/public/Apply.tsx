@@ -1,3 +1,5 @@
+import { LIVE } from "../../platform/mode";
+import { passwordProblem } from "../../platform/accounts";
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -12,6 +14,7 @@ import { useTitle } from "./title";
 type Values = {
   name: string;
   email: string;
+  password: string;
   channel: string;
   otherChannels: string;
   audience: string;
@@ -25,7 +28,7 @@ const FEATURE_MIN = 30;
 const FEATURE_MAX = 800;
 
 /** Checked in the order the fields appear, so focus lands on the first problem. */
-const ORDER: Key[] = ["name", "email", "channel", "otherChannels", "audience", "feature", "commitments"];
+const ORDER: Key[] = ["name", "email", ...(LIVE ? ["password" as const] : []), "channel", "otherChannels", "audience", "feature", "commitments"];
 
 function problem(key: Key, values: Values, confirmed: string[]): string | undefined {
   if (key === "commitments") {
@@ -37,6 +40,8 @@ function problem(key: Key, values: Values, confirmed: string[]): string | undefi
       return v.length > 1 ? undefined : "Enter your full name.";
     case "email":
       return !v ? "Enter your email." : EMAIL.test(v) ? undefined : "Enter a full email address.";
+    case "password":
+      return LIVE ? passwordProblem(values.password) : undefined;
     case "channel":
       return !v
         ? "Enter the address of your main channel."
@@ -60,6 +65,7 @@ export default function Apply() {
   const [values, setValues] = useState<Values>({
     name: "",
     email: "",
+    password: "",
     channel: "",
     otherChannels: "",
     audience: "",
@@ -68,6 +74,7 @@ export default function Apply() {
   const [confirmed, setConfirmed] = useState<string[]>([]);
   const [touched, setTouched] = useState<Partial<Record<Key, boolean>>>({});
   const [status, setStatus] = useState<"idle" | "busy" | "failed">("idle");
+  const [failure, setFailure] = useState("");
   const [received, setReceived] = useState<PartnerApplication | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
 
@@ -101,6 +108,7 @@ export default function Apply() {
       return;
     }
     setStatus("busy");
+    setFailure("");
     try {
       const application = await submitApplication({
         name: values.name.trim(),
@@ -113,9 +121,10 @@ export default function Apply() {
         audience: values.audience.trim(),
         feature: values.feature.trim(),
         commitments: commitments.map((c) => c.id).filter((id) => confirmed.includes(id)),
-      });
+      }, values.password);
       setReceived(application);
-    } catch {
+    } catch (error) {
+      setFailure(error instanceof Error ? error.message : "The application could not be sent. Your answers are kept; try again.");
       setStatus("failed");
     }
   }
@@ -145,10 +154,12 @@ export default function Apply() {
           <div className="pp-received">
             <p className="tm-eyebrow">Application</p>
             <h2 className="tm-heading" tabIndex={-1} ref={heading}>
-              Application received.
-              <br />
-              <span>We’ll email you once it has been reviewed.</span>
+              {LIVE ? (received.confirmationRequired ? "Confirm your email." : "Application received.") : <>Application received.<br /><span>We’ll email you once it has been reviewed.</span></>}
             </h2>
+            {LIVE && <>
+              {received.confirmationRequired && <p className="tm-section-note">Use the link in your email to confirm your account.</p>}
+              <p className="tm-section-note">{received.confirmationRequired ? "Application received. " : ""}We review every application; you'll hear from us by email. Sign in once you're approved.</p>
+            </>}
             <dl className="pp-received-facts">
               <div>
                 <dt>Name</dt>
@@ -163,10 +174,10 @@ export default function Apply() {
                 <dd>{received.channel}</dd>
               </div>
             </dl>
-            <p className="pp-preview-note">Design preview: this application stays on this page; nothing was sent.</p>
+            {!LIVE && <p className="pp-preview-note">Design preview: this application stays on this page; nothing was sent.</p>}
             <div className="tm-actions">
-              <Link className="tm-button tm-button-primary" to="/partners">
-                Back to the partner program
+              <Link className="tm-button tm-button-primary" to={LIVE ? "/partners/sign-in" : "/partners"}>
+                {LIVE ? "Sign in to the portal" : "Back to the partner program"}
               </Link>
               <Link className="tm-textlink" to="/verify">
                 See how a lot is verified <ArrowRight size={16} strokeWidth={1.6} />
@@ -182,7 +193,8 @@ export default function Apply() {
               </legend>
               <div className="pp-fields is-pair">
                 <Field {...bind("name")} label="Full name" autoComplete="name" />
-                <Field {...bind("email")} label="Email" type="email" autoComplete="email" inputMode="email" spellCheck={false} />
+                <Field {...bind("email")} label="Email" type="email" autoComplete={LIVE ? "username" : "email"} inputMode="email" spellCheck={false} />
+                {LIVE && <Field {...bind("password")} label="Password" type="password" autoComplete="new-password" minLength={10} hint="Use at least 10 characters." />}
               </div>
             </fieldset>
 
@@ -271,11 +283,11 @@ export default function Apply() {
               <button type="submit" className="tm-button tm-button-primary" disabled={status === "busy"}>
                 {status === "busy" ? "Submitting…" : "Submit application"}
               </button>
-              <p className="pp-preview-note">Design preview: applications are kept on this page and not sent.</p>
+              {!LIVE && <p className="pp-preview-note">Design preview: applications are kept on this page and not sent.</p>}
             </div>
             {status === "failed" && (
               <p className="pp-field-error" role="alert">
-                The application could not be sent. Your answers are kept; try again.
+                {LIVE ? failure : "The application could not be sent. Your answers are kept; try again."}
               </p>
             )}
           </form>
@@ -300,7 +312,7 @@ export default function Apply() {
           <p className="tm-eyebrow">What happens next</p>
           <ol className="pp-apply-next">
             <li>We review your application and your channels against the guidelines.</li>
-            <li>If it is approved, your code and your portal sign-in arrive by email.</li>
+            <li>{LIVE ? "If it is approved, sign in to your portal to find your code and links." : "If it is approved, your code and your portal sign-in arrive by email."}</li>
             <li>You share TrueMark as the guidelines describe, and earn on every referred order.</li>
           </ol>
           <Link className="tm-textlink" to="/partners#guidelines">

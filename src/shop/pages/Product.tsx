@@ -93,7 +93,7 @@ export default function ProductPage() {
         {/* The name comes first, so a phone shows what it is (and its price) before the photograph. */}
         <div className="tm-buy-head">
           <p className="tm-eyebrow">{categoryName(product.category)}</p>
-          <h1 id="tm-product-title" className="tm-display tm-product-name" data-review="cjc-dose">
+          <h1 id="tm-product-title" className="tm-display tm-product-name">
             {product.name}
           </h1>
           <p className="tm-product-sub">

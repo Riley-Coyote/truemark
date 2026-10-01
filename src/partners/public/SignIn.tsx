@@ -1,3 +1,4 @@
+import { PasswordReset, useRecovery } from "../../platform/PasswordReset";
 import { LIVE } from "../../platform/mode";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -34,6 +35,8 @@ function PreviewSignOut() {
 export default function SignIn() {
   useTitle("Partner sign in");
   const navigate = useNavigate();
+  const recovery = useRecovery();
+  const [reset, setReset] = useState(false);
   const location = useLocation();
   const state = location.state as { from?: string; signedOut?: boolean } | null;
   const [email, setEmail] = useState("");
@@ -62,7 +65,7 @@ export default function SignIn() {
 
   return (
     <div className="tm-page">
-      <section className="tm pp-signin" aria-labelledby="pp-signin-title">
+      <section className="tm pp-signin" aria-label="Partner sign in">
         <div className="pp-signin-copy">
           {state?.signedOut && (
             <p className="pp-flash" role="status">
@@ -70,6 +73,7 @@ export default function SignIn() {
             </p>
           )}
           <p className="tm-eyebrow">Partner portal</p>
+          {reset || recovery ? <PasswordReset gate="partner" email={email} onBack={() => setReset(false)} /> : <>
           <h1 id="pp-signin-title" className="tm-heading">
             Sign in to
             <br />
@@ -87,7 +91,8 @@ export default function SignIn() {
               label="Email"
               type="email"
               inputMode="email"
-              autoComplete="email"
+              name="email"
+              autoComplete="username"
               spellCheck={false}
               placeholder="you@example.com"
               value={email}
@@ -97,11 +102,12 @@ export default function SignIn() {
                 if (error) setError(undefined);
               }}
             />
-            {LIVE && <Field id="pp-signin-password" label="Password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} />}
+            {LIVE && <Field name="password" id="pp-signin-password" label="Password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} />}
             <button className="tm-button tm-button-primary" type="submit" disabled={busy}>
               {busy ? "One moment" : "Continue"}
             </button>
           </form>
+          <p className="pp-signin-switch"><button type="button" className="tm-textlink" onClick={() => setReset(true)}>Forgot password?</button></p>
           {!LIVE && <p className="pp-preview-note">Design preview: any email opens the sample partner portal.</p>}
           <p className="pp-signin-switch">
             <span>Not a partner yet?</span>
@@ -109,6 +115,7 @@ export default function SignIn() {
               Apply to the program <ArrowRight size={16} strokeWidth={1.6} />
             </Link>
           </p>
+          </>}
         </div>
         <VialTrio className="pp-signin-trio" />
       </section>

@@ -1,30 +1,24 @@
-/**
- * Partner applications. The store has no endpoint for them yet
- * (store.partners.apply is the one the backend needs), so a submitted
- * application lives only in the page that sent it. The call is async, like
- * every store call, so the form already handles waiting and failure.
- */
+import { LIVE } from "../platform/mode";
+import { live } from "../platform/live/runtime";
 import { worldNow } from "../platform/storage";
+import type { PartnerApplicationDraft } from "../platform/accounts";
+export type { PartnerApplicationDraft } from "../platform/accounts";
 
-export type PartnerApplicationDraft = {
-  name: string;
-  email: string;
-  channel: string;
-  otherChannels: string[];
-  audience: string;
-  feature: string;
-  /** Ids from `commitments` in program.ts; all four are required. */
-  commitments: string[];
-};
-
+/** A submission receipt; live application status is read separately under RLS. */
 export type PartnerApplication = PartnerApplicationDraft & {
   submittedAt: string;
   status: "submitted";
+  confirmationRequired?: boolean;
 };
 
 const LATENCY_MS = 360;
+const submitLive = LIVE ? async (draft: PartnerApplicationDraft, password: string): Promise<PartnerApplication> => {
+  const result = await live().auth.signUpPartner(draft, password);
+  return { ...draft, submittedAt: worldNow(), status: "submitted", ...result };
+} : null;
 
-export function submitApplication(draft: PartnerApplicationDraft): Promise<PartnerApplication> {
+export function submitApplication(draft: PartnerApplicationDraft, password = ""): Promise<PartnerApplication> {
+  if (submitLive) return submitLive(draft, password);
   return new Promise((resolve) =>
     window.setTimeout(() => resolve({ ...draft, submittedAt: worldNow(), status: "submitted" }), LATENCY_MS),
   );

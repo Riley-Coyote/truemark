@@ -150,7 +150,6 @@ function AlertPreferences({
       ref={section}
       className="kit-card pp-alerts"
       aria-labelledby={titleId}
-      data-review="partner-alerts"
       tabIndex={-1}
     >
       <header className="kit-card-head">

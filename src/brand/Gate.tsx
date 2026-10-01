@@ -1,3 +1,4 @@
+import { PasswordReset, useRecovery } from "../platform/PasswordReset";
 import { LIVE } from "../platform/mode";
 import { live } from "../platform/live/runtime";
 import { useEffect, useId, useRef, useState } from "react";
@@ -53,6 +54,8 @@ function Field({
  */
 export default function Gate() {
   const navigate = useNavigate();
+  const recovery = useRecovery();
+  const [reset, setReset] = useState(false);
   const location = useLocation();
   // Where the visitor was headed before the gate asked them to sign in.
   const from = (location.state as { from?: string } | null)?.from;
@@ -152,8 +155,9 @@ export default function Gate() {
           <p className="tm-gate-legal">For research use only. Not for human consumption.</p>
         </section>
 
-        <main className="tm-gate-panel" data-review="sign-in-gate">
+        <main className="tm-gate-panel">
           <div className="tm-gate-form">
+            {reset || recovery ? <PasswordReset gate="shop" email={values.email} onBack={() => setReset(false)} /> : <>
             <h2 className="tm-gate-heading">{mode === "signin" ? "Sign in" : "Create account"}</h2>
             <p className="tm-gate-sub">
               {mode === "signin"
@@ -193,7 +197,8 @@ export default function Gate() {
                     data-field="email"
                     type="email"
                     inputMode="email"
-                    autoComplete="email"
+                    name="email"
+                    autoComplete="username"
                     placeholder="you@lab.org"
                     value={values.email}
                     onChange={set("email")}
@@ -207,9 +212,9 @@ export default function Gate() {
                 error={errors.password}
                 aside={
                   mode === "signin" ? (
-                    <Link className="tm-gate-link" to="/contact">
+                    <button type="button" className="tm-gate-link" onClick={() => setReset(true)}>
                       Forgot password?
-                    </Link>
+                    </button>
                   ) : undefined
                 }
               >
@@ -217,6 +222,7 @@ export default function Gate() {
                   <span className="tm-password">
                     <input
                       id={id}
+                      name="password"
                       data-field="password"
                       type={reveal ? "text" : "password"}
                       autoComplete={mode === "signin" ? "current-password" : "new-password"}
@@ -270,6 +276,7 @@ export default function Gate() {
               </button>
             </p>
             {!LIVE && <p className="tm-gate-preview">Design preview: any details open the sample research account.</p>}
+            </>}
           </div>
         </main>
       </div>

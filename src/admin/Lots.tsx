@@ -250,7 +250,10 @@ function LotDrawer({ lotId, onClose }: { lotId: string; onClose: () => void }) {
       if (rejectLiveLot && action.to === "rejected") {
         await rejectLiveLot(l.lot, rejectionNote.trim());
         lot.reload();
-      } else await store.lots.setStatus(l.lot, action.to);
+      } else {
+        await store.lots.setStatus(l.lot, action.to);
+        if (LIVE) lot.reload();
+      }
       setDone(`${l.lot} is now ${statusLabel(action.to).toLowerCase()}.`);
       setPending(null);
     } catch (error) {

@@ -939,6 +939,25 @@ html:has(.pp-public) {
   justify-self: center;
 }
 
+/* Applicant states use the public sign-in page's background, type and controls. */
+.pp-application-state {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: 100%;
+  max-width: var(--pp-form-measure);
+  min-width: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.tm .pp-application-note {
+  max-width: var(--pp-signin-measure);
+  margin: var(--tm-space-5) auto 0;
+  white-space: pre-line;
+}
+.tm .pp-application-state .tm-actions {
+  justify-content: center;
+}
+
 /* ---------- Not found ---------- */
 
 .pp-missing {

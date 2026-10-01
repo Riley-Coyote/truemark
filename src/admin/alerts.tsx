@@ -200,7 +200,7 @@ export function OwnerBell() {
   const shown = items.slice(0, 20);
 
   return (
-    <div ref={wrap} className="cc-bell" data-review="owner-alerts" onBlur={onBlur}>
+    <div ref={wrap} className="cc-bell" onBlur={onBlur}>
       <button
         ref={button}
         type="button"

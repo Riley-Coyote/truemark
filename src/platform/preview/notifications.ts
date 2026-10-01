@@ -19,7 +19,8 @@ export type NoticeKind =
   | "order.delivered"
   | "referral.created"
   | "commission.approved"
-  | "payout.sent";
+  | "payout.sent"
+  | "partner.welcome";
 
 export type Notice = {
   id: string;

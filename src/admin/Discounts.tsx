@@ -2,6 +2,8 @@ import { useId, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Plus } from "lucide-react";
+import { LIVE } from "../platform/mode";
+import { live } from "../platform/live/runtime";
 import {
   Button,
   DataTable,
@@ -33,6 +35,8 @@ import type { CodeRow, CodeStatus } from "./program";
 import { matches, useQueryParam, useSearchQuery } from "./state";
 
 const CODE_TONE: Record<CodeStatus, Tone> = { active: "signal", inactive: "neutral", expired: "neutral" };
+// Select outside the async handler so preview drops the live transport.
+const savePromoActive = LIVE ? (code: string, active: boolean) => live().team.setPromoActive(code, active) : null;
 const STATUSES: CodeStatus[] = ["active", "inactive", "expired"];
 const kindLabel = (kind: Discount["kind"]) => (kind === "partner" ? "Partner code" : "Promotion");
 
@@ -130,6 +134,7 @@ export default function Discounts() {
 
   /** Close the new-code drawer and open the code just made, as one step in history. */
   function showCreated(code: string) {
+    if (LIVE) reload();
     setParams(
       (current) => {
         const next = new URLSearchParams(current);
@@ -198,7 +203,7 @@ export default function Discounts() {
           code={openCode}
           row={all?.find((r) => r.code === openCode.toUpperCase())}
           orders={orders.data ?? []}
-          loading={!all && !error}
+          loading={loading}
           failed={error}
           onRetry={reload}
           onClose={() => setOpenCode(null, { replace: true })}
@@ -245,6 +250,8 @@ function CodeDrawer({
 }) {
   const navigate = useNavigate();
   const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
   const used = useMemo(
     () => (row ? orders.filter((o) => o.discount?.code === row.code).sort((a, b) => b.createdAt.localeCompare(a.createdAt)) : []),
     [orders, row],
@@ -263,7 +270,7 @@ function CodeDrawer({
             title="No code matches this link."
             note={
               <>
-                Nothing is on file for <span className="kit-mono">{code}</span>. Codes made in the preview last until the page reloads.
+                Nothing is on file for <span className="kit-mono">{code}</span>.{!LIVE && " Codes made in the preview last until the page reloads."}
               </>
             }
           />
@@ -273,6 +280,17 @@ function CodeDrawer({
   }
 
   const advertised = row.code === firstOrderOffer.code;
+  const partnerManaged = LIVE && row.kind === "partner";
+  async function toggle(active: boolean) {
+    if (!row || busy) return;
+    setError(undefined); setMessage(null); setBusy(true);
+    try {
+      if (savePromoActive) { await savePromoActive(row.code, active); onRetry(); }
+      else preview.setCodeActive(row.code, active);
+      setMessage(`${row.code} is now ${active ? "active" : "inactive"}${LIVE ? "." : " in this preview."}`);
+    } catch (failure) { setError(failure instanceof Error ? failure.message : "The code could not be saved."); }
+    finally { setBusy(false); }
+  }
 
   return (
     <Drawer
@@ -287,10 +305,12 @@ function CodeDrawer({
           <span className="cc-tag-text">{plural(row.uses, "use")}</span>
         </>
       }
-      onClose={onClose}
+      onClose={() => { if (!busy) onClose(); }}
     >
       <div className="cc-live" aria-live="polite">
+        {busy && <p className="kit-note">Saving…</p>}
         {message && <p className="kit-note">{message}</p>}
+        {error && <p className="kit-field-error" role="alert">{error}</p>}
         {row.created && !message && <p className="kit-note">Made in this preview. It lasts until the page reloads.</p>}
       </div>
 
@@ -298,17 +318,10 @@ function CodeDrawer({
         <SwitchRow
           title="Active at checkout"
           description={`Buyers can apply ${row.code} to an order.`}
-          checked={row.locked ? false : row.enabled}
-          locked={row.locked ? "Locked" : undefined}
-          note={row.locked}
-          onChange={
-            row.locked
-              ? undefined
-              : (value) => {
-                  preview.setCodeActive(row.code, value);
-                  setMessage(`${row.code} is now ${value ? "active" : "inactive"} in this preview.`);
-                }
-          }
+          checked={partnerManaged ? row.active : row.locked ? false : row.enabled}
+          locked={partnerManaged ? "Managed with partner" : row.locked ? "Locked" : undefined}
+          note={partnerManaged ? <>Only pause or resume changes this code. <Link className="cc-inline-link" to={`${HOME}/partners?partner=${encodeURIComponent(row.partnerId ?? "")}`}>Manage partner</Link></> : row.locked}
+          onChange={partnerManaged || row.locked || busy ? undefined : toggle}
         />
         {advertised && !row.active && (
           <p className="cc-footnote">The shop still advertises {row.code} as its first-order offer.</p>
@@ -384,17 +397,19 @@ function validate(draft: Draft, existing: Set<string>): Errors {
   const errors: Errors = {};
   const code = draft.code.trim();
   if (!code) errors.code = "Enter a code.";
-  else if (!/^[A-Z0-9]+$/.test(code)) errors.code = "Use letters and digits only, with no spaces or symbols.";
-  else if (code.length < 3 || code.length > 16) errors.code = "Use 3 to 16 letters and digits.";
-  else if (existing.has(code)) errors.code = `${code} already exists. Choose another code.`;
+  else if (LIVE ? !/^[A-Z0-9_-]{1,64}$/.test(code) : !/^[A-Z0-9]+$/.test(code)) errors.code = LIVE ? "Use 1 to 64 letters, digits, underscores or hyphens." : "Use letters and digits only, with no spaces or symbols.";
+  else if (!LIVE && (code.length < 3 || code.length > 16)) errors.code = "Use 3 to 16 letters and digits.";
+  else if (!LIVE && existing.has(code)) errors.code = `${code} already exists. Choose another code.`;
 
   if (draft.kind === "partner" && !draft.partnerId) errors.partnerId = "Choose the partner this code belongs to.";
 
   const amount = draft.percent.trim().replace(/%$/, "").trim();
-  if (!amount) errors.percent = "Enter a percent from 1 to 50.";
+  if (LIVE) {
+    if (!/^\d+(\.\d{1,2})?$/.test(amount) || Number(amount) < 0 || Number(amount) > 100) errors.percent = "Enter a percent from 0 to 100 with up to two decimals.";
+  } else if (!amount) errors.percent = "Enter a percent from 1 to 50.";
   else if (!/^\d+$/.test(amount) || Number(amount) < 1 || Number(amount) > 50) errors.percent = "Use a whole number from 1 to 50.";
 
-  if (draft.ends && draft.ends <= TODAY) errors.ends = `Choose a day after ${formatDate(TODAY_ISO)}, or leave it empty.`;
+  if (draft.ends && (LIVE ? draft.ends < TODAY : draft.ends <= TODAY)) errors.ends = LIVE ? "Choose today or a later day, or leave it empty." : `Choose a day after ${formatDate(TODAY_ISO)}, or leave it empty.`;
   return errors;
 }
 
@@ -413,6 +428,9 @@ function NewCodeDrawer({
   const [draft, setDraft] = useState<Draft>({ code: "", kind: "promo", partnerId: "", percent: "", ends: "", active: true });
   const [touched, setTouched] = useState<Set<Field>>(new Set());
   const [submitted, setSubmitted] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState<string>();
+  const request = useRef<{ input: string; id: string } | null>(null);
   const refs = {
     code: useRef<HTMLInputElement>(null),
     partnerId: useRef<HTMLSelectElement>(null),
@@ -425,8 +443,9 @@ function NewCodeDrawer({
   const touch = (field: Field) => setTouched((current) => new Set(current).add(field));
   const set = (change: Partial<Draft>) => setDraft((current) => ({ ...current, ...change }));
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
+    if (busy) return;
     setSubmitted(true);
     const first = FIELDS.find((field) => errors[field]);
     if (first) {
@@ -434,6 +453,17 @@ function NewCodeDrawer({
       return;
     }
     const code = draft.code.trim();
+    if (LIVE) {
+      const input = { code, percent: Number(draft.percent.trim().replace(/%$/, "").trim()), active: draft.active,
+        expiresAt: draft.ends ? `${draft.ends}T23:59:59.999Z` : undefined };
+      const signature = JSON.stringify(input);
+      if (request.current?.input !== signature) request.current = { input: signature, id: crypto.randomUUID() };
+      setBusy(true); setFailure(undefined);
+      try { const saved = await live().team.createPromo({ ...input, requestId: request.current.id }); onCreated(saved.code); }
+      catch (error) { setFailure(error instanceof Error ? error.message : "The code could not be created."); }
+      finally { setBusy(false); }
+      return;
+    }
     preview.addCode({
       code,
       kind: draft.kind,
@@ -452,19 +482,20 @@ function NewCodeDrawer({
     <Drawer
       title="New code"
       eyebrow="Discount code"
-      subtitle="A promotion takes its percent off the order subtotal; a partner code also credits the order to its partner."
+      subtitle={LIVE ? "A promotion takes its percent off the order subtotal. Partner codes are created through Applications." : "A promotion takes its percent off the order subtotal; a partner code also credits the order to its partner."}
       footer={
         <div className="cc-confirm-actions cc-foot-row">
-          <Button type="submit" form={formId} variant="primary">
-            Create code
+          <Button type="submit" form={formId} variant="primary" disabled={busy}>
+            {busy ? "Saving…" : "Create code"}
           </Button>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose} disabled={busy}>Cancel</Button>
           <PreviewTag />
         </div>
       }
-      onClose={onClose}
+      onClose={() => { if (!busy) onClose(); }}
     >
       <form id={formId} className="cc-form" onSubmit={submit} noValidate>
+        {failure && <p className="kit-field-error" role="alert">{failure}</p>}
         <p className="kit-sr" aria-live="polite">
           {submitted && count ? `${plural(count, "field")} to correct.` : ""}
         </p>
@@ -477,10 +508,11 @@ function NewCodeDrawer({
           onChange={(value) => set({ code: value.toUpperCase() })}
           onBlur={() => touch("code")}
           error={shown("code")}
-          hint="Letters and digits, 3 to 16 characters. Buyers type it at checkout."
+          disabled={busy}
+          hint={LIVE ? "Letters, digits, underscores or hyphens, 1 to 64 characters." : "Letters and digits, 3 to 16 characters. Buyers type it at checkout."}
         />
 
-        <div className="kit-field">
+        {!LIVE && <div className="kit-field">
           <p className="kit-field-label" aria-hidden="true">
             Kind
           </p>
@@ -493,9 +525,9 @@ function NewCodeDrawer({
               { value: "partner", label: "Partner code" },
             ]}
           />
-        </div>
+        </div>}
 
-        {draft.kind === "partner" && (
+        {!LIVE && draft.kind === "partner" && (
           <SelectField
             label="Partner"
             value={draft.partnerId}
@@ -517,33 +549,35 @@ function NewCodeDrawer({
           label="Percent off"
           suffix="%"
           size="short"
-          inputMode="numeric"
+          inputMode={LIVE ? "decimal" : "numeric"}
           value={draft.percent}
           inputRef={refs.percent}
           onChange={(value) => set({ percent: value })}
           onBlur={() => touch("percent")}
           error={shown("percent")}
-          hint="A whole number from 1 to 50, taken off the order subtotal."
+          disabled={busy}
+          hint={LIVE ? "From 0 to 100, with up to two decimals, taken off the order subtotal." : "A whole number from 1 to 50, taken off the order subtotal."}
         />
 
         <TextField
           label="Last day"
           type="date"
           size="medium"
-          min={nextDay(TODAY)}
+          min={LIVE ? TODAY : nextDay(TODAY)}
           value={draft.ends}
           inputRef={refs.ends}
           onChange={(value) => set({ ends: value })}
           onBlur={() => touch("ends")}
           error={shown("ends")}
-          hint="Optional. Leave empty for a code with no end date."
+          disabled={busy}
+          hint={LIVE ? "Optional. The code lasts through this day in UTC." : "Optional. Leave empty for a code with no end date."}
         />
 
         <SwitchRow
           title="Active at checkout"
           description="Buyers can apply the code as soon as it is created."
           checked={draft.active}
-          onChange={(active) => set({ active })}
+          onChange={busy ? undefined : (active) => set({ active })}
         />
       </form>
     </Drawer>

@@ -235,7 +235,7 @@ export default function Apply() {
           account can order.
         </p>
 
-        <nav className="tm-acct-rail" aria-label="Application steps" data-review="account-approval">
+        <nav className="tm-acct-rail" aria-label="Application steps">
           <ol>
             {steps.map((s, i) => {
               const state = received || i < step ? "done" : i === step ? "current" : "upcoming";
@@ -264,10 +264,12 @@ export default function Apply() {
               Application {received.id && <span className="tm-mono">{received.id}</span>}
             </p>
             <h2 className="tm-heading" tabIndex={-1} ref={heading}>
-              Application received.
-              <br />
-              <span>{LIVE ? (confirmationRequired ? "Check your email to confirm your account, then sign in." : "Your account awaits review. You can browse and verify lots while you wait.") : "We’ll email you when your account has been reviewed."}</span>
+              {LIVE ? (confirmationRequired ? "Confirm your email." : "Research account received.") : <>Application received.<br /><span>We’ll email you when your account has been reviewed.</span></>}
             </h2>
+            {LIVE && <>
+              {confirmationRequired && <p className="tm-acct-intro">Check your email to confirm your account.</p>}
+              <p className="tm-acct-intro">{confirmationRequired ? "Research account received. " : ""}We review every research account; you'll hear from us by email. Sign in once you're approved.</p>
+            </>}
             <dl className="tm-acct-dl is-compact">
               <div>
                 <dt>Name</dt>
@@ -308,7 +310,7 @@ export default function Apply() {
                 <>
                   <Field {...bind("name")} label="Full name" wide autoComplete="name" />
                   <Field {...bind("email")} label="Work email" wide type="email" autoComplete="email" inputMode="email" spellCheck={false} />
-                  {LIVE && <Field id="tm-acct-password" label="Password" wide type="password" autoComplete="new-password" value={password} error={passwordError} onChange={(event) => { setPassword(event.target.value); setPasswordError(undefined); }} />}
+                  {LIVE && <Field id="tm-acct-password" name="password" label="Password" wide type="password" autoComplete="new-password" value={password} error={passwordError} onChange={(event) => { setPassword(event.target.value); setPasswordError(undefined); }} />}
                   <Field {...bind("role")} label="Role" hint="For example, principal investigator or lab manager." wide autoComplete="organization-title" />
                 </>
               )}

@@ -1,5 +1,8 @@
+import { PartnerApplications } from "./PartnerApplicationDrawer";
 import { LIVE } from "../platform/mode";
-import { OwnerPayments } from "../platform/live/OwnerPayments";
+import { ApproveCommissions } from "../platform/live/OwnerPayments";
+import { live } from "../platform/live/runtime";
+import { PayoutDrawer } from "./PayoutDrawer";
 import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -47,10 +50,13 @@ import { CountingMoneyText, CountingPercent } from "./pulse";
 import { matches, useQueryParam, useSearchQuery } from "./state";
 
 const PARTNER_TONE: Record<PartnerStatus, Tone> = { active: "signal", pending: "pending", paused: "neutral" };
+// Select outside the async handler so preview drops the live transport.
+const savePartnerStatus = LIVE ? (id: string, status: "active" | "paused") => live().team.setPartnerStatus(id, status) : null;
 const STATUS_ORDER: PartnerStatus[] = ["pending", "active", "paused"];
 const round2 = (n: number) => Math.round(n * 100) / 100;
 /** The summary band's window: the Overview's default period. */
 const BAND_DAYS = 30;
+const NO_BATCHES: PayoutBatch[] = [];
 /** "1 Sep": where the sample month, and every "This month" figure, begins. */
 const MONTH_FROM = formatDay(new Date(MONTH_START).toISOString());
 
@@ -75,6 +81,7 @@ function useProgram() {
   const payouts = useResource(() => store.partners.payouts(), []);
   const orders = useResource(() => store.orders.list(), []);
   const changes = usePreview();
+  const batches = LIVE ? NO_BATCHES : changes.batches;
   const rows = useMemo(
     () => (partners.data && referrals.data ? partnerRows(partners.data, referrals.data, changes) : undefined),
     [partners.data, referrals.data, changes],
@@ -87,9 +94,9 @@ function useProgram() {
   const band = useMemo(
     () =>
       orders.data && referrals.data && partners.data && rows
-        ? { figures: partnerFigures(orders.data, referrals.data, partners.data, BAND_DAYS), payout: nextPayout(rows, changes.batches) }
+        ? { figures: partnerFigures(orders.data, referrals.data, partners.data, BAND_DAYS), payout: nextPayout(rows, batches) }
         : null,
-    [orders.data, referrals.data, partners.data, rows, changes.batches],
+    [orders.data, referrals.data, partners.data, rows, batches],
   );
   return {
     rows,
@@ -97,7 +104,7 @@ function useProgram() {
     band,
     referrals: referrals.data,
     payouts: payouts.data,
-    batches: changes.batches,
+    batches,
     loading: partners.loading || referrals.loading || payouts.loading || orders.loading,
     error: partners.error ?? referrals.error ?? payouts.error ?? orders.error,
     reload: () => {
@@ -161,14 +168,14 @@ function ProgramBand({ figures, payout }: { figures: PartnerFigures | null; payo
         )}
       </div>
       <div className="kit-stat">
-        <p className="kit-label">Next payout</p>
+        <p className="kit-label">{LIVE ? "Approved, not yet paid" : "Next payout"}</p>
         {payout ? (
           <>
             <p className="kit-figure">
               <CountingMoney value={payout.amount} />
             </p>
             <p className="cc-program-note">
-              {payout.partners
+              {LIVE ? (payout.partners ? `Owed to ${plural(payout.partners, "partner")}` : "Nothing approved to pay yet") : payout.partners
                 ? `${formatDate(payout.date)} · to ${plural(payout.partners, "partner")} by bank transfer, a sample schedule`
                 : `${formatDate(payout.date)} · nothing approved to pay yet`}
             </p>
@@ -293,7 +300,9 @@ export default function Partners() {
   const [viewParam, setView] = useQueryParam("view");
   const [openId, setOpenId] = useQueryParam("partner");
   const [batchParam, setBatch] = useQueryParam("batch");
-  const view = viewParam === "payouts" ? "payouts" : "partners";
+  const [payoutId, setPayoutId] = useQueryParam("payout");
+  const [payoutMessage, setPayoutMessage] = useState("");
+  const view = LIVE && viewParam === "applications" ? "applications" : viewParam === "payouts" ? "payouts" : "partners";
   const { rows, months, batches } = program;
   const columns = useMemo(() => partnerColumns(months, now), [months, now]);
 
@@ -321,32 +330,33 @@ export default function Partners() {
     <div className="kit-grid cc-partner-page">
       <PageHeader
         description={
-          view === "partners"
-            ? `Partners who refer buyers with their code or link. This month counts the orders placed through each partner since ${MONTH_FROM}: their totals, and the commission earned on them. Owed is approved commission not yet paid. Rates are sample terms.`
-            : "Approved commission waiting to be paid, and every payout sent. Payouts go out by bank transfer on the 5th of each month, a sample schedule."
+          view === "applications" ? "Review partner applications, set their code and terms, or decline with a note." : view === "partners"
+            ? `Partners who refer buyers with their code or link. This month counts the orders placed through each partner since ${MONTH_FROM}: their totals, and the commission earned on them. Owed is approved commission not yet paid.${LIVE ? "" : " Rates are sample terms."}`
+            : LIVE ? "Approve eligible commissions, record completed transfers, and review payout history." : "Approved commission waiting to be paid, and every payout sent. Payouts go out by bank transfer on the 5th of each month, a sample schedule."
         }
-        meta={
+        meta={view === "applications" ? undefined : (
           <>
             {rows && (
               <span>
                 {view === "partners"
-                  ? `${plural(rows.length, "partner")} · ${formatCount(waiting)} awaiting approval`
+                  ? `${plural(rows.length, "partner")}${LIVE ? "" : ` · ${formatCount(waiting)} awaiting approval`}`
                   : `${formatMoney(awaitingTotal)} approved, not yet paid`}
               </span>
             )}
             <PreviewTag />
           </>
-        }
+        )}
       />
       {!program.error && <ProgramBand figures={program.band?.figures ?? null} payout={program.band?.payout ?? null} />}
       <div className="kit-toolbar">
         <Segmented
-          label="Partners or payouts"
+          label={LIVE ? "Partners, payouts or applications" : "Partners or payouts"}
           value={view}
           onChange={(value) => setView(value === "partners" ? null : value, { replace: true })}
           options={[
             { value: "partners", label: "Partners" },
             { value: "payouts", label: "Payouts" },
+            ...(LIVE ? [{ value: "applications", label: "Applications" }] : []),
           ]}
         />
         {rows && query && view === "partners" && (
@@ -356,7 +366,7 @@ export default function Partners() {
         )}
       </div>
 
-      {view === "partners" ? (
+      {LIVE && view === "applications" ? <PartnerApplications query={query} /> : view === "partners" ? (
         <div className="kit-card kit-span-12 cc-partner-table">
           <DataTable
             caption="Partners"
@@ -381,10 +391,12 @@ export default function Partners() {
           openId={openId}
           onOpenPartner={setOpenId}
           onCreate={() => setBatch("new")}
+          onRecord={(id) => { setPayoutMessage(""); setPayoutId(id); }}
+          message={payoutMessage}
         />
       )}
 
-      {openId && (
+      {openId && !(LIVE && view === "payouts" && payoutId) && (
         <PartnerDrawer
           key={openId}
           id={openId}
@@ -398,7 +410,7 @@ export default function Partners() {
           onClose={() => setOpenId(null, { replace: true })}
         />
       )}
-      {batchParam === "new" && (
+      {!LIVE && batchParam === "new" && (
         <BatchDrawer
           awaiting={awaiting}
           count={batches.length}
@@ -408,7 +420,15 @@ export default function Partners() {
           onClose={() => setBatch(null, { replace: true })}
         />
       )}
-      {LIVE && <div className="kit-card kit-span-12"><Section title="Commissions and payouts"><OwnerPayments /></Section></div>}
+      {LIVE && view === "payouts" && payoutId && <PayoutDrawer
+        line={awaiting?.find((line) => line.partner.id === payoutId)} loading={program.loading} error={program.error}
+        onRetry={program.reload} onClose={() => setPayoutId(null, { replace: true })}
+        onSaved={(payout) => {
+          setPayoutId(null, { replace: true });
+          setPayoutMessage(`Payout recorded: ${formatMoney(payout.amount)}.`);
+          program.reload();
+        }}
+      />}
     </div>
   );
 }
@@ -469,6 +489,8 @@ function PayoutsView({
   openId,
   onOpenPartner,
   onCreate,
+  onRecord,
+  message,
 }: {
   program: ReturnType<typeof useProgram>;
   awaiting: AwaitingLine[] | undefined;
@@ -477,8 +499,17 @@ function PayoutsView({
   openId: string | null;
   onOpenPartner: (id: string) => void;
   onCreate: () => void;
+  onRecord: (id: string) => void;
+  message: string;
 }) {
   const { rows, payouts, referrals, batches } = program;
+  const profile = useResource(() => LIVE ? live().auth.profile() : Promise.resolve(null), []);
+  const approvedColumns: Column<AwaitingLine>[] = LIVE ? [...awaitingColumns.map((column, index) => ({ ...column, width: ["20%", "12%", "13%", "10%", "15%", "14%"][index] })), {
+    key: "record", header: "Payout", width: "16%", align: "end", mobile: "secondary",
+    cell: (line) => <Button variant="text" disabled={profile.data?.role !== "owner"}
+      onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") event.stopPropagation(); }}
+      onClick={(event) => { event.stopPropagation(); onRecord(line.partner.id); }}>Record payout</Button>,
+  }] : awaitingColumns;
   const names = useMemo(() => new Map((rows ?? []).map((r) => [r.id, r])), [rows]);
   const columns = useMemo(() => historyColumns(names), [names]);
   const history = useMemo(
@@ -505,6 +536,8 @@ function PayoutsView({
 
   return (
     <>
+      {LIVE && <ApproveCommissions onSaved={program.reload} />}
+      {LIVE && message && <p className="kit-note kit-span-12" role="status">{message}</p>}
       <Card
         className="kit-span-12"
         title="Approved, not yet paid"
@@ -513,7 +546,7 @@ function PayoutsView({
       >
         <DataTable
           caption="Approved commission awaiting payout"
-          columns={awaitingColumns}
+          columns={approvedColumns}
           rows={awaitingShown}
           rowKey={(line) => line.partner.id}
           loading={program.loading}
@@ -526,10 +559,10 @@ function PayoutsView({
           empty={
             query
               ? { title: "No approved commission matches this search." }
-              : { title: "Nothing waiting to be paid.", note: "Approved commission appears here until a payout batch holds it." }
+              : { title: "Nothing waiting to be paid.", note: LIVE ? "Approved commission appears here until its completed transfer is recorded." : "Approved commission appears here until a payout batch holds it." }
           }
         />
-        <div className="cc-card-foot">
+        {!LIVE && <div className="cc-card-foot">
           <p className="cc-footnote">
             {awaiting?.length
               ? `A batch pays ${formatMoney(awaitingTotal)} by bank transfer on ${formatDate(NEXT_PAYOUT)}, a sample schedule.`
@@ -538,7 +571,7 @@ function PayoutsView({
           <Button variant="primary" onClick={onCreate} disabled={!awaiting?.length}>
             Create payout batch
           </Button>
-        </div>
+        </div>}
       </Card>
 
       <Card className="kit-span-12" title="Payout history" flush meta={history && <span>{plural(history.length, "payout")}</span>}>
@@ -868,6 +901,8 @@ function PartnerDrawer({
   const navigate = useNavigate();
   const [pending, setPending] = useState<Change | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const history = useMemo(
     () => (payouts && referrals ? payoutHistory(payouts, batches, referrals).filter((line) => line.partnerId === id) : []),
     [payouts, referrals, batches, id],
@@ -891,30 +926,41 @@ function PartnerDrawer({
 
   const change = changeFor(row);
 
-  function apply(next: Change) {
-    if (!row) return;
-    preview.setPartnerStatus(row.id, next.to);
-    setPending(null);
-    setMessage(`${row.name} is now ${statusLabel(next.to).toLowerCase()} in this preview.`);
+  async function apply(next: Change) {
+    if (!row || busy) return;
+    setBusy(true); setSaveError("");
+    try {
+      if (savePartnerStatus) {
+        if (row.status === "pending" || next.to === "pending") return;
+        await savePartnerStatus(row.id, next.to);
+        onRetry();
+      } else preview.setPartnerStatus(row.id, next.to);
+      setPending(null);
+      setMessage(`${row.name} is now ${statusLabel(next.to).toLowerCase()}${LIVE ? "." : " in this preview."}`);
+    } catch (failure) { setSaveError(failure instanceof Error ? failure.message : "The partner could not be saved."); }
+    finally { setBusy(false); }
   }
 
   const footer = pending ? (
     <div className="cc-confirm" role="group" aria-label="Confirm the change">
       <p className="cc-confirm-text">{pending.text}</p>
       <div className="cc-confirm-actions cc-foot-row">
-        <Button variant="primary" onClick={() => apply(pending)}>
-          {pending.confirm}
+        <Button variant="primary" disabled={busy} onClick={() => apply(pending)}>
+          {busy ? "Saving…" : pending.confirm}
         </Button>
-        <Button onClick={() => setPending(null)}>Cancel</Button>
+        <Button disabled={busy} onClick={() => { setPending(null); setSaveError(""); }}>Cancel</Button>
         <PreviewTag />
       </div>
     </div>
+  ) : LIVE && row.status === "pending" ? (
+    <p className="kit-note">Review new partners in <Link className="cc-inline-link" to={`${HOME}/partners?view=applications`}>Applications</Link>.</p>
   ) : (
     <div className="cc-confirm-actions cc-foot-row">
       <Button
         variant={change.to === "paused" ? "quiet" : "primary"}
         onClick={() => {
           setMessage(null);
+          setSaveError("");
           setPending(change);
         }}
       >
@@ -937,10 +983,11 @@ function PartnerDrawer({
         </>
       }
       footer={footer}
-      onClose={onClose}
+      onClose={() => { if (!busy) onClose(); }}
     >
       <div className="cc-live" aria-live="polite">
         {message && <p className="kit-note">{message}</p>}
+        {saveError && <p className="kit-field-error" role="alert">{saveError}</p>}
       </div>
 
       <dl className="cc-figures">
@@ -984,7 +1031,7 @@ function PartnerDrawer({
               label: "Payouts",
               value: (
                 <span className="cc-fact-line">
-                  {PAYOUT_METHOD} on the 5th of each month <SampleTag>Sample schedule</SampleTag>
+                  {LIVE ? "Completed transfers recorded in Payouts" : <>{PAYOUT_METHOD} on the 5th of each month <SampleTag>Sample schedule</SampleTag></>}
                 </span>
               ),
             },

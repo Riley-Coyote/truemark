@@ -20,7 +20,6 @@ import {
 import type { Column } from "../app-kit";
 import { PreviewTag, SwitchRow } from "./fields";
 import { NewOrderAlerts } from "./notify";
-import { preview, usePreview } from "./preview";
 import { useQueryParam } from "./state";
 import { TEAM } from "./team";
 import type { Operator } from "./team";
@@ -42,7 +41,6 @@ function Block({ title, note, children }: { title: string; note: ReactNode; chil
 }
 
 export default function Settings() {
-  const changes = usePreview();
   const [openId, setOpenId] = useQueryParam("operator");
   const profile = useResource(() => LIVE ? live().auth.profile() : Promise.resolve(null));
   if (LIVE && !profile.data && profile.loading) return <p className="kit-note" role="status">Checking settings access…</p>;
@@ -115,16 +113,14 @@ export default function Settings() {
           <SwitchRow
             title="Research-use attestation at checkout"
             description="Buyers confirm the materials are for laboratory research use only and will not be used in humans or animals."
-            checked={changes.compliance.attestation}
-            onChange={(value) => preview.setCompliance("attestation", value)}
-            note={changes.compliance.attestation ? undefined : "Orders would be placed without the research-use confirmation."}
+            checked
+            locked="Always on"
           />
           <SwitchRow
             title="Publish released certificates on /verify"
             description="When a lot is released, its certificate appears on the public verify page."
-            checked={changes.compliance.certificates}
-            onChange={(value) => preview.setCompliance("certificates", value)}
-            note={changes.compliance.certificates ? undefined : "Released lots would have no public record."}
+            checked
+            locked="Always on"
           />
         </div>
       </Block>

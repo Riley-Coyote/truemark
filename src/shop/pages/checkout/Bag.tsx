@@ -4,12 +4,13 @@ import { LIVE, storageKey } from "../../../platform/mode";
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, CircleAlert } from "lucide-react";
+import { ArrowRight, CircleAlert, Plus } from "lucide-react";
 import { money, products } from "../../../data";
 import type { Product } from "../../../data";
 import { store } from "../../../platform/store";
 import type { Discount } from "../../../platform/types";
 import { productCutout } from "../../catalog";
+import { pairsFor } from "../../pairs";
 import { readReferral, useShop } from "../../context";
 import { Quantity } from "../../ui";
 import { ShippingProgress, useShipping } from "../../ShippingProgress";
@@ -323,28 +324,75 @@ export function DiscountRow({ discount, amount }: { discount: Discount | null; a
 
 /* ---------- Bag drawer ---------- */
 
-/** Moves focus to the next line's Remove after a removal, or to the empty state's link. */
-function useRemovalFocus(length: number) {
+/** Keep focus with the bag: quantity after adding, Remove (or the empty link) after removing. */
+function useBagFocus(length: number) {
   const list = useRef<HTMLUListElement>(null);
   const fallback = useRef<HTMLAnchorElement>(null);
-  const pending = useRef<number | null>(null);
+  const pending = useRef<{ added: string } | { removed: number } | null>(null);
   useEffect(() => {
-    const index = pending.current;
-    if (index === null) return;
+    const action = pending.current;
+    if (action === null) return;
     pending.current = null;
+    if ("added" in action) {
+      const line = Array.from(list.current?.children ?? []).find((element) => (element as HTMLElement).dataset.productId === action.added);
+      line?.querySelector<HTMLInputElement>(".tm-quantity input")?.focus();
+      return;
+    }
     const buttons = list.current?.querySelectorAll<HTMLButtonElement>(".tm-remove");
-    const next = buttons?.length ? buttons[Math.min(index, buttons.length - 1)] : fallback.current;
+    const next = buttons?.length ? buttons[Math.min(action.removed, buttons.length - 1)] : fallback.current;
     next?.focus();
   }, [length]);
-  return { list, fallback, mark: (index: number) => (pending.current = index) };
+  return {
+    list,
+    fallback,
+    mark: (index: number) => { pending.current = { removed: index }; },
+    added: (id: string) => { pending.current = { added: id }; },
+  };
+}
+
+function PairsWith({ onAdd }: { onAdd: (id: string) => void }) {
+  const { cart, catalogChecking, catalogError } = useShop();
+  const title = useId();
+  const suggestions = pairsFor(products, cart);
+  if (!suggestions.length) return null;
+  const disabled = Boolean(catalogChecking || catalogError);
+  return (
+    <section className="tm-pairs" aria-labelledby={title}>
+      <h3 className="tm-eyebrow" id={title}>Pairs with</h3>
+      <ul className="tm-pairs-list">
+        {suggestions.map((product) => (
+          <li className="tm-pair" key={product.id}>
+            <img className="tm-pair-vial" src={productCutout(product, "sm")} alt="" loading="lazy" draggable={false} />
+            <div className="tm-pair-info">
+              <span className="tm-pair-name">{product.name}</span>
+              <span className="tm-pair-size">{product.size}</span>
+            </div>
+            <span className="tm-pair-price">{money(product.price)}</span>
+            <button
+              type="button"
+              className="tm-pair-add"
+              disabled={disabled}
+              aria-label={`Add ${product.name} ${product.size} to bag`}
+              onClick={() => {
+                // The live catalog can refresh between rendering and activation.
+                if (!disabled && pairsFor(products, cart).some((candidate) => candidate.id === product.id)) onAdd(product.id);
+              }}
+            >
+              <Plus size={16} strokeWidth={1.6} aria-hidden="true" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }
 
 export function BagContents() {
-  const { change, closeCart } = useShop();
+  const { add, change, closeCart } = useShop();
   const { lines, count, subtotal, issues, catalogChecking, catalogError, reloadCatalog } = useBagLines();
   const [insured] = useInsuranceChoice();
   const blocked = issues.length > 0 || catalogChecking || Boolean(catalogError);
-  const focus = useRemovalFocus(lines.length);
+  const focus = useBagFocus(lines.length);
   const code = useBagCode();
   const shipping = useShipping();
   const discount = code.discount ? discountOn(subtotal, code.discount) : 0;
@@ -369,39 +417,42 @@ export function BagContents() {
       <p className="tm-bag-tally" aria-live="polite">
         {itemCount(count)}
       </p>
-      <ul className="tm-bag-lines" ref={focus.list} aria-label="Items in your bag">
-        {lines.map(({ product, quantity, total }, i) => (
-          <li className="tm-bag-line" key={product.id}>
-            <Thumb product={product} />
-            <div className="tm-bag-info">
-              <Link className="tm-line-name" to={`/product/${product.id}`} onClick={closeCart}>
-                {product.name}
-              </Link>
-              <p className="tm-line-meta">
-                {product.size} · <span className="tm-mono">{product.lot}</span>
-              </p>
-            </div>
-            <p className="tm-bag-price">{money(total)}</p>
-            <div className="tm-bag-controls">
-              <Quantity
-                value={quantity}
-                onChange={(q) => change(product.id, q)}
-                label={`Quantity for ${product.name} ${product.size}`}
-              />
-              <button
-                type="button"
-                className="tm-remove"
-                onClick={() => {
-                  focus.mark(i);
-                  change(product.id, 0);
-                }}
-              >
-                Remove<span className="sr-only"> {product.name} {product.size}</span>
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="tm-bag-body">
+        <ul className="tm-bag-lines" ref={focus.list} aria-label="Items in your bag">
+          {lines.map(({ product, quantity, total }, i) => (
+            <li className="tm-bag-line" key={product.id} data-product-id={product.id}>
+              <Thumb product={product} />
+              <div className="tm-bag-info">
+                <Link className="tm-line-name" to={`/product/${product.id}`} onClick={closeCart}>
+                  {product.name}
+                </Link>
+                <p className="tm-line-meta">
+                  {product.size} · <span className="tm-mono">{product.lot}</span>
+                </p>
+              </div>
+              <p className="tm-bag-price">{money(total)}</p>
+              <div className="tm-bag-controls">
+                <Quantity
+                  value={quantity}
+                  onChange={(q) => change(product.id, q)}
+                  label={`Quantity for ${product.name} ${product.size}`}
+                />
+                <button
+                  type="button"
+                  className="tm-remove"
+                  onClick={() => {
+                    focus.mark(i);
+                    change(product.id, 0);
+                  }}
+                >
+                  Remove<span className="sr-only"> {product.name} {product.size}</span>
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <PairsWith onAdd={(id) => { focus.added(id); add(id, 1); }} />
+      </div>
       <div className="tm-bag-foot">
         <p className="tm-bag-subtotal">
           <span>Subtotal</span>
@@ -430,12 +481,12 @@ export function BagContents() {
 /* ---------- /cart ---------- */
 
 export function CartPage() {
-  const { change } = useShop();
+  const { add, change, closeCart } = useShop();
   const { lines, count, subtotal, issues, catalogChecking, catalogError, reloadCatalog } = useBagLines();
   const [insured] = useInsuranceChoice();
   const blocked = issues.length > 0 || catalogChecking || Boolean(catalogError);
   const code = useBagCode();
-  const focus = useRemovalFocus(lines.length);
+  const focus = useBagFocus(lines.length);
   const shipping = useShipping();
   const method = shipping.data?.methods.find((m) => m.id === "cold-2day") ?? null;
   const discount = code.discount ? discountOn(subtotal, code.discount) : 0;
@@ -473,7 +524,7 @@ export function CartPage() {
 
         <ul className="tm-cart-lines" ref={focus.list} aria-label="Items in your bag">
           {lines.map(({ product, quantity, total: lineTotal }, i) => (
-            <li className="tm-cart-line" key={product.id}>
+            <li className="tm-cart-line" key={product.id} data-product-id={product.id}>
               <Thumb product={product} size="lg" />
               <div className="tm-cart-line-body">
                 <h2 className="tm-cart-name">
@@ -516,6 +567,12 @@ export function CartPage() {
           <h2 id="tm-cart-summary-title" className="tm-summary-title">
             Summary
           </h2>
+          <PairsWith onAdd={(id) => {
+            focus.added(id);
+            add(id, 1);
+            // React batches these updates: adding here never opens the drawer.
+            closeCart();
+          }} />
           <StockNotice issues={issues} checking={catalogChecking} error={catalogError} onRetry={reloadCatalog} />
           <dl className="tm-totals">
             <div className="tm-totals-row">

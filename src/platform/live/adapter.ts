@@ -7,21 +7,24 @@ import type { PlatformEvent } from "../events";
 import type * as Preview from "../preview/store";
 import * as map from "./rows";
 import { createContentAdapter } from "./content";
+import { createAccounts } from "./accounts";
+import type { AccountOptions } from "./accounts";
+import type { Profile } from "../accounts";
 
-export type Profile = { id: string; role: "owner" | "staff" | "buyer" | "partner" };
+export type { Profile } from "../accounts";
 export type ApplicationForm = Omit<Application, "id" | "submittedAt" | "status"> & { country?: string };
 type Result<T> = { data: T | null; error: { message: string } | null };
 function unwrap<T>({ data, error }: Result<T>): T {
   if (error) throw new Error(error.message);
   return data as T;
 }
-const savingNext = async (): Promise<never> => { throw new Error("Saving arrives next"); };
+export type PromoCodeDraft = { code: string; percent: number; expiresAt?: string; active: boolean; requestId: string };
 export const approvalCutoff = (today = new Date()) => new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()) - 14 * 86_400_000).toISOString().slice(0, 10);
 
 /** Injected client keeps transport, row mapping, authorization failures and events testable. */
 export function createLiveAdapter(client: SupabaseClient, options: {
-  changed?: () => void; emit?: (event: PlatformEvent) => void; redirectTo?: () => string;
-} = {}) {
+  changed?: () => void; emit?: (event: PlatformEvent) => void;
+} & AccountOptions = {}) {
   const changed = options.changed ?? (() => {});
   const emit = options.emit ?? (() => {});
   const rpc = async <T,>(name: string, args: Record<string, unknown> = {}) => unwrap<T>(await client.rpc(name, args));
@@ -132,7 +135,10 @@ export function createLiveAdapter(client: SupabaseClient, options: {
     lots: {
       list: async () => (await rows("lots")).map(map.lot),
       get: async (lot) => { const row = await rpc<map.Row | null>("lot_lookup", { lot }); return row ? map.lot(row) : null; },
-      setStatus: savingNext,
+      setStatus: async (lot, status) => {
+        const saved = map.lot(await rpc<map.Row>("set_lot_status", { lot, status }));
+        changed(); return saved;
+      },
     },
     buyers: {
       list: async () => (await rows("buyers", "*, addresses(*)")).map(map.buyer),
@@ -156,7 +162,9 @@ export function createLiveAdapter(client: SupabaseClient, options: {
       discounts: codes,
     },
   };
+  const accounts = createAccounts(client, rows, rpc, profile, changed, store.session.signOut, options);
   const auth = {
+    ...accounts.auth,
     profile,
     async signIn(email: string, password: string) {
       const { error } = await client.auth.signInWithPassword({ email, password });
@@ -166,7 +174,9 @@ export function createLiveAdapter(client: SupabaseClient, options: {
     async signUp(application: ApplicationForm, password: string) {
       const result = unwrap(await client.auth.signUp({ email: application.email, password,
         options: { data: { application }, emailRedirectTo: options.redirectTo?.() } }));
-      changed(); return { confirmationRequired: !result.session };
+      if (result.session) await store.session.signOut();
+      else changed();
+      return { confirmationRequired: !result.session };
     },
     signOut: store.session.signOut,
   };
@@ -175,6 +185,21 @@ export function createLiveAdapter(client: SupabaseClient, options: {
     async recordPayout(partnerId: string, start: string, end: string, method: string, note?: string) {
       const result = map.payout(await rpc<map.Row>("record_payout", { partner_id: partnerId, period_start: start, period_end: end, method, note: note ?? null }));
       changed(); return result;
+    },
+  };
+  const team = {
+    async setPartnerStatus(partnerId: string, status: "active" | "paused") {
+      const saved = await rpc<map.Row>("set_partner_status", { partner_id: partnerId, status });
+      changed(); return map.partner(saved, await codes());
+    },
+    async createPromo(draft: PromoCodeDraft) {
+      const saved = map.discount(await rpc<map.Row>("create_promo_code", { code: draft.code.trim().toUpperCase(), percent: draft.percent,
+        expires_at: draft.expiresAt ?? null, active: draft.active, request_id: draft.requestId }));
+      changed(); return saved;
+    },
+    async setPromoActive(code: string, active: boolean) {
+      const saved = map.discount(await rpc<map.Row>("set_promo_active", { code: code.trim().toUpperCase(), active }));
+      changed(); return saved;
     },
   };
   let noticeCache: Notice[] = [];
@@ -229,7 +254,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
     }
     channel.subscribe((status) => { if (status === "SUBSCRIBED") changed(); });
   }
-  return { store, auth, owner, notices, startRealtime, stopRealtime,
+  return { store, auth, owner, team, notices, startRealtime, stopRealtime, partnerApplications: accounts.applications,
     content: createContentAdapter(client, rows, rpc, changed),
     async quote(draft: OrderDraft) {
       const [products, settings, methods, discount] = await Promise.all([store.catalog.products(), store.settings.get(),

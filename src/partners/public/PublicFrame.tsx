@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { BrandLogo } from "../../BrandLogo";
 import { SectionLink } from "../../SectionLink";
@@ -8,7 +9,7 @@ import "../public.css";
  * The public partner pages wear the shop's chrome: the research-use notice, a
  * light bar with the client's logo, and the shop's own footer.
  */
-export default function PublicFrame() {
+export default function PublicFrame({ children }: { children?: ReactNode }) {
   return (
     <div className="brand-refinement pp-public">
       <SectionLink className="pp-skip" section="pp-main">
@@ -37,7 +38,7 @@ export default function PublicFrame() {
         </div>
       </header>
       <main id="pp-main">
-        <Outlet />
+        {children ?? <Outlet />}
       </main>
       <Footer />
     </div>
