@@ -11,11 +11,15 @@
 
 /* Left: the brand, in their ink. */
 .tm-gate-brand {
+  --tm-gate-studio-lift: radial-gradient(55% 42% at 78% 46%, rgba(132, 104, 214, 0.16), transparent 72%);
+  --tm-gate-studio-floor: radial-gradient(70% 60% at 0% 100%, rgba(16, 10, 40, 0.55), transparent 70%);
+  --tm-lens-lot-blur: 6px;
+  --tm-dur-lot-enter: 700ms;
   position: relative;
   display: flex;
   flex-direction: column;
   padding: var(--tm-space-7) clamp(2rem, 5.5vw, 5.5rem) var(--tm-space-6);
-  background: var(--tm-night);
+  background: var(--tm-gate-studio-lift), var(--tm-gate-studio-floor), var(--tm-night);
   color: var(--tm-glow);
   overflow: hidden;
 }
@@ -59,7 +63,7 @@
   font: var(--tm-weight-regular) var(--tm-type-lead) / 1.55 var(--tm-font-sans);
   color: var(--tm-glow-2);
 }
-.tm-gate-brand > :not(.tm-floats, .tm-light-pool) {
+.tm-gate-brand > :not(.tm-lens) {
   position: relative;
   z-index: 1;
 }
@@ -319,61 +323,63 @@
   color: var(--tm-ink-3);
 }
 
-/* The collection, drifting behind the statement. */
-.tm-floats {
+/* One transparent camera, with a static cutout composition when WebGL cannot run. */
+.tm-lens,
+.tm-lens-canvas,
+.tm-lens-still {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
-.tm-float {
-  --tm-parallax: 26px;
-  position: absolute;
-  transform: translate(-50%, -50%) rotate(var(--tm-rot));
-  /* Depth: as the light moves, near vials shift more than far ones. */
-  translate: calc(var(--dx, 0) * var(--tm-parallax) * -1) calc(var(--dy, 0) * var(--tm-parallax) * -0.6);
-  transition: translate 1400ms var(--tm-ease-enter);
-  animation: tm-drift var(--tm-cycle) var(--tm-ease-breathe) var(--tm-delay) infinite alternate;
-}
-.tm-float-body {
-  position: relative;
-  display: block;
-  animation: tm-float-in 1400ms var(--tm-ease-enter) calc(var(--tm-i, 0) * 110ms + 250ms) both;
-}
-@keyframes tm-float-in {
-  from {
-    opacity: 0;
-    transform: scale(0.94);
-    filter: blur(6px);
-  }
-}
-.tm-float img {
-  position: relative;
-  z-index: 1;
-  display: block;
-  width: 100%;
-  height: auto;
-}
-/* Light through coloured glass: the label's own colour, behind the vial only. */
-.tm-float-glow {
-  position: absolute;
+.tm-lens {
   z-index: 0;
-  inset: 12% -24%;
-  border-radius: var(--tm-radius-pill);
-  background: radial-gradient(closest-side, var(--tm-tone), transparent);
-  opacity: 0.32;
-  filter: blur(26px);
 }
-.tm-float-d1 {
-  --tm-parallax: 14px;
-  filter: blur(1px);
-  opacity: 0.88;
+.tm-lens-canvas {
+  display: block;
+  opacity: 0;
 }
-.tm-float-d2 {
-  --tm-parallax: 7px;
-  filter: blur(2.5px);
-  opacity: 0.62;
+.tm-lens-still {
+  visibility: hidden;
 }
+.tm-lens[data-render="webgl"] .tm-lens-canvas {
+  opacity: 1;
+}
+.tm-lens[data-render="fallback"] .tm-lens-still {
+  visibility: visible;
+}
+.tm-lens-still img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  transform: translate(-50%, -50%) rotate(var(--tm-lens-roll));
+}
+.tm-gate-lotline[data-lot-phase="opening"] > .tm-gate-lot {
+  filter: blur(var(--tm-lens-lot-blur));
+}
+.tm-gate-lotline[data-lot-phase="opening"] > .tm-gate-lot-label {
+  opacity: 0;
+  filter: blur(var(--tm-lens-lot-blur));
+}
+.tm-gate-lotline[data-lot-phase="leave"] > :is(.tm-gate-lot-label, .tm-gate-lot) {
+  animation: tm-lens-lot-out var(--tm-dur-slow) ease-in both;
+}
+.tm-gate-lotline[data-lot-phase="enter"] > :is(.tm-gate-lot-label, .tm-gate-lot) {
+  animation: tm-lens-lot-in var(--tm-dur-lot-enter) var(--tm-ease-enter) both;
+}
+.tm-gate-brand[data-lens-paused="true"] :is(.tm-gate-lot-label, .tm-gate-lot) {
+  animation-play-state: paused;
+}
+@keyframes tm-lens-lot-out {
+  from { opacity: var(--tm-lens-lot-opacity, 1); filter: var(--tm-lens-lot-filter, blur(0)); }
+  to { opacity: 0; filter: blur(var(--tm-lens-lot-blur)); }
+}
+@keyframes tm-lens-lot-in {
+  from { opacity: 0; filter: blur(var(--tm-lens-lot-blur)); }
+  to { opacity: 1; filter: blur(0); }
+}
+
 /* The way in for a visitor with a vial in hand: verification needs no account. */
 .tm .tm-gate-verify {
   display: inline-flex;
@@ -398,25 +404,16 @@
   outline: none;
   border-bottom-color: var(--tm-glow);
 }
-@keyframes tm-drift {
-  from {
-    transform: translate(-50%, -50%) rotate(var(--tm-rot)) translateY(calc(var(--tm-space-2) * -1.5));
-  }
-  to {
-    transform: translate(-50%, -50%) rotate(calc(var(--tm-rot) + 3deg)) translateY(calc(var(--tm-space-2) * 1.5));
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .tm-gate-statement,
   .tm-gate-lotline,
   .tm-gate-form,
-  .tm-float,
-  .tm-float-body {
+  .tm-gate-lotline[data-lot-phase] > :is(.tm-gate-lot-label, .tm-gate-lot) {
     animation: none;
   }
-  .tm-float {
-    transition: none;
+  .tm-gate-lotline[data-lot-phase] > :is(.tm-gate-lot-label, .tm-gate-lot) {
+    opacity: 1;
+    filter: none;
   }
 }
 
@@ -436,16 +433,8 @@
     font-size: clamp(2rem, 8.4vw, 2.75rem);
   }
   .tm .tm-gate-lead,
-  .tm-gate-lotline,
-  .tm-float-d1,
-  .tm-float-d2 {
+  .tm-gate-lotline {
     display: none;
-  }
-  /* On a phone one vial drifts at the edge of the band. */
-  .tm-float-d0 {
-    left: 88% !important;
-    top: 46% !important;
-    width: 22% !important;
   }
   .tm-gate-trace {
     margin-inline: calc(var(--tm-margin) * -1);

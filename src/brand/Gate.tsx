@@ -1,14 +1,15 @@
 import { PasswordReset, useRecovery } from "../platform/PasswordReset";
 import { LIVE } from "../platform/mode";
 import { live } from "../platform/live/runtime";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { BrandLogo } from "../BrandLogo";
 import { store } from "../platform/store";
 import { productById } from "../shop/catalog";
-import { FloatingVials, gateLayout } from "./FloatingVials";
-import { useLight } from "./light";
+import { Lens } from "./Lens";
+import { SCENE } from "./lens-scene";
+import type { LotPhase } from "./lens-scene";
 import { BrandDot } from "./HeroShelf";
 import { Trace } from "./Trace";
 import "./gate.css";
@@ -67,9 +68,10 @@ export default function Gate() {
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string>();
-  const specimen = productById("bpc-157-10-mg");
+  const [focusedLot, setFocusedLot] = useState<{ index: number; phase: LotPhase }>({ index: 0, phase: "opening" });
+  const specimen = productById(SCENE.vials[focusedLot.index].id);
   const scene = useRef<HTMLElement>(null);
-  useLight(scene, { firstPass: 900, pass: 3200, period: 11000 });
+  const focusLot = useCallback((index: number, phase: LotPhase) => setFocusedLot({ index, phase }), []);
 
   useEffect(() => {
     document.title = `${mode === "signin" ? "Sign in" : "Create account"} — TrueMark BioLabs`;
@@ -123,8 +125,7 @@ export default function Gate() {
     <div className="brand-refinement">
       <div className="tm tm-gate">
         <section className="tm-gate-brand" aria-label="TrueMark BioLabs" ref={scene}>
-          <span className="tm-light-pool" aria-hidden="true" />
-          <FloatingVials layout={gateLayout} className="tm-gate-floats" />
+          <Lens panel={scene} onFocus={focusLot} />
           <Link className="tm-gate-logo" to="/" aria-label="TrueMark BioLabs home">
             <BrandLogo variant="white" />
           </Link>
@@ -140,8 +141,8 @@ export default function Gate() {
               available only to registered researchers.
             </p>
           </div>
-          <div className="tm-gate-lotline">
-            <span className="tm-gate-lot-label">Lot:</span>
+          <div className="tm-gate-lotline" data-lot-phase={focusedLot.phase}>
+            <span className="tm-gate-lot-label">Lot · {specimen?.name} {specimen?.size}</span>
             {specimen && <span className="tm-gate-lot">{specimen.lot}</span>}
             <span className="tm-gate-lot-note">
               Every label carries one. Sign in to read the certificate for yours.

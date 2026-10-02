@@ -174,7 +174,7 @@ export default function Guidelines() {
             {library === "renders"
               ? "WebP · 1254 × 1254 px"
               : library === "cutouts"
-                ? "WebP · 578 × 1103 px · transparent"
+                ? "WebP · 578 × 1112 px · transparent"
                 : "SVG · scales to any size"}
           </p>
         </div>

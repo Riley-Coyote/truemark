@@ -346,7 +346,7 @@
     overflow: clip;
     scroll-snap-type: none;
     display: block;
-    height: calc(var(--tm-vial) * 1103 / 578 + var(--tm-space-10) + var(--tm-space-7));
+    height: calc(var(--tm-vial) * 1112 / 578 + var(--tm-space-10) + var(--tm-space-7));
     padding: 0;
     touch-action: pan-y;
   }

@@ -54,14 +54,14 @@
 }
 
 /* Where the number is: the vial, and a loupe over the LOT line of its label.
-   The cut-out is 578 x 1103; the lot line is centred at 17.5% across, 57.9% down. */
+   The cut-out is 578 x 1112; the lot line is centred at 17.5% across, 58.24% down. */
 .tm-lothint {
   --tm-lh-w: clamp(10rem, 15vw, 13.5rem);
   --tm-lh-k: 2;
   --tm-lh-l: calc(var(--tm-lh-w) * 0.62);
-  --tm-lh-ratio: 1.9083;
+  --tm-lh-ratio: 1.9239;
   --tm-lh-x: 0.175;
-  --tm-lh-y: 0.579;
+  --tm-lh-y: 0.5824;
   grid-column: 9 / -1;
   justify-self: center;
   display: flex;
