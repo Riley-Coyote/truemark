@@ -4,18 +4,19 @@
   /* Local tokens. */
   --tm-hairline: 1px;
   --tm-handling-open-h: clamp(34rem, 50vw, 48rem); /* the cold-storage opening's height */
+  --tm-handling-focus: 50% 25%; /* the photo's crop point: room above the caps, the shelf in frame */
   --tm-handling-title: clamp(2.75rem, 5.2vw, 5rem);
   --tm-handling-cold: clamp(4.5rem, 10.5vw, 9rem); /* the designed −20 °C */
   --tm-handling-unit: 0.34em; /* °C, set small against the figure */
   --tm-handling-unit-rise: 1.36em; /* lifts °C so its cap height meets the figure's */
   --tm-handling-label-track: 0.14em; /* nano capitals, as the home labels */
-  /* Paper mist over the steel, so the type sits on the glass at full contrast. */
+  /* Paper mist low over the shelf front, under the type only: the vials above it stay untouched. */
   --tm-handling-scrim: linear-gradient(
     to top,
-    color-mix(in srgb, var(--tm-paper) 90%, transparent) 0%,
-    color-mix(in srgb, var(--tm-paper) 78%, transparent) 32%,
-    color-mix(in srgb, var(--tm-paper) 42%, transparent) 58%,
-    transparent 78%
+    color-mix(in srgb, var(--tm-paper) 88%, transparent) 0%,
+    color-mix(in srgb, var(--tm-paper) 72%, transparent) 14%,
+    color-mix(in srgb, var(--tm-paper) 34%, transparent) 25%,
+    transparent 32%
   );
 }
 
@@ -29,7 +30,7 @@
   outline: none;
 }
 
-/* ---------- Opening: untouched vials on the cold-storage shelf ---------- */
+/* ---------- Opening: the vials on their shelf, in one photograph ---------- */
 
 .tm-handling-open {
   --tm-bg: var(--tm-lilac-100);
@@ -46,32 +47,14 @@
   inset: 0;
   overflow: hidden;
 }
-.tm-handling-scene {
-  position: absolute;
-  top: 50%;
-  left: 50%;
+.tm-handling-art > picture { display: contents; }
+.tm-handling-open-photo {
+  display: block;
   width: 100%;
-  aspect-ratio: 1344 / 752;
-  transform: translate(-50%, -50%);
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--tm-handling-focus);
 }
-.tm-handling-open-photo { display: block; width: 100%; height: 100%; }
-/* The vials' own layer: after the mist in paint order, so the mist never covers them. */
-.tm-handling-cast {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-.tm-handling-vial {
-  position: absolute;
-  height: 27%;
-  bottom: 32%;
-  left: var(--tm-cold-x);
-  transform: translateX(-50%);
-  aspect-ratio: 578 / 1103;
-}
-.tm-handling-vial > img { position: relative; display: block; width: 100%; height: 100%; object-fit: contain; }
 .tm-handling-open::before {
   content: "";
   position: absolute;
@@ -257,15 +240,16 @@
   }
 }
 @media (max-width: 960px) {
-  /* The same cover box fills the phone hero; text leaves the standing line clear. */
+  /* The same photo fills the phone hero, cropped to the middle of the row; text leaves the vials clear. */
+  .tm-handling {
+    --tm-handling-focus: 84% 50%; /* the tall photograph, centred on the row */
+  }
   .tm-handling-open {
     min-height: calc(var(--tm-space-10) * 5);
     grid-template-rows: auto 1fr auto;
     align-content: stretch;
     padding-block: var(--tm-space-6);
   }
-  .tm-handling-vial { left: var(--tm-cold-phone-x); }
-  .tm-handling-vial.is-desktop { display: none; }
   .tm-handling-open-head,
   .tm .tm-handling-open-lead {
     grid-column: 1 / -1;

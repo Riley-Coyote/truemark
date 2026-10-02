@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { assetUrl } from "../../../assetUrl";
 import { Track } from "../../../brand/Track";
 import type { TrackStop } from "../../../brand/Track";
 import { useReveal } from "../../motion";
-import { productById, productCutout } from "../../catalog";
-import "../../../brand/hero.css";
 import "../../../brand/handling.css";
 
 /*
@@ -39,44 +37,18 @@ const coldChain: TrackStop[] = [
 ];
 
 function Opening() {
-  const backdrop = scene("cold-storage", 1344);
-  const art = useRef<HTMLDivElement>(null);
-  const [box, setBox] = useState<{ width: number; height: number }>();
-  useEffect(() => {
-    const observer = new ResizeObserver(([entry]) => {
-      const width = Math.max(entry.contentRect.width, entry.contentRect.height * 1344 / 752);
-      setBox({ width, height: width * 752 / 1344 });
-    });
-    if (art.current) observer.observe(art.current);
-    return () => observer.disconnect();
-  }, []);
-  const vials = [
-    { id: "ghk-cu-100-mg", x: 42, phone: 40 },
-    { id: "melanotan-ii-10-mg", x: 51 },
-    { id: "nad-500-mg", x: 60 },
-    { id: "bpc-157-10-mg", x: 69, phone: 50 },
-    { id: "tesamorelin-10-mg", x: 78, phone: 60 },
-  ];
+  // One photograph: the vials stand in the refrigerator, so the light, shadow and frost are theirs.
+  // Phones get the same photograph extended upward, so the title has wall to sit on above the vials.
+  const photo = scene("cold-storage-shelf", 2560);
+  const tall = scene("cold-storage-shelf-tall", 2560);
   return (
     <section className="tm tm-handling-open" aria-labelledby="tm-handling-title">
-      <div className="tm-handling-art" ref={art}>
-        <div className="tm-handling-scene" style={box}>
-          <img className="tm-handling-open-photo" src={backdrop.src} srcSet={backdrop.srcSet}
-            sizes="100vw" width={1344} height={752} alt="TrueMark vials on a cold-storage shelf." fetchPriority="high" />
-        </div>
-      </div>
-      {/* The vials stand above the paper mist, so their labels stay crisp; the mist only softens the steel. */}
-      <div className="tm-handling-cast" aria-hidden="true">
-        <div className="tm-handling-scene" style={box}>
-          {vials.map(({ id, x, phone }) => {
-            const product = productById(id);
-            return product && <span key={id} className={`tm-handling-vial${phone ? "" : " is-desktop"}`}
-              style={{ "--tm-cold-x": `${x}%`, "--tm-cold-phone-x": `${phone ?? x}%` } as CSSProperties}>
-              <span className="tm-shelf-shadow" aria-hidden="true" />
-              <img src={productCutout(product, "lg")} alt="" draggable={false} />
-            </span>;
-          })}
-        </div>
+      <div className="tm-handling-art">
+        <picture>
+          <source media="(max-width: 960px)" srcSet={tall.srcSet} sizes="780px" width={2560} height={2107} />
+          <img className="tm-handling-open-photo" src={photo.src} srcSet={photo.srcSet} sizes="100vw" width={2560} height={1440}
+            alt="Five TrueMark vials standing on a shelf inside a laboratory refrigerator." fetchPriority="high" />
+        </picture>
       </div>
       <header className="tm-handling-open-head">
         <p className="tm-eyebrow">Handling</p>
