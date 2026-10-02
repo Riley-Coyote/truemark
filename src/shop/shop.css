@@ -17,6 +17,11 @@
   padding: var(--tm-space-silence) var(--tm-pad);
   background: var(--tm-bg);
 }
+/* A storefront section that also carries the app kit keeps the storefront's surface, whatever
+   order the two stylesheets load in. */
+.tm.kit {
+  background: var(--tm-bg);
+}
 
 /* ---------- Type roles ---------- */
 

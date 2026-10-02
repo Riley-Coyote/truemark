@@ -1,6 +1,8 @@
 /* Home, top of page: the client's hero, re-set. */
 
-.tm-bhero {
+/* `.tm.` on these sections: they override the generic `.tm` rhythm in shop.css whatever order
+   the stylesheets load in (hero.css also arrives early, through BrandDot). */
+.tm.tm-bhero {
   --tm-bg: var(--tm-lilac-studio);
   --tm-vial: clamp(6.5rem, 11.2vw, 11rem);
   padding-block: var(--tm-space-7) 0;
@@ -254,7 +256,7 @@
   margin: var(--tm-space-3) calc(var(--tm-pad) * -1) 0;
 }
 /* Their four trust lines, as a quiet row. */
-.tm-trust {
+.tm.tm-trust {
   --tm-bg: var(--tm-paper);
   padding-top: var(--tm-space-6);
   padding-block: 0;
@@ -296,7 +298,7 @@
 }
 
 @media (max-width: 960px) {
-  .tm-bhero {
+  .tm.tm-bhero {
     --tm-vial: clamp(8rem, 34vw, 14rem);
   }
   .tm-bhero-head,
