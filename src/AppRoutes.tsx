@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { LIVE } from "./platform/mode";
 import { Route, Routes } from "react-router-dom";
 import App from "./App";
 import ReviewShell from "./ReviewShell";
@@ -11,6 +12,7 @@ const VisualStudy = lazy(() => import("./VisualStudy"));
 const LiveOrder = lazy(() => import("./demo/LiveOrder"));
 const AdminApp = lazy(() => import("./admin/AdminApp"));
 const PartnerApp = lazy(() => import("./partners/PartnerApp"));
+const TeamInvite = LIVE ? lazy(() => import("./platform/live/TeamInvite")) : null;
 
 export default function AppRoutes() {
   return (
@@ -57,6 +59,7 @@ export default function AppRoutes() {
             </Suspense>
           }
         />
+        {TeamInvite && <Route path="/access/team" element={<Suspense fallback={null}><TeamInvite /></Suspense>} />}
         <Route path="/access" element={<Gate />} />
         <Route path="*" element={<App />} />
       </Routes>

@@ -3,6 +3,7 @@ import { CommerceSettings } from "./Commerce";
 import { AppearanceControl } from "./appearance";
 import { LIVE } from "../platform/mode";
 import { live } from "../platform/live/runtime";
+import { LiveTeam } from "../platform/live/TeamSettings";
 import { useResource } from "../platform/store";
 import { useId } from "react";
 import type { ReactNode } from "react";
@@ -45,12 +46,12 @@ export default function Settings() {
   const profile = useResource(() => LIVE ? live().auth.profile() : Promise.resolve(null));
   if (LIVE && !profile.data && profile.loading) return <p className="kit-note" role="status">Checking settings access…</p>;
   if (LIVE && profile.error) return <EmptyState title="Settings access could not be checked." note={profile.error.message} action={<Button onClick={profile.reload}>Try again</Button>} />;
-  if (LIVE && profile.data?.role !== "owner") return <EmptyState title="Owner access required." note="Only the owner can change the shop settings." />;
+  if (LIVE && !["owner", "staff"].includes(profile.data?.role ?? "")) return <EmptyState title="Team access required." note="Sign in with your TrueMark team account." />;
 
   return (
     <div className="kit-grid">
       <PageHeader
-        description="The rules the shop runs on. The owner sets free shipping and insurance; payments and team invitations connect at launch."
+        description={LIVE ? "The rules the shop runs on. Owners set free shipping and insurance, and manage the team. Payments connect at launch." : "The rules the shop runs on. The owner sets free shipping and insurance; payments and team invitations connect at launch."}
         meta={LIVE ? undefined : <PreviewTag />}
       />
 
@@ -58,6 +59,7 @@ export default function Settings() {
         <div className="kit-card cc-setting-card cc-appearance-card"><AppearanceControl /></div>
       </Block>
 
+      {(!LIVE || profile.data?.role === "owner") && <>
       <Block title="Store" note="How the shop names itself and where it lives.">
         <div className="kit-card cc-setting-card">
           <Facts
@@ -125,8 +127,10 @@ export default function Settings() {
         </div>
       </Block>
 
+      </>}
+
       <Block title="Team" note="Who operates the command center, and what each role can change.">
-        <div className="kit-card">
+        {LIVE ? <LiveTeam canManage={profile.data?.role === "owner"} openId={openId} onOpen={(id) => setOpenId(id, { replace: id === null })} /> : <div className="kit-card">
           <DataTable
             caption="Team"
             columns={teamColumns}
@@ -145,7 +149,7 @@ export default function Settings() {
               Invite an operator
             </Button>
           </div>
-        </div>
+        </div>}
       </Block>
 
       <Block
@@ -155,7 +159,7 @@ export default function Settings() {
         <NewOrderAlerts />
       </Block>
 
-      {openId && <OperatorDrawer key={openId} operator={TEAM.find((o) => o.id === openId)} onClose={() => setOpenId(null, { replace: true })} />}
+      {!LIVE && openId && <OperatorDrawer key={openId} operator={TEAM.find((o) => o.id === openId)} onClose={() => setOpenId(null, { replace: true })} />}
     </div>
   );
 }

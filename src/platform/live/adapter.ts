@@ -8,6 +8,7 @@ import type * as Preview from "../preview/store";
 import * as map from "./rows";
 import { createContentAdapter } from "./content";
 import { createAccounts } from "./accounts";
+import { createTeam } from "./team";
 import type { AccountOptions } from "./accounts";
 import type { Profile } from "../accounts";
 
@@ -188,6 +189,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
     },
   };
   const team = {
+    ...createTeam(client, rpc, profile, changed, options.redirectTo),
     async setPartnerStatus(partnerId: string, status: "active" | "paused") {
       const saved = await rpc<map.Row>("set_partner_status", { partner_id: partnerId, status });
       changed(); return map.partner(saved, await codes());

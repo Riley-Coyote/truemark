@@ -13,6 +13,7 @@ import { Button, Dot, EmptyState, Skeleton, formatCount, formatDate, formatDateT
 import type { Tone } from "../app-kit";
 import { CountingMoney, useCountUp } from "../app-kit/motion";
 import { onPlatformEvent } from "../platform/events";
+import { LIVE } from "../platform/mode";
 import type { PlatformEvent } from "../platform/events";
 import { worldNow } from "../platform/storage";
 import type { Buyer, Order, Partner } from "../platform/types";
@@ -203,7 +204,7 @@ export function TodayFigures({ orders, now }: { orders: Order[] | undefined; now
       </dl>
 
       <p className="cc-day-note">
-        Sample data through {formatDate(TODAY_ISO)}. Today is compared with {WEEKDAYS[weekAgo.getUTCDay()]}{" "}
+        {LIVE ? "" : `Sample data through ${formatDate(TODAY_ISO)}. `}Today is compared with {WEEKDAYS[weekAgo.getUTCDay()]}{" "}
         {weekAgo.getUTCDate()} {MONTHS[weekAgo.getUTCMonth()].slice(0, 3)} up to this hour; cancelled orders are left out.
       </p>
     </section>

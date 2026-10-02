@@ -1,0 +1,25 @@
+/* Live team controls only; the shared gate and preview tables keep their layout. */
+.cc-gate-form .kit-button.cc-team-gate-link {
+  justify-self: center;
+  width: fit-content;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+.cc-team-expiry {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.cc-team-mobile-label {
+  display: none;
+}
+
+/* Match the kit's stacked table rows, where column headers are no longer visible. */
+@media (max-width: 45rem) {
+  .cc-team-mobile-label {
+    display: inline;
+  }
+}

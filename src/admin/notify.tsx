@@ -1,4 +1,4 @@
-import { storageKey } from "../platform/mode";
+import { LIVE, storageKey } from "../platform/mode";
 /**
  * New-order alerts for the team: who hears about every order, by email or by
  * text message, and exactly what they receive, previewed with the latest order in
@@ -6,7 +6,7 @@ import { storageKey } from "../platform/mode";
  * the backend.
  */
 import { useId, useSyncExternalStore } from "react";
-import { Button, EmptyState, SampleTag, Skeleton, formatDateTime, formatMoney } from "../app-kit";
+import { Button, DataTable, EmptyState, SampleTag, Skeleton, formatDateTime, formatMoney } from "../app-kit";
 import {
   EmailButton,
   EmailFigure,
@@ -22,6 +22,9 @@ import { productById } from "../shop/catalog";
 import { Switch } from "./fields";
 import { TEAM } from "./team";
 import type { Operator } from "./team";
+import { live } from "../platform/live/runtime";
+import { teamRoleLabel } from "../platform/team";
+import "../platform/live/team.css";
 
 export type Channel = "email" | "text";
 type Prefs = Record<string, Record<Channel, boolean>>;
@@ -127,6 +130,24 @@ const CHANNELS: { id: Channel; label: string }[] = [
 ];
 
 export function NewOrderAlerts() {
+  return LIVE ? <LiveOrderAlerts /> : <PreviewOrderAlerts />;
+}
+
+function LiveOrderAlerts() {
+  const members = useResource(() => live().team.members());
+  return <div className="kit-card">
+    <DataTable caption="New-order alerts" rows={members.data} loading={members.loading} error={members.error} onRetry={members.reload}
+      rowKey={(member) => member.id} stickyHeader={false} empty={{ title: "No team members yet." }} columns={[
+        { key: "email", header: "Team member", mobile: "primary", cell: (member) => <span className="cc-alerts-person"><span>{member.email}</span><span className="kit-quiet">{teamRoleLabel(member.role)}</span></span> },
+        { key: "bell", header: "In the command center", mobile: "secondary", cell: () => <><span className="cc-team-mobile-label">In the command center: </span>On</> },
+        { key: "emailAlerts", header: "Email", cell: () => <span className="kit-quiet"><span className="cc-team-mobile-label">Email: </span>Off</span> },
+        { key: "textAlerts", header: "Text", cell: () => <span className="kit-quiet"><span className="cc-team-mobile-label">Text: </span>Off</span> },
+      ]} />
+    <div className="cc-card-foot"><p className="cc-footnote">Email and text alerts connect with your email and SMS accounts.</p></div>
+  </div>;
+}
+
+function PreviewOrderAlerts() {
   const prefs = usePrefs();
   const baseId = useId();
   const latest = useResource(async () => {
