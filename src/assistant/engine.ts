@@ -1,4 +1,5 @@
-import type { Artifact, PendingAction, ToolOutput } from "./runtime";
+import type { Artifact, PendingAction, Source, ToolOutput } from "./runtime";
+import { activityFor } from "./runtime";
 import type { createToolRuntime } from "./runtime";
 import type { Transport, RequestInput } from "./client";
 import type { ToolResult } from "./protocol";
@@ -8,6 +9,9 @@ export type TurnCallbacks = {
   artifact: (artifact: Artifact) => void;
   confirm: (action: PendingAction, signal: AbortSignal) => Promise<boolean>;
   status: (status: "loading" | "streaming" | "confirming") => void;
+  /** Optional: what a tool is about to read, and the record its answer came from. */
+  activity?: (label: string) => void;
+  source?: (source: Source) => void;
 };
 /** No callable write is ever serialized or sent to the server. Only this loop can resolve proposals. */
 export async function runTurn(text: string, transport: Transport, prepare: ReturnType<typeof createToolRuntime>, callbacks: TurnCallbacks, signal: AbortSignal) {
@@ -24,7 +28,9 @@ export async function runTurn(text: string, transport: Transport, prepare: Retur
       if (handled.has(tool.id)) throw new Error("This action was already handled. Please send a new message.");
       handled.add(tool.id);
       try {
+        callbacks.activity?.(activityFor(tool));
         let output: ToolOutput = await prepare(tool, reply.meta.tools, reply.meta.persona);
+        if (output.source) callbacks.source?.(output.source);
         if (output.artifact) callbacks.artifact(output.artifact);
         if (output.pending) {
           callbacks.status("confirming");

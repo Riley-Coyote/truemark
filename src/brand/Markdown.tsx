@@ -23,26 +23,33 @@ function MarkdownLink({ href, children }: { href: string; children: ReactNode })
   return <a href={href}>{children}</a>;
 }
 
-export function inlineMarkdown(text: string, depth = 0): ReactNode[] {
+/** With `words`, plain text is set word by word in spans (keyed by place, so a growing answer keeps the
+ *  words it has), which lets the chat settle each new word as it is written. */
+export function inlineMarkdown(text: string, depth = 0, words = false): ReactNode[] {
   if (depth > 8) return [text];
   const result: ReactNode[] = [];
-  let plain = "";
-  const flush = () => { if (plain) result.push(plain); plain = ""; };
+  let plain = "", start = 0;
+  const flush = () => {
+    if (plain && words) plain.split(/(\s+)/).forEach((part, j) => result.push(!part || /^\s/.test(part) ? part : <span key={`${start}:${j}`} className="tm-word">{part}</span>));
+    else if (plain) result.push(plain);
+    plain = "";
+  };
   for (let i = 0; i < text.length;) {
+    if (!plain) start = i;
     if (text[i] === "\\" && i + 1 < text.length) { plain += text[i + 1]; i += 2; continue; }
     const remaining = text.slice(i);
     const link = remaining.match(/^\[([^\]\n]*)\]\(([^)\n]*)\)/);
     if (link) {
       flush(); const href = safeMarkdownUrl(link[2]);
-      result.push(href ? <MarkdownLink key={i} href={href}>{inlineMarkdown(link[1], depth + 1)}</MarkdownLink> : <Fragment key={i}>{inlineMarkdown(link[1], depth + 1)}</Fragment>);
+      result.push(href ? <MarkdownLink key={i} href={href}>{inlineMarkdown(link[1], depth + 1, words)}</MarkdownLink> : <Fragment key={i}>{inlineMarkdown(link[1], depth + 1, words)}</Fragment>);
       i += link[0].length; continue;
     }
     const code = remaining.match(/^`([^`\n]+)`/);
     if (code) { flush(); result.push(<code key={i}>{code[1]}</code>); i += code[0].length; continue; }
     const strong = remaining.match(/^\*\*(.+?)\*\*/);
-    if (strong) { flush(); result.push(<strong key={i}>{inlineMarkdown(strong[1], depth + 1)}</strong>); i += strong[0].length; continue; }
+    if (strong) { flush(); result.push(<strong key={i}>{inlineMarkdown(strong[1], depth + 1, words)}</strong>); i += strong[0].length; continue; }
     const emphasis = remaining.match(/^(?:\*([^*]+)\*|_([^_]+)_)/);
-    if (emphasis) { flush(); result.push(<em key={i}>{inlineMarkdown(emphasis[1] ?? emphasis[2], depth + 1)}</em>); i += emphasis[0].length; continue; }
+    if (emphasis) { flush(); result.push(<em key={i}>{inlineMarkdown(emphasis[1] ?? emphasis[2], depth + 1, words)}</em>); i += emphasis[0].length; continue; }
     plain += text[i++];
   }
   flush(); return result;
@@ -95,29 +102,31 @@ export function markdownBlocks(markdown: string): Block[] {
 }
 
 /** Published pages, editor previews and chat share the same safe inline parser. */
-export function Markdown({ source, variant = "article" }: { source: string; variant?: "article" | "chat" }) {
+export function Markdown({ source, variant = "article", words = false }: { source: string; variant?: "article" | "chat"; words?: boolean }) {
   const chat = variant === "chat";
+  // Word spans are for an answer being written in the chat; everywhere else text stays plain.
+  const inline = (text: string) => inlineMarkdown(text, 0, chat && words);
   // Chat headings are body-sized labels, regardless of the model's heading level.
   const markdown = chat ? source.replace(/^#{1,6} +/gm, "### ") : source;
   let lastHeading: string | undefined;
   return <>{markdownBlocks(markdown).map((block, i) => {
     switch (block.kind) {
       case "heading": {
-        if (chat) return <p key={i}><strong>{inlineMarkdown(block.text)}</strong></p>;
+        if (chat) return <p key={i}><strong>{inline(block.text)}</strong></p>;
         lastHeading = block.id; const Heading = block.level === 2 ? "h2" : "h3";
         return <Heading key={i} id={block.id}>{inlineMarkdown(block.text)}</Heading>;
       }
-      case "paragraph": return <p key={i}>{inlineMarkdown(block.text)}</p>;
-      case "quote": return chat ? <blockquote key={i}><p>{inlineMarkdown(block.text)}</p></blockquote> : <blockquote key={i} className="tm-article-quote"><p>{inlineMarkdown(block.text.endsWith(".") ? block.text.slice(0, -1) : block.text)}{block.text.endsWith(".") && <BrandDot />}</p></blockquote>;
+      case "paragraph": return <p key={i}>{inline(block.text)}</p>;
+      case "quote": return chat ? <blockquote key={i}><p>{inline(block.text)}</p></blockquote> : <blockquote key={i} className="tm-article-quote"><p>{inlineMarkdown(block.text.endsWith(".") ? block.text.slice(0, -1) : block.text)}{block.text.endsWith(".") && <BrandDot />}</p></blockquote>;
       case "list": {
         const List = block.ordered ? "ol" : "ul";
         return <List key={i} className={chat ? undefined : block.ordered ? "tm-article-refs" : "tm-article-list"}>{block.items.map((item, index) => {
           const term = !chat && !block.ordered && item.match(/^\*\*(.+?)\*\* (.*)$/);
-          return <li key={index}>{term ? <><dfn>{inlineMarkdown(term[1])}</dfn> {inlineMarkdown(term[2])}</> : inlineMarkdown(item)}</li>;
+          return <li key={index}>{term ? <><dfn>{inlineMarkdown(term[1])}</dfn> {inlineMarkdown(term[2])}</> : inline(item)}</li>;
         })}</List>;
       }
       case "table": return chat
-        ? <div key={i} className="assistant-text-table">{block.rows.map((row, index) => <p key={index}>{inlineMarkdown(row.join(" · "))}</p>)}</div>
+        ? <div key={i} className="assistant-text-table">{block.rows.map((row, index) => <p key={index}>{inline(row.join(" · "))}</p>)}</div>
         : <table key={i} className="tm-article-table" aria-labelledby={lastHeading}><tbody>{block.rows.map(([name, ...rest], index) => <tr key={index}><th scope="row">{inlineMarkdown(name)}</th>{rest.map((cell, c) => <td key={c}>{inlineMarkdown(cell)}</td>)}</tr>)}</tbody></table>;
       case "image": {
         // Answers may link out, but never load model-selected remote images.

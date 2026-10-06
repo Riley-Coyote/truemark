@@ -3,6 +3,7 @@ import { live } from "../../../platform/live/runtime";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, FocusEvent, FormEvent, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { useReveal } from "../../motion";
 import "../../../brand/contact.css";
 
@@ -118,12 +119,14 @@ export default function Contact() {
   const returning = useRef(false);
   const focusNext = useRef<Key | null>(null);
   const uid = useId();
+  // Arriving from the chat's "Talk to a person", the topic and the conversation come along.
+  const prefill = (useLocation().state as { prefill?: { topic?: string; message?: string } } | null)?.prefill;
   const [values, setValues] = useState<Values>({
     name: "",
     organization: "",
     email: "",
-    topic: routes[0].id,
-    message: "",
+    topic: routes.some((r) => r.id === prefill?.topic) ? prefill!.topic! : routes[0].id,
+    message: typeof prefill?.message === "string" ? prefill.message.slice(0, 4000) : "",
   });
   const [errors, setErrors] = useState<Errors>({});
   const [attempted, setAttempted] = useState(false);
@@ -132,6 +135,16 @@ export default function Contact() {
   const [website, setWebsite] = useState("");
   const [sent, setSent] = useState(false);
   useReveal(root);
+
+  // Arriving from the chat to write, the reader lands on the form, already filled in, when it
+  // would otherwise sit low or below the fold. No field takes focus, so no keyboard rises.
+  useEffect(() => {
+    if (!prefill) return;
+    const compose = root.current?.querySelector<HTMLElement>(".tm-contact-compose");
+    if (compose && compose.getBoundingClientRect().top > window.innerHeight / 2) compose.scrollIntoView({ block: "start", behavior: "instant" });
+    // Only on arrival.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Focus follows the swap: to the plain notice when "sent", back to the first field on return.
   useEffect(() => {

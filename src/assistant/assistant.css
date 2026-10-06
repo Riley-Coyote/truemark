@@ -203,8 +203,13 @@
   align-items: center;
   gap: var(--tm-space-3);
   padding: var(--tm-space-4) var(--tm-chat-pad) var(--tm-space-3);
-  border-bottom: 1px solid var(--tm-line);
+  /* A hairline only while the conversation runs beneath it. */
+  border-bottom: 1px solid transparent;
   touch-action: none;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+:is(.tm-chat-panel, .tm-desk-dock):has(> .tm-chat-body[data-above]) > .tm-chat-head {
+  border-bottom-color: var(--tm-line);
 }
 .tm-chat-grabber {
   position: absolute;
@@ -263,21 +268,39 @@
   height: auto;
   min-height: 0;
 }
+/* The chat body is a storefront scope (.tm), so the site's own records shown in it (a certificate, a
+   lot number) wear their own styles; it keeps none of a section's layout. */
+.tm.tm-chat-body {
+  display: flex;
+  flex-direction: column;
+  column-gap: 0;
+  grid-template-columns: none;
+  padding: 0;
+  background: transparent;
+}
 .tm-chat-log {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
   padding: var(--tm-space-4) var(--tm-chat-pad);
 }
-/* Short conversations sit at the bottom, by the field, the way messages do. */
+/* The conversation sits by the field, the way messages do: whenever the panel is taller than what it
+   holds (a moment, as it grows), the room is above. The flow is exactly as tall as its lines, which is
+   what the panel measures to fit them. */
 .tm-chat-flow {
-  min-height: 100%;
+  flex: none;
+  margin-top: auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   gap: var(--tm-space-4);
+}
+/* Each question begins a new exchange, set a little further from the last. */
+.tm-chat-flow > .tm-chat-msg.is-user:not(:first-child) {
+  margin-top: var(--tm-space-3);
 }
 .tm-chat-intro {
   display: grid;
@@ -342,10 +365,10 @@
   background: var(--tm-ink);
   color: var(--tm-paper);
 }
-.tm-chat .tm-chat-bubble :is(p, li, a, strong, em) {
+:is(.tm-chat, .tm-desk-dock) .tm-chat-bubble :is(p, li, a, strong, em) {
   color: inherit;
 }
-.tm-chat .tm-chat-msg.is-assistant :is(p, li) {
+:is(.tm-chat, .tm-desk-dock) .tm-chat-msg.is-assistant :is(p, li) {
   color: var(--tm-ink);
 }
 .tm-chat-msg.is-assistant {
@@ -424,10 +447,61 @@
 }
 
 .tm-chat-compose {
+  position: relative;
   flex: none;
   padding: var(--tm-space-3) var(--tm-chat-pad) calc(var(--tm-space-3) + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--tm-line);
+  /* A hairline only while more of the conversation waits below. */
+  border-top: 1px solid transparent;
   background: var(--tm-paper);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-chat-body[data-below] .tm-chat-compose {
+  border-top-color: var(--tm-line);
+}
+/* What continues below dissolves into the field's edge instead of being cut by it. */
+.tm-chat-body[data-below] .tm-chat-log {
+  -webkit-mask-image: linear-gradient(to bottom, var(--tm-ink) calc(100% - var(--tm-space-7)), transparent);
+  mask-image: linear-gradient(to bottom, var(--tm-ink) calc(100% - var(--tm-space-7)), transparent);
+}
+/* Back to the newest line, when the reader is above it: a small round button over the field's edge. */
+.tm-chat-jump {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: calc(100% + var(--tm-space-3));
+  display: grid;
+  place-items: center;
+  width: var(--tm-control-sm);
+  height: var(--tm-control-sm);
+  padding: 0;
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-lift);
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, var(--tm-space-2));
+  transition: opacity var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-base) var(--tm-ease-enter), visibility 0s linear var(--tm-dur-base), border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-chat-jump[data-shown] {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition-delay: 0s;
+}
+.tm-chat-jump:hover {
+  border-color: var(--tm-ink-3);
+  color: var(--tm-ink);
+}
+.tm-chat-jump:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+  color: var(--tm-ink);
+}
+.tm-chat-jump:active {
+  transform: translate(-50%, 0) scale(0.94);
 }
 .tm-chat-field {
   display: flex;
@@ -455,8 +529,8 @@
   outline: none;
 }
 /* The pill shows focus with its own border; the field inside draws nothing of its own. */
-.tm-chat .tm-chat-field input:focus,
-.tm-chat .tm-chat-field input:focus-visible {
+:is(.tm-chat, .tm-desk-dock) .tm-chat-field input:focus,
+:is(.tm-chat, .tm-desk-dock) .tm-chat-field input:focus-visible {
   outline: none;
   border: 0;
   box-shadow: none;
@@ -497,8 +571,10 @@
   background: var(--tm-wash);
   color: var(--tm-ink);
 }
+/* Set in from the field's rounded end, on the same line as the words typed in it. */
 .tm-chat-fine {
   margin: var(--tm-space-2) 0 0;
+  padding-inline: var(--tm-space-4);
   font: var(--tm-weight-regular) var(--tm-type-micro) / 1.5 var(--tm-font-sans);
   color: var(--tm-ink-3);
 }

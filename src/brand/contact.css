@@ -132,8 +132,10 @@
   grid-column: 1 / -1;
   min-width: 0;
 }
-/* Whatever receives focus lands below the sticky header (and the review bar, when present). */
+/* Whatever receives focus, or the form when the chat hands over, lands below the sticky header
+   (and the review bar, when present). */
 .tm-contact-field,
+.tm-contact-compose,
 .tm .tm-contact-sent-title {
   scroll-margin-block: calc(var(--review-bar-height, 0px) + var(--tm-header-height) + var(--tm-space-5)) var(--tm-space-5);
 }

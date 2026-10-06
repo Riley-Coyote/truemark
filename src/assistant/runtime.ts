@@ -5,11 +5,28 @@ import { checkClaims, type ClaimCheck } from "./claims";
 import { expectedNames, validateInput, type Persona, type ToolSchema, type ToolCall } from "./protocol";
 import { businessSummary, partnerMomentum, recordedStock, reorder, trend, windowFor, within } from "./metrics";
 
-export type Artifact = { kind: "certificate"; record: LotRecord; coaUrl?: string } |
+/** One component's main peak on a certificate's chromatogram (the lot line). */
+export type Peak = { name: string | null; retentionTime: string };
+export type SpecRow = { label: string; value: string };
+/** A product as the storefront chat shows it: the vial, its sizes, its specification and its current lot. */
+export type ProductCard = { id: string; name: string; size: string; price: number | null; image: string; href: string; lot: string; purity: string | null;
+  sizes: { id: string; size: string; price: number | null }[]; spec: SpecRow[] };
+export type OrderCard = { id: string; number: string; status: OrderStatus; placedAt: string; events: { status: string; at: string }[]; method: string;
+  carrier?: string; tracking?: string; total: number; lines: { name: string; size: string; quantity: number; lot: string }[]; href: string };
+export type ShippingCard = { methods: { label: string; detail: string; price: number }[]; freeThreshold: number | null; bagSubtotal: number | null; remaining: number | null; policy: string };
+/** Where an answer's facts came from: a record the reader can open. */
+export type Source = { label: string; href: string };
+export type Artifact = { kind: "certificate"; record: LotRecord; coaUrl?: string; peaks?: Peak[] } |
   { kind: "rows"; rows: { label: string; detail: string; href: string }[] } |
   { kind: "draft"; text: string; check: ClaimCheck; disclosure?: string } |
-  { kind: "link"; url: string; qr: string };
-export type ToolOutput = { model: unknown; artifact?: Artifact; pending?: PendingAction };
+  { kind: "link"; url: string; qr: string } |
+  { kind: "product"; product: ProductCard } |
+  { kind: "compare"; products: ProductCard[] } |
+  { kind: "order"; order: OrderCard } |
+  { kind: "shipping"; shipping: ShippingCard } |
+  // What a confirmed action did, kept in the conversation as its receipt.
+  { kind: "done"; text: string; href?: string; link?: string };
+export type ToolOutput = { model: unknown; artifact?: Artifact; pending?: PendingAction; source?: Source };
 export type PendingAction = { kind: "pending_action"; tool: string; title: string; details: Record<string, unknown>; confirm: () => Promise<ToolOutput>; cancel: () => ToolOutput };
 export type Scope = { persona: Persona; role: string; id: string; sample: boolean };
 export type RuntimeDependencies = {
@@ -24,7 +41,30 @@ export type RuntimeDependencies = {
   goal: (id: string) => number;
   milestones: (refs: Awaited<ReturnType<AssistantStore["partners"]["referrals"]>>) => unknown;
   qr: (url: string) => Promise<string>;
+  /** The storefront chat's extras, optional so other surfaces and tests need not supply them. */
+  describeProduct?: (product: Awaited<ReturnType<AssistantStore["assistant"]["products"]>>[number]) => { image: string; spec: SpecRow[] };
+  peaks?: (record: LotRecord) => Peak[];
+  bag?: () => { id: string; quantity: number }[];
 };
+
+/** What the chat says it is doing while a tool runs: the record it is reading, in plain words. */
+export function activityFor(tool: ToolCall): string {
+  const a = tool.arguments ?? {};
+  const named = (key: string) => (typeof a[key] === "string" ? String(a[key]).slice(0, 40) : "");
+  switch (tool.name) {
+    case "lookup_lot": return named("lot") ? `Reading lot ${named("lot").toUpperCase()}` : "Reading the lot record";
+    case "get_product": return "Opening the product sheet";
+    case "compare_products": return "Laying the specifications side by side";
+    case "search_catalog": return "Searching the catalog";
+    case "shipping_info": return "Checking shipping";
+    case "site_answers": return a.topic === "policies" ? "Reading our policies" : a.topic === "faq" ? "Checking our answers" : "Reading our handling guidance";
+    case "my_orders": return "Opening your orders";
+    case "order_status": return named("number") ? `Checking order ${named("number").toUpperCase()}` : "Checking your order";
+    case "my_account_status": return "Checking your account";
+    case "add_to_bag": return "Preparing your bag";
+    default: return "Looking into it";
+  }
+}
 const productSummary = (p: Awaited<ReturnType<AssistantStore["assistant"]["products"]>>[number]) => ({ id: p.id, name: p.name, size: p.size, price: p.price ?? null, category: p.category, form: p.form, active: p.active, stock: p.stock, description: p.description });
 const orderSummary = (o: Order) => ({ id: o.id, number: o.number, status: o.status, total: o.total, createdAt: o.createdAt });
 const matching = (query: unknown, ...parts: unknown[]) => !query || parts.join(" ").toLowerCase().includes(String(query).toLowerCase());
@@ -47,18 +87,18 @@ export function createToolRuntime(deps: RuntimeDependencies) {
     if (["approve_commissions", "record_payout", "create_discount_code"].includes(tool.name) && scope.role !== "owner") throw new Error("This action requires the owner.");
     const a = structuredClone(tool.arguments), text = (key: string) => String(a[key] ?? "");
     const now = deps.now();
-    const output = (model: unknown, artifact?: Artifact): ToolOutput => ({ model: { sample: scope.sample, data: model }, artifact });
+    const output = (model: unknown, artifact?: Artifact, source?: Source): ToolOutput => ({ model: { sample: scope.sample, data: model }, artifact, source });
     async function ownPartner(): Promise<Partner> { return required(await s.partners.me(), "Sign in to your partner account first."); }
     async function ownOrders() { const buyer = required(await s.session.get(), "Sign in to your research account to see your orders."); return s.orders.listForBuyer(buyer.id); }
     const product = async () => structuredClone(required((await s.assistant.products()).find((p) => p.id === text("id")), "Product not found."));
-    const pending = (title: string, details: Record<string, unknown>, run: () => Promise<unknown>, artifact?: Artifact): ToolOutput => {
+    const pending = (title: string, details: Record<string, unknown>, run: () => Promise<unknown>, artifact?: Artifact, done?: Artifact): ToolOutput => {
       let settled = false;
       return { model: { pending_action: true, title }, artifact, pending: { kind: "pending_action", tool: tool.name, title, details,
         async confirm() {
           if (settled) throw new Error("This action has already been handled.");
           settled = true;
           if (fingerprint(await deps.scope()) !== fingerprint(scope)) throw new Error("Your account changed. Please ask again.");
-          return output(await run());
+          return output(await run(), done);
         },
         cancel() { settled = true; return output({ cancelled: true, message: "Cancelled. No change was made." }); },
       } };
@@ -71,31 +111,89 @@ export function createToolRuntime(deps: RuntimeDependencies) {
       return Promise.all(partners.map(async (p) => partnerMomentum(p, refs, await s.partners.visits(p.id), now)));
     };
     const orderRows = (orders: Order[]): Artifact => ({ kind: "rows", rows: orders.map((o) => ({ label: o.number, detail: `${o.status} · ${money(o.total)}`, href: persona === "owner" ? `/admin/orders?order=${encodeURIComponent(o.id)}` : `/account/orders/${encodeURIComponent(o.id)}` })) });
+    /** A product as a card: its sizes, its specification and its own current lot's purity, never inferred. */
+    const productCard = async (p: Awaited<ReturnType<typeof product>>): Promise<ProductCard> => {
+      const all = await s.assistant.products();
+      const lot = await s.lots.get(p.lot);
+      const released = lot?.status === "released" && lot.results.length > 0;
+      const hplc = released ? lot!.results.find((r) => r.method === "HPLC") : undefined;
+      const described = deps.describeProduct?.(p) ?? { image: "", spec: [{ label: "Form", value: p.form }] };
+      return { id: p.id, name: p.name, size: p.size, price: p.price ?? null, image: described.image, href: `/product/${encodeURIComponent(p.id)}`, lot: p.lot,
+        purity: hplc ? `${hplc.value}${hplc.unit ?? ""}` : null,
+        sizes: all.filter((x) => x.name === p.name && x.active).map((x) => ({ id: x.id, size: x.size, price: x.price ?? null })), spec: described.spec };
+    };
+    const cardModel = (c: ProductCard) => ({ id: c.id, name: c.name, size: c.size, price: c.price, lot: c.lot, currentLotPurity: c.purity ?? "not published",
+      sizes: c.sizes.map((x) => `${x.size}${x.price == null ? "" : ` ${money(x.price)}`}`), specification: Object.fromEntries(c.spec.map((row) => [row.label, row.value])) });
+    const orderCard = async (o: Order): Promise<OrderCard> => {
+      const all = await s.assistant.products();
+      return { id: o.id, number: o.number, status: o.status, placedAt: o.createdAt, events: o.events.slice(-7).map((e) => ({ status: e.status, at: e.at })),
+        method: o.shipping.method, carrier: o.shipping.carrier, tracking: o.shipping.tracking, total: o.total,
+        lines: o.lines.map((l) => { const p = all.find((x) => x.id === l.productId); return { name: p?.name ?? l.productId, size: p?.size ?? "", quantity: l.quantity, lot: l.lot }; }),
+        href: `/account/orders/${encodeURIComponent(o.id)}` };
+    };
     switch (tool.name) {
       case "search_catalog": case "catalog": case "products_and_stock": {
         const list = (await s.assistant.products()).filter((p) => (persona === "owner" || p.active) && matching(a.query, p.name, p.size, p.category));
         const lots = tool.name === "products_and_stock" ? await s.lots.list() : [];
-        const result = page(list.map((p) => ({ ...productSummary(p), ...(tool.name === "products_and_stock" ? recordedStock(p, lots) : {}) })), a); return output(result);
+        const result = page(list.map((p) => ({ ...productSummary(p), ...(tool.name === "products_and_stock" ? recordedStock(p, lots) : {}) })), a);
+        return output(result, undefined, persona === "visitor" ? { label: "Catalog", href: "/products" } : undefined);
       }
-      case "get_product": return output(productSummary(await product()));
+      case "get_product": {
+        const p = await product();
+        if (persona !== "visitor") return output(productSummary(p));
+        const card = await productCard(p);
+        return output({ ...productSummary(p), ...cardModel(card) }, { kind: "product", product: card }, { label: `${p.name} ${p.size}`, href: card.href });
+      }
+      case "compare_products": {
+        const ids = [text("first"), text("second"), text("third")].filter(Boolean);
+        const all = await s.assistant.products();
+        const found = ids.map((id) => all.find((p) => p.id === id && p.active)).filter((p): p is NonNullable<typeof p> => Boolean(p));
+        if (found.length < 2) throw new Error("Choose at least two current products to compare.");
+        const cards = await Promise.all(found.map((p) => productCard(structuredClone(p))));
+        return output({ compared: cards.map(cardModel) }, { kind: "compare", products: cards }, { label: "Product specifications", href: "/products" });
+      }
       case "lookup_lot": {
         const lot = await s.lots.get(text("lot").trim().toUpperCase().replace(/\s+/g, "").replace(/[–—]/g, "-"));
         const record = deps.verify(lot);
         if (!record) return output({ found: false, contact: "/contact" });
-        return output({ ...record, product: { id: record.product.id, name: record.product.name, size: record.product.size }, coaUrl: lot?.coaUrl }, { kind: "certificate", record, coaUrl: lot?.coaUrl });
+        return output({ ...record, product: { id: record.product.id, name: record.product.name, size: record.product.size }, coaUrl: lot?.coaUrl },
+          { kind: "certificate", record, coaUrl: lot?.coaUrl, peaks: deps.peaks?.(record) }, { label: `Certificate · lot ${record.lot}`, href: `/verify?lot=${encodeURIComponent(record.lot)}` });
       }
-      case "shipping_info": return output({ methods: await s.catalog.shippingMethods(), settings: await s.settings.get(), wording: deps.shippingCopy, policy: "/shipping-policy" });
-      case "site_answers": return output(deps.siteAnswers(text("topic"), text("query")));
-      case "my_account_status": { const buyer = await s.session.get(); return output(buyer ? { signedIn: true, status: buyer.status } : { signedIn: false, href: "/access" }); }
-      case "my_orders": { const result = page(await ownOrders(), a); return output({ ...result, items: result.items.map(orderSummary) }, orderRows(result.items)); }
-      case "order_status": { const o = required((await ownOrders()).find((o) => o.number.toUpperCase() === text("number").toUpperCase()), "No order with that number belongs to this account."); return output({ ...orderSummary(o), shipping: o.shipping, events: o.events.slice(-7) }, orderRows([o])); }
+      case "shipping_info": {
+        const [methods, settings] = await Promise.all([s.catalog.shippingMethods(), s.settings.get()]);
+        const model = { methods, settings, wording: deps.shippingCopy, policy: "/shipping-policy" };
+        if (persona !== "visitor") return output(model);
+        // The reader's own bag, priced from the catalog, for the distance to free shipping.
+        const items = deps.bag?.() ?? [];
+        const prices = await s.assistant.products();
+        const subtotal = items.length ? items.reduce((sum, item) => sum + (prices.find((p) => p.id === item.id)?.price ?? 0) * item.quantity, 0) : null;
+        const threshold = settings.freeShippingThreshold;
+        const remaining = threshold != null && subtotal != null ? Math.max(0, Math.round((threshold - subtotal) * 100) / 100) : null;
+        const shipping: ShippingCard = { methods: methods.filter((m) => m.active !== false).map((m) => ({ label: m.label, detail: m.detail, price: m.price })),
+          freeThreshold: threshold, bagSubtotal: subtotal, remaining, policy: "/shipping-policy" };
+        return output({ ...model, bag: subtotal == null ? "empty" : { subtotal, remainingForFreeShipping: remaining } }, { kind: "shipping", shipping }, { label: "Shipping policy", href: "/shipping-policy" });
+      }
+      case "site_answers": {
+        const answers = deps.siteAnswers(text("topic"), text("query")) as { excerpts?: { source?: string }[] };
+        const topic = text("topic");
+        const href = topic === "policies" ? answers.excerpts?.[0]?.source ?? "/shipping-policy" : topic === "faq" ? "/#questions" : "/handling";
+        return output(answers, undefined, { label: topic === "policies" ? "Our policies" : topic === "faq" ? "Common questions" : "Storage and handling", href });
+      }
+      case "my_account_status": { const buyer = await s.session.get(); return output(buyer ? { signedIn: true, status: buyer.status } : { signedIn: false, href: "/access" }, undefined, buyer ? { label: "Your account", href: "/account" } : undefined); }
+      case "my_orders": { const result = page(await ownOrders(), a); return output({ ...result, items: result.items.map(orderSummary) }, orderRows(result.items), { label: "Your orders", href: "/account/orders" }); }
+      case "order_status": {
+        const o = required((await ownOrders()).find((o) => o.number.toUpperCase() === text("number").toUpperCase()), "No order with that number belongs to this account.");
+        const card = persona === "visitor" ? await orderCard(o) : undefined;
+        return output({ ...orderSummary(o), shipping: o.shipping, events: o.events.slice(-7), ...(card ? { lines: card.lines } : {}) },
+          card ? { kind: "order", order: card } : orderRows([o]), { label: `Order ${o.number}`, href: `/account/orders/${encodeURIComponent(o.id)}` });
+      }
       case "add_to_bag": {
         const p = await product(); if (!p.active || p.price == null || !deps.addToBag) throw new Error("This item cannot be added here.");
         const quantity = Number(a.quantity);
         if (p.stock !== null && p.stock < quantity) throw new Error("That quantity is not currently in stock.");
         return pending(`Add ${quantity} × ${p.name} ${p.size} to your bag`, { productId: `${p.name} ${p.size}`, unitPrice: p.price, quantity }, async () => {
           await unchanged(product, p); deps.addToBag!(p.id, quantity); return { added: true, id: p.id, quantity };
-        });
+        }, undefined, { kind: "done", text: `Added ${quantity} × ${p.name} ${p.size} to your bag`, href: "/cart", link: "View your bag" });
       }
       case "orders": { const result = page((await s.orders.list()).filter((o) => matching(a.filter, o.number, o.status)), a); return output({ ...result, items: result.items.map(orderSummary) }, orderRows(result.items)); }
       case "order": {
@@ -109,7 +207,8 @@ export function createToolRuntime(deps: RuntimeDependencies) {
         return output({ ...result, items }, { kind: "rows", rows: items.map((b) => ({ label: b.name, detail: `${b.institution} · ${b.status}`, href: `/admin/customers?customer=${encodeURIComponent(b.id)}` })) });
       }
       case "lots": case "released_lots": {
-        const list = (await s.lots.list()).filter((l) => (tool.name !== "released_lots" || l.status === "released") && matching(a.filter, l.lot, l.productId, l.status));
+        // Partners see the public record only: released lots, never the command center's fictional samples.
+        const list = (await s.lots.list()).filter((l) => (tool.name !== "released_lots" || (l.status === "released" && !l.sample)) && matching(a.filter, l.lot, l.productId, l.status));
         return output(page(list.map((l) => ({ lot: l.lot, productId: l.productId, status: l.status, units: l.units, results: l.results.slice(0, 6), sample: l.sample })), a));
       }
       case "applications": return output(page((await s.applications.list()).filter((row) => matching(a.filter, row.name, row.status)).map(({ id, name, institution, status, submittedAt }) => ({ id, name, institution, status, submittedAt })), a));

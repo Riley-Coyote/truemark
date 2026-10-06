@@ -1,0 +1,1071 @@
+/* The storefront chat as TrueMark's lab desk (LabDesk.tsx, and the desk beside the page in
+   Assistant.tsx). Answers arrive as records; each closes with where its facts came from. */
+
+/* ---------- The desk beside the page (desktop) ---------- */
+
+.tm-desk-dock {
+  --tm-chat-pad: var(--tm-space-4);
+  --tm-chat-dur: var(--tm-dur-slow);
+  --tm-chat-ease: var(--tm-ease-glide, cubic-bezier(0.32, 0.72, 0, 1));
+  --tm-chat-dot: calc(var(--tm-space-1) * 1.5);
+  --tm-chat-dot-cycle: 1.2s;
+  --tm-chat-dot-step: 160ms;
+  /* Its height: as tall as what it holds (--tm-chat-fit, measured), growing with the conversation up
+     to a chat window's own size, never a column the height of a tall screen; on a short window, no
+     higher than just below the site's header, so the bag and the menu stay in reach. */
+  --tm-desk-full: min(46rem, calc(100vh - var(--review-bar-height, 0px) - var(--tm-notice-height) - var(--tm-header-height) - var(--tm-space-4) * 2));
+  position: fixed;
+  z-index: 90;
+  right: var(--tm-space-4);
+  bottom: var(--tm-space-4);
+  height: min(var(--tm-chat-fit, 100vh), var(--tm-desk-full));
+  display: flex;
+  flex-direction: column;
+  width: min(27rem, calc(100vw - var(--tm-space-8)));
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-xl);
+  background: var(--tm-paper);
+  color: var(--tm-ink);
+  box-shadow: var(--tm-shadow-float);
+  outline: none;
+  /* It unfolds out of its corner mark and folds back into it: the visible desk grows from a circle
+     the size of the mark at its bottom corner. Open, the clip stands clear of its shadow. */
+  --tm-desk-fold: inset(calc(100% - var(--tm-control-sm) - var(--tm-space-1)) 0 0 calc(100% - var(--tm-control-sm) - var(--tm-space-1)) round var(--tm-radius-pill));
+  clip-path: inset(calc(var(--tm-space-8) * -1));
+  transition: clip-path var(--tm-chat-dur) var(--tm-chat-ease), opacity var(--tm-dur-base) var(--tm-ease-enter), display var(--tm-chat-dur) allow-discrete;
+}
+/* Only an open desk grows: it arrives already at its measured height. */
+.tm-desk-dock[data-state="open"] {
+  transition: clip-path var(--tm-chat-dur) var(--tm-chat-ease), opacity var(--tm-dur-base) var(--tm-ease-enter), height var(--tm-chat-dur) var(--tm-chat-ease), display var(--tm-chat-dur) allow-discrete;
+}
+.tm-desk-dock[data-state="entering"],
+.tm-desk-dock[data-state="leaving"],
+.tm-desk-dock[hidden] {
+  opacity: 0;
+  clip-path: var(--tm-desk-fold);
+}
+/* Stepping aside, it folds into the corner where its mark appears, and unfolds from there again. */
+.tm-desk-dock[hidden] {
+  display: none;
+  pointer-events: none;
+}
+@starting-style {
+  .tm-desk-dock[data-state="open"]:not([hidden]) {
+    opacity: 0;
+    clip-path: var(--tm-desk-fold);
+  }
+}
+.tm-desk-dock .tm-chat-head {
+  touch-action: auto;
+}
+
+/* ---------- The desk's corner mark (desktop) ---------- */
+
+/* A round mark in the page's own right margin (the storefront's .tm padding), as near the corner as that
+   margin allows, so it never stands over the page; the desk rises from the same corner. */
+.tm-desk-launcher {
+  /* Small enough to sit within a laptop's margin beside a page's primary button. */
+  --tm-desk-mark: calc(var(--tm-control-sm) + var(--tm-space-1));
+  position: fixed;
+  z-index: 90;
+  bottom: var(--tm-space-4);
+  right: max(var(--tm-space-3), min(var(--tm-space-5), calc(max(var(--tm-margin), calc((100vw - var(--tm-content)) / 2 + var(--tm-margin))) - var(--tm-desk-mark) - var(--tm-space-2))));
+  display: grid;
+  place-items: center;
+  width: var(--tm-desk-mark);
+  height: var(--tm-desk-mark);
+  padding: 0;
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-lift);
+  color: var(--tm-ink);
+  cursor: pointer;
+  animation: tm-chat-in var(--tm-dur-base) var(--tm-ease-enter) var(--tm-dur-quick) backwards;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro), opacity var(--tm-dur-base) var(--tm-ease-enter), visibility 0s linear 0s;
+}
+.tm-desk-launcher:hover {
+  border-color: var(--tm-ink-3);
+}
+.tm-desk-launcher:active {
+  transform: scale(0.95);
+}
+.tm-desk-launcher:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+}
+/* A page's primary action passing beneath it: it stands aside until the way is clear. */
+.tm-desk-launcher[data-yield] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--tm-dur-base) var(--tm-ease-enter), visibility 0s linear var(--tm-dur-base);
+}
+/* The brand's dot, worn at its shoulder. */
+.tm-desk-launcher .tm-desk-presence {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--tm-space-3);
+  height: var(--tm-space-3);
+  box-shadow: 0 0 0 calc(var(--tm-space-1) / 2) var(--tm-paper);
+}
+/* Its name, on hover and focus; while an answer waits, it says so and stays. */
+.tm-desk-launcher-label {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + var(--tm-space-2));
+  padding: var(--tm-space-2) var(--tm-space-3);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-whisper);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-ink);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(var(--tm-space-2), -50%);
+  transition: opacity var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-launcher:is(:hover, :focus-visible) .tm-desk-launcher-label,
+.tm-desk-launcher[data-unread] .tm-desk-launcher-label {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+/* The brand's dot as the desk's presence: still at rest, breathing while it reads. */
+.tm-desk-presence {
+  flex: none;
+  width: var(--tm-space-2);
+  height: var(--tm-space-2);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-gradient);
+}
+.tm-desk-presence.is-working {
+  animation: tm-desk-breathe 1400ms var(--tm-ease-breathe) infinite;
+}
+@keyframes tm-desk-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* What it is reading, while it reads: a light passes along the words, as along a page under a lamp,
+   and each new label arrives in the old one's place. */
+.tm-desk-activity {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+  animation: tm-chat-in var(--tm-dur-base) var(--tm-ease-enter) both;
+}
+.tm-desk-activity-label {
+  background: linear-gradient(90deg, var(--tm-ink-3) 0%, var(--tm-ink-3) 38%, var(--tm-ink) 50%, var(--tm-ink-3) 62%, var(--tm-ink-3) 100%) 100% 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: tm-chat-in var(--tm-dur-base) var(--tm-ease-enter) backwards, tm-desk-shimmer 1800ms linear infinite;
+}
+@keyframes tm-desk-shimmer {
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* ---------- The first thing it says ---------- */
+
+.tm-desk-welcome {
+  display: grid;
+  gap: var(--tm-space-2);
+}
+.tm-desk-here {
+  display: grid;
+  gap: var(--tm-space-2);
+}
+.tm-desk-here:has(.tm-desk-here-row) {
+  gap: var(--tm-space-3);
+  padding: var(--tm-space-4);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-lilac-50);
+}
+.tm-desk-here-row {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+}
+.tm .tm-desk-kicker,
+.tm-desk-kicker {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-desk-trace {
+  margin-inline: calc(var(--tm-space-2) * -1);
+}
+
+/* ---------- Answers as records ---------- */
+
+/* Emphasis in an answer (a lot number, a key figure) is set in the brand's medium, its strongest
+   weight in running text, never the browser's heavy bold. */
+.tm-chat-body strong {
+  font-weight: var(--tm-weight-medium);
+  color: var(--tm-ink);
+}
+/* The signal green as small type: deepened with the ink until it reads at AA contrast on paper and on
+   its own tint, still green. */
+.tm-chat-body {
+  --tm-desk-signal-text: color-mix(in srgb, var(--tm-signal) 80%, var(--tm-ink));
+}
+
+/* An answer takes the conversation's full width, so its records line up edge to edge. */
+.tm-chat-flow > .tm-chat-msg.is-assistant {
+  align-self: stretch;
+}
+/* The chat may break a long string anywhere (.assistant); a record keeps its words whole and breaks
+   only what cannot fit on a line of its own. */
+.tm-desk-card,
+.tm-desk-cert,
+.tm-desk-welcome,
+.tm-desk-close {
+  overflow-wrap: break-word;
+}
+.tm-desk-card {
+  display: grid;
+  gap: var(--tm-space-3);
+  min-width: 0;
+  padding: var(--tm-space-4);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-whisper);
+}
+.tm-desk-thumb {
+  flex: none;
+  display: grid;
+  place-items: end center;
+  width: 3.5rem;
+  height: 4.5rem;
+  overflow: hidden;
+  border-radius: var(--tm-radius-sm);
+  background: var(--tm-lilac-100);
+}
+.tm-desk-thumb img {
+  display: block;
+  width: 72%;
+  height: auto;
+  margin-bottom: 10%;
+}
+.tm-desk-thumb.is-small {
+  width: 2.75rem;
+  height: 3.5rem;
+}
+.tm .tm-desk-name,
+.tm-desk-name {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1.3 var(--tm-font-display);
+  color: var(--tm-ink);
+}
+.tm-desk-name span {
+  color: var(--tm-ink-3);
+}
+.tm .tm-desk-price,
+.tm-desk-price {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+}
+.tm .tm-desk-lot,
+.tm-desk-lot,
+.tm .tm-desk-note,
+.tm-desk-note {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-desk-product-top {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-4);
+}
+.tm-desk-product-id {
+  display: grid;
+  gap: var(--tm-space-1);
+  min-width: 0;
+}
+
+.tm-desk-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tm-space-2);
+}
+.tm-desk-sizes button {
+  min-height: var(--tm-control-sm);
+  padding: 0 var(--tm-space-3);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-desk-sizes button:hover {
+  border-color: var(--tm-ink-3);
+  color: var(--tm-ink);
+}
+.tm-desk-sizes button:active {
+  transform: scale(0.97);
+}
+.tm-desk-sizes button[aria-pressed="true"] {
+  border-color: var(--tm-ink);
+  color: var(--tm-ink);
+  box-shadow: inset 0 0 0 1px var(--tm-ink);
+}
+.tm-desk-sizes button:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+}
+
+.tm .tm-desk-spec,
+.tm-desk-spec {
+  display: grid;
+  margin: 0;
+}
+.tm-desk-spec div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  padding-block: var(--tm-space-2);
+  border-top: 1px solid var(--tm-line);
+}
+.tm .tm-desk-spec dt,
+.tm-desk-spec dt {
+  flex: none;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm .tm-desk-spec dd,
+.tm-desk-spec dd {
+  margin: 0;
+  min-width: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.45 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.tm-desk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-3) var(--tm-space-5);
+}
+.tm-desk-add {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  min-height: var(--tm-control-sm);
+  padding: 0 var(--tm-space-5);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-ink);
+  box-shadow: var(--tm-shadow-whisper), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-paper);
+  cursor: pointer;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-desk-add:hover {
+  background: var(--tm-ink-hover);
+}
+.tm-desk-add:active {
+  transform: scale(0.97);
+}
+.tm-desk-add:focus-visible {
+  outline: none;
+  border-color: var(--tm-glow-3);
+}
+/* Once added, it says so in the shop's own signal colour, and stays ready to add another. The button
+   gives way at once to the words, which arrive as their check is drawn (never a grey half-button). */
+.tm-desk-add[data-added] {
+  padding-inline: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--tm-desk-signal-text);
+  transition: none;
+  animation: tm-desk-row var(--tm-dur-base) var(--tm-ease-enter) backwards;
+}
+.tm-desk-link {
+  /* As wide as its words, wherever it stands in a card. */
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-1);
+  padding-block: var(--tm-space-1);
+  border-bottom: 1px solid var(--tm-line-strong);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1.3 var(--tm-font-sans);
+  color: var(--tm-ink);
+  text-decoration: none;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-link:hover,
+.tm-desk-link:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+}
+.tm-desk-link svg {
+  transition: transform var(--tm-dur-base) var(--tm-ease-micro);
+}
+.tm-desk-link:hover svg {
+  transform: translateX(2px);
+}
+
+/* Side by side: a column per product; each fact's name spans the columns above its values. */
+.tm-desk-compare table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.tm-desk-compare thead th {
+  padding: 0 var(--tm-space-2) var(--tm-space-3) 0;
+  font-weight: inherit;
+  text-align: left;
+  vertical-align: bottom;
+}
+.tm-desk-compare thead a {
+  display: grid;
+  justify-items: start;
+  gap: var(--tm-space-2);
+  color: inherit;
+  text-decoration: none;
+}
+/* Sizes of one compound: the size is what tells the columns apart. */
+.tm-desk-compare-size {
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.1 var(--tm-font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+}
+.tm-desk-compare thead a:hover :is(.tm-desk-name, .tm-desk-compare-size),
+.tm-desk-compare thead a:focus-visible :is(.tm-desk-name, .tm-desk-compare-size) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.tm-desk-compare thead a:focus-visible {
+  outline: none;
+}
+.tm-desk-compare .tm-desk-fact th {
+  padding: var(--tm-space-3) 0 var(--tm-space-1);
+  border-top: 1px solid var(--tm-line);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.3 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+  text-align: left;
+}
+.tm-desk-compare td {
+  padding: 0 var(--tm-space-2) var(--tm-space-3) 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+  vertical-align: top;
+}
+/* A lot number stays on one line: the smallest type that is still read easily, which on a phone is
+   the step-up label size. */
+.tm .tm-desk-compare td .tm-mono {
+  font-size: var(--tm-type-micro);
+}
+@media (max-width: 560px) {
+  .tm .tm-desk-compare td .tm-mono {
+    font-size: var(--tm-type-nano);
+  }
+}
+
+/* An order's progress, its shipment and its lots. */
+.tm-desk-order-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-3);
+}
+.tm-desk-status {
+  flex: none;
+  padding: var(--tm-space-1) var(--tm-space-2);
+  border-radius: var(--tm-radius-pill);
+  background: color-mix(in srgb, var(--tm-signal) 9%, transparent);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.2 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-desk-signal-text);
+}
+.tm-desk-status[data-stopped] {
+  background: var(--tm-wash);
+  color: var(--tm-ink-3);
+}
+.tm-desk-track {
+  --tm-desk-node: 0.625rem;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* The rail runs between the first and last stations' centres; the reached part is ink. */
+.tm-desk-track::before,
+.tm-desk-track::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--tm-desk-node) / 2);
+  left: 10%;
+  height: 1px;
+}
+.tm-desk-track::before {
+  right: 10%;
+  background: var(--tm-line-strong);
+}
+.tm-desk-track::after {
+  width: calc(80% * var(--tm-desk-reached) / 4);
+  background: var(--tm-ink);
+}
+.tm-desk-track li {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: var(--tm-space-1);
+  text-align: center;
+}
+.tm-desk-node {
+  width: var(--tm-desk-node);
+  height: var(--tm-desk-node);
+  border: 1px solid var(--tm-ink-4);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+}
+.tm-desk-track li.is-done .tm-desk-node {
+  border-color: var(--tm-ink);
+  background: var(--tm-ink);
+}
+.tm-desk-step {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.3 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-desk-track li.is-done .tm-desk-step {
+  color: var(--tm-ink);
+}
+.tm-desk-when {
+  min-height: 1.2em;
+  font: var(--tm-weight-regular) var(--tm-type-nano) / 1.2 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+}
+.tm-desk-lines {
+  display: grid;
+  gap: var(--tm-space-2);
+  margin: 0;
+  padding: var(--tm-space-3) 0 0;
+  border-top: 1px solid var(--tm-line);
+  list-style: none;
+}
+.tm-desk-lines li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--tm-space-1) var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm-desk-lines a {
+  color: var(--tm-ink-2);
+  text-decoration: none;
+  border-bottom: 1px solid var(--tm-line-strong);
+}
+.tm-desk-lines a:hover,
+.tm-desk-lines a:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+}
+
+/* Shipping: the distance to free shipping, then the methods. */
+/* The bar belongs to its sentence, set a little apart from the methods below. */
+.tm-desk-free {
+  padding-bottom: var(--tm-space-2);
+}
+.tm .tm-desk-free p,
+.tm-desk-free p {
+  margin: 0 0 var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm-desk-bar {
+  display: block;
+  height: var(--tm-space-1);
+  overflow: hidden;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-line);
+}
+.tm-desk-bar i {
+  display: block;
+  width: calc(var(--tm-desk-fill) * 100%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tm-ink);
+  transform-origin: left;
+  animation: tm-desk-fill var(--tm-dur-scene) var(--tm-ease-enter) both;
+}
+@keyframes tm-desk-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+.tm-desk-methods {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-desk-methods li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  padding-block: var(--tm-space-2);
+  border-top: 1px solid var(--tm-line);
+}
+.tm-desk-methods li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.tm-desk-methods .tm-desk-note {
+  display: block;
+}
+.tm-desk-method {
+  display: block;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm-desk-method-price {
+  flex: none;
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+}
+
+/* A certificate, with its lot's own line above it. */
+.tm-desk-cert {
+  display: grid;
+  gap: var(--tm-space-3);
+  min-width: 0;
+}
+.tm-desk-trace-card {
+  gap: var(--tm-space-1);
+  padding-bottom: var(--tm-space-2);
+}
+/* The certificate at the desk's scale: the same paper, set closer, its results settling in one by
+   one as they do on the site. */
+.tm-desk-cert .tm-coa {
+  padding: var(--tm-space-4);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-md);
+  box-shadow: var(--tm-shadow-whisper);
+}
+.tm-desk-cert .tm-coa-head {
+  padding-bottom: var(--tm-space-3);
+}
+.tm-desk-cert .tm-coa-title {
+  font-size: var(--tm-type-body);
+}
+/* A long name and its value share a line where they fit; otherwise the value steps below it,
+   still on the right. */
+.tm-desk-cert .tm-coa-rows div {
+  flex-wrap: wrap;
+  gap: var(--tm-space-1) var(--tm-space-3);
+  padding-block: var(--tm-space-2);
+}
+.tm .tm-desk-cert .tm-coa-rows dd {
+  margin-left: auto;
+}
+.tm .tm-desk-cert .tm-coa-component {
+  padding-top: var(--tm-space-4);
+}
+.tm .tm-desk-cert .tm-coa-links {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--tm-space-2);
+  padding-block: var(--tm-space-3);
+}
+.tm-desk-cert .tm-coa-enter {
+  flex-basis: auto;
+}
+.tm-desk-cert .tm-coa-foot {
+  padding-top: var(--tm-space-3);
+}
+.tm-desk-cert .tm-coa .is-result {
+  opacity: 1;
+  transition: none;
+  animation: tm-desk-result var(--tm-dur-scene) var(--tm-ease-enter) both;
+  animation-delay: calc(240ms + var(--tm-i) * 140ms);
+}
+@keyframes tm-desk-result {
+  from {
+    opacity: 0.2;
+  }
+}
+
+.tm-desk-rows {
+  margin: 0;
+  padding: var(--tm-space-2) var(--tm-space-4);
+  list-style: none;
+}
+.tm-desk-rows li + li {
+  border-top: 1px solid var(--tm-line);
+}
+.tm-desk-rows a {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-3);
+  padding-block: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink);
+  text-decoration: none;
+}
+.tm-desk-rows a:hover span:first-child,
+.tm-desk-rows a:focus-visible span:first-child {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tm-desk-rows a:focus-visible {
+  outline: none;
+}
+
+/* A change waits for the reader: what will happen, its particulars, and the two answers. */
+.tm .tm-desk-confirm dl {
+  display: grid;
+  margin: 0;
+}
+.tm-desk-confirm dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  padding-block: var(--tm-space-2);
+  border-top: 1px solid var(--tm-line);
+}
+.tm .tm-desk-confirm dt {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm .tm-desk-confirm dd {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.45 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+  text-align: right;
+}
+.tm-desk-quiet {
+  padding: var(--tm-space-1) 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1.3 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-desk-quiet:hover {
+  border-bottom-color: var(--tm-line-strong);
+  color: var(--tm-ink);
+}
+.tm-desk-quiet:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+  color: var(--tm-ink);
+}
+.tm-desk-quiet:active {
+  transform: scale(0.97);
+}
+/* What a confirmed change did, left in the conversation as its receipt. */
+.tm .tm-desk-done,
+.tm-desk-done {
+  display: flex;
+  align-items: baseline;
+  gap: var(--tm-space-2);
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm-desk-done svg {
+  flex: none;
+  align-self: center;
+  color: var(--tm-signal);
+}
+.tm-desk-done a {
+  border-bottom: 1px solid var(--tm-line-strong);
+  color: var(--tm-ink-2);
+  text-decoration: none;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-done a:hover,
+.tm-desk-done a:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+  color: var(--tm-ink);
+}
+
+/* ---------- Arrivals ---------- */
+
+/* Only what has just arrived plays its arrival (data-fresh, set by its line); opened again, the desk
+   shows its conversation still. */
+.tm-chat-body {
+  --tm-desk-stagger: 32ms;
+}
+.tm-chat-flow > :is(.tm-chat-msg, .tm-desk-close):not([data-fresh]) {
+  animation: none;
+}
+/* A question lifts out of the field into the conversation. */
+.tm-chat-flow > .tm-chat-msg.is-user[data-fresh] {
+  transform-origin: 100% 100%;
+  animation: tm-desk-ask var(--tm-dur-slow) var(--tm-chat-ease) both;
+}
+@keyframes tm-desk-ask {
+  from {
+    opacity: 0;
+    transform: translateY(var(--tm-space-5)) scale(0.96);
+  }
+}
+/* A record is set down on the desk: it rises a little and its shadow lands, then its rows settle
+   one after another, the way a document is read from the top. */
+.tm-chat-msg[data-fresh] .tm-desk-card,
+.tm-chat-msg[data-fresh] .tm-desk-cert > div {
+  animation: tm-desk-set var(--tm-dur-slow) var(--tm-chat-ease) backwards;
+}
+@keyframes tm-desk-set {
+  from {
+    opacity: 0;
+    transform: translateY(var(--tm-space-3)) scale(0.985);
+    box-shadow: none;
+  }
+}
+.tm-chat-msg[data-fresh] :is(.tm-desk-spec > div, .tm-desk-compare thead th, .tm-desk-compare tbody, .tm-desk-methods li, .tm-desk-track li, .tm-desk-lines li, .tm-desk-rows li) {
+  animation: tm-desk-row var(--tm-dur-slow) var(--tm-ease-enter) backwards;
+  animation-delay: calc(var(--tm-dur-quick) / 2 + var(--tm-i, 0) * var(--tm-desk-stagger));
+}
+@keyframes tm-desk-row {
+  from {
+    opacity: 0;
+  }
+}
+/* What to ask next follows the answer, one suggestion after another; so do the welcome's. */
+.tm-desk-close[data-fresh] {
+  animation: tm-desk-row var(--tm-dur-slow) var(--tm-ease-enter) backwards;
+}
+.tm-desk-close[data-fresh] .tm-chat-chip,
+.tm-desk-welcome .tm-chat-chip {
+  animation: tm-desk-chip var(--tm-dur-slow) var(--tm-chat-ease) backwards;
+  animation-delay: calc(var(--tm-dur-quick) + var(--tm-i, 0) * var(--tm-desk-stagger) * 1.5);
+}
+@keyframes tm-desk-chip {
+  from {
+    opacity: 0;
+    transform: translateY(var(--tm-space-2));
+  }
+}
+/* The send arrow stands back until there is something to send, then comes forward; the stop square
+   and the arrow trade places with the same small spring. */
+.tm-chat-body .tm-chat-send {
+  animation: tm-desk-pop var(--tm-dur-base) var(--tm-ease-micro) backwards;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-base) var(--tm-ease-micro);
+}
+.tm-chat-body .tm-chat-send:disabled {
+  transform: scale(0.86);
+}
+@keyframes tm-desk-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+/* A change waiting on the reader is set down like a record; a problem arrives as quietly. */
+.tm-desk-confirm {
+  animation: tm-desk-set var(--tm-dur-slow) var(--tm-chat-ease) backwards;
+}
+.tm-chat-body .tm-chat-error {
+  animation: tm-desk-row var(--tm-dur-slow) var(--tm-ease-enter) backwards;
+}
+/* A check is drawn, not stamped: on the receipt of a change, and on a card's "Added to your bag". */
+:is(.tm-desk-done, .tm-desk-add[data-added]) svg * {
+  stroke-dasharray: 24;
+}
+:is(.tm-chat-msg[data-fresh] .tm-desk-done, .tm-desk-add[data-added]) svg * {
+  animation: tm-desk-draw var(--tm-dur-slow) var(--tm-ease-enter) var(--tm-dur-quick) backwards;
+}
+@keyframes tm-desk-draw {
+  from {
+    stroke-dashoffset: 24;
+  }
+}
+/* Another size chosen on a product card: its price takes the old one's place. */
+.tm-desk-price[data-switched] {
+  animation: tm-desk-row var(--tm-dur-base) var(--tm-ease-enter) backwards;
+}
+/* The conversation's scrollbar, where a system draws one, as quiet as a hairline. */
+.tm-chat-body .tm-chat-log {
+  scrollbar-width: thin;
+  scrollbar-color: var(--tm-line-strong) transparent;
+}
+
+/* ---------- An answer being written (DeskText) ---------- */
+
+/* Each new word settles into ink: from the paper, softly out of focus, to the page. Nothing moves along
+   the line, so the reader's eye is never pushed. */
+.assistant-message-text[data-writing] .tm-word {
+  animation: tm-desk-ink var(--tm-dur-base) var(--tm-ease-enter) both;
+}
+@keyframes tm-desk-ink {
+  from {
+    opacity: 0;
+    filter: blur(0.12em);
+  }
+}
+/* The brand's dot at the writing edge, where the sentence's period will land; it rests once the
+   answer is written. */
+.assistant-message-text[data-writing] > :last-child:not(ul, ol)::after,
+.assistant-message-text[data-writing] > :is(ul, ol):last-child > li:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 0.34em;
+  height: 0.34em;
+  margin-left: 0.28em;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-gradient);
+  vertical-align: 0.06em;
+  animation: tm-desk-nib 1200ms var(--tm-ease-breathe) infinite;
+}
+/* Its last words down, the dot lifts away rather than standing beside the final period. */
+.assistant-message-text[data-writing="settling"] > :last-child:not(ul, ol)::after,
+.assistant-message-text[data-writing="settling"] > :is(ul, ol):last-child > li:last-child::after {
+  animation: tm-desk-nib-out var(--tm-dur-base) var(--tm-ease-enter) forwards;
+}
+@keyframes tm-desk-nib-out {
+  to {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+@keyframes tm-desk-nib {
+  50% {
+    opacity: 0.5;
+    transform: scale(0.78);
+  }
+}
+
+/* ---------- Where it came from, and what to ask next ---------- */
+
+.tm-desk-close {
+  display: grid;
+  gap: var(--tm-space-2);
+}
+.tm .tm-desk-sources,
+.tm-desk-sources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--tm-space-1) var(--tm-space-3);
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-desk-sources-label {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-desk-sources a {
+  border-bottom: 1px solid transparent;
+  color: var(--tm-ink-2);
+  text-decoration: none;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-sources a:hover {
+  border-bottom-color: var(--tm-line-strong);
+  color: var(--tm-ink);
+}
+.tm-desk-sources a:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+}
+.tm-chat-suggestions.tm-desk-followups {
+  margin-top: 0;
+}
+
+/* The way to a person, in the fine print by the field. */
+.tm-desk-human {
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--tm-line-strong);
+  background: none;
+  font: inherit;
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-human:hover {
+  border-bottom-color: var(--tm-ink-2);
+  color: var(--tm-ink);
+}
+.tm-desk-human:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+  color: var(--tm-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-desk-dock,
+  .tm-desk-launcher,
+  .tm-desk-launcher-label,
+  .tm-desk-card,
+  .tm-desk-close,
+  .tm-desk-activity,
+  .tm-desk-bar i,
+  .tm-desk-cert .tm-coa .is-result,
+  .assistant-message-text[data-writing] .tm-word,
+  .tm-chat-flow > .tm-chat-msg[data-fresh],
+  .tm-chat-msg[data-fresh] .tm-desk-card,
+  .tm-chat-msg[data-fresh] .tm-desk-cert > div,
+  .tm-desk-close[data-fresh],
+  .tm-desk-close .tm-chat-chip,
+  .tm-desk-welcome .tm-chat-chip,
+  .tm-chat-body .tm-chat-send,
+  .tm-desk-confirm,
+  .tm-chat-body .tm-chat-error,
+  .tm-desk-done svg *,
+  .tm-desk-add[data-added] svg *,
+  .tm-desk-price[data-switched] {
+    animation: none;
+    transition: none;
+  }
+  .tm-desk-activity-label {
+    animation: none;
+    background: none;
+    color: var(--tm-ink-3);
+  }
+  .tm-desk-presence.is-working {
+    animation: none;
+    opacity: 1;
+  }
+}

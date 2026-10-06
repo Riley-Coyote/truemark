@@ -1,0 +1,152 @@
+/* A lot's own line (LotTrace.tsx): its peaks at their reported retention times. */
+
+.tm-lot-trace {
+  position: relative;
+  width: 100%;
+  color: var(--tm-ink-3);
+}
+.tm-lot-trace svg {
+  display: block;
+  overflow: visible;
+}
+.tm-lot-trace-axis,
+.tm-lot-trace-tick {
+  stroke: var(--tm-line-strong);
+  stroke-width: 1;
+}
+/* An opaque ink, not a translucent one: Safari strokes a long line in pieces, and a translucent
+   stroke darkens where two pieces meet. */
+.tm-lot-trace-line {
+  fill: none;
+  stroke: color-mix(in srgb, var(--tm-ink) 30%, var(--tm-paper));
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  clip-path: inset(-10% 100% -10% 0);
+}
+.tm-lot-trace-peak path {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0;
+}
+.tm-lot-trace-peak .is-light {
+  stroke-width: 2;
+}
+.tm-lot-trace-peak .is-glow {
+  stroke-width: 6;
+}
+
+/* Recorded once, left to right, as an instrument records a run over time; each peak lights as
+   the record reaches it. */
+.tm-lot-trace[data-drawn] .tm-lot-trace-line {
+  animation: tm-lot-trace-draw var(--tm-lot-trace-draw) var(--tm-ease-glide, cubic-bezier(0.32, 0.72, 0, 1)) var(--tm-lot-trace-delay) forwards;
+}
+.tm-lot-trace[data-drawn] .tm-lot-trace-peak .is-light {
+  animation: tm-lot-trace-light var(--tm-dur-slow) var(--tm-ease-enter) var(--tm-lot-trace-at) forwards;
+}
+.tm-lot-trace[data-drawn] .tm-lot-trace-peak .is-glow {
+  animation: tm-lot-trace-glow calc(var(--tm-dur-slow) * 3) var(--tm-ease-enter) var(--tm-lot-trace-at) forwards;
+}
+@keyframes tm-lot-trace-draw {
+  to {
+    clip-path: inset(-10% 0 -10% 0);
+  }
+}
+@keyframes tm-lot-trace-light {
+  to {
+    opacity: 1;
+  }
+}
+/* The peak flares as the line reaches it, then settles to a soft light. */
+@keyframes tm-lot-trace-glow {
+  40% {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 0.35;
+  }
+}
+
+/* Each peak's label: its component (in a blend), then its time. */
+.tm-lot-trace-label {
+  position: absolute;
+  display: grid;
+  gap: 2px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(var(--tm-space-1));
+}
+.tm-lot-trace-label.is-middle {
+  justify-items: center;
+  translate: -50% 0;
+}
+.tm-lot-trace-label.is-end {
+  justify-items: end;
+  text-align: right;
+}
+.tm-lot-trace[data-drawn] .tm-lot-trace-label {
+  animation: tm-lot-trace-label var(--tm-dur-slow) var(--tm-ease-enter) calc(var(--tm-lot-trace-at) + var(--tm-dur-base)) forwards;
+}
+@keyframes tm-lot-trace-label {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Names keep their own case: GHK-Cu's copper is Cu. */
+.tm-lot-trace-name {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  letter-spacing: 0.02em;
+  color: var(--tm-ink-3);
+}
+.tm-lot-trace-time {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1 var(--tm-font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+}
+
+/* The minutes along the baseline. */
+.tm-lot-trace-minutes {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--tm-space-4);
+}
+.tm-lot-trace-minutes span {
+  position: absolute;
+  bottom: 0;
+  translate: -50% 0;
+  font: var(--tm-weight-regular) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+  white-space: nowrap;
+}
+.tm-lot-trace-minutes .is-first {
+  translate: 0 0;
+}
+.tm-lot-trace-minutes .is-last {
+  translate: -100% 0;
+}
+.tm-lot-trace-minutes i {
+  font-style: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-lot-trace .tm-lot-trace-line,
+  .tm-lot-trace[data-drawn] .tm-lot-trace-line {
+    animation: none;
+    clip-path: none;
+  }
+  .tm-lot-trace .tm-lot-trace-peak .is-light,
+  .tm-lot-trace .tm-lot-trace-label {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .tm-lot-trace .tm-lot-trace-peak .is-glow {
+    animation: none;
+    opacity: 0.35;
+  }
+}

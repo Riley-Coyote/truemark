@@ -7,6 +7,10 @@ import { disclosure, partnerLink, doRules, dontRules, disclosurePlacement } from
 import { readPrefs } from "../partners/prefs";
 import { milestones } from "../partners/momentum";
 import { shippingCopy, siteAnswers } from "./copy";
+import { chatContext } from "./chat-context";
+import { productCutout, specFor } from "../shop/catalog";
+import { lotPeaks } from "./lot-lines";
+import type { Product } from "../data";
 import { store } from "./store";
 import { createToolRuntime, type Scope } from "./runtime";
 import { createTransport } from "./client";
@@ -40,15 +44,34 @@ export async function currentScope(previewPersona: Persona): Promise<Scope> {
   const persona = profile?.role === "owner" || profile?.role === "staff" ? "owner" : profile?.role === "partner" && await store.partners.me() ? "partner" : "visitor";
   return { persona, role: profile?.role ?? "anonymous", id: profile?.id ?? "anonymous", sample: false };
 }
-export function browserAssistant(persona: Persona, authorizedKey: string | null, addToBag?: (id: string, quantity: number) => void) {
+export function browserAssistant(persona: Persona, authorizedKey: string | null, addToBag?: (id: string, quantity: number) => void, bag?: () => { id: string; quantity: number }[]) {
   return {
-    transport: createTransport({ endpoint, headers, context: () => ({ mode: LIVE ? "live" : "preview", ...(!LIVE ? { persona, reviewKey: reviewKey() } : {}) }) }),
+    transport: createTransport({ endpoint, headers, context: () => ({ mode: LIVE ? "live" : "preview", ...(!LIVE ? { persona, reviewKey: reviewKey() } : {}),
+      ...(persona === "visitor" && chatContext() ? { context: chatContext() } : {}) }) }),
     prepare: createToolRuntime({ store, now: worldNow, scope: async () => {
       if (!LIVE && (!authorizedKey || reviewKey() !== authorizedKey)) throw new Error("Open a valid review link to continue.");
       return currentScope(persona);
     }, addToBag, verify: (lot) => lot ? recordFromLot(lot) : null, siteAnswers, shippingCopy,
     program: { disclosure, link: partnerLink, rules: { do: doRules, dont: dontRules, disclosurePlacement } },
     goal: (id) => readPrefs(id).goal, milestones: (refs) => { const result = milestones(refs); return { next: result.next, reached: result.reached, orders: result.orders, earned: result.earned }; },
+    bag,
+    describeProduct: (product) => {
+      const spec = specFor(product as unknown as Product);
+      const rows = [
+        { label: "Form", value: spec.form }, { label: "Storage", value: spec.storage },
+        ...(spec.blend ? [{ label: "Blend", value: spec.blend }] : []),
+        ...(spec.cas ? [{ label: "CAS", value: spec.cas }] : []),
+        ...(spec.formula ? [{ label: "Formula", value: spec.formula }] : []),
+        ...(spec.weight ? [{ label: "Molecular weight", value: spec.weight }] : []),
+        ...(spec.sequence ? [{ label: "Sequence", value: spec.sequence }] : []),
+      ];
+      return { image: productCutout(product as unknown as Product, "sm"), spec: rows };
+    },
+    // Each released lot draws its own line from the certificate's reported retention times.
+    peaks: (record) => {
+      if (record.status !== "released" && record.status !== "archived") return [];
+      return lotPeaks(record.reference);
+    },
     async qr(url) {
       // @ts-expect-error qrcode's JavaScript API is typed at the boundary, like ShareKit.
       const module = await import("qrcode");

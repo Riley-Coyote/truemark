@@ -12,7 +12,9 @@ function tool(name: string, description: string, properties: Record<string, Sche
 const catalog = (name: string) => tool(name, "Search the current catalog. Returns at most 10 records, counts and pagination, never inferred stock.", { query: str("Name, size or class"), ...paging });
 export const TOOLS = {
   visitor: [
-    catalog("search_catalog"), tool("get_product", "Read one catalog product.", { id: str("Product ID") }, ["id"]),
+    catalog("search_catalog"),
+    tool("get_product", "Show one product as a card: its sizes and prices, its specification, and its current lot with that lot's published purity.", { id: str("Product ID") }, ["id"]),
+    tool("compare_products", "Show two or three current products side by side: sizes, prices, specification and each current lot's published purity.", { first: str("Product ID"), second: str("Product ID"), third: str("Optional product ID") }, ["first", "second"]),
     tool("lookup_lot", "Exactly the public Verify record. Never infer or fabricate results.", { lot: str("Printed lot number") }, ["lot"]),
     tool("shipping_info", "Current methods, prices, free shipping rule and the site's when-applicable wording."),
     tool("site_answers", "Quote the site's FAQ, storage, handling or policies. Query narrows excerpts.", { topic: choice("faq", "storage", "handling", "policies"), query: str("Question or policy search") }, ["topic"]),
