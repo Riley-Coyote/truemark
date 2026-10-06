@@ -104,7 +104,9 @@ export function createHandler(deps: Dependencies) {
           if (!token || !(identity = await deps.repository.identify(token))) return json(401, "Please sign in again to continue.");
         }
         persona = selectPersona(identity);
-        const ip = request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() || "unknown";
+        // The first forwarded address is the visitor's own, as the uploads function reads it; the last is
+        // only the nearest relay, which can change between two requests of one conversation.
+        const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
         subject = await deps.hash(identity ? `user:${identity.id}` : `ip:${ip}`);
         kind = identity?.role === "owner" || identity?.role === "staff" ? "owner" : identity?.role === "partner" && identity.hasPartner ? "partner" : identity ? "buyer" : "anonymous";
       }
