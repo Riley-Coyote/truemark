@@ -1165,6 +1165,8 @@
   gap: var(--tm-space-5);
 }
 .cc-content-fields { padding: 0; margin: 0; border: 0; min-width: 0; }
+/* A blend's results in the release form, under each component's name in its own case (GHK-Cu). */
+.cc-release-part > legend { padding: var(--tm-space-3) 0 var(--tm-space-3); font: var(--tm-weight-medium) var(--tm-type-body) / var(--tm-leading-label) var(--tm-font-sans); color: var(--kit-ink); }
 .cc-content-file { width: 100%; padding: var(--tm-space-3); border: 1px solid var(--kit-line-strong); border-radius: var(--tm-radius-sm); background: var(--kit-field); color: var(--kit-ink); font: inherit; }
 .cc-content-file:hover { border-color: var(--kit-focus); }
 .kit .cc-content-file:focus-visible { outline: none; border-color: var(--kit-focus); }

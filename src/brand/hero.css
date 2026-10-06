@@ -3,11 +3,41 @@
 /* `.tm.` on these sections: they override the generic `.tm` rhythm in shop.css whatever order
    the stylesheets load in (hero.css also arrives early, through BrandDot). */
 .tm.tm-bhero {
-  --tm-bg: var(--tm-lilac-studio);
+  --tm-bg: linear-gradient(162deg, transparent 42%, var(--tm-studio-falloff) 100%), var(--tm-lilac-studio);
   --tm-vial: clamp(6.5rem, 11.2vw, 11rem);
   padding-block: var(--tm-space-7) 0;
   overflow: hidden;
+  isolation: isolate;
 }
+/* One soft key from the upper left, as in a photographer's studio: it blooms on the seamless
+   behind the type, and its bounce pools on the floor under the shelf. It comes up as the page
+   arrives, the way studio lights do. */
+.tm-bhero::before,
+.tm-bhero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.tm-bhero::before {
+  background:
+    radial-gradient(72% 88% at 20% 14%, var(--tm-studio-key), transparent 64%),
+    radial-gradient(58% 34% at 50% 86%, var(--tm-studio-bounce), transparent 72%);
+  animation: tm-studio-up 1800ms var(--tm-ease-breathe) 80ms both;
+}
+.tm-bhero::after {
+  background-image: var(--tm-grain);
+  background-size: 180px 180px;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+}
+@keyframes tm-studio-up {
+  from {
+    opacity: 0;
+  }
+}
+
 .tm-bhero-head {
   grid-column: 1 / span 7;
 }
@@ -106,6 +136,16 @@
   display: block;
   width: 100%;
 }
+/* Set in a gentle crescent on the studio floor: the centre vial, the verified lot, stands
+   nearest; each step out stands a little further back, so it reads a touch smaller and its
+   base sits a little higher. The names keep one baseline. */
+@media (min-width: 961px) {
+  .tm-shelf-stage {
+    transform-origin: 50% 97%;
+    scale: calc(1 - var(--tm-i) * 0.05);
+    translate: 0 calc(var(--tm-vial) * var(--tm-i) * var(--tm-i) * -0.012);
+  }
+}
 .tm-shelf-stage img {
   position: relative;
   z-index: 1;
@@ -115,17 +155,48 @@
   transition: transform var(--tm-dur-slow) var(--tm-ease-enter);
   user-select: none;
 }
+/* Where glass meets floor: a tight dark core under the base, inside a softer occlusion. */
 .tm-shelf-shadow {
   position: absolute;
   z-index: 0;
-  left: 4%;
-  right: 4%;
-  bottom: -3%;
-  height: 9%;
+  left: 3%;
+  right: 3%;
+  bottom: -2%;
+  height: 7%;
   border-radius: var(--tm-radius-pill);
-  background: radial-gradient(ellipse at center, var(--tm-lilac-shadow) 0%, transparent 70%);
-  filter: blur(3px);
+  background:
+    radial-gradient(46% 38% at 50% 50%, var(--tm-studio-core), transparent 100%),
+    radial-gradient(50% 50% at 50% 50%, var(--tm-lilac-shadow), transparent 100%);
+  filter: blur(2px);
   transition: transform var(--tm-dur-slow) var(--tm-ease-enter), opacity var(--tm-dur-slow) var(--tm-ease-enter);
+}
+/* The vial's own silhouette, thrown forward and to the right by the key behind it: flipped at
+   the base, laid flat on the floor, leaned away from the light and softened by distance. */
+.tm-shelf-cast {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background: var(--tm-studio-cast);
+  /* The silhouette, and a fade along its length: darkest where it leaves the base. */
+  -webkit-mask-image: var(--tm-sheen-mask), linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.35) 30%, transparent 70%);
+  mask-image: var(--tm-sheen-mask), linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.35) 30%, transparent 70%);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  transform-origin: 50% 97%;
+  transform: skewX(52deg) scaleY(-0.13);
+  filter: blur(5px);
+  opacity: 0.34;
+  pointer-events: none;
+  transition: opacity var(--tm-dur-slow) var(--tm-ease-enter), filter var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.tm .tm-shelf-vial:hover .tm-shelf-cast,
+.tm .tm-shelf-vial:focus-visible .tm-shelf-cast {
+  opacity: 0.2;
+  filter: blur(10px);
 }
 .tm-shelf-name {
   margin-top: var(--tm-space-4);
@@ -167,10 +238,12 @@
 }
 
 /* The lot card over the centre vial: the client's own hero card, arriving with the first light. */
+/* The cut-outs carry a margin above the cap: its top is row 63 of 1112 (scripts/cut-vials.py),
+   94.33% of the stage up from its foot. The card and its hairline measure from there. */
 .tm-lotchip {
   position: absolute;
   z-index: 3;
-  bottom: calc(100% + var(--tm-space-4));
+  bottom: calc(94.33% + var(--tm-space-3));
   left: 50%;
   display: flex;
   flex-direction: column;
@@ -184,17 +257,17 @@
   transform: translateX(-50%);
   animation: tm-lotchip-in 800ms var(--tm-ease-enter) 2250ms both;
 }
-/* A hairline from the card to the cap. */
+/* A hairline from the card to the cap: it ends on the cap itself. */
 .tm-lotchip::after {
   content: "";
   position: absolute;
   top: 100%;
   left: 50%;
   width: 1px;
-  height: var(--tm-space-4);
+  height: var(--tm-space-3);
   background: var(--tm-line-strong);
 }
-.tm-lotchip-top {
+.tm-lotchip-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -220,6 +293,15 @@
   height: 6px;
   border-radius: var(--tm-radius-pill);
   background: currentColor;
+}
+.tm-lotchip .tm-skel {
+  height: 0.7rem;
+}
+.tm-lotchip .tm-lotchip-skel-result {
+  width: 5.5rem;
+}
+.tm-lotchip .tm-lotchip-skel-status {
+  width: 3.5rem;
 }
 .tm-lotchip-results {
   font: var(--tm-weight-regular) var(--tm-type-ui) / 1.3 var(--tm-font-sans);
@@ -288,6 +370,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .tm-bhero::before,
   .tm-bhero-line > span,
   .tm-bhero-aside,
   .tm .tm-shelf-vial,
@@ -380,7 +463,7 @@
     transform: translateX(-50%) translateY(0);
     transition-delay: var(--tm-dur-scene);
   }
-  .tm-lotchip-top { flex-wrap: wrap; }
+  .tm-lotchip-row { flex-wrap: wrap; }
   .tm .is-carousel .tm-shelf-vial:is(:hover, :focus-visible, :active) :is(img, .tm-sheen) { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) and (max-width: 960px) {
@@ -440,5 +523,21 @@
   }
   .tm .tm-bhero-aside .tm-actions {
     margin-top: var(--tm-space-5);
+  }
+}
+/* On a laptop the whole composition fits the first screen: the shelf whole, names and all. Type,
+   vials and the space between them answer to the window's height as well as its width, so a
+   MacBook Air's browser window (about 1440 x 790) shows every vial standing on its floor. */
+@media (min-width: 961px) {
+  .tm.tm-bhero {
+    --tm-vial: clamp(6.5rem, min(11.2vw, 16.6svh), 11rem);
+    padding-top: clamp(var(--tm-space-5), 4.2svh, var(--tm-space-7));
+  }
+  .tm .tm-bhero-title {
+    font-size: clamp(3rem, min(6.1vw, 9.3svh), 5.5rem);
+  }
+  /* Never less than 3rem: the lot card over a vial right of centre must clear the buttons. */
+  .tm-shelf {
+    margin-top: clamp(3rem, 5.8svh, var(--tm-space-8));
   }
 }

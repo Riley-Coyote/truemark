@@ -89,10 +89,6 @@ function Opening() {
           <BrandDot />
         </h1>
       </header>
-      <p className="tm-quality-open-lead">
-        Every lot moves through the same controlled path — from sourcing to release — and every step leaves a
-        record you can read.
-      </p>
       <div className="tm-quality-open-photo">
         <img
           src={photo.src}
@@ -119,6 +115,11 @@ function Process() {
           <span>to released vial</span>
         </h2>
       </header>
+      {/* The page's opening line, beside the path it introduces. */}
+      <p className="tm-quality-process-note" data-reveal>
+        Every lot moves through the same controlled path — from sourcing to release — and every step leaves a
+        record you can read.
+      </p>
       <Track stops={process} labelledBy="tm-quality-process-title" />
     </section>
   );
@@ -156,7 +157,7 @@ function Specification() {
   return (
     <section
       id="specification"
-      className="tm tm-night tm-quality-spec"
+      className="tm tm-night tm-night-studio tm-quality-spec"
       aria-labelledby="tm-quality-spec-title"
     >
       <header className="tm-quality-spec-head" data-reveal>
@@ -210,7 +211,7 @@ function Records() {
   const photo = scene("powder", 1600);
   return (
     <section id="records" className="tm tm-quality-records" aria-labelledby="tm-quality-records-title">
-      <div className="tm-quality-records-photo" data-reveal>
+      <div className="tm-quality-records-photo tm-settle" data-reveal>
         <img
           src={photo.src}
           srcSet={photo.srcSet}

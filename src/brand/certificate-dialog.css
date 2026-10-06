@@ -1,0 +1,149 @@
+/* A certificate opened in place (CertificateDialog.tsx): the large card over the dimmed, blurred
+   page, as the first-order offer opens; a tall sheet on a phone. */
+
+.tm-certdlg {
+  --tm-certdlg-ease: var(--tm-ease-glide, cubic-bezier(0.32, 0.72, 0, 1));
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  place-items: center;
+  padding: var(--tm-space-6);
+  background: var(--tm-scrim);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    background-color var(--tm-dur-slow) var(--tm-certdlg-ease),
+    backdrop-filter var(--tm-dur-slow) var(--tm-certdlg-ease),
+    -webkit-backdrop-filter var(--tm-dur-slow) var(--tm-certdlg-ease);
+}
+.tm-certdlg:not([data-state="open"]) {
+  background: transparent;
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+}
+.tm.tm-certdlg-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: min(52rem, 100%);
+  max-height: 100%;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--tm-radius-xl);
+  background: var(--tm-paper);
+  color: var(--tm-ink);
+  box-shadow: var(--tm-shadow-float);
+  outline: none;
+  transition: transform var(--tm-dur-slow) var(--tm-certdlg-ease), opacity var(--tm-dur-slow) var(--tm-certdlg-ease);
+}
+.tm-certdlg:not([data-state="open"]) .tm-certdlg-panel {
+  opacity: 0;
+  transform: translateY(var(--tm-space-4)) scale(0.98);
+}
+.tm-certdlg-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--tm-space-8) var(--tm-space-8) var(--tm-space-7);
+}
+.tm-certdlg-grab {
+  display: none;
+}
+.tm .tm-certdlg-close {
+  position: absolute;
+  z-index: 2;
+  top: var(--tm-space-4);
+  right: var(--tm-space-4);
+  display: grid;
+  place-items: center;
+  width: var(--tm-control-sm);
+  height: var(--tm-control-sm);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: color-mix(in srgb, var(--tm-paper) 86%, transparent);
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm .tm-certdlg-close:active {
+  transform: scale(0.94);
+}
+.tm .tm-certdlg-close:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink-3);
+}
+@media (hover: hover) {
+  .tm .tm-certdlg-close:hover {
+    background: var(--tm-wash);
+    color: var(--tm-ink);
+  }
+}
+
+/* Phones: a tall sheet from the bottom, pulled down by its top. */
+@media (max-width: 760px) {
+  .tm-certdlg {
+    top: var(--tm-sheet-top, 0px);
+    bottom: auto;
+    height: var(--tm-sheet-height, 100dvh);
+    place-items: end stretch;
+    padding: 0;
+  }
+  .tm.tm-certdlg-panel {
+    width: 100%;
+    height: calc(100% - var(--tm-space-2));
+    border-radius: var(--tm-radius-xl) var(--tm-radius-xl) 0 0;
+    /* The dimmed page sets it apart, as on iPhone; a shadow would only fall on the paper below. */
+    box-shadow: none;
+  }
+  .tm-certdlg:not([data-state="open"]) .tm-certdlg-panel {
+    opacity: 1;
+    transform: translateY(100%);
+  }
+  .tm-certdlg-scroll {
+    padding: var(--tm-space-7) var(--tm-margin) calc(var(--tm-space-6) + env(safe-area-inset-bottom, 0px));
+  }
+  .tm-certdlg-grab {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: block;
+    height: var(--tm-space-6);
+    touch-action: none;
+  }
+  .tm-certdlg-grab::before {
+    content: "";
+    position: absolute;
+    top: var(--tm-space-2);
+    left: 50%;
+    width: var(--tm-space-7);
+    height: var(--tm-space-1);
+    border-radius: var(--tm-radius-pill);
+    background: var(--tm-line-strong);
+    transform: translateX(-50%);
+  }
+  .tm-certdlg-panel .tm-cert-head {
+    touch-action: none;
+  }
+  .tm .tm-certdlg-close {
+    top: var(--tm-space-3);
+    right: var(--tm-space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-certdlg,
+  .tm.tm-certdlg-panel {
+    transition: none;
+  }
+}

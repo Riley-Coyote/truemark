@@ -49,16 +49,26 @@ function LotChip({ product }: { product: Product }) {
   const identity = released ? lot.results.find((r) => r.method === "Mass spectrometry") : undefined;
   return (
     <span className="tm-lotchip">
-      <span className="tm-lotchip-top">
-        <span className="tm-lotchip-lot">{lot?.sample ? "Sample lot" : "Lot"} {product.lot}</span>
-        <span className={`tm-lotchip-status${released ? "" : " is-pending"}`}>
-          {released && <i />}
-          {record.loading ? "Loading" : record.error || !lot ? "Unavailable" : released ? "Verified" : "In testing"}
+      <span className="tm-lotchip-lot">{lot?.sample ? "Sample lot" : "Lot"} {product.lot}</span>
+      {/* The result and its verdict share a line, which keeps the card narrow over the shelf. */}
+      {/* Until the record first arrives, the row holds its place with light passing over it. A
+          reload (any change in the shop re-reads every record) keeps what is already shown. */}
+      {!lot && record.loading ? (
+        <span className="tm-lotchip-row" role="status" aria-label="Loading the lot record">
+          <span className="tm-skel tm-lotchip-skel-result" aria-hidden="true" />
+          <span className="tm-skel tm-lotchip-skel-status" aria-hidden="true" />
         </span>
-      </span>
-      <span className="tm-lotchip-results">
-        {released ? [purity && `HPLC ${purity.value}${purity.unit}`, identity && `MS ${identity.value.toLowerCase()}${identity.unit ? ` ${identity.unit}` : ""}`].filter(Boolean).join(" · ") : record.loading ? "Loading lot record" : record.error || !lot ? "Lot lookup unavailable" : "Certificate on release"}
-      </span>
+      ) : (
+        <span className="tm-lotchip-row">
+          <span className="tm-lotchip-results">
+            {released ? [purity && `HPLC ${purity.value}${purity.unit}`, identity && `MS ${identity.value.toLowerCase()}${identity.unit ? ` ${identity.unit}` : ""}`].filter(Boolean).join(" · ") : !lot ? "Lot lookup unavailable" : "Certificate on release"}
+          </span>
+          <span className={`tm-lotchip-status${released ? "" : " is-pending"}`}>
+            {released && <i />}
+            {!lot ? "Unavailable" : released ? "Verified" : "In testing"}
+          </span>
+        </span>
+      )}
       {lot?.sample && <span className="tm-lotchip-sample">Sample record · illustrative values</span>}
     </span>
   );
@@ -132,7 +142,8 @@ export function HeroShelf() {
     observer.observe(section);
     return () => observer.disconnect();
   }, [mobile, chosen]);
-  useLight(scene);
+  // The studio has one fixed key, so the glass catches only its slow passes, never the pointer.
+  useLight(scene, { follow: false });
   return (
     <>
       <section className="tm tm-bhero" aria-labelledby="tm-bhero-title" ref={scene}>
@@ -228,6 +239,7 @@ export function HeroShelf() {
               <span className="tm-shelf-stage" data-sheen>
                 <LotChip product={product} />
                 <span className="tm-shelf-shadow" aria-hidden="true" />
+                <span className="tm-shelf-cast" aria-hidden="true" style={sheenMask(productCutout(product, "sm"))} />
                 <img
                   src={productCutout(product, "lg")}
                   srcSet={`${productCutout(product, "sm")} 289w, ${productCutout(product, "lg")} 578w`}

@@ -1,0 +1,457 @@
+/* A lot's certificate as a page of the site (CertificateView.tsx): on the lot's page and in the
+   certificate dialog. Sections part by space and the surface's tone, with few rules. */
+
+.tm-cert {
+  /* Its figures size to the width it's given: a dialog, the lot page's sheet, a phone. */
+  container-type: inline-size;
+  display: grid;
+  gap: var(--tm-space-7);
+  color: var(--tm-ink);
+}
+
+/* ---------- Head ---------- */
+
+.tm-cert-head {
+  display: grid;
+  gap: var(--tm-space-3);
+}
+.tm .tm-cert-eyebrow {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm .tm-cert-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-h2) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+  text-wrap: balance;
+}
+.tm .tm-cert-title span {
+  color: var(--tm-ink-3);
+}
+.tm-cert-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-3) var(--tm-space-5);
+}
+.tm-cert-lot {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm-cert-lot-label {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm .tm-cert-copy {
+  display: inline-grid;
+  place-items: center;
+  min-height: var(--tm-space-6);
+  padding: 0 var(--tm-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-wash);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  letter-spacing: 0.04em;
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+/* "Copy" and "Copied" share one cell; the hidden one keeps its width. */
+.tm .tm-cert-copy > span {
+  grid-area: 1 / 1;
+}
+.tm .tm-cert-copy > span[hidden] {
+  display: block;
+  visibility: hidden;
+}
+.tm .tm-cert-copy:active {
+  transform: scale(0.96);
+  background: var(--tm-line);
+}
+.tm .tm-cert-copy:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink-3);
+}
+.tm-cert-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-signal);
+}
+.tm-cert-status i {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--tm-radius-pill);
+  background: currentColor;
+}
+.tm-cert.is-pending .tm-cert-status,
+.tm-cert.is-archived .tm-cert-status {
+  color: var(--tm-ink-3);
+}
+.tm-cert.is-withheld .tm-cert-status {
+  color: var(--tm-danger);
+}
+
+/* ---------- The lot's line, on a plate of the surface's own tone ---------- */
+
+.tm-cert-line {
+  display: grid;
+  gap: var(--tm-space-3);
+  margin: 0;
+  padding: var(--tm-space-5) var(--tm-space-5) var(--tm-space-4);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-wash);
+}
+.tm-cert-line figcaption {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+
+/* ---------- Results ---------- */
+
+.tm-cert-figures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--tm-space-6);
+}
+.tm-cert-figure {
+  display: grid;
+  align-content: start;
+  gap: var(--tm-space-3);
+  padding-top: var(--tm-space-4);
+  border-top: 1px solid var(--tm-line-strong);
+}
+.tm .tm-cert-figure-label {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm .tm-cert-figure-value {
+  margin: 0;
+  font: var(--tm-weight-light) clamp(var(--tm-type-h3), 5.4cqi, var(--tm-type-h1)) / 1 var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+  white-space: nowrap;
+}
+.tm .tm-cert-figure-value span {
+  font-size: 0.42em;
+  letter-spacing: 0;
+  color: var(--tm-ink-3);
+}
+.tm .tm-cert-figure-value .is-percent {
+  vertical-align: 0.9em;
+  margin-left: 0.04em;
+}
+.tm-cert-figure-note {
+  display: grid;
+  gap: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+
+/* Too narrow for three side by side, the figures stand one above another. */
+@container (max-width: 34rem) {
+  .tm-cert-figures {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--tm-space-5);
+  }
+  .tm .tm-cert-figure-value {
+    font-size: var(--tm-type-h2);
+  }
+}
+
+/* Where this lot sits against the specification. */
+.tm-cert-scale {
+  display: grid;
+  gap: var(--tm-space-2);
+  padding-top: var(--tm-space-1);
+}
+.tm-cert-scale-track {
+  position: relative;
+  height: 2px;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-line-strong);
+}
+.tm-cert-scale-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--tm-ink-4);
+}
+.tm-cert-scale-spec {
+  position: absolute;
+  top: -4px;
+  width: 1px;
+  height: 10px;
+  background: var(--tm-ink-3);
+  translate: -50% 0;
+}
+.tm-cert-scale-mark {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--tm-paper);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-ink);
+  translate: -50% -50%;
+  box-shadow: var(--tm-shadow-whisper);
+}
+.tm-cert-scale-ends {
+  position: relative;
+  height: 1em;
+  font: var(--tm-weight-regular) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+}
+.tm-cert-scale-ends span {
+  position: absolute;
+  top: 0;
+}
+.tm-cert-scale-ends span:first-child {
+  left: 0;
+}
+.tm-cert-scale-ends span:nth-child(2) {
+  translate: -50% 0;
+}
+.tm-cert-scale-ends span:last-child {
+  right: 0;
+}
+
+/* A blend: one row per component. */
+.tm-cert-components {
+  display: grid;
+  gap: var(--tm-space-4);
+}
+.tm-cert-components table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1.4 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.tm-cert-components th,
+.tm-cert-components td {
+  padding: var(--tm-space-4) var(--tm-space-4) var(--tm-space-4) 0;
+  border-bottom: 1px solid var(--tm-line);
+  text-align: left;
+  vertical-align: top;
+}
+.tm-cert-components thead th {
+  padding-top: 0;
+  padding-bottom: var(--tm-space-3);
+  border-bottom-color: var(--tm-line-strong);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-cert-components tbody th {
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1.4 var(--tm-font-display);
+  color: var(--tm-ink);
+}
+.tm-cert-components td small {
+  display: block;
+  margin-top: var(--tm-space-1);
+  font-size: var(--tm-type-micro);
+  color: var(--tm-ink-3);
+}
+.tm .tm-cert-components-spec,
+.tm .tm-cert-aside {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm .tm-cert-aside strong {
+  font-weight: var(--tm-weight-medium);
+  color: var(--tm-ink-2);
+}
+
+/* ---------- The record ---------- */
+
+.tm-cert-record {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--tm-space-6);
+  margin: 0;
+}
+.tm-cert-record div {
+  display: grid;
+  gap: var(--tm-space-2);
+  padding: var(--tm-space-3) 0;
+  border-top: 1px solid var(--tm-line);
+}
+.tm-cert-record div:first-child {
+  grid-column: 1 / -1;
+}
+.tm .tm-cert-record dt {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm .tm-cert-record dd {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink);
+  overflow-wrap: anywhere;
+}
+.tm .tm-cert-record dd small {
+  display: block;
+  font-size: var(--tm-type-micro);
+  color: var(--tm-ink-3);
+}
+
+/* ---------- How to read it ---------- */
+
+.tm-cert-read {
+  display: grid;
+  gap: var(--tm-space-2);
+  padding: var(--tm-space-5);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-wash);
+}
+.tm .tm-cert-read p {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.6 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+.tm .tm-cert-read .tm-cert-read-title {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+
+/* ---------- Actions and foot ---------- */
+
+.tm-cert-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-4) var(--tm-space-6);
+}
+.tm .tm-cert-download {
+  gap: var(--tm-space-2);
+}
+.tm-cert-download-kind {
+  margin-left: var(--tm-space-1);
+  padding: 3px 6px;
+  border: 1px solid var(--tm-glow-4);
+  border-radius: var(--tm-radius-xs);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  letter-spacing: var(--tm-track-label);
+  color: var(--tm-glow-2);
+}
+.tm .tm-cert-enter {
+  flex-basis: 100%;
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm .tm-cert-note {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1.6 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm .tm-cert-foot {
+  margin: 0;
+  padding-top: var(--tm-space-4);
+  border-top: 1px solid var(--tm-line);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+
+@media (hover: hover) {
+  .tm .tm-cert-copy:hover {
+    background: var(--tm-line);
+    color: var(--tm-ink);
+  }
+}
+
+/* ---------- Phones ---------- */
+
+@media (max-width: 760px) {
+  .tm-cert {
+    gap: var(--tm-space-6);
+  }
+  .tm .tm-cert-title {
+    font-size: var(--tm-type-h3);
+  }
+  .tm-cert-line {
+    margin-inline: calc(var(--tm-space-2) * -1);
+    padding: var(--tm-space-4) var(--tm-space-3) var(--tm-space-3);
+  }
+  /* A blend's rows stack: each component, then its three results. */
+  .tm-cert-components thead {
+    display: none;
+  }
+  .tm-cert-components table,
+  .tm-cert-components tbody,
+  .tm-cert-components tr {
+    display: grid;
+  }
+  .tm-cert-components tr {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--tm-space-3) var(--tm-space-4);
+    padding: var(--tm-space-4) 0;
+    border-bottom: 1px solid var(--tm-line);
+  }
+  .tm-cert-components th,
+  .tm-cert-components td {
+    padding: 0;
+    border: 0;
+  }
+  .tm-cert-components tbody th {
+    grid-column: 1 / -1;
+  }
+  .tm-cert-components td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: var(--tm-space-1);
+    font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
+    letter-spacing: var(--tm-track-label);
+    text-transform: uppercase;
+    color: var(--tm-ink-3);
+  }
+  .tm-cert-components td:last-child {
+    grid-column: 1 / -1;
+  }
+  .tm-cert-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .tm .tm-cert-download {
+    justify-content: center;
+    width: 100%;
+  }
+  .tm-cert-actions .tm-textlink {
+    align-self: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm .tm-cert-copy {
+    transition: none;
+  }
+}

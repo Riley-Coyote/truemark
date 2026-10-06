@@ -44,8 +44,14 @@ export function useReveal(root: RefObject<HTMLElement | null>, key: unknown = nu
           { rootMargin: "0px 0px -12% 0px", threshold: 0.12 },
         )
       : null;
+    // Something already on screen when it arrives shows at once: the margin above is for what
+    // scrolls into view, and would otherwise leave the foot of a first screen blank.
+    const onScreen = (el: HTMLElement) => {
+      const box = el.getBoundingClientRect();
+      return box.height > 0 && box.top < window.innerHeight && box.bottom > 0;
+    };
     // Observing an element twice is a no-op, so every arrival can simply re-scan.
-    const watch = () => pending().forEach((el) => (io ? io.observe(el) : el.classList.add("is-visible")));
+    const watch = () => pending().forEach((el) => (io && !onScreen(el) ? io.observe(el) : el.classList.add("is-visible")));
     watch();
     const arrivals = new MutationObserver(watch);
     arrivals.observe(scope, { childList: true, subtree: true });

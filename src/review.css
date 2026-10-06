@@ -215,9 +215,9 @@ html:has(.rl-root :is(.rl-dock, .rl-dock-pill)) :is(.tm-footer, .kit-content, .r
   }
 }
 
-/* While the page has a modal or a phone menu open (the bag, an order's drawer, the offer, the
-   menu), the dock and the question above it step aside, so they never cover the modal's own
-   actions. They return when it closes. */
-html:has(:is(.modal-panel, .kit-drawer, .tm-chat-panel, .tm-offer-panel)[aria-modal="true"], .tm-mmenu, .kit-mmenu) .rl-root :is(.rl-dock, .rl-dock-pill, .rl-ask) {
+/* While the page has a modal or a phone menu open (the bag, an order's drawer, the offer, a
+   certificate, the menu), the dock and the question above it step aside, so they never cover
+   the modal's own actions. They return when it closes. */
+html:has(:is(.modal-panel, .kit-drawer, .tm-chat-panel, .tm-offer-panel, .tm-certdlg-panel)[aria-modal="true"], .tm-mmenu, .kit-mmenu) .rl-root :is(.rl-dock, .rl-dock-pill, .rl-ask) {
   visibility: hidden;
 }

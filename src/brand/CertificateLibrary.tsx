@@ -6,10 +6,15 @@ import { certificateLibrary, hplcPurity } from "../platform/certificates";
 import { useResource } from "../platform/store";
 import type { Lot } from "../platform/types";
 import { productById, productCutout } from "../shop/catalog";
+import { recordFromLot } from "../shop/records";
+import type { LotRecord } from "../shop/records";
+import { CertificateDialog } from "./CertificateDialog";
 import "./certificate-library.css";
 
 export function CertificateRows({ lots }: { lots: Lot[] }) {
-  return <table className="tm-library-table">
+  // Each certificate opens in place; its PDF and the lot's page are inside.
+  const [open, setOpen] = useState<LotRecord | null>(null);
+  return <><table className="tm-library-table">
     <caption className="sr-only">Released lot certificates</caption>
     <thead><tr>
       <th scope="col" className="tm-eyebrow">Compound</th>
@@ -21,7 +26,8 @@ export function CertificateRows({ lots }: { lots: Lot[] }) {
     <tbody>{lots.map((lot) => {
       const product = productById(lot.productId);
       const purity = hplcPurity(lot);
-      const link = <>View certificate <span aria-hidden="true">→</span><span className="sr-only"> for {lot.lot}{lot.coaUrl ? ", opens in a new tab" : ""}</span></>;
+      const record = recordFromLot(lot);
+      const link = <>View certificate <span aria-hidden="true">→</span><span className="sr-only"> for {lot.lot}{!record && lot.coaUrl ? ", opens in a new tab" : ""}</span></>;
       return <tr key={lot.lot}>
         <td className="tm-library-compound">
           <div className="tm-library-product">
@@ -34,13 +40,18 @@ export function CertificateRows({ lots }: { lots: Lot[] }) {
         <td className="tm-library-lot"><span className="tm-mono">{lot.lot}</span></td>
         <td className="tm-library-date">{lot.releasedAt ? <time dateTime={lot.releasedAt}>{formatDate(lot.releasedAt)}</time> : "—"}</td>
         <td className="tm-library-purity">{purity ? `${purity.value}${purity.unit}` : "—"}</td>
-        <td className="tm-library-link">{lot.coaUrl
-          ? <a className="tm-textlink" href={lot.coaUrl} target="_blank" rel="noopener noreferrer">{link}</a>
-          : <Link className="tm-textlink" to={`/verify?lot=${encodeURIComponent(lot.lot)}`}>{link}</Link>}
+        {/* A real lot's certificate opens in place; a sample has no lot page, so its PDF opens. */}
+        <td className="tm-library-link">{record
+          ? <button type="button" className="tm-textlink" onClick={() => setOpen(record)} aria-haspopup="dialog">{link}</button>
+          : lot.coaUrl
+            ? <a className="tm-textlink" href={lot.coaUrl} target="_blank" rel="noopener noreferrer">{link}</a>
+            : <Link className="tm-textlink" to={`/verify?lot=${encodeURIComponent(lot.lot)}`}>{link}</Link>}
         </td>
       </tr>;
     })}</tbody>
-  </table>;
+  </table>
+  {open && <CertificateDialog record={open} onClose={() => setOpen(null)} />}
+  </>;
 }
 
 export function CertificateLibrary() {

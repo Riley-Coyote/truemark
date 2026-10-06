@@ -7,8 +7,8 @@ import type { ReceivedLot } from "./lib";
 import { Empty, Loading, PageHead, Problem, StatusChip, Thumb, useAccount, useTitle } from "./parts";
 
 /**
- * Lots the buyer has received. A released lot links to its public record;
- * every other state reads as pending (real TM- lots have no published results).
+ * Lots the buyer has received. A released lot links to its public record, which
+ * carries the laboratory's certificate; every other state reads as pending.
  * `lots` is undefined while loading and null when the statuses could not be read.
  */
 export function LotTable({ entries, lots, label }: { entries: ReceivedLot[]; lots: Lot[] | null | undefined; label: string }) {

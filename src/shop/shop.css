@@ -119,6 +119,7 @@
 }
 .tm .tm-button-primary:hover {
   background: var(--tm-ink-hover);
+  box-shadow: var(--tm-shadow-lift), inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 .tm .tm-button:active {
   transform: scale(0.975);
@@ -153,9 +154,23 @@
   color: var(--tm-ink);
   transition: border-color var(--tm-dur-base) var(--tm-ease-enter), gap var(--tm-dur-base) var(--tm-ease-micro);
 }
+.tm button.tm-textlink {
+  padding-inline: 0;
+  border-width: 0 0 1px;
+  border-style: solid;
+  background: none;
+  cursor: pointer;
+}
 .tm .tm-textlink:hover {
   border-bottom-color: var(--tm-ink);
   gap: var(--tm-space-3);
+}
+.tm .tm-textlink svg {
+  flex: none;
+  transition: transform var(--tm-dur-base) var(--tm-ease-micro);
+}
+.tm .tm-textlink:hover svg {
+  transform: translateX(1px);
 }
 .tm .tm-textlink:active {
   opacity: 0.7;
@@ -587,6 +602,36 @@
 .tm-night .tm-eyebrow {
   color: var(--tm-glow-3);
 }
+/* The hero's studio at night, for the dark bands that present the proof: one soft key above the
+   document it presents (`--tm-key-at`), the room falling into deeper ink toward the lower left,
+   and, where a lab line peaks (`--tm-peak-x`, `--tm-peak-y`), its colours faintly lighting the floor.
+   The same grain as the hero keeps the gradients clean. */
+.tm-night-studio {
+  overflow: hidden;
+  isolation: isolate;
+}
+.tm-night-studio::before,
+.tm-night-studio::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.tm-night-studio::before {
+  background:
+    radial-gradient(44% 64% at var(--tm-key-at, 72% 26%), var(--tm-night-key), transparent 70%),
+    radial-gradient(20% 12% at var(--tm-peak-x, 70%) var(--tm-peak-y, 96%), var(--tm-night-warm), transparent 72%),
+    radial-gradient(22% 13% at calc(var(--tm-peak-x, 70%) + 6%) calc(var(--tm-peak-y, 96%) + 1%), var(--tm-night-cool), transparent 72%),
+    radial-gradient(90% 80% at 0% 100%, var(--tm-night-falloff), transparent 72%);
+}
+.tm-night-studio::after {
+  background-image: var(--tm-grain);
+  background-size: 180px 180px;
+  opacity: 0.07;
+  mix-blend-mode: soft-light;
+}
+
 .tm-night .tm-heading {
   color: var(--tm-glow);
 }
@@ -1064,6 +1109,49 @@
   opacity: 1;
   transform: none;
 }
+/* A value on its way: a quiet bar holding the value's place, with light passing over it like the
+   sheen on the vials (asymmetric: a long tail behind, a crisp edge ahead). On a dark band it is
+   drawn in glow instead of ink. */
+.tm-skel {
+  --tm-skel-base: rgba(36, 26, 74, 0.07);
+  --tm-skel-light: rgba(36, 26, 74, 0.02);
+  display: inline-block;
+  width: 6em;
+  height: 0.75em;
+  border-radius: var(--tm-radius-xs);
+  background: linear-gradient(100deg, var(--tm-skel-base) 30%, var(--tm-skel-light) 44%, var(--tm-skel-base) 50%) 100% 0 / 300% 100% no-repeat, var(--tm-skel-base);
+  vertical-align: middle;
+  animation: tm-skel-pass 1800ms var(--tm-ease-breathe) infinite;
+}
+.tm-night .tm-skel {
+  --tm-skel-base: rgba(255, 255, 255, 0.08);
+  --tm-skel-light: rgba(255, 255, 255, 0.2);
+}
+/* A certificate is paper, even on a dark band. */
+.tm-night .tm-coa .tm-skel {
+  --tm-skel-base: rgba(36, 26, 74, 0.07);
+  --tm-skel-light: rgba(36, 26, 74, 0.02);
+}
+/* The light enters fully off the left and leaves fully off the right, so the loop never jumps. */
+@keyframes tm-skel-pass {
+  to {
+    background-position: -15% 0, 0 0;
+  }
+}
+/* A photograph settles into its frame as it arrives: the frame is there at once, and the image
+   eases from a breath larger to exact, the way a camera finishes its move. */
+.tm [data-reveal].tm-settle {
+  opacity: 1;
+  transform: none;
+  overflow: hidden;
+}
+.tm-settle img {
+  transform: scale(1.045);
+  transition: transform 2200ms var(--tm-ease-enter);
+}
+.tm-settle.is-visible img {
+  transform: none;
+}
 
 @keyframes tm-rise {
   from {
@@ -1111,6 +1199,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .tm-settle img {
+    transform: none;
+    transition: none;
+  }
+  .tm-skel {
+    animation: none;
+  }
   .tm [data-reveal],
   .tm-record-card[data-reveal] dl > div {
     opacity: 1;

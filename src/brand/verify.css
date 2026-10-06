@@ -78,7 +78,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--tm-space-5);
+  /* The caption clears the plinth's front edge. */
+  gap: calc(var(--tm-lh-w) * 0.62);
   margin: 0;
 }
 .tm-lothint-vial {
@@ -94,16 +95,34 @@
   height: auto;
   user-select: none;
 }
+/* The stage: the night studio's black stone plinth, its room graded to this section's ink so it
+   has no edge. Sized so the plinth is two and a half vials across, and placed so the vial's base
+   stands on the centre of its top. An elliptical fade lets its pool of light end the way light does. */
+.tm-lothint-vial > .tm-lothint-stage {
+  --tm-lh-stage: calc(var(--tm-lh-w) * 3.69);
+  position: absolute;
+  z-index: 0;
+  left: calc(var(--tm-lh-w) / 2 - var(--tm-lh-stage) / 2);
+  top: calc(var(--tm-lh-w) * var(--tm-lh-ratio) * 0.9703 - var(--tm-lh-stage) * 0.4074);
+  width: var(--tm-lh-stage);
+  max-width: none;
+  height: auto;
+  -webkit-mask-image: radial-gradient(56% 44% at 50% 58%, #000 60%, transparent 100%);
+  mask-image: radial-gradient(56% 44% at 50% 58%, #000 60%, transparent 100%);
+  pointer-events: none;
+  user-select: none;
+}
+/* Where the glass meets the stone. */
 .tm-lothint-glow {
   position: absolute;
   z-index: 0;
-  left: 6%;
-  right: 6%;
-  bottom: -5%;
-  height: 16%;
+  left: 9%;
+  right: 9%;
+  bottom: -1.5%;
+  height: 5%;
   border-radius: var(--tm-radius-pill);
-  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--tm-lilac-300) 42%, transparent) 0%, transparent 70%);
-  filter: blur(10px);
+  background: radial-gradient(50% 50% at 50% 50%, rgba(6, 3, 20, 0.62), transparent 100%);
+  filter: blur(2px);
 }
 .tm-lothint-loupe {
   position: absolute;
@@ -129,6 +148,9 @@
   user-select: none;
 }
 .tm .tm-lothint figcaption {
+  /* Above the stage, whose fading floor reaches under it. */
+  position: relative;
+  z-index: 1;
   max-width: 24ch;
   font: var(--tm-weight-regular) var(--tm-type-ui) / 1.45 var(--tm-font-sans);
   color: var(--tm-glow-3);
@@ -199,10 +221,13 @@
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--tm-gutter);
   row-gap: var(--tm-space-7);
-  align-items: center;
+  align-items: start;
 }
+/* The vial stays in view while its certificate is read beside it. */
 .tm-vresult-vial {
   grid-column: 1 / span 5;
+  position: sticky;
+  top: calc(var(--tm-header-height, 0px) + var(--tm-space-7));
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -212,8 +237,13 @@
   width: 100%;
   max-width: 28rem;
 }
+/* The certificate as a sheet of paper laid beside the vial. */
 .tm-vresult-cert {
-  grid-column: 7 / -1;
+  grid-column: 6 / -1;
+  padding: var(--tm-space-8) var(--tm-space-8) var(--tm-space-7);
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-float);
 }
 
 /* How it works, and what each result means. */
@@ -263,7 +293,7 @@
 .tm .tm-vmeans-list {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--tm-gutter);
   margin: 0;
 }
@@ -341,6 +371,10 @@
   /* On a phone the certificate is what was asked for; the vial follows it. */
   .tm-vresult-cert {
     order: -1;
+    padding: var(--tm-space-6) var(--tm-space-5);
+  }
+  .tm-vresult-vial {
+    position: static;
   }
   .tm-vresult-vial .tm-pstage {
     max-width: 18rem;

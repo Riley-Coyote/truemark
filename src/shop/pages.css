@@ -807,6 +807,34 @@
   gap: var(--tm-space-1);
   font: var(--tm-weight-medium) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
 }
+/* With its certificate, the whole card opens it in place. */
+.tm .tm-lot-card.is-certified {
+  position: relative;
+}
+.tm .tm-lot-card.is-certified .tm-lot-card-action {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--tm-ink);
+  cursor: pointer;
+}
+.tm-lot-card.is-certified .tm-lot-card-action::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.tm-lot-card.is-certified .tm-lot-card-action:focus-visible {
+  outline: none;
+}
+.brand-refinement .tm .tm-lot-card.is-certified:has(.tm-lot-card-action:focus-visible) {
+  border-color: var(--tm-ink);
+}
+.tm-lot-card-certificate {
+  grid-column: 1 / -1;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
 .tm .tm-fineprint {
   margin: var(--tm-space-4) 0 0;
   font-size: var(--tm-type-micro);
@@ -843,6 +871,10 @@
   font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
   color: var(--tm-ink);
   overflow-wrap: anywhere;
+}
+/* A blend's results, one component to a line. */
+.tm-spec-line {
+  display: block;
 }
 .tm-product-more {
   padding-bottom: var(--tm-space-silence);

@@ -5,6 +5,7 @@
  * Changes made in the preview persist in this browser's localStorage only.
  */
 import { useCallback, useEffect, useState } from "react";
+import { assetUrl } from "../../assetUrl";
 import { products, previewCategories } from "../../data";
 import { emit } from "./events";
 import { notices } from "./notifications";
@@ -73,8 +74,11 @@ const allApplications = (): Application[] => {
 };
 const allLots = (): Lot[] => {
   const overrides = read<Record<string, Partial<Lot>>>(KEYS.lots, {});
-  return seed.lots.map((l) => ({ ...l, ...overrides[l.lot] }));
+  return seed.lots.map((l) => withCertificate({ ...l, ...overrides[l.lot] }));
 };
+/** A released lot's PDF ships with the site (public/certificates), as live Storage holds it. */
+const withCertificate = (lot: Lot): Lot =>
+  lot.status === "released" && lot.coaPath ? { ...lot, coaUrl: assetUrl(`certificates/${lot.coaPath}`) } : lot;
 const allBuyers = (): Buyer[] => {
   const added = read<Buyer[]>(KEYS.buyers, []);
   return [...seed.buyers, ...added];

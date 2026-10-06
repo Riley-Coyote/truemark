@@ -20,7 +20,8 @@ export function sheenMask(src: string): CSSProperties {
  * local highlight position (`--sx`, as a percentage of its width) and its
  * offset from the light (`--dx`, `--dy`, -1…1, for depth parallax).
  *
- * The pointer moves the light, which follows it with a slight lag, as a real
+ * Unless `follow` is false (a scene lit by a fixed studio key, like the home hero, whose shadows
+ * don't move), the pointer moves the light, which follows it with a slight lag, as a real
  * light carried by a hand would. When the pointer is away, the light rests off
  * the scene's left edge, where nothing catches it, and makes a slow pass across
  * on its own: the first shortly after the scene appears (`firstPass`), then one
@@ -38,7 +39,8 @@ export function useLight(
     idle = 3200,
     repeat = true,
     ambient: passes = true,
-  }: { firstPass?: number; pass?: number; period?: number; idle?: number; repeat?: boolean; ambient?: boolean } = {},
+    follow = true,
+  }: { firstPass?: number; pass?: number; period?: number; idle?: number; repeat?: boolean; ambient?: boolean; follow?: boolean } = {},
 ) {
   useEffect(() => {
     const scene = root.current;
@@ -162,7 +164,7 @@ export function useLight(
     });
     seen.observe(scene);
 
-    scene.addEventListener("pointermove", onMove);
+    if (follow) scene.addEventListener("pointermove", onMove);
     scene.addEventListener("pointerleave", onLeave);
     frame = requestAnimationFrame(tick);
     return () => {
@@ -172,5 +174,5 @@ export function useLight(
       if (frame) cancelAnimationFrame(frame);
       if (wake) window.clearTimeout(wake);
     };
-  }, [root, firstPass, pass, period, idle, repeat, passes]);
+  }, [root, firstPass, pass, period, idle, repeat, passes, follow]);
 }

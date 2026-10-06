@@ -132,7 +132,7 @@ export default function Lots() {
   return (
     <div className="kit-grid">
       <PageHeader
-        description="Every lot on file, grouped by release status. Lots from the client's first batch carry real identifiers and no results; sample lots are fictional and show the other states."
+        description="Every lot on file, grouped by release status. Lots from the client's first batch carry real identifiers and, once released, the laboratory's results; sample lots are fictional and show the other states."
         meta={lots.data && <span>{plural(all.length, "lot")}</span>}
       />
       <div className="kit-toolbar">
@@ -365,7 +365,7 @@ function LotDrawer({ lotId, onClose }: { lotId: string; onClose: () => void }) {
           <p className="kit-note">
             {l.sample
               ? "No results on file for this sample lot."
-              : "No results on file. The laboratory results for the first batch have not been supplied."}
+              : "No results on file."}
           </p>
         )}
         {hasResults && l.sample && <p className="cc-footnote">Illustrative values for a fictional sample lot.</p>}

@@ -1,0 +1,566 @@
+{
+  "about": "The client's certificates of analysis (docs/client-documents/certificates), transcribed. scripts/certificates.test.mjs re-reads every PDF and compares each field.",
+  "lab": {
+    "name": "KMD Analytical",
+    "company": "KMD Group LLC",
+    "description": "an independent third-party analytical testing laboratory",
+    "method": "HPLC-DAD",
+    "verifyPage": "https://kmdanalytical.com/verify"
+  },
+  "specification": {
+    "purity": "95.0"
+  },
+  "certificates": [
+    {
+      "certificate": "TB-20260924-TRNF-01",
+      "pdf": "TB-20260924-TRNF-01.pdf",
+      "lot": "TM-RET10-2609-01",
+      "productId": "retatrutide-10-mg",
+      "compound": "Retatrutide",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-TRNF-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.68",
+          "identity": "Conforms",
+          "retentionTime": "7.710",
+          "content": "11.59",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "115.9"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-VRHE-01",
+      "pdf": "TB-20260924-VRHE-01.pdf",
+      "lot": "TM-RET20-2609-01",
+      "productId": "retatrutide-20-mg",
+      "compound": "Retatrutide",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-VRHE-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.99",
+          "identity": "Conforms",
+          "retentionTime": "7.703",
+          "content": "21.65",
+          "contentUnit": "mg per vial",
+          "claim": "20",
+          "claimUnit": "mg",
+          "ofClaim": "108.3"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-EP45-01",
+      "pdf": "TB-20260924-EP45-01.pdf",
+      "lot": "TM-RET30-2609-01",
+      "productId": "retatrutide-30-mg",
+      "compound": "Retatrutide",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-EP45-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.99",
+          "identity": "Conforms",
+          "retentionTime": "7.698",
+          "content": "36.27",
+          "contentUnit": "mg per vial",
+          "claim": "30",
+          "claimUnit": "mg",
+          "ofClaim": "120.9"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-SSZQ-01",
+      "pdf": "TB-20260924-SSZQ-01.pdf",
+      "lot": "TM-RET60-2609-01",
+      "productId": "retatrutide-60-mg",
+      "compound": "Retatrutide",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-SSZQ-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.99",
+          "identity": "Conforms",
+          "retentionTime": "7.707",
+          "content": "69.32",
+          "contentUnit": "mg per vial",
+          "claim": "60",
+          "claimUnit": "mg",
+          "ofClaim": "115.5"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-68C6-01",
+      "pdf": "TB-20260924-68C6-01.pdf",
+      "lot": "TM-TRZ30-2609-01",
+      "productId": "tirzepatide-30-mg",
+      "compound": "Tirzepatide",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-68C6-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.40",
+          "identity": "Conforms",
+          "retentionTime": "8.162",
+          "content": "33.91",
+          "contentUnit": "mg per vial",
+          "claim": "30",
+          "claimUnit": "mg",
+          "ofClaim": "113"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-DRSK-01",
+      "pdf": "TB-20260924-DRSK-01.pdf",
+      "lot": "TM-SEM20-2609-01",
+      "productId": "semaglutide-20-mg",
+      "compound": "Semaglutide",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-DRSK-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.99",
+          "identity": "Conforms",
+          "retentionTime": "7.196",
+          "content": "19.89",
+          "contentUnit": "mg per vial",
+          "claim": "20",
+          "claimUnit": "mg",
+          "ofClaim": "99.5"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-FZM5-01",
+      "pdf": "TB-20260924-FZM5-01.pdf",
+      "lot": "TM-CAG10-2609-01",
+      "productId": "cagrilintide-10-mg",
+      "compound": "Cagrilintide",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-FZM5-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.98",
+          "identity": "Conforms",
+          "retentionTime": "6.473",
+          "content": "10.34",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "103.4"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-VKKT-01",
+      "pdf": "TB-20260924-VKKT-01.pdf",
+      "lot": "TM-BPC10-2609-01",
+      "productId": "bpc-157-10-mg",
+      "compound": "BPC-157",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-VKKT-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.51",
+          "identity": "Conforms",
+          "retentionTime": "6.657",
+          "content": "12.46",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "124.6"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-FAYJ-01",
+      "pdf": "TB-20260924-FAYJ-01.pdf",
+      "lot": "TM-BTB10-2609-01",
+      "productId": "bpc-tb-1010-mg",
+      "compound": "BPC-157 / TB-500",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-FAYJ-01",
+      "components": [
+        {
+          "name": "BPC-157",
+          "purity": "97.36",
+          "identity": "Conforms",
+          "retentionTime": "7.073",
+          "content": "9.738",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "97.4"
+        },
+        {
+          "name": "TB-500",
+          "purity": "98.77",
+          "identity": "Conforms",
+          "retentionTime": "6.663",
+          "content": "12.93",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "129.3"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-VBEH-01",
+      "pdf": "TB-20260924-VBEH-01.pdf",
+      "lot": "TM-KPV10-2609-01",
+      "productId": "kpv-10-mg",
+      "compound": "KPV",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-VBEH-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "98.21",
+          "identity": "Conforms",
+          "retentionTime": "3.748",
+          "content": "11.21",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "112.1"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-7MJZ-01",
+      "pdf": "TB-20260924-7MJZ-01.pdf",
+      "lot": "TM-GHK100-2609-01",
+      "productId": "ghk-cu-100-mg",
+      "compound": "GHK-Cu",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-7MJZ-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.99",
+          "identity": "Conforms",
+          "retentionTime": "1.015",
+          "content": "120.50",
+          "contentUnit": "mg per vial",
+          "claim": "100",
+          "claimUnit": "mg",
+          "ofClaim": "120.5"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-6S24-01",
+      "pdf": "TB-20260924-6S24-01.pdf",
+      "lot": "TM-GLW70-2609-01",
+      "productId": "glow-70-mg",
+      "compound": "GLOW",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-6S24-01",
+      "components": [
+        {
+          "name": "GHK-Cu",
+          "purity": "98.89",
+          "identity": "Conforms",
+          "retentionTime": "1.015",
+          "content": "60.30",
+          "contentUnit": "mg per vial",
+          "claim": "50",
+          "claimUnit": "mg",
+          "ofClaim": "120.6"
+        },
+        {
+          "name": "BPC-157",
+          "purity": "99.99",
+          "identity": "Conforms",
+          "retentionTime": "7.091",
+          "content": "13.04",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "130.4"
+        },
+        {
+          "name": "TB-500",
+          "purity": "99.97",
+          "identity": "Conforms",
+          "retentionTime": "6.684",
+          "content": "14.56",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "145.6"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-8CPW-01",
+      "pdf": "TB-20260924-8CPW-01.pdf",
+      "lot": "TM-TES10-2609-01",
+      "productId": "tesamorelin-10-mg",
+      "compound": "Tesamorelin",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-8CPW-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.35",
+          "identity": "Conforms",
+          "retentionTime": "9.257",
+          "content": "10.95",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "109.5"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-6WQZ-01",
+      "pdf": "TB-20260924-6WQZ-01.pdf",
+      "lot": "TM-NAD500-2609-01",
+      "productId": "nad-500-mg",
+      "compound": "NAD+",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-6WQZ-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.77",
+          "identity": "Conforms",
+          "retentionTime": "1.885",
+          "content": "522.09",
+          "contentUnit": "mg per vial",
+          "claim": "500",
+          "claimUnit": "mg",
+          "ofClaim": "104.4"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-EPSK-01",
+      "pdf": "TB-20260924-EPSK-01.pdf",
+      "lot": "TM-MOT10-2609-01",
+      "productId": "mots-c-10-mg",
+      "compound": "MOTS-c",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-EPSK-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "97.52",
+          "identity": "Conforms",
+          "retentionTime": "8.567",
+          "content": "14.09",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "140.9"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-K6BB-01",
+      "pdf": "TB-20260924-K6BB-01.pdf",
+      "lot": "TM-SMX10-2609-01",
+      "productId": "semax-10-mg",
+      "compound": "Semax",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-K6BB-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.78",
+          "identity": "Conforms",
+          "retentionTime": "6.922",
+          "content": "10.09",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "100.9"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-WVT6-01",
+      "pdf": "TB-20260924-WVT6-01.pdf",
+      "lot": "TM-SLK10-2609-01",
+      "productId": "selank-10-mg",
+      "compound": "Selank",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-WVT6-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "98.68",
+          "identity": "Conforms",
+          "retentionTime": "4.951",
+          "content": "10.37",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "103.7"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-R7XY-01",
+      "pdf": "TB-20260924-R7XY-01.pdf",
+      "lot": "TM-MEL10-2609-01",
+      "productId": "melanotan-ii-10-mg",
+      "compound": "Melanotan II",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-R7XY-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "98.67",
+          "identity": "Conforms",
+          "retentionTime": "3.294",
+          "content": "10.17",
+          "contentUnit": "mg per vial",
+          "claim": "10",
+          "claimUnit": "mg",
+          "ofClaim": "101.7"
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-EMNS-01",
+      "pdf": "TB-20260924-EMNS-01.pdf",
+      "lot": "TM-BAC10-2609-01",
+      "productId": "bacteriostatic-water-10-ml",
+      "compound": "Bacteriostatic Water (benzyl alcohol 0.9% w/v)",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-EMNS-01",
+      "components": [
+        {
+          "name": null,
+          "purity": "99.99",
+          "identity": "Conforms",
+          "retentionTime": "1.481",
+          "contentLabel": "Benzyl alcohol content",
+          "content": "9.24",
+          "contentUnit": "mg/mL",
+          "claim": "9",
+          "claimUnit": "mg/mL (0.9% w/v)",
+          "ofClaim": "103",
+          "calculated": {
+            "value": "≈ 92.4",
+            "unit": "mg per vial",
+            "note": "calculated from the labeled 10 mL fill volume; fill volume not independently verified"
+          }
+        }
+      ]
+    },
+    {
+      "certificate": "TB-20260924-QC6H-01",
+      "pdf": "TB-20260924-QC6H-01.pdf",
+      "lot": "TM-CJI5-2609-01",
+      "productId": "cjc-ipa-1010-mg",
+      "compound": "CJC-1295 (No DAC) / Ipamorelin",
+      "lab": "KMD Analytical",
+      "sampleReceived": "2026-09-24",
+      "analyzed": "2026-10-01",
+      "issued": "2026-10-01",
+      "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-QC6H-01",
+      "components": [
+        {
+          "name": "CJC-1295 (no DAC)",
+          "purity": "99.94",
+          "identity": "Conforms",
+          "retentionTime": "4.917",
+          "content": "5.09",
+          "contentUnit": "mg per vial",
+          "claim": "5",
+          "claimUnit": "mg",
+          "ofClaim": "101.8"
+        },
+        {
+          "name": "Ipamorelin",
+          "purity": "96.28",
+          "identity": "Conforms",
+          "retentionTime": "1.331",
+          "content": "5.63",
+          "contentUnit": "mg per vial",
+          "claim": "5",
+          "claimUnit": "mg",
+          "ofClaim": "112.6"
+        }
+      ]
+    }
+  ],
+  "pending": []
+}

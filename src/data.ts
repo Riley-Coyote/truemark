@@ -382,18 +382,19 @@ export const products: Product[] = [
     form: "Research diluent",
     lot: "TM-BAC10-2609-01",
   },
-  // The client chose the supplied 10 mg / 10 mg artwork while corrected 5 mg / 5 mg brand-kit art is pending.
+  // Sold at the size its certificate tested (KMD TB-20260924-QC6H-01, lot TM-CJI5-2609-01), as the brand kit lists it
+  // (Riley, 2026-10-06). The photograph still shows the supplied 10 mg / 10 mg label until the 5 mg / 5 mg art arrives.
   {
     id: "cjc-ipa-1010-mg",
     name: "CJC (No DAC) / Ipamorelin",
-    size: "10 mg / 10 mg",
+    size: "5 mg / 5 mg",
     category: "secretagogue-peptides",
     price: 55,
     image: "/images/products/cjc-no-dac-ipamorelin-10-mg-10-mg.png",
     color: "#0273D0",
     colorInk: "#00437A",
     form: "Lyophilized powder",
-    lot: "TM-CJI10-2609-01",
+    lot: "TM-CJI5-2609-01",
   },
 ];
 

@@ -2,11 +2,13 @@ import { LIVE } from "./mode";
 /**
  * Sample data for the design preview. Every person, institution, order and
  * partner here is fictional (emails use the reserved .example domain).
- * First-batch identifiers carry no results except the explicitly illustrative
- * BPC-157 preview record; other sample lots exist only to show each state.
+ * First-batch lots carry the client's real certificates where one matches
+ * (certificate-manifest.json), as live holds them after the import; SAMPLE-*
+ * lots are fictional and exist only to show the command center each state.
  * Rates and prices marked "sample" are placeholders for the client to set.
  */
 import { sampleCatalog as products } from "../data";
+import { LAB, certificates, releasedFields, resultsFor } from "./certificate-records";
 import type {
   Address,
   Application,
@@ -402,34 +404,19 @@ export function visitsFor(partnerId: string): Visit[] {
   return visitShape.map((v) => ({ date: v.date, clicks: Math.max(1, Math.round(v.clicks * scale)) }));
 }
 
-/** Preview-only illustrative results on the client's BPC-157 first-batch identifier. */
+/** The featured lot (home, verify, the hero): the client's BPC-157 first batch, with its real certificate. */
+const featured = certificates.find((entry) => entry.lot === "TM-BPC10-2609-01")!;
 export const sampleRecord = {
-  lot: "TM-BPC10-2609-01",
-  productId: "bpc-157-10-mg",
+  lot: featured.lot,
+  productId: featured.productId,
   compound: "BPC-157",
   presentation: "10 mg · Lyophilized powder",
-  reference: "TM-COA-0114",
-  results: [
-    { label: "Purity", method: "HPLC", value: "99.31", unit: "%" },
-    { label: "Identity", method: "Mass spectrometry", value: "Confirmed", unit: "" },
-    { label: "Endotoxin", method: "LAL", value: "< 0.25", unit: "EU/mg" },
-    { label: "Sterility", method: "", value: "Pass", unit: "" },
-  ],
+  reference: featured.certificate,
+  results: resultsFor(featured),
   status: "Released",
-  laboratory: "Contracted laboratory",
-  /** Dates agree with the client's paper trail below. */
-  receivedAt: "2026-08-02T14:00:00.000Z",
-  testedAt: "2026-08-11T14:00:00.000Z",
-  releasedAt: "2026-08-12T14:00:00.000Z",
-  /** The client's own paper trail for this lot. */
-  trail: [
-    { step: "Received", date: "02 Aug", iso: "2026-08-02", detail: "Batch logged" },
-    { step: "Quarantined", date: "02 Aug", iso: "2026-08-02", detail: "Held at −20 °C" },
-    { step: "Sampled", date: "05 Aug", iso: "2026-08-05", detail: "Sent to laboratory" },
-    { step: "Tested", date: "11 Aug", iso: "2026-08-11", detail: "HPLC · MS" },
-    { step: "Released", date: "12 Aug", iso: "2026-08-12", detail: "Certificate published" },
-    { step: "Shipped", date: "14 Aug", iso: "2026-08-14", detail: "Cold chain" },
-  ],
+  laboratory: LAB.name,
+  testedAt: featured.analyzed,
+  releasedAt: featured.issued,
 };
 
 // Build every first-batch row before merging so its seeded inventory and PRNG order stay intact.
@@ -443,21 +430,14 @@ const firstBatchLots: Lot[] = products.map((p, i) => ({
   sample: false,
 }));
 
+const certified = new Map(certificates.map((entry) => [entry.lot, entry]));
+
 export const lots: Lot[] = [
-  ...firstBatchLots.filter((lot) => lot.lot !== sampleRecord.lot),
-  // The client mockup's illustrative evidence, merged with its first-batch identifier.
-  {
-    lot: sampleRecord.lot,
-    productId: sampleRecord.productId,
-    status: "released",
-    receivedAt: sampleRecord.receivedAt,
-    testedAt: sampleRecord.testedAt,
-    releasedAt: sampleRecord.releasedAt,
-    results: sampleRecord.results,
-    reference: sampleRecord.reference,
-    units: firstBatchLots.find((lot) => lot.lot === sampleRecord.lot)!.units,
-    sample: true,
-  },
+  // The client's certificates, released as the live import releases them; a lot without one stays in testing.
+  ...firstBatchLots.map((lot) => {
+    const entry = certified.get(lot.lot);
+    return entry ? { ...lot, ...releasedFields(entry) } : lot;
+  }),
   { lot: "SAMPLE-RT30-A", productId: "retatrutide-30-mg", status: "released", receivedAt: day(70), releasedAt: day(61), results: [{ label: "Purity", method: "HPLC", value: "99.12", unit: "%" }, { label: "Identity", method: "Mass spectrometry", value: "Confirmed", unit: "" }], reference: "TM-COA-0109", units: 0, sample: true },
   { lot: "SAMPLE-GH100-A", productId: "ghk-cu-100-mg", status: "archived", receivedAt: day(140), releasedAt: day(131), results: [{ label: "Purity", method: "HPLC", value: "99.04", unit: "%" }], reference: "TM-COA-0088", units: 0, sample: true },
   { lot: "SAMPLE-SM20-C", productId: "semaglutide-20-mg", status: "rejected", receivedAt: day(33), results: [{ label: "Purity", method: "HPLC", value: "97.40", unit: "%" }], reference: "TM-COA-0121", units: 0, sample: true },

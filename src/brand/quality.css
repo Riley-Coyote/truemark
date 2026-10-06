@@ -8,7 +8,14 @@
    * viewport; the headline and lead scale with it so they stay clear of the vials.
    */
   --tm-quality-sky: 2.6vw; /* photo's top edge to the eyebrow */
-  --tm-quality-floor: 2.4vw; /* the lead's last line to the photo's bottom edge */
+  /*
+   * The opening fits the first screen with the process heading and its path below it. The trio's
+   * vials stand in the photograph's top 58%: it may lose its floor and pedestal bases (to 66% of
+   * its height, 37.3vw), never a vial. 45.2vw is its top 80%: the floor below is empty.
+   */
+  --tm-quality-first: calc(100svh - var(--review-bar-height, 0px) - var(--tm-header-height) - var(--tm-notice-height));
+  --tm-quality-path: 26rem; /* the process heading and its path, left in view below */
+  --tm-quality-photo-h: clamp(37.3vw, calc(var(--tm-quality-first) - var(--tm-quality-path)), 45.2vw);
   --tm-quality-title: clamp(2.75rem, 4.2vw, 4.25rem);
   --tm-quality-trace-h: 120px; /* the Trace's drawn height, as on the home band */
   --tm-quality-caption-delay: 1900ms; /* the caption follows the peak, as the Trace's own does */
@@ -31,7 +38,7 @@
 
 .tm-quality-open {
   --tm-bg: var(--tm-paper);
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
   padding-block: 0;
   row-gap: 0;
 }
@@ -39,15 +46,18 @@
   grid-column: 1 / -1;
   grid-row: 1 / -1;
   margin-inline: calc(var(--tm-pad) * -1);
-  /* The studio floor dissolves into the page. */
-  -webkit-mask-image: linear-gradient(to bottom, var(--tm-ink) 84%, transparent);
-  mask-image: linear-gradient(to bottom, var(--tm-ink) 84%, transparent);
+  /* The pedestals' bases dissolve into the page, below the last vial. */
+  -webkit-mask-image: linear-gradient(to bottom, var(--tm-ink) 90%, transparent);
+  mask-image: linear-gradient(to bottom, var(--tm-ink) 90%, transparent);
   animation: tm-appear var(--tm-dur-scene) var(--tm-ease-enter) both;
 }
 .tm-quality-open-photo img {
   display: block;
   width: 100%;
-  height: auto;
+  height: var(--tm-quality-photo-h);
+  object-fit: cover;
+  /* Held by its top: the headroom keeps the headline, and the empty floor is what goes. */
+  object-position: 50% 0;
 }
 /* Set in the photograph's own headroom, above the first pedestal. */
 .tm-quality-open-head {
@@ -68,28 +78,26 @@
   letter-spacing: var(--tm-track-display);
   color: var(--tm-ink);
 }
-/* The lead stands on the studio floor, hung from the headline's left edge. */
-.tm .tm-quality-open-lead {
-  grid-column: 1 / span 5;
-  grid-row: 3;
-  position: relative;
-  z-index: 1;
+/* ---------- Process: straight on from the opening ---------- */
+
+.tm-quality-process {
+  padding-top: var(--tm-space-5);
+  row-gap: var(--tm-space-7);
+}
+.tm-quality-process-head {
+  grid-column: 1 / span 6;
+  grid-row: 1;
+}
+/* The page's opening line, beside the heading of the path it introduces. */
+.tm .tm-quality-process-note {
+  grid-column: 8 / -1;
+  grid-row: 1;
+  align-self: end;
   margin: 0;
-  padding-bottom: var(--tm-quality-floor);
   max-width: 44ch;
   font: var(--tm-weight-regular) var(--tm-type-lead) / 1.55 var(--tm-font-sans);
   color: var(--tm-ink-2);
   text-wrap: pretty;
-  animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) var(--tm-stagger) both;
-}
-
-/* ---------- Process ---------- */
-
-.tm-quality-process {
-  row-gap: var(--tm-space-8);
-}
-.tm-quality-process-head {
-  grid-column: 1 / span 7;
 }
 .tm-quality-process .tm-track {
   grid-column: 1 / -1;
@@ -98,6 +106,10 @@
 /* ---------- Release specification ---------- */
 
 .tm-quality-spec {
+  /* The night studio (shop.css): the key over the specification, the peak's glow at its column. */
+  --tm-key-at: 70% 40%;
+  --tm-peak-x: 79%;
+  --tm-peak-y: 26%;
   row-gap: 0;
   align-items: start;
 }
@@ -287,20 +299,25 @@
     grid-template-rows: none;
     padding-top: var(--tm-space-7);
   }
-  .tm-quality-open-head,
-  .tm .tm-quality-open-lead {
+  .tm-quality-open-head {
     grid-column: 1 / -1;
     grid-row: auto;
     padding: 0;
-  }
-  .tm .tm-quality-open-lead {
-    margin-top: var(--tm-space-5);
   }
   .tm-quality-open-photo {
     grid-row: auto;
     margin-top: var(--tm-space-6);
     -webkit-mask-image: linear-gradient(to bottom, transparent, var(--tm-ink) 10%, var(--tm-ink) 84%, transparent);
     mask-image: linear-gradient(to bottom, transparent, var(--tm-ink) 10%, var(--tm-ink) 84%, transparent);
+  }
+  /* Stacked, the photograph keeps its natural shape. */
+  .tm-quality-open-photo img {
+    height: auto;
+  }
+  .tm-quality-process-head,
+  .tm .tm-quality-process-note {
+    grid-column: 1 / -1;
+    grid-row: auto;
   }
   .tm-quality-spec-head,
   .tm .tm-quality-spec-note,
@@ -320,9 +337,6 @@
   }
 }
 @media (max-width: 960px) {
-  .tm-quality-process-head {
-    grid-column: 1 / -1;
-  }
   .tm-quality-records-photo,
   .tm-quality-records-head,
   .tm .tm-quality-files,
@@ -364,8 +378,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .tm-quality-open-photo,
-  .tm-quality-open-head,
-  .tm .tm-quality-open-lead {
+  .tm-quality-open-head {
     animation: none;
   }
   .tm-quality-trace-caption,

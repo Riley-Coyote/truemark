@@ -7,11 +7,10 @@ import { compoundClasses, faqs } from "../data";
 import { HomeAssistantEntry } from "../assistant/Assistant";
 import { productById, productCutout, sampleRecord, specFor } from "../shop/catalog";
 import { pictureLoading } from "../shop/ui";
-import { findRecord, recordFromLot } from "../shop/records";
-import { LIVE } from "../platform/mode";
+import { recordFromLot } from "../shop/records";
 import { store, useResource } from "../platform/store";
 import type { Lot } from "../platform/types";
-import { Certificate } from "./Certificate";
+import { Certificate, CertificateSkeleton } from "./Certificate";
 import { SequenceChain } from "./SequenceChain";
 import { Trace } from "./Trace";
 import "./home.css";
@@ -33,9 +32,9 @@ const stationDate = (iso?: string | null) =>
   iso ? { iso, date: new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", timeZone: "UTC" }).format(new Date(iso)) } : { date: "—" };
 
 /**
- * A live lot walks the client's six stations. The record keeps three dates (received, tested,
- * released) and a status; a station passed without a recorded date says "Done", the one the lot
- * is at says "Now", and the rest wait.
+ * The lot walks the client's six stations, in preview as in live. The record keeps three dates
+ * (received, tested, released) and a status; a station passed without a recorded date says "Done",
+ * the one the lot is at says "Now", and the rest wait.
  */
 function liveStations(record: Lot): Station[] {
   const { status } = record;
@@ -62,16 +61,16 @@ function liveStations(record: Lot): Station[] {
 }
 
 export function PaperTrail() {
-  const current = useResource(() => LIVE ? store.lots.get(lot) : Promise.resolve(null));
+  const current = useResource(() => store.lots.get(lot));
   const product = productById(sampleRecord.productId);
   const sequence = product ? specFor(product).sequence : undefined;
-  const trail: Station[] = LIVE
-    ? current.data ? liveStations(current.data) : []
-    : sampleRecord.trail.map((stop) => ({ ...stop, state: "done", release: stop.step === "Released" }));
+  const trail: Station[] = current.data ? liveStations(current.data) : [];
   const done = trail.filter((stop) => stop.state === "done").length;
   // The lot travels to the station it is at: the one in progress, or else the last one passed.
   const at = trail.findIndex((stop) => stop.state === "current");
   const reached = at >= 0 ? at + 1 : done;
+  // The track lays out one column per station; while the record loads, six placeholders hold them.
+  const stops = trail.length || (current.loading ? 6 : 0);
   return (
     <section className="tm tm-trail" aria-labelledby="tm-trail-title">
       <header className="tm-trail-head" data-reveal>
@@ -95,8 +94,8 @@ export function PaperTrail() {
       <div
         className="tm-trail-record"
         data-reveal
-        data-stops={LIVE ? trail.length : undefined}
-        style={LIVE ? ({ "--tm-trail-stops": trail.length, "--tm-trail-done": reached } as CSSProperties) : undefined}
+        data-stops={stops}
+        style={{ "--tm-trail-stops": stops, "--tm-trail-done": reached } as CSSProperties}
       >
         <div className="tm-trail-lot">
           <p className="tm-trail-id">
@@ -110,6 +109,15 @@ export function PaperTrail() {
         </div>
         <div className="tm-trail-rail">
           <ol className="tm-trail-track">
+            {/* While the lot's record is on the way, its six stations hold their places. */}
+            {trail.length === 0 && current.loading && Array.from({ length: 6 }, (_, i) => (
+              <li key={i} className="is-next is-skeleton" aria-hidden="true">
+                <span className="tm-trail-node" />
+                <span className="tm-trail-date"><span className="tm-skel" style={{ width: "2.5em" }} /></span>
+                <span className="tm-trail-step"><span className="tm-skel" style={{ width: "5.5em" }} /></span>
+                <span className="tm-trail-detail"><span className="tm-skel" style={{ width: "6.5em" }} /></span>
+              </li>
+            ))}
             {trail.map((stop, i) => (
               <li
                 key={stop.step}
@@ -130,7 +138,9 @@ export function PaperTrail() {
             ))}
           </ol>
           {reached > 0 && <span className="tm-trail-progress" aria-hidden="true" />}
-          {LIVE && trail.length === 0 && <p className="tm-section-note" role="status">{current.loading ? "Loading lot record…" : "Lot record unavailable."}</p>}
+          {trail.length === 0 && (current.loading
+            ? <span className="sr-only" role="status">Loading the lot record</span>
+            : <p className="tm-section-note" role="status">Lot record unavailable.</p>)}
         </div>
       </div>
     </section>
@@ -143,7 +153,7 @@ export function Classes() {
   const photo = scene("collection");
   return (
     <section className="tm tm-classes" aria-labelledby="tm-classes-title">
-      <div className="tm-classes-photo">
+      <div className="tm-classes-photo tm-settle" data-reveal>
         <img
           src={photo.src}
           srcSet={photo.srcSet}
@@ -196,8 +206,8 @@ export function Classes() {
 }
 
 export function Verification() {
-  const current = useResource(() => LIVE ? store.lots.get(lot) : Promise.resolve(null));
-  const record = LIVE ? current.data ? recordFromLot(current.data) : null : findRecord(lot);
+  const current = useResource(() => store.lots.get(lot));
+  const record = current.data ? recordFromLot(current.data) : null;
   const navigate = useNavigate();
   const [value, setValue] = useState("");
 
@@ -207,7 +217,7 @@ export function Verification() {
   }
 
   return (
-    <section className="tm tm-night tm-vband" aria-labelledby="tm-vband-title">
+    <section className="tm tm-night tm-night-studio tm-vband" aria-labelledby="tm-vband-title">
       <div className="tm-vband-copy" data-reveal>
         <p className="tm-eyebrow">Verification</p>
         <h2 id="tm-vband-title" className="tm-heading">
@@ -237,10 +247,12 @@ export function Verification() {
         </form>
       </div>
 
-      {record ? <Certificate record={record} reveal className="tm-vband-cert" /> : <div className="tm-vband-cert" role="status">
-        {current.loading ? "Loading lot record…" : "Lot record unavailable."}
-        {current.error && <button type="button" className="tm-textlink" onClick={current.reload}>Try again</button>}
-      </div>}
+      {record ? <Certificate record={record} reveal className="tm-vband-cert" />
+        : current.loading ? <CertificateSkeleton className="tm-vband-cert" />
+        : <div className="tm-vband-cert" role="status">
+            Lot record unavailable.
+            {current.error && <button type="button" className="tm-textlink" onClick={current.reload}>Try again</button>}
+          </div>}
 
       <div className="tm-vband-trace" data-reveal>
         <Trace theme="night" peakAt={0.7} height={120} caption={record?.status === "released" && record.results.length ? `${lot} · HPLC` : "HPLC · purity specification"} />

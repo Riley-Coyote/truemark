@@ -63,6 +63,12 @@
   --tm-signal-night: #63d6a4;
   --tm-purple: #7a39b1;
   --tm-gradient: linear-gradient(100deg, #e9284c 0%, #b3146b 28%, #7a2aa0 55%, #2f1492 80%, #0a2ea9 100%);
+  /* The same five colours one by one, for SVG strokes, which can't take a CSS gradient. */
+  --tm-spectrum-1: #e9284c;
+  --tm-spectrum-2: #b3146b;
+  --tm-spectrum-3: #7a2aa0;
+  --tm-spectrum-4: #2f1492;
+  --tm-spectrum-5: #0a2ea9;
   --tm-gradient-soft: linear-gradient(100deg, rgba(233, 40, 76, 0.55), rgba(122, 42, 160, 0.55) 55%, rgba(10, 46, 169, 0.55));
   --tm-danger: #b3473b;
   --tm-danger-night: #e0877a;
@@ -182,6 +188,22 @@
   --tm-lilac-floor: #e1d6ee;
   --tm-bench: #d2d2e5;
   --tm-lilac-studio: linear-gradient(to bottom, var(--tm-lilac-50) 0%, var(--tm-lilac-100) 58%, var(--tm-lilac-200) 100%);
+  /* The hero's studio, lit by one soft key from the upper left: the light it throws on the
+     seamless and the floor, where the set falls away from it, and what the vials cast. */
+  --tm-studio-key: rgba(255, 255, 255, 0.78);
+  --tm-studio-bounce: rgba(255, 255, 255, 0.5);
+  --tm-studio-falloff: rgba(184, 160, 222, 0.32);
+  --tm-studio-core: rgba(46, 24, 86, 0.36);
+  --tm-studio-cast: rgba(58, 30, 104, 0.85);
+  /* The same studio at night, for the record's dark bands: one soft key from above, behind the
+     document it presents, the room falling into deeper ink, and the lab line's peak lighting
+     the floor in the brand's own colours. */
+  --tm-night-key: rgba(128, 100, 222, 0.3);
+  --tm-night-falloff: rgba(10, 6, 30, 0.55);
+  --tm-night-warm: rgba(179, 20, 107, 0.16);
+  --tm-night-cool: rgba(10, 46, 169, 0.2);
+  /* Photographic grain: fractal noise, laid at a whisper so gradients never band. */
+  --tm-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.24 0 0 0 0 0.16 0 0 0 0 0.42 0 0 0 1.4 -0.2'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
 
   --tm-shelf-floor: linear-gradient(to bottom, #f4f7fa 0%, #f4f7fa 74%, #f1f5f9 78%, #edf0f4 83%, #e7eaef 87.5%, #f1f4f8 92.5%, #f4f7fa 100%);
 

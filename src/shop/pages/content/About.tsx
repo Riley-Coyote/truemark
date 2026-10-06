@@ -56,7 +56,7 @@ const principles = [
 export default function About() {
   const root = useRef<HTMLDivElement>(null);
   useReveal(root);
-  const lab = scene("lab");
+  const lab = scene("lab-bench");
   const light = scene("caustics");
 
   return (
@@ -78,7 +78,15 @@ export default function About() {
           compounds with precision, transparency, and absolute integrity.
         </p>
         <div className="tm-about-open-photo">
-          <img src={lab.src} srcSet={lab.srcSet} sizes="100vw" width={2400} height={1357} alt="" fetchPriority="high" />
+          <img
+            src={lab.src}
+            srcSet={lab.srcSet}
+            sizes="100vw"
+            width={2400}
+            height={1357}
+            alt="Three TrueMark vials on a laboratory bench: Tesamorelin, Retatrutide and Semax."
+            fetchPriority="high"
+          />
         </div>
       </section>
 

@@ -193,6 +193,10 @@
  * Stations sit at the start of each of six equal columns (gap included), so
  * station n lies at n/6 of the track width plus n/6 of one gap.
  */
+/* A station holding its place: no arrival, no colour. */
+.tm-trail-record.is-visible li.is-skeleton :is(.tm-trail-node, .tm-trail-step) {
+  animation: none;
+}
 @keyframes tm-trail-run {
   0% {
     width: 0;
@@ -388,6 +392,10 @@
 .tm-vband {
   row-gap: var(--tm-space-8);
   padding-bottom: 0;
+  /* The night studio (shop.css): the key above the certificate, the peak's glow on the floor. */
+  --tm-key-at: 72% 26%;
+  --tm-peak-x: 70%;
+  --tm-peak-y: 96%;
 }
 .tm-vband > * { min-width: 0; }
 .tm-vband-copy {
@@ -825,11 +833,13 @@
   }
 }
 @media (max-width: 560px) {
-  /* No room beside the peak on a phone: the caption reads as the chart's title instead. */
+  /* No room beside the peak on a phone: the caption reads as the chart's title instead, on one
+     line at the left. Trace.tsx sizes it inline for the space beside the peak, so it's overridden. */
   .tm-vband-trace .tm-trace-caption {
     left: 0 !important;
     right: auto;
-    max-width: 55%;
+    max-width: 60% !important;
+    white-space: nowrap;
     text-align: left;
   }
 }

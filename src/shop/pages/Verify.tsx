@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { Certificate } from "../../brand/Certificate";
+import { CertificateView } from "../../brand/CertificateView";
 import { CertificateLibrary } from "../../brand/CertificateLibrary";
 import { ProductStage } from "../../brand/ProductStage";
 import { productById, productCutout, sampleRecord } from "../catalog";
 import { useReveal } from "../motion";
+import { assetUrl } from "../../assetUrl";
 import { LIVE } from "../../platform/mode";
 import { store, useResource } from "../../platform/store";
 import { normaliseLot, recordFromLot } from "../records";
@@ -27,6 +28,9 @@ const meanings = [
   ["Identity · MS", "Mass spectrometry confirms the molecular mass matches the stated compound and sequence."],
   ["Endotoxin · LAL", "Limulus amebocyte lysate assay quantifies bacterial endotoxin, reported in EU per milligram."],
   ["Sterility", "Culture-based testing verifies the absence of viable microbial growth in the sampled vials."],
+  // What the laboratory's certificates also report, in its own terms.
+  ["Identity · HPLC", "The main peak's retention time and UV spectrum match a reference standard of the stated compound."],
+  ["Content per vial · HPLC", "The net peptide measured in the vial, in milligrams, with its percentage of the label claim. Purity, a share of peak area, is not a measure of net peptide content."],
 ];
 
 /** Where the lot is printed: the vial, with a loupe over the LOT line of its label. */
@@ -36,6 +40,15 @@ function LotHint() {
   return (
     <figure className="tm-lothint" aria-hidden="true">
       <div className="tm-lothint-vial">
+        {/* The night studio's black stone plinth, graded to this section's ink; the vial stands on it. */}
+        <img
+          className="tm-lothint-stage"
+          src={assetUrl("images/scenes/verify-stage-sm.webp")}
+          srcSet={`${assetUrl("images/scenes/verify-stage-sm.webp")} 540w, ${assetUrl("images/scenes/verify-stage.webp")} 1080w`}
+          sizes="34rem"
+          alt=""
+          draggable={false}
+        />
         <span className="tm-lothint-glow" />
         <img src={src} alt="" draggable={false} />
         <span className="tm-lothint-loupe">
@@ -148,7 +161,9 @@ export default function Verify() {
                 {record.product.name} {record.product.size} <ArrowRight size={16} strokeWidth={1.6} />
               </Link>
             </div>
-            <Certificate record={record} reveal className="tm-vresult-cert" />
+            <div className="tm-vresult-cert" data-reveal>
+              <CertificateView record={record} />
+            </div>
           </div>
         ) : (
           <div className="tm-vresult-empty tm-vresult-missing" data-reveal>

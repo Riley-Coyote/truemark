@@ -54,16 +54,6 @@ export const questions: Question[] = [
     placeholder: "e.g. Best seller: Retatrutide, BPC-157. New: GLOW",
   },
   {
-    id: "lab-name",
-    route: "/verify?lot=TM-BPC10-2609-01",
-    title: "Name the laboratory?",
-    prompt:
-      "Certificates say “Contracted laboratory”. Can we name the testing lab, or should it stay unnamed?",
-    choices: ["Name it", "Keep it unnamed"],
-    allowText: true,
-    placeholder: "The lab's name",
-  },
-  {
     id: "shipping-rates",
     route: "/checkout",
     title: "Shipping and carriers",

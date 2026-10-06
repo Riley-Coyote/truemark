@@ -201,9 +201,9 @@ export default function Review() {
         </h2>
         <p className="rv-text">
           Everything you can click works, with sample data. No order is placed, no
-          payment is taken and no message is sent. Sample people, figures and the sample
-          record on lot TM-BPC10-2609-01 are illustrative; the rest of your first batch
-          shows its real lot numbers, and no results until the laboratory publishes them.
+          payment is taken and no message is sent. Sample people and figures are
+          illustrative; your first batch shows its real lot numbers and, where a
+          certificate matches the lot, the laboratory's results.
         </p>
       </section>
 

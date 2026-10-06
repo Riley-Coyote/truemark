@@ -1,14 +1,21 @@
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { claimText, contentValue, resultGroups, splitLabel } from "../../platform/certificate-records";
 import { stockProblem } from "../../platform/commerce";
+import { useReleasedLots } from "../../platform/released";
+import type { LotResult } from "../../platform/types";
 import { LIVE } from "../../platform/mode";
 import { categoryName, money, products } from "../../data";
 import { compoundsForBrowsing, describe, specFor } from "../catalog";
 import { useShop } from "../context";
+import { recordFromLot } from "../records";
 import { announceMobileAdd } from "../MobileAdd";
 import { useReveal } from "../motion";
 import { ProductName, ProofFigures, Quantity, tone } from "../ui";
+import { certificateDate } from "../../brand/Certificate";
+import { CertificateDialog } from "../../brand/CertificateDialog";
 import { useLight } from "../../brand/light";
 import { ContinueExploring } from "../../brand/ContinueExploring";
 import { ProductStage } from "../../brand/ProductStage";
@@ -21,12 +28,14 @@ export default function ProductPage() {
   const { add, cart } = useShop();
   const [quantity, setQuantity] = useState(1);
   const [zoomed, setZoomed] = useState(false);
+  const [certificateOpen, setCertificateOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   useReveal(root, product?.name);
   const top = useRef<HTMLElement>(null);
   const more = useRef<HTMLElement>(null);
   useLight(top, { firstPass: 900, pass: 2450, repeat: false });
   useLight(more, { ambient: false });
+  const released = useReleasedLots();
 
   const siblings = product ? products.filter((p) => p.name === product.name && p.active !== false) : [];
   const index = product ? siblings.indexOf(product) : 0;
@@ -64,7 +73,10 @@ export default function ProductPage() {
   const unavailable = stockProblem(product, quantity + (cart.find((item) => item.id === product.id)?.quantity ?? 0));
   const spec = specFor(product);
   const others = compoundsForBrowsing.filter((c) => c.name !== product.name);
-  const rows: [string, string | undefined][] = [
+  // The current lot's certificate, once its record arrives; a lot still in testing has none.
+  const lot = released.data?.find((entry) => entry.lot === product.lot);
+  const certificate = lot ? recordFromLot(lot) : null;
+  const rows: [string, ReactNode][] = [
     ["Compound", product.name],
     ["Class", categoryName(product.category)],
     ["Presentation", `${product.size} per vial`],
@@ -75,7 +87,10 @@ export default function ProductPage() {
     ["Sequence", spec.sequence],
     ["Blend", spec.blend],
     ["Purity specification", product.category === "lab-supplies" ? undefined : "≥99% (HPLC)"],
+    ...lotRows(lot?.results, "purity"),
     ["Identity method", product.category === "lab-supplies" ? undefined : "Mass spectrometry"],
+    ...lotRows(lot?.results, "identity"),
+    ...lotRows(lot?.results, "content"),
     ["Storage", spec.storage],
     ["Documentation", "Lot-specific certificate of analysis"],
     ["Intended use", "Laboratory research only"],
@@ -181,13 +196,27 @@ export default function ProductPage() {
             <li>For laboratory research use only</li>
           </ul>
 
-          <Link className="tm-lot-card" to={`/verify?lot=${product.lot}`}>
-            <span className="tm-lot-card-label">Current lot</span>
-            <span className="tm-mono tm-lot-card-number">{product.lot}</span>
-            <span className="tm-lot-card-action">
-              Read the record <ArrowUpRight size={15} strokeWidth={1.6} />
-            </span>
-          </Link>
+          {lot && certificate ? (
+            // The whole card opens the certificate in place; its PDF and the lot's page are inside.
+            <div className="tm-lot-card is-certified">
+              <span className="tm-lot-card-label">Current lot</span>
+              <span className="tm-mono tm-lot-card-number">{product.lot}</span>
+              <button type="button" className="tm-lot-card-action" onClick={() => setCertificateOpen(true)} aria-haspopup="dialog">
+                View the certificate <ArrowRight size={15} strokeWidth={1.6} aria-hidden="true" />
+              </button>
+              <span className="tm-lot-card-certificate">
+                Certificate <span className="tm-mono">{lot.reference}</span> · Analyzed {certificateDate(lot.testedAt)}
+              </span>
+            </div>
+          ) : (
+            <Link className="tm-lot-card" to={`/verify?lot=${product.lot}`}>
+              <span className="tm-lot-card-label">Current lot</span>
+              <span className="tm-mono tm-lot-card-number">{product.lot}</span>
+              <span className="tm-lot-card-action">
+                Read the record <ArrowUpRight size={15} strokeWidth={1.6} />
+              </span>
+            </Link>
+          )}
           {!LIVE && <p className="tm-fineprint">Design preview. No order is placed and no payment is collected.</p>}
         </div>
       </section>
@@ -220,12 +249,12 @@ export default function ProductPage() {
         </header>
         <dl className="tm-spec-table" data-reveal>
           {rows
-            .filter((row): row is [string, string] => Boolean(row[1]))
+            .filter((row): row is [string, NonNullable<ReactNode>] => Boolean(row[1]))
             .map(([label, value]) => (
               <div key={label}>
                 <dt>{label}</dt>
                 <dd className={/CAS|formula|Sequence/.test(label) ? "tm-mono" : undefined}>
-                  {label === "Sequence" ? <SequenceChain sequence={value} name={product.name} /> : value}
+                  {label === "Sequence" && typeof value === "string" ? <SequenceChain sequence={value} name={product.name} /> : value}
                 </dd>
               </div>
             ))}
@@ -235,6 +264,41 @@ export default function ProductPage() {
       <section className="tm tm-product-more" aria-labelledby="tm-more-title" ref={more}>
         <ContinueExploring compounds={others} />
       </section>
+
+      {certificateOpen && certificate && <CertificateDialog record={certificate} onClose={() => setCertificateOpen(false)} />}
     </div>
   );
+}
+
+/**
+ * The current lot's own results for the specification table, read from its certificate record:
+ * one line, or one per component of a blend.
+ */
+function lotRows(results: LotResult[] | undefined, kind: "purity" | "identity" | "content"): [string, ReactNode][] {
+  if (!results?.length) return [];
+  const groups = resultGroups(results);
+  const named = (component: string | undefined, text: string) => (component ? `${component} ${text}` : text);
+  const lines = (texts: string[]) => (texts.length > 1 ? texts.map((text) => <span key={text} className="tm-spec-line">{text}</span>) : texts[0]);
+  if (kind === "purity") {
+    const texts = groups.flatMap((g) => (g.purity ? [named(g.component, `${g.purity.value}%`)] : []));
+    return texts.length ? [["HPLC purity, current lot", lines(texts)]] : [];
+  }
+  if (kind === "identity") {
+    const texts = groups.flatMap((g) => (g.identity ? [named(g.component, g.identity.value.toLowerCase())] : []));
+    if (!texts.length) return [];
+    // The certificate's own method, beside the identity method the site states.
+    const method = `by ${groups.find((g) => g.identity)!.identity!.method}`;
+    return [["Identity, current lot", groups.length > 1 ? lines([...texts, method]) : `${texts[0].charAt(0).toUpperCase()}${texts[0].slice(1)}, ${method}`]];
+  }
+  const content = groups.filter((g) => g.content);
+  const rows: [string, ReactNode][] = [];
+  if (content.length) {
+    const perVial = content[0].content!.unit === "mg per vial";
+    const label = perVial ? "Content per vial, current lot" : `${splitLabel(content[0].content!.label).base}, current lot`;
+    rows.push([label, lines(content.map((g) => named(g.component, [contentValue(g.content!), claimText(g)].filter(Boolean).join(" · "))))]);
+  }
+  for (const g of groups) {
+    for (const extra of g.other) rows.push([`${splitLabel(extra.label).base}, current lot`, `${extra.value} ${extra.unit} · ${extra.method}`]);
+  }
+  return rows;
 }

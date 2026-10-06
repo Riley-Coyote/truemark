@@ -335,6 +335,18 @@
     aspect-ratio: 16 / 9;
     object-position: 44% 40%;
   }
+  /* A phone sits closer to the three vials, with the room around them; the fades stay clear of
+     their caps and their shadows. */
+  @media (max-width: 640px) {
+    .tm-about-open-photo {
+      -webkit-mask-image: linear-gradient(to bottom, transparent, var(--tm-ink) 16%, var(--tm-ink) 78%, transparent);
+      mask-image: linear-gradient(to bottom, transparent, var(--tm-ink) 16%, var(--tm-ink) 78%, transparent);
+    }
+    .tm-about-open-photo img {
+      aspect-ratio: 1 / 1;
+      object-position: 49% 50%;
+    }
+  }
   .tm-about-verbs-head {
     grid-column: 1 / -1;
   }
