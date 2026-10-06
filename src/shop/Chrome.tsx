@@ -12,6 +12,7 @@ import { categoryName, products } from "../data";
 import { productCutout } from "./catalog";
 import { useShop } from "./context";
 import { Modal } from "./Modal";
+import { FirstOrderOffer } from "./FirstOrderOffer";
 import { MobileAdd } from "./MobileAdd";
 import { AskButton, StorefrontAssistant } from "../assistant/Assistant";
 import "./tokens.css";
@@ -158,6 +159,7 @@ export function Header() {
       </header>
       <MobileAdd />
       <StorefrontAssistant />
+      <FirstOrderOffer locked={locked} />
       {!locked && searchOpen && (
         <Modal title="Find a compound" onClose={() => setSearchOpen(false)} field="always">
           <div className="search-input-wrap">

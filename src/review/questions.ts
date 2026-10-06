@@ -26,6 +26,25 @@ export const questions: Question[] = [
     placeholder: "What should change",
   },
   {
+    id: "offer-popup",
+    route: "/?offer=popup",
+    title: "The first-order popup",
+    prompt:
+      "A first-time visitor sees the offer once: about seven seconds in, or partway down a page, and never over checkout, an account or a lot lookup. Here it is as a popup (a sheet from the bottom on a phone). The corner card is the other way to show it. Which should visitors see?",
+    choices: ["The popup", "The corner card", "Neither"],
+    allowText: true,
+    placeholder: "Anything to change in either",
+  },
+  {
+    id: "offer-card",
+    route: "/?offer=card",
+    title: "The first-order card",
+    prompt:
+      "The same offer as a small card in the corner, which leaves the page free to use. It's here to compare with the popup; tell us what you think of it.",
+    allowText: true,
+    placeholder: "What you think of the card",
+  },
+  {
     id: "product-tags",
     route: "/products",
     title: "Best seller and New tags",

@@ -1,0 +1,497 @@
+/* The first-order offer (FirstOrderOffer.tsx): a popup beside the page, a sheet on a phone, or a
+   card in the corner. It moves as every sheet does: the page glide, the same time. */
+
+.tm-offer,
+.tm-offer-card {
+  --tm-offer-ease: var(--tm-ease-glide, cubic-bezier(0.32, 0.72, 0, 1));
+  --tm-offer-photo: 22rem;
+  --tm-offer-thumb: 4.5rem;
+}
+
+/* ---------- The popup ---------- */
+
+.tm-offer {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--tm-space-6);
+  background: var(--tm-scrim);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    background-color var(--tm-dur-slow) var(--tm-offer-ease),
+    backdrop-filter var(--tm-dur-slow) var(--tm-offer-ease),
+    -webkit-backdrop-filter var(--tm-dur-slow) var(--tm-offer-ease);
+}
+.tm-offer:not([data-state="open"]) {
+  background: transparent;
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+}
+.tm.tm-offer-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tm-offer-photo) minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  width: min(48rem, 100%);
+  overflow: hidden;
+  border-radius: var(--tm-radius-xl);
+  background: var(--tm-paper);
+  color: var(--tm-ink);
+  box-shadow: var(--tm-shadow-float);
+  outline: none;
+  transition: transform var(--tm-dur-slow) var(--tm-offer-ease), opacity var(--tm-dur-slow) var(--tm-offer-ease);
+}
+.tm-offer:not([data-state="open"]) .tm-offer-panel {
+  opacity: 0;
+  transform: translateY(var(--tm-space-4)) scale(0.98);
+}
+
+/* The studio photograph, the same light as the shelves it comes from. */
+.tm .tm-offer-photo {
+  position: relative;
+  margin: 0;
+  min-height: 100%;
+  overflow: hidden;
+  background: var(--tm-lilac-studio);
+}
+.tm .tm-offer-photo img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* The tall plinth and the low one, whole; the third vial stays out of the narrow frame. */
+  object-position: 69% 50%;
+  user-select: none;
+  transform: scale(1.06);
+  transition: transform calc(var(--tm-dur-slow) * 2.4) var(--tm-offer-ease);
+}
+.tm-offer[data-state="open"] .tm-offer-photo img {
+  transform: scale(1);
+}
+.tm .tm-offer-grab {
+  display: none;
+}
+
+.tm .tm-offer-body {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: var(--tm-space-4);
+  padding: var(--tm-space-8) var(--tm-space-7) var(--tm-space-6);
+}
+.tm .tm-offer-eyebrow {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm .tm-offer-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-h2) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+  text-wrap: balance;
+}
+/* The logo's dot closes the line, and checks itself once the offer has arrived, as on the home page. */
+.tm-offer[data-state="open"] .tm-offer-title .tm-brand-dot {
+  animation: tm-dot-verify 1100ms var(--tm-ease-micro) 600ms both;
+}
+.tm .tm-offer-text {
+  margin: 0;
+  max-width: 34ch;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+
+/* The code, set like the lot line of a label. */
+.tm .tm-offer-codeline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+  margin: var(--tm-space-1) 0 0;
+  padding: var(--tm-space-2) var(--tm-space-2) var(--tm-space-2) var(--tm-space-4);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+}
+.tm-offer-codeline-label {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-sans);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-offer-codeline-value {
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  color: var(--tm-ink);
+}
+.tm .tm-offer-copy {
+  display: inline-grid;
+  place-items: center;
+  min-height: var(--tm-control-sm);
+  padding: 0 var(--tm-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-wash);
+  font: var(--tm-weight-medium) var(--tm-type-micro) / 1 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+/* "Copy" and "Copied" share one cell; the hidden one keeps its width. */
+.tm .tm-offer-copy > span {
+  grid-area: 1 / 1;
+}
+.tm .tm-offer-copy > span[hidden] {
+  display: block;
+  visibility: hidden;
+}
+.tm .tm-offer-copy:active {
+  transform: scale(0.96);
+  background: var(--tm-line);
+}
+.tm .tm-offer-copy:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink-3);
+}
+
+.tm .tm-offer-applied {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--tm-space-2);
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm .tm-offer-applied svg {
+  flex: none;
+  margin-top: 0.12em;
+  color: var(--tm-signal);
+}
+.tm .tm-offer-error {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-danger);
+}
+
+.tm .tm-offer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tm-space-5);
+  margin-top: var(--tm-space-2);
+}
+.tm .tm-offer-later {
+  padding: var(--tm-space-1) 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  transition: color var(--tm-dur-quick) var(--tm-ease-enter), border-color var(--tm-dur-quick) var(--tm-ease-enter);
+}
+.tm .tm-offer-later:active {
+  color: var(--tm-ink);
+}
+.tm .tm-offer-later:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+}
+.tm .tm-offer-fine {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+
+.tm .tm-offer-close {
+  position: absolute;
+  z-index: 2;
+  top: var(--tm-space-4);
+  right: var(--tm-space-4);
+  display: grid;
+  place-items: center;
+  width: var(--tm-control-sm);
+  height: var(--tm-control-sm);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-wash);
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm .tm-offer-close:active {
+  transform: scale(0.94);
+}
+.tm .tm-offer-close:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink-3);
+}
+
+@media (hover: hover) {
+  .tm .tm-offer-copy:hover {
+    background: var(--tm-line);
+    color: var(--tm-ink);
+  }
+  .tm .tm-offer-later:hover {
+    color: var(--tm-ink);
+    border-bottom-color: var(--tm-ink-3);
+  }
+  .tm .tm-offer-close:hover {
+    background: var(--tm-line);
+    color: var(--tm-ink);
+  }
+}
+
+/* Phones: a sheet risen from the bottom, the photograph across its top. */
+@media (max-width: 760px) {
+  .tm-offer {
+    top: var(--tm-sheet-top, 0px);
+    bottom: auto;
+    height: var(--tm-sheet-height, 100dvh);
+    align-items: end;
+    justify-items: stretch;
+    padding: 0;
+  }
+  .tm.tm-offer-panel {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-height: calc(100% - var(--tm-space-2));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: var(--tm-radius-xl) var(--tm-radius-xl) 0 0;
+    /* The dimmed page sets it apart, as on iPhone; a shadow would only fall on the paper below. */
+    box-shadow: none;
+  }
+  .tm-offer:not([data-state="open"]) .tm-offer-panel {
+    opacity: 1;
+    transform: translateY(100%);
+  }
+  .tm .tm-offer-photo {
+    height: clamp(10rem, 30vh, 13.5rem);
+    min-height: 0;
+    touch-action: none;
+  }
+  /* Anchored to the top, so the tallest vial's cap clears the handle above it. */
+  .tm .tm-offer-photo img {
+    object-position: 50% 0%;
+  }
+  .tm .tm-offer-grab {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: block;
+    height: var(--tm-space-6);
+    touch-action: none;
+  }
+  .tm .tm-offer-grab::before {
+    content: "";
+    position: absolute;
+    top: var(--tm-space-2);
+    left: 50%;
+    width: var(--tm-space-7);
+    height: var(--tm-space-1);
+    border-radius: var(--tm-radius-pill);
+    background: color-mix(in srgb, var(--tm-paper) 72%, transparent);
+    transform: translateX(-50%);
+  }
+  .tm .tm-offer-body {
+    gap: var(--tm-space-3);
+    padding: var(--tm-space-5) var(--tm-margin) calc(var(--tm-space-5) + env(safe-area-inset-bottom, 0px));
+  }
+  .tm .tm-offer-title {
+    font-size: var(--tm-type-h3);
+  }
+  .tm .tm-offer-text {
+    max-width: none;
+  }
+  .tm .tm-offer-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--tm-space-3);
+    width: 100%;
+  }
+  .tm .tm-offer-actions .tm-button {
+    justify-content: center;
+    width: 100%;
+  }
+  .tm .tm-offer-later {
+    align-self: center;
+  }
+  .tm .tm-offer-close {
+    top: var(--tm-space-3);
+    right: var(--tm-space-3);
+    background: color-mix(in srgb, var(--tm-paper) 82%, transparent);
+    color: var(--tm-ink);
+  }
+}
+
+/* ---------- The corner card ---------- */
+
+.tm.tm-offer-card {
+  position: fixed;
+  z-index: 34;
+  left: var(--tm-space-5);
+  bottom: calc(var(--tm-space-5) + var(--tm-offer-dock, 0px));
+  display: grid;
+  grid-template-columns: var(--tm-offer-thumb) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--tm-space-4);
+  width: min(26rem, calc(100% - var(--tm-space-5) * 2));
+  padding: var(--tm-space-2) var(--tm-space-4) var(--tm-space-2) var(--tm-space-2);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-paper);
+  color: var(--tm-ink);
+  box-shadow: var(--tm-shadow-float);
+  transition: transform var(--tm-dur-slow) var(--tm-offer-ease), opacity var(--tm-dur-slow) var(--tm-offer-ease);
+}
+.tm.tm-offer-card:not([data-state="open"]) {
+  opacity: 0;
+  transform: translateY(var(--tm-space-5));
+  pointer-events: none;
+}
+.tm .tm-offer-card-photo {
+  display: block;
+  width: var(--tm-offer-thumb);
+  height: var(--tm-offer-thumb);
+  object-fit: cover;
+  object-position: 50% 66%;
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-lilac-studio);
+  user-select: none;
+}
+.tm .tm-offer-card-text {
+  display: grid;
+  gap: var(--tm-space-2);
+  min-width: 0;
+}
+.tm .tm-offer-card-title {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1.3 var(--tm-font-display);
+  color: var(--tm-ink);
+}
+.tm .tm-offer-codeline.is-sm {
+  justify-self: start;
+  gap: var(--tm-space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.tm .tm-offer-codeline.is-sm .tm-offer-codeline-value {
+  font-size: var(--tm-type-micro);
+}
+.tm .tm-offer-card-action {
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--tm-control-sm);
+  min-height: var(--tm-control-sm);
+  padding: 0 var(--tm-space-4);
+  border: 1px solid var(--tm-ink);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-ink);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-paper);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm .tm-offer-card-action:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.tm .tm-offer-card-action:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--tm-paper);
+}
+.tm .tm-offer-card-action:disabled {
+  opacity: 1;
+  cursor: default;
+}
+/* Once applied, the button settles to a quiet tick: done, not unavailable. */
+.tm .tm-offer-card-action[data-done] {
+  border-color: var(--tm-line-strong);
+  background: transparent;
+  color: var(--tm-signal);
+}
+.tm .tm-offer-card-close {
+  position: absolute;
+  top: calc(var(--tm-space-2) * -1);
+  right: calc(var(--tm-space-2) * -1);
+  display: grid;
+  place-items: center;
+  width: var(--tm-space-6);
+  height: var(--tm-space-6);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  color: var(--tm-ink-2);
+  box-shadow: var(--tm-shadow-whisper);
+  cursor: pointer;
+  transition: color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+/* A fingertip's target around the small mark. */
+.tm .tm-offer-card-close::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--tm-space-2) * -1);
+}
+.tm .tm-offer-card-close:active {
+  color: var(--tm-ink);
+}
+.tm .tm-offer-card-close:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink-3);
+}
+@media (hover: hover) {
+  .tm .tm-offer-card-action:hover:not(:disabled) {
+    border-color: var(--tm-ink-hover);
+    background: var(--tm-ink-hover);
+  }
+  .tm .tm-offer-card-close:hover {
+    color: var(--tm-ink);
+    border-color: var(--tm-line-strong);
+  }
+}
+@media (max-width: 760px) {
+  .tm.tm-offer-card {
+    --tm-offer-thumb: 3.25rem;
+    left: var(--tm-space-3);
+    right: var(--tm-space-3);
+    bottom: calc(var(--tm-space-3) + var(--tm-offer-dock, 0px) + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    gap: var(--tm-space-3);
+  }
+  .tm .tm-offer-card-title {
+    font-size: var(--tm-type-ui);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-offer,
+  .tm.tm-offer-panel,
+  .tm .tm-offer-photo img,
+  .tm.tm-offer-card {
+    transition: none;
+  }
+  .tm-offer[data-state="open"] .tm-offer-title .tm-brand-dot {
+    animation: none;
+  }
+}

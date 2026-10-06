@@ -6,10 +6,11 @@ import { useShop } from "./context";
 import { usePrefersReducedMotion } from "./motion";
 import { discountOn, roundMoney, useBagCode, useBagLines } from "./pages/checkout/Bag";
 import { ShippingProgress, useShipping } from "./ShippingProgress";
+import { useReviewDockRoom } from "./dock";
 import "./mobile-add.css";
 
 type Added = { id: string; origin?: { left: number; top: number; width: number; height: number } };
-const ADD_EVENT = "tm-mobile-add";
+export const ADD_EVENT = "tm-mobile-add";
 
 export function announceMobileAdd(id: string, image?: HTMLImageElement | null) {
   const rect = image?.getBoundingClientRect();
@@ -19,7 +20,6 @@ export function announceMobileAdd(id: string, image?: HTMLImageElement | null) {
 
 export function MobileAdd() {
   const [entry, setEntry] = useState<(Added & { sequence: number }) | null>(null);
-  const [dockRoom, setDockRoom] = useState(0);
   const bar = useRef<HTMLDivElement>(null);
   const reduced = usePrefersReducedMotion();
   const { openCart } = useShop();
@@ -28,6 +28,7 @@ export function MobileAdd() {
   const shipping = useShipping();
   const base = roundMoney(subtotal - (code.discount ? discountOn(subtotal, code.discount) : 0));
   const product = entry ? productById(entry.id) : undefined;
+  const dockRoom = useReviewDockRoom(Boolean(entry));
 
   useEffect(() => {
     let sequence = 0;
@@ -84,24 +85,6 @@ export function MobileAdd() {
     };
     return () => { flight.cancel(); pulse?.cancel(); vial.remove(); };
   }, [entry, product, reduced]);
-
-  useEffect(() => {
-    if (!entry) return;
-    // Measure the existing review dock without modifying its layout or styles.
-    const measure = () => {
-      const docks = document.querySelectorAll<HTMLElement>(".rl-dock, .rl-dock-pill");
-      const room = Array.from(docks).reduce((max, dock) => {
-        const rect = dock.getBoundingClientRect();
-        return rect.height && getComputedStyle(dock).visibility !== "hidden" ? Math.max(max, window.innerHeight - rect.top) : max;
-      }, 0);
-      setDockRoom(room);
-    };
-    measure();
-    const observer = new MutationObserver(measure);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "hidden", "data-drawer"] });
-    window.addEventListener("resize", measure);
-    return () => { observer.disconnect(); window.removeEventListener("resize", measure); };
-  }, [entry]);
 
   if (!entry || !product || !count) return null;
   const close = () => {
