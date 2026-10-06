@@ -2,7 +2,7 @@
 
 .tm-contact {
   /* Local tokens for this page. */
-  --tm-contact-title: clamp(3rem, 6.1vw, 5.5rem); /* the opening, at the home hero's scale */
+  --tm-contact-title: var(--tm-type-page); /* a page to use: the shared modest title */
   --tm-contact-message: 10rem; /* the message field at rest */
   --tm-contact-sent: clamp(1.75rem, 2.8vw, 2.25rem); /* the sent notice */
 }
@@ -10,7 +10,7 @@
 /* ---------- The opening ---------- */
 
 .tm-contact-open {
-  padding-block: var(--tm-space-9) var(--tm-space-8);
+  padding-block: var(--tm-head-top) var(--tm-space-7);
   row-gap: 0;
 }
 .tm-contact-open-head {
@@ -18,18 +18,17 @@
 }
 .tm .tm-contact-title {
   margin: 0;
-  font: var(--tm-weight-light) var(--tm-contact-title) / var(--tm-leading-display) var(--tm-font-display);
-  letter-spacing: var(--tm-track-display);
+  font: var(--tm-weight-light) var(--tm-contact-title) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
   color: var(--tm-ink);
   animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) both;
 }
 .tm .tm-contact-lead {
   grid-column: 9 / -1;
   align-self: end;
-  /* Lifted so its last line shares the headline's baseline. */
-  margin: 0 0 var(--tm-space-2);
-  max-width: 36ch;
-  font: var(--tm-weight-regular) var(--tm-type-lead) / var(--tm-leading-body) var(--tm-font-sans);
+  margin: 0;
+  max-width: 42ch;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
   color: var(--tm-ink-2);
   text-wrap: pretty;
   animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) var(--tm-stagger) both;
@@ -119,6 +118,10 @@
 }
 
 /* ---------- The form ---------- */
+
+.tm .tm-contact-compose-title {
+  margin-bottom: var(--tm-space-5);
+}
 
 .tm-contact-form {
   display: grid;
@@ -279,7 +282,7 @@
 
 @media (max-width: 960px) {
   .tm-contact-open {
-    padding-block: var(--tm-space-7) var(--tm-space-7);
+    padding-bottom: var(--tm-space-6);
   }
   .tm-contact-open-head,
   .tm .tm-contact-lead,
@@ -288,7 +291,7 @@
     grid-column: 1 / -1;
   }
   .tm .tm-contact-lead {
-    margin: var(--tm-space-5) 0 0;
+    margin: var(--tm-space-3) 0 0;
   }
 }
 @media (max-width: 640px) {

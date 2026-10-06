@@ -2,6 +2,16 @@ import { storageKey } from "../mode";
 import { products, setCategories } from "../../data";
 import { live, initialize } from "./runtime";
 
+let loadedAccess: "showcase" | "full" = "showcase";
+export const catalogAccess = () => loadedAccess;
+export function catalogReloadNeeded(access: "showcase" | "full", signedIn: boolean, gated: boolean,
+  storage: Pick<Storage, "getItem" | "setItem" | "removeItem">): boolean {
+  if (access === "full") { storage.removeItem("tm-catalog-reload"); return false; }
+  if (!signedIn || !gated || storage.getItem("tm-catalog-reload") === "1") return false;
+  storage.setItem("tm-catalog-reload", "1");
+  return true;
+}
+
 const visited = new Set<string>();
 const pending = new Map<string, Promise<void>>();
 /** Once per browser session/code, with an in-memory fallback when storage is blocked. */
@@ -26,7 +36,9 @@ export function rememberLink(raw: string): Promise<void> {
 /** Run before importing screen modules, whose catalog groupings are synchronous. */
 export async function bootstrap() {
   await initialize();
-  const [catalog, classes] = await Promise.all([live().products(), live().store.catalog.categories()]);
+  loadedAccess = await live().auth.hasSession() ? "full" : "showcase";
+  const [catalog, classes] = await Promise.all([loadedAccess === "full" ? live().products() : live().showcase(), live().store.catalog.categories()]);
+  if (loadedAccess === "full") { try { sessionStorage.removeItem("tm-catalog-reload"); } catch { /* Storage may be blocked. */ } }
   products.splice(0, products.length, ...catalog);
   setCategories(classes.map((category) => ({ ...category, vial: catalog.find((product) => product.category === category.id)?.id })));
   const query = new URLSearchParams(location.hash.split("?")[1] ?? location.search);

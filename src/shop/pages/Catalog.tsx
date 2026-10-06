@@ -1,6 +1,8 @@
-import { useMemo, useRef } from "react";
+import { LIVE } from "../../platform/mode";
+import { store, useResource } from "../../platform/store";
+import { useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ArrowRight, Search, X } from "lucide-react";
+import { ArrowRight, Grid2x2, Grid3x3, Search, X } from "lucide-react";
 import { categories } from "../../data";
 import { useLight } from "../../brand/light";
 import { ProductCard } from "../../brand/ProductCard";
@@ -9,11 +11,12 @@ import type { Compound } from "../catalog";
 import { useReveal } from "../motion";
 
 type Sort = "featured" | "price-asc" | "price-desc" | "name";
+type Density = "comfortable" | "dense";
 
 const sortLabels: Record<Sort, string> = {
   featured: "Featured",
-  "price-asc": "Price, low to high",
-  "price-desc": "Price, high to low",
+  "price-asc": "Lowest price",
+  "price-desc": "Highest price",
   name: "Name",
 };
 
@@ -25,16 +28,34 @@ function sortCompounds(list: Compound[], sort: Sort): Compound[] {
   return copy;
 }
 
+/** The reader's grid size, kept on this device between visits. */
+const DENSITY = "tm-catalog-density";
+function savedDensity(): Density {
+  try {
+    return localStorage.getItem(DENSITY) === "dense" ? "dense" : "comfortable";
+  } catch {
+    return "comfortable";
+  }
+}
+
+/**
+ * The catalog, as a shop's catalog: a one-line title, the classes (a column on desktop, a row
+ * of chips on a phone), search, sort and grid size, and the products straight away.
+ */
 export default function Catalog() {
+  const offer = useResource(() => LIVE ? store.catalog.validateCode("FIRSTLOT") : Promise.resolve(firstOrderOffer), []);
+  const firstOffer = LIVE ? offer.data : firstOrderOffer;
   const root = useRef<HTMLDivElement>(null);
   useReveal(root);
-  const grid = useRef<HTMLElement>(null);
-  useLight(grid, { firstPass: 700, pass: 2950, repeat: false });
+  const shelf = useRef<HTMLElement>(null);
+  useLight(shelf, { firstPass: 700, pass: 2950, repeat: false });
   const [params, setParams] = useSearchParams();
   const requestedClass = params.get("class");
   const active = categories.some((c) => c.id === requestedClass) ? requestedClass! : "all";
+  const activeClass = categories.find((c) => c.id === active);
   const query = params.get("q") ?? "";
   const sort = (params.get("sort") as Sort) || "featured";
+  const [density, setDensity] = useState<Density>(savedDensity);
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
@@ -64,86 +85,102 @@ export default function Catalog() {
     setParams(next, { replace: true, preventScrollReset: true });
   };
 
-  return (
-    <div className="tm-page" ref={root}>
-      <section className="tm tm-catalog-head" aria-labelledby="tm-catalog-title">
-        <div className="tm-catalog-title">
-          <p className="tm-eyebrow">Catalog</p>
-          <h1 id="tm-catalog-title" className="tm-display">
-            Research compounds
-          </h1>
-        </div>
-        <div className="tm-catalog-note">
-          <p className="tm-section-note">
-            Every compound ships as lyophilized powder with lot-level
-            traceability. Each lot is independently tested and released with a
-            Certificate of Analysis.
-          </p>
-          <Link className="tm-offer" to="/access" data-review="first-order-offer">
-            <span className="tm-brand-dot" aria-hidden="true" />
-            First order? Take {firstOrderOffer.percent}% off with code{" "}
-            <span className="tm-offer-code">{firstOrderOffer.code}</span>
-            <ArrowRight size={14} strokeWidth={1.6} aria-hidden="true" />
-          </Link>
-        </div>
-        <div className="tm-filterbar">
-          <div className="tm-chips" role="group" aria-label="Filter by class">
-            {categories.map((c) => (
-                <button
-                  key={c.id}
-                  className="tm-chip"
-                  aria-pressed={active === c.id}
-                  onClick={() => update("class", c.id)}
-                >
-                  {c.short}
-                  <span>{c.id === "all" ? compoundsForBrowsing.length : counts.get(c.id) ?? 0}</span>
-                </button>
-              ))}
-          </div>
-        </div>
-        <div className="tm-filter-meta">
-          <p className="tm-result-count" aria-live="polite">
-            {visible.length} {visible.length === 1 ? "compound" : "compounds"}
-          </p>
-          <div className="tm-filter-tools">
-            <label className="tm-search">
-              <Search size={16} strokeWidth={1.6} aria-hidden="true" />
-              <span className="sr-only">Search compounds</span>
-              <input
-                type="search"
-                placeholder="Search compounds"
-                value={query}
-                onChange={(e) => update("q", e.target.value)}
-              />
-              {query && (
-                <button type="button" aria-label="Clear search" onClick={() => update("q", null)}>
-                  <X size={14} strokeWidth={1.8} />
-                </button>
-              )}
-            </label>
-            <label className="tm-select">
-              <span className="sr-only">Sort</span>
-              <select value={sort} onChange={(e) => update("sort", e.target.value)}>
-                {(Object.keys(sortLabels) as Sort[]).map((key) => (
-                  <option key={key} value={key}>
-                    {sortLabels[key]}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        </div>
-      </section>
+  const choose = (next: Density) => {
+    setDensity(next);
+    try {
+      localStorage.setItem(DENSITY, next);
+    } catch {
+      /* The size holds for this visit only. */
+    }
+  };
 
-      <section className="tm tm-catalog-grid" aria-label="Compounds" ref={grid}>
+  return (
+    <div className="tm-page tm-page-task" ref={root}>
+      <section className="tm tm-shop" aria-labelledby="tm-catalog-title" ref={shelf}>
+        <div className="tm-shop-heading">
+          <div className="tm-shop-titleline">
+            <h1 id="tm-catalog-title" className="tm-shop-title">
+              {active === "all" || !activeClass ? "Research compounds" : activeClass.name}
+            </h1>
+            <p className="tm-shop-count" aria-live="polite">
+              {visible.length} {visible.length === 1 ? "compound" : "compounds"}
+            </p>
+          </div>
+          {firstOffer && (
+            <Link className="tm-shop-offer" to="/access" data-review="first-order-offer">
+              <span className="tm-brand-dot" aria-hidden="true" />
+              <span>
+                First order? {firstOffer.percent}% off with <span className="tm-offer-code">{firstOffer.code}</span>
+              </span>
+              <ArrowRight size={14} strokeWidth={1.6} aria-hidden="true" />
+            </Link>
+          )}
+        </div>
+
+        <nav className="tm-shop-classes" aria-label="Compound classes">
+          <p className="tm-shop-label">Classes</p>
+          <div className="tm-shop-chips" role="group" aria-label="Filter by class">
+            {categories.map((c) => (
+              <button key={c.id} type="button" className="tm-chip" aria-pressed={active === c.id} onClick={() => update("class", c.id)}>
+                {c.short}
+                <span>{c.id === "all" ? compoundsForBrowsing.length : counts.get(c.id) ?? 0}</span>
+              </button>
+            ))}
+          </div>
+          <p className="tm-shop-assurance">
+            Every lot is tested independently and released with its Certificate of Analysis.
+          </p>
+        </nav>
+
+        <div className="tm-shop-tools">
+          <label className="tm-search">
+            <Search size={16} strokeWidth={1.6} aria-hidden="true" />
+            <span className="sr-only">Search compounds</span>
+            <input
+              type="search"
+              placeholder="Search"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              enterKeyHint="search"
+              value={query}
+              onChange={(e) => update("q", e.target.value)}
+            />
+            {query && (
+              <button type="button" aria-label="Clear search" onClick={() => update("q", null)}>
+                <X size={14} strokeWidth={1.8} />
+              </button>
+            )}
+          </label>
+          <label className="tm-select">
+            <span className="sr-only">Sort</span>
+            <select value={sort} onChange={(e) => update("sort", e.target.value)}>
+              {(Object.keys(sortLabels) as Sort[]).map((key) => (
+                <option key={key} value={key}>
+                  {sortLabels[key]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="tm-density" role="group" aria-label="Grid size">
+            <button type="button" aria-pressed={density === "comfortable"} aria-label="Larger photos" onClick={() => choose("comfortable")}>
+              <Grid2x2 size={16} strokeWidth={1.6} aria-hidden="true" />
+            </button>
+            <button type="button" aria-pressed={density === "dense"} aria-label="More per row" onClick={() => choose("dense")}>
+              <Grid3x3 size={16} strokeWidth={1.6} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+
         {visible.length > 0 ? (
-          <div className="tm-grid" role="list" data-review="product-tags">
+          <div className={`tm-grid tm-shop-grid${density === "dense" ? " is-dense" : ""}`} role="list" aria-label="Compounds" data-review="product-tags">
             {visible.map((compound) => (
-              <ProductCard key={compound.key} compound={compound} listItem />
+              <ProductCard key={compound.key} compound={compound} listItem compact={density === "dense"} />
             ))}
           </div>
         ) : (
-          <div className="tm-empty">
+          <div className="tm-empty tm-shop-empty">
             <p className="tm-empty-title">Nothing matches “{query}”.</p>
             <p className="tm-section-note">Try a compound name, or clear the filters to see the full collection.</p>
             <button

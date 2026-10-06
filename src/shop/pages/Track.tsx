@@ -1,9 +1,13 @@
+import { LIVE } from "../../platform/mode";
+import { live } from "../../platform/live/runtime";
+import type { TrackedOrder } from "../../platform/live/rows";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, CircleAlert } from "lucide-react";
 import { assetUrl } from "../../assetUrl";
 import { Tracker, estimatedDelivery, eventAt, weekdayDate } from "../../brand/Tracker";
+import { useMediaQuery } from "../motion";
 import { store, useResource } from "../../platform/store";
 import type { Lot, Order, ShippingMethod } from "../../platform/types";
 import "../../brand/track-page.css";
@@ -36,7 +40,8 @@ const longDate = (iso: string) => {
  * so the page never tells anyone which orders exist. At launch the backend makes
  * this check itself.
  */
-async function lookUp(number: string, email: string): Promise<Order | null> {
+async function lookUp(number: string, email: string): Promise<Order | TrackedOrder | null> {
+  if (LIVE) return live().trackOrder(number, email);
   const [order, buyers] = await Promise.all([store.orders.get(number), store.buyers.list()]);
   const buyer = order ? buyers.find((b) => b.id === order.buyerId) : undefined;
   return order && buyer && buyer.email.toLowerCase() === email.trim().toLowerCase() ? order : null;
@@ -75,18 +80,20 @@ export default function Track() {
   const session = useResource(() => store.session.get(), []);
   const methods = useResource(() => store.catalog.shippingMethods(), []);
   const lots = useResource(() => store.lots.list(), []);
+  const [tracked, setTracked] = useState<TrackedOrder | null>(null);
   const [unlocked, setUnlocked] = useState<string | null>(null);
   const buyerId = session.data?.id;
 
   // The page reads an order only when it may show it: unlocked by its email in this
   // visit, or possibly the signed-in buyer's own (checked against the owner below).
-  const target = wanted && (unlocked === wanted || buyerId) ? wanted : "";
+  const target = wanted && ((!LIVE && unlocked === wanted) || buyerId) ? wanted : "";
   const order = useResource(() => (target ? store.orders.get(target) : Promise.resolve(null)), [target]);
-  const found =
+  const direct =
     order.data && order.data.number === target && (unlocked === order.data.number || order.data.buyerId === buyerId)
       ? order.data
       : null;
-  const owner = Boolean(found && buyerId && found.buyerId === buyerId);
+  const found = direct ?? (LIVE && tracked?.number === wanted ? tracked : null);
+  const owner = Boolean(direct && buyerId && direct.buyerId === buyerId);
   const resolving = session.loading && session.data === undefined ? true : Boolean(target) && order.loading && !found;
 
   useEffect(() => {
@@ -102,7 +109,7 @@ export default function Track() {
           method={methods.data?.find((m) => m.id === found.shipping.method)}
           lots={lots.error ? null : lots.data}
           onAnother={() => {
-            setUnlocked(null);
+            setUnlocked(null); setTracked(null);
             navigate("/track");
           }}
         />
@@ -119,6 +126,7 @@ export default function Track() {
           signedIn={Boolean(buyerId)}
           onFound={(match) => {
             setUnlocked(match.number);
+            if (LIVE && "city" in match) setTracked(match);
             navigate(`/track/${match.number}`, { replace: Boolean(param) });
           }}
         />
@@ -128,16 +136,17 @@ export default function Track() {
   );
 }
 
-function Lookup({ wanted, signedIn, onFound }: { wanted: string; signedIn: boolean; onFound: (order: Order) => void }) {
+function Lookup({ wanted, signedIn, onFound }: { wanted: string; signedIn: boolean; onFound: (order: Order | TrackedOrder) => void }) {
   const [number, setNumber] = useState(wanted);
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<{ number?: string; email?: string }>({});
   const [checking, setChecking] = useState(false);
   const [missed, setMissed] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<string | null>(null);
   const numberRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const missRef = useRef<HTMLParagraphElement>(null);
+  const wide = useMediaQuery("(min-width: 961px)");
   const frost = {
     src: assetUrl("images/scenes/frost.webp"),
     srcSet: `${assetUrl("images/scenes/frost-sm.webp")} 800w, ${assetUrl("images/scenes/frost.webp")} 1600w`,
@@ -161,7 +170,7 @@ function Lookup({ wanted, signedIn, onFound }: { wanted: string; signedIn: boole
     const next = { number: numberError(number), email: emailError(email) };
     setErrors(next);
     setMissed(false);
-    setFailed(false);
+    setFailed(null);
     if (next.number) return numberRef.current?.focus();
     if (next.email) return emailRef.current?.focus();
     setChecking(true);
@@ -172,9 +181,9 @@ function Lookup({ wanted, signedIn, onFound }: { wanted: string; signedIn: boole
         setChecking(false);
         setMissed(true);
       }
-    } catch {
+    } catch (error) {
       setChecking(false);
-      setFailed(true);
+      setFailed(LIVE && error instanceof Error && error.message === "Too many lookups for this order. Try again in an hour." ? error.message : "The order could not be looked up just now. Nothing was changed; try again.");
     }
   }
 
@@ -182,7 +191,7 @@ function Lookup({ wanted, signedIn, onFound }: { wanted: string; signedIn: boole
     <section className="tm tm-trackpage-lookup" aria-labelledby="tm-track-title">
       <div className="tm-trackpage-copy tm-trackpage-rise">
         <p className="tm-eyebrow">Track an order</p>
-        <h1 id="tm-track-title" className="tm-heading">
+        <h1 id="tm-track-title" className="tm-page-title">
           Cold from our freezer
           <br />
           <span>to your dock.</span>
@@ -266,7 +275,7 @@ function Lookup({ wanted, signedIn, onFound }: { wanted: string; signedIn: boole
             )}
             {failed && (
               <p className="tm-trackpage-miss">
-                The order could not be looked up just now. Nothing was changed; try again.
+                {failed}
               </p>
             )}
           </div>
@@ -281,7 +290,8 @@ function Lookup({ wanted, signedIn, onFound }: { wanted: string; signedIn: boole
         </p>
       </div>
       <figure className="tm-trackpage-photo tm-trackpage-rise" style={rise(1)}>
-        <img src={frost.src} srcSet={frost.srcSet} sizes="(max-width: 960px) 100vw, 40vw" width={1600} height={1062} alt="" />
+        {/* Narrow screens hide the photograph (track-page.css), so they never download it. */}
+        {wide && <img src={frost.src} srcSet={frost.srcSet} sizes="40vw" width={1600} height={1062} alt="" />}
       </figure>
     </section>
   );
@@ -294,19 +304,22 @@ function Status({
   lots,
   onAnother,
 }: {
-  order: Order;
+  order: Order | TrackedOrder;
   owner: boolean;
   method?: ShippingMethod;
   lots?: Lot[] | null;
   onAnother: () => void;
 }) {
-  const [title, line] = headline(order);
+  // Tracker reads only status, events, shipping and parcel lines. The public
+  // result deliberately lacks money and buyer identity; no fields are invented.
+  const presentation = order as Order;
+  const [title, line] = headline(presentation);
   const titleRef = useRef<HTMLHeadingElement>(null);
 
   // A found order takes focus, so its state is what a screen reader reads next.
   useEffect(() => {
     titleRef.current?.focus({ preventScroll: true });
-  }, [order.id]);
+  }, [order.number]);
 
   return (
     <section className="tm tm-trackpage-status" aria-labelledby="tm-track-title">
@@ -314,7 +327,7 @@ function Status({
         <p className="tm-eyebrow">
           Order <span className="tm-mono">{order.number}</span> · Placed {longDate(order.createdAt)}
         </p>
-        <h1 id="tm-track-title" ref={titleRef} className="tm-heading" tabIndex={-1}>
+        <h1 id="tm-track-title" ref={titleRef} className="tm-page-title" tabIndex={-1}>
           {title}
           <br />
           <span>{line}</span>
@@ -322,7 +335,7 @@ function Status({
       </header>
       <div className="tm-trackpage-aside tm-trackpage-rise" style={rise(1)}>
         {owner ? (
-          <Link className="tm-textlink" to={`/account/orders/${order.id}`}>
+          <Link className="tm-textlink" to={`/account/orders/${(order as Order).id}`}>
             Open it in your account <ArrowRight size={16} strokeWidth={1.6} />
           </Link>
         ) : (
@@ -332,7 +345,7 @@ function Status({
         )}
       </div>
       <div className="tm-trackpage-tracker tm-trackpage-rise" style={rise(2)}>
-        <Tracker key={order.id} order={order} method={method} lots={lots} />
+        <Tracker key={order.number} order={presentation} method={method} lots={lots} />
       </div>
     </section>
   );

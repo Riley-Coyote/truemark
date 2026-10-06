@@ -1,0 +1,32 @@
+/* What every sheet shares (sheet.tsx). The sheets' own frames live with them: the chat in
+   assistant.css, the bag and search in chrome.css. */
+
+/* iPhone Safari floats its address pill and the keyboard's bar over the page below the part of the
+   screen the reader can see, and shows the page there: fixed layers like a sheet stop at that
+   edge. This strip of paper is part of the page itself and lies just under the sheet (SheetSkirt
+   places it, one layer beneath), so only the sheet's paper continues there. It tucks a little way
+   up under the sheet, because Safari places the two a point or two apart. */
+.tm-sheet-skirt {
+  --tm-sheet-tuck: var(--tm-space-6);
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: calc(100lvh + var(--tm-sheet-tuck));
+  margin-top: calc(var(--tm-sheet-tuck) * -1);
+  background: var(--tm-paper);
+  pointer-events: none;
+  transition: opacity var(--tm-dur-slow) var(--tm-ease-glide, cubic-bezier(0.32, 0.72, 0, 1));
+}
+.tm-sheet-skirt:not([data-state="open"]) {
+  opacity: 0;
+}
+@media (min-width: 761px) {
+  .tm-sheet-skirt {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tm-sheet-skirt {
+    transition: none;
+  }
+}

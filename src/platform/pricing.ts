@@ -1,10 +1,15 @@
-import type { ShippingMethod, StorefrontSettings } from "./types";
+import { taxQuote } from "./tax";
+import type { TaxRate } from "./tax";
+import type { Address, ShippingMethod, StorefrontSettings } from "./types";
 
 export const defaultSettings: StorefrontSettings = {
   freeShippingThreshold: 150,
   freeShippingMethod: "cold-2day",
   insuranceMode: "off",
   insuranceRate: null,
+  shippingRatesConfirmed: false,
+  taxMode: "off",
+  taxShipping: false,
 };
 
 export const roundMoney = (amount: number) => Math.round((amount + Number.EPSILON) * 100) / 100;
@@ -28,11 +33,13 @@ export function insurancePrice(base: number, settings: StorefrontSettings, opted
     ? fractionOfMoney(base, Math.round((settings.insuranceRate ?? 0) * 100000), 100000) : 0;
 }
 
-export function priceQuote(subtotal: number, percent: number, method: ShippingMethod | null, settings: StorefrontSettings, optedIn = false) {
+export function priceQuote(subtotal: number, percent: number, method: ShippingMethod | null, settings: StorefrontSettings, optedIn = false, address?: Address | null, rates: TaxRate[] = []) {
   const discountAmount = fractionOfMoney(subtotal, Math.round(percent * 100), 10000);
   const base = roundMoney(subtotal - discountAmount);
   const shipping = method ? shippingPrice(base, method, settings) : 0;
   const insuranceApplied = settings.insuranceMode === "automatic" || (settings.insuranceMode === "optional" && optedIn);
   const insurance = insurancePrice(base, settings, optedIn);
-  return { subtotal, discountAmount, base, shipping, insurance, insuranceApplied, total: roundMoney(base + shipping + insurance) };
+  const tax = taxQuote(base, shipping, settings, address, rates);
+  const includedTax: Partial<ReturnType<typeof taxQuote>> = address ? tax : {};
+  return { subtotal, discountAmount, base, shipping, insurance, insuranceApplied, ...includedTax, total: roundMoney(base + shipping + insurance + tax.tax) };
 }

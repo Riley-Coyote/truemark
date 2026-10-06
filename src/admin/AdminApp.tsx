@@ -18,6 +18,8 @@ import Orders from "./Orders";
 import Overview from "./Overview";
 import Partners from "./Partners";
 import Products from "./Products";
+import Inbox from "./Inbox";
+import SentMessages from "./SentMessages";
 import Settings from "./Settings";
 import { SearchQuery } from "./state";
 import "./admin.css";
@@ -110,6 +112,8 @@ function CommandCenter() {
         <Routes>
           <Route index element={<Overview />} />
           <Route path="orders" element={<Orders />} />
+          <Route path="inbox" element={<Inbox />} />
+          <Route path="messages" element={<SentMessages />} />
           <Route path="lots" element={<Lots />} />
           <Route path="journal" element={<Journal />} />
           <Route path="applications" element={<Applications />} />

@@ -152,23 +152,306 @@
 
 /* ---------- Catalog ---------- */
 
-.tm-catalog-head {
-  --tm-bg: var(--tm-studio);
-  padding-block: var(--tm-space-8) var(--tm-space-6);
-  align-items: end;
+/* One section, laid out by areas: the title line, the classes, the tools and the products.
+   Phones and tablets stack them, the classes as a row of chips; desktop gives the classes a
+   column of their own beside the products, and the tools a place beside the title. */
+.tm-shop {
+  --tm-shop-side: 14rem;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "heading"
+    "classes"
+    "tools"
+    "grid";
+  row-gap: var(--tm-space-4);
+  align-items: start;
+  padding-top: var(--tm-head-top);
 }
-.tm-catalog-title {
-  grid-column: 1 / span 8;
+.tm-shop-heading {
+  grid-area: heading;
+  display: grid;
+  gap: var(--tm-space-2);
+  min-width: 0;
 }
-.tm .tm-catalog-note {
-  grid-column: 9 / -1;
-  padding-bottom: var(--tm-space-2);
+.tm-shop-titleline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  min-width: 0;
 }
+.tm .tm-shop-title {
+  margin: 0;
+  min-width: 0;
+  font: var(--tm-weight-light) var(--tm-type-page) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+}
+.tm .tm-shop-count {
+  flex: none;
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+}
+/* The first-order offer: a quiet line, marked with the logo's dot. */
+.tm .tm-shop-offer {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  padding-block: var(--tm-space-1);
+  border-bottom: 1px solid transparent;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.3 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-shop-offer .tm-brand-dot {
+  width: var(--tm-space-2);
+  height: var(--tm-space-2);
+  margin: 0;
+}
+.tm .tm-shop-offer:hover {
+  border-bottom-color: var(--tm-line-strong);
+  color: var(--tm-ink);
+}
+.tm .tm-shop-offer:active {
+  color: var(--tm-ink-2);
+}
+.brand-refinement .tm .tm-shop-offer:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+  color: var(--tm-ink);
+}
+
+.tm-shop-classes {
+  grid-area: classes;
+  min-width: 0;
+}
+.tm .tm-shop-label,
+.tm .tm-shop-assurance {
+  display: none;
+}
+/* A row of chips that scrolls sideways, edge to edge. */
+.tm-shop-chips {
+  display: flex;
+  gap: var(--tm-space-2);
+  overflow-x: auto;
+  margin-inline: calc(var(--tm-pad) * -1);
+  padding-inline: var(--tm-pad);
+  scroll-padding-inline: var(--tm-pad);
+  scrollbar-width: none;
+}
+.tm-shop-chips::-webkit-scrollbar {
+  display: none;
+}
+.tm .tm-shop-chips .tm-chip {
+  flex: none;
+  padding: 0 var(--tm-space-3);
+}
+
+.tm-shop-tools {
+  grid-area: tools;
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  min-width: 0;
+}
+.tm .tm-shop-tools .tm-search {
+  flex: 1;
+  min-width: 0;
+}
+.tm .tm-shop-tools .tm-search input {
+  width: 100%;
+  min-width: 0;
+}
+.tm .tm-shop-tools .tm-select {
+  flex: none;
+}
+
+/* Grid size: larger photos, or more of them in a row. */
+.tm-density {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: var(--tm-control-sm);
+  padding: 0 var(--tm-space-1);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+}
+.tm-density button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: calc(var(--tm-control-sm) - var(--tm-space-2));
+  height: calc(var(--tm-control-sm) - var(--tm-space-2));
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: transparent;
+  color: var(--tm-ink-3);
+  cursor: pointer;
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+/* A fingertip's worth of target above and below the small buttons. */
+.tm-density button::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--tm-space-2) * -1) 0;
+}
+.tm-density button:hover {
+  color: var(--tm-ink);
+}
+.tm-density button:active {
+  transform: scale(0.92);
+}
+.tm-density button:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+}
+.tm-density button[aria-pressed="true"] {
+  background: var(--tm-ink);
+  color: var(--tm-paper);
+}
+.tm-density button[aria-pressed="true"]:focus-visible {
+  border-color: var(--tm-glow-3);
+}
+
+.tm-shop-grid,
+.tm-shop-empty {
+  grid-area: grid;
+}
+.tm-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--tm-space-6) var(--tm-gutter);
+  margin-top: var(--tm-space-2);
+}
+.tm-shop-grid.is-dense {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--tm-space-5) var(--tm-space-3);
+}
+/* Phones: the title keeps one line, with the count beneath it. */
+@media (max-width: 560px) {
+  .tm-shop-titleline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--tm-space-1);
+  }
+}
+@media (min-width: 761px) {
+  .tm-shop-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .tm-shop-grid.is-dense {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (min-width: 961px) {
+  .tm-shop {
+    grid-template-columns: var(--tm-shop-side) minmax(0, 1fr) auto;
+    grid-template-areas:
+      "heading heading tools"
+      "classes grid grid";
+    column-gap: var(--tm-space-7);
+    row-gap: var(--tm-space-6);
+  }
+  .tm-shop-titleline {
+    justify-content: flex-start;
+  }
+  .tm-shop-tools {
+    align-self: center;
+  }
+  .tm .tm-shop-tools .tm-search {
+    flex: none;
+    width: 14rem;
+  }
+  /* The classes become a column that stays in view beside the products. */
+  .tm-shop-classes {
+    position: sticky;
+    top: calc(var(--tm-header-height) + var(--tm-space-6));
+  }
+  .review-shell .tm-shop-classes {
+    top: calc(var(--tm-header-height) + var(--review-bar-height, 0px) + var(--tm-space-6));
+  }
+  .tm .tm-shop-label {
+    display: block;
+    margin: 0 0 var(--tm-space-3);
+    font: var(--tm-weight-medium) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
+    letter-spacing: var(--tm-track-label);
+    text-transform: uppercase;
+    color: var(--tm-ink-3);
+  }
+  .tm-shop-chips {
+    flex-direction: column;
+    gap: 0;
+    overflow: visible;
+    margin-inline: calc(var(--tm-space-3) * -1);
+    padding-inline: 0;
+  }
+  .tm .tm-shop-chips .tm-chip {
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 var(--tm-space-3);
+    border-color: transparent;
+    border-radius: var(--tm-radius-sm);
+    color: var(--tm-ink-2);
+  }
+  .tm .tm-shop-chips .tm-chip:hover {
+    border-color: transparent;
+    background: var(--tm-wash);
+    color: var(--tm-ink);
+  }
+  .tm .tm-shop-chips .tm-chip:active {
+    transform: none;
+    background: var(--tm-line);
+  }
+  .brand-refinement .tm .tm-shop-chips .tm-chip:focus-visible {
+    border-color: var(--tm-ink-3);
+  }
+  .tm .tm-shop-chips .tm-chip[aria-pressed="true"] {
+    border-color: transparent;
+    background: var(--tm-wash);
+    color: var(--tm-ink);
+  }
+  .tm .tm-shop-chips .tm-chip[aria-pressed="true"] span {
+    color: var(--tm-ink-2);
+  }
+  .brand-refinement .tm .tm-shop-chips .tm-chip[aria-pressed="true"]:focus-visible {
+    border-color: var(--tm-ink-3);
+  }
+  .tm .tm-shop-assurance {
+    display: block;
+    max-width: 24ch;
+    margin: var(--tm-space-6) 0 0;
+    font: var(--tm-weight-regular) var(--tm-type-ui) / 1.5 var(--tm-font-sans);
+    color: var(--tm-ink-3);
+  }
+  .tm-shop-grid {
+    margin-top: 0;
+  }
+  .tm-shop-grid.is-dense {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1201px) {
+  .tm-shop-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    row-gap: var(--tm-space-7);
+  }
+  .tm-shop-grid.is-dense {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    row-gap: var(--tm-space-6);
+  }
+}
+
 .tm-filterbar {
   grid-column: 1 / -1;
-  margin-top: var(--tm-space-8);
-  padding-top: var(--tm-space-5);
-  border-top: 1px solid var(--tm-line);
+  margin-top: var(--tm-space-5);
 }
 .tm-chips {
   display: flex;
@@ -264,18 +547,8 @@
   pointer-events: none;
 }
 
-.tm-catalog-grid {
-  padding-block: var(--tm-space-8) var(--tm-space-silence);
-}
-.tm-grid {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--tm-space-8) var(--tm-gutter);
-}
-
 .tm-band {
-  padding-block: var(--tm-space-9);
+  padding-block: var(--tm-space-silence);
   align-items: end;
 }
 .tm-band-copy {
@@ -293,7 +566,8 @@
 
 .tm-product-top {
   --tm-bg: var(--tm-studio);
-  padding-block: var(--tm-space-5) var(--tm-space-9);
+  /* The buying block ends on its fine print; the next section's own space follows. */
+  padding-block: var(--tm-space-5) var(--tm-space-7);
   align-items: start;
 }
 .tm-crumbs {
@@ -571,7 +845,7 @@
   overflow-wrap: anywhere;
 }
 .tm-product-more {
-  padding-bottom: var(--tm-space-9);
+  padding-bottom: var(--tm-space-silence);
 }
 
 /* ---------- Verify ---------- */
@@ -758,14 +1032,7 @@
 
 /* ---------- Narrow ---------- */
 
-@media (max-width: 1200px) {
-  .tm-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
 @media (max-width: 960px) {
-  .tm-catalog-title,
-  .tm .tm-catalog-note,
   .tm-band-copy,
   .tm-band-action,
   .tm-product-stage,
@@ -780,13 +1047,6 @@
   .tm .tm-empty,
   .tm .tm-empty-page {
     grid-column: 1 / -1;
-  }
-  .tm .tm-catalog-note {
-    margin-top: var(--tm-space-5);
-  }
-  .tm-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--tm-space-7) var(--tm-gutter);
   }
   .tm-filter-tools {
     width: 100%;
@@ -851,5 +1111,28 @@
   }
   .tm-record-card.is-large {
     padding: var(--tm-space-5);
+  }
+}
+
+/* ---------- Phones: the catalog toolbar ---------- */
+
+@media (max-width: 560px) {
+  /* Search takes a full row of its own; the count and the sort share the next. */
+  .tm-filter-meta {
+    flex-wrap: wrap;
+    gap: var(--tm-space-3);
+  }
+  .tm-filter-tools {
+    display: contents;
+  }
+  .tm .tm-search {
+    order: -1;
+    flex: 1 1 100%;
+  }
+  .tm .tm-result-count {
+    flex: 1;
+  }
+  .tm .tm-select {
+    flex: none;
   }
 }

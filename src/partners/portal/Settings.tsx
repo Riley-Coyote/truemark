@@ -2,6 +2,11 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Landmark } from "lucide-react";
+import { LIVE } from "../../platform/mode";
+import { live } from "../../platform/live/runtime";
+import { CONSENT } from "../../platform/live/messages";
+import type { MessagePreferences } from "../../platform/live/messages";
+import { useResource } from "../../platform/store";
 import { Button, Card, Facts, PageHeader, SampleTag, StatusChip, formatDate } from "../../app-kit";
 import type { Partner } from "../../platform/types";
 import { roundMoney } from "../momentum";
@@ -256,7 +261,7 @@ export default function Settings() {
 
   return (
     <div className="kit-grid pp-page pp-settings">
-      <PageHeader description="Your partner record, your terms, your goal and how you hear from us. Profile and payout details are read only in this preview." />
+      <PageHeader description={LIVE ? "Your partner record, your terms, your goal and how you hear from us." : "Your partner record, your terms, your goal and how you hear from us. Profile and payout details are read only in this preview."} />
 
       <div className="kit-span-6 pp-stack">
         <Card title="Profile" meta={<span className="pp-card-aside">Read only</span>}>
@@ -274,7 +279,7 @@ export default function Settings() {
               { label: "Partner since", value: formatDate(partner.joinedAt) },
             ]}
           />
-          <p className="pp-footnote">Editing your profile arrives with the backend.</p>
+          <p className="pp-footnote">{LIVE ? <>To change these details, <Link className="kit-link" to="/contact">contact the TrueMark team</Link>.</> : "Editing your profile arrives with the backend."}</p>
         </Card>
 
         <GoalSetting prefs={prefs} update={update} autoFocus={focus === "goal"} />
@@ -307,17 +312,39 @@ export default function Settings() {
             </span>
             <span className="pp-method-text">
               <span className="pp-method-name">Bank transfer</span>
-              <span className="kit-quiet">Account details are added at launch.</span>
+              <span className="kit-quiet">{LIVE ? "TrueMark arranges the account details with you directly." : "Account details are added at launch."}</span>
             </span>
           </div>
-          <Button disabled>Change method</Button>
-          <p className="pp-footnote">Changing the method arrives with the backend.</p>
+          {!LIVE && <Button disabled>Change method</Button>}
+          {!LIVE && <p className="pp-footnote">Changing the method arrives with the backend.</p>}
         </Card>
 
-        <AlertPreferences partner={partner} prefs={prefs} update={update} autoFocus={focus === "alerts"} />
+        {LIVE ? <LiveAlertPreferences partner={partner} autoFocus={focus === "alerts"} /> : <AlertPreferences partner={partner} prefs={prefs} update={update} autoFocus={focus === "alerts"} />}
       </div>
 
       <WhatYouReceive partner={partner} prefs={prefs} />
     </div>
   );
+}
+
+function LiveAlertPreferences({partner,autoFocus}: {partner: Partner;autoFocus:boolean}) {
+  const resource=useResource(()=>live().messages.preferences());
+  if(!resource.data)return <Card title="Alert preferences"><p className="kit-note" role={resource.error?"alert":"status"}>{resource.error?.message??"Loading…"}</p>{resource.error&&<Button onClick={resource.reload}>Try again</Button>}</Card>;
+  return <LiveAlertForm partner={partner} initial={resource.data} autoFocus={autoFocus}/>;
+}
+function LiveAlertForm({partner,initial,autoFocus}: {partner:Partner;initial:MessagePreferences;autoFocus:boolean}) {
+  const [prefs,setPrefs]=useState(initial),[busy,setBusy]=useState(false),[error,setError]=useState("");
+  const [saved,confirm]=useSaved(),section=useRef<HTMLElement>(null),id=useId();
+  useEffect(()=>{if(autoFocus)section.current?.focus();},[autoFocus]);
+  return <section className="kit-card pp-alerts" ref={section} tabIndex={-1} aria-labelledby={id}>
+    <header className="kit-card-head"><h2 className="kit-card-title" id={id}>Alert preferences</h2><div className="kit-card-meta"><span className="pp-card-aside">Saved to your account</span></div></header>
+    <div className="kit-card-body"><form onSubmit={async e=>{e.preventDefault();setBusy(true);setError("");try{setPrefs(await live().messages.savePreferences(prefs.alerts,prefs.phone,prefs.smsConsent));confirm();}catch(e){setError(e instanceof Error?e.message:"Please try again.");}finally{setBusy(false);}}}>
+      <table className="pp-prefs"><caption className="kit-sr">Which alerts reach you, by channel</caption><thead><tr><th scope="col"><span className="kit-sr">Alert</span></th><th scope="col">Email</th><th scope="col">Text</th></tr></thead><tbody>
+      {alertEvents.map(event=><tr key={event.id}><th scope="row"><span className="pp-prefs-event">{event.label}</span><span className="pp-prefs-hint">{event.hint}</span></th>{(['email','text'] as const).map(channel=><td key={channel}><label className="pp-prefs-cell"><input className="pp-box" type="checkbox" disabled={busy} aria-label={`${event.label} by ${channel}`} checked={prefs.alerts[event.id]?.[channel]??false} onChange={e=>setPrefs(p=>({...p,alerts:{...p.alerts,[event.id]:{...p.alerts[event.id],[channel]:e.target.checked}}}))}/><span className="pp-prefs-channel" aria-hidden="true">{channel==='email'?'Email':'Text'}</span></label></td>)}</tr>)}
+      </tbody></table>
+      <div className="pp-phone"><TextField label="Mobile number for text messages" type="tel" inputMode="tel" autoComplete="tel-national" placeholder="(415) 555-0132" value={prefs.phone??""} onChange={phone=>setPrefs(p=>({...p,phone}))}/>
+      <label className="pp-consent"><input className="pp-box" type="checkbox" disabled={busy} checked={prefs.smsConsent} onChange={e=>setPrefs(p=>({...p,smsConsent:e.target.checked}))}/><span>{CONSENT.partner}</span></label>
+      <div className="pp-field-actions"><Button type="submit" disabled={busy}>Save</Button><span className="pp-saved" role="status">{saved?"Saved.":""}</span></div>{error&&<p className="pp-field-error" role="alert">{error}</p>}</div>
+    </form><ul className="pp-alert-notes"><li>Every alert also rises in your portal. The bell keeps them all.</li><li>Guideline updates are always on: every partner hears when the guidelines change.</li><li>Email goes to {partner.email}.</li></ul></div>
+  </section>;
 }

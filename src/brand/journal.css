@@ -12,8 +12,17 @@
 /* ---------- Head: the client's heading and lead ---------- */
 
 .tm-journal-head {
-  padding-block: var(--tm-space-9) var(--tm-space-5);
+  padding-block: var(--tm-head-top) var(--tm-space-4);
   align-items: end;
+}
+/* The client's heading, at the size of a page the reader came to use. */
+.tm .tm-journal-heading .tm-eyebrow {
+  margin-bottom: var(--tm-space-3);
+}
+.tm .tm-journal-heading .tm-display {
+  font-size: var(--tm-type-page);
+  line-height: var(--tm-leading-heading);
+  letter-spacing: var(--tm-track-heading);
 }
 .tm-journal-heading {
   grid-column: 1 / span 8;
@@ -21,7 +30,7 @@
 }
 .tm .tm-journal-intro {
   grid-column: 9 / -1;
-  padding-bottom: var(--tm-space-3);
+  padding-bottom: var(--tm-space-1);
   animation: tm-rise var(--tm-dur-scene) var(--tm-ease-enter) var(--tm-stagger) both;
 }
 .tm-journal-filters {
@@ -35,7 +44,7 @@
 /* ---------- The list ---------- */
 
 .tm-journal-list {
-  padding-top: var(--tm-space-7);
+  padding-top: var(--tm-space-5);
 }
 .tm-journal-grid {
   grid-column: 1 / -1;
@@ -246,7 +255,7 @@
     grid-column: 1 / -1;
   }
   .tm .tm-journal-intro {
-    margin-top: var(--tm-space-5);
+    margin-top: var(--tm-space-3);
   }
   .tm-jcard.is-lead {
     display: flex;
@@ -256,9 +265,6 @@
   }
 }
 @media (max-width: 640px) {
-  .tm-journal-head {
-    padding-top: var(--tm-space-8);
-  }
   .tm-journal-grid {
     row-gap: var(--tm-space-7);
   }

@@ -3,22 +3,24 @@ import type { ReactNode } from "react";
 import { Segmented } from "../app-kit";
 import { storageKey } from "../platform/mode";
 
-export type Appearance = "system" | "light" | "dark";
-type CommandTheme = "day" | "night";
-const KEY = storageKey("tm-command-appearance");
+export type Appearance = "purple" | "dark" | "light" | "system";
+export type CommandTheme = "violet" | "night" | "day";
+// v2: Purple became the default (2026-10-05), so earlier device choices start over once.
+const KEY = storageKey("tm-command-appearance-v2");
 const QUERY = "(prefers-color-scheme: dark)";
 const OPTIONS: { value: Appearance; label: string }[] = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
+  { value: "purple", label: "Purple" },
   { value: "dark", label: "Dark" },
+  { value: "light", label: "Light" },
+  { value: "system", label: "System" },
 ];
 
 function readAppearance(): Appearance {
   try {
     const value = localStorage.getItem(KEY);
-    return value === "light" || value === "dark" ? value : "system";
+    return value === "dark" || value === "light" || value === "system" ? value : "purple";
   } catch {
-    return "system";
+    return "purple";
   }
 }
 
@@ -42,7 +44,8 @@ const AppearanceContext = createContext<{
 export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [appearance, setChoice] = useState(readAppearance);
   const darkSystem = useSyncExternalStore(subscribeSystem, systemIsDark, () => false);
-  const theme = appearance === "dark" || (appearance === "system" && darkSystem) ? "night" : "day";
+  const theme: CommandTheme = appearance === "purple" ? "violet"
+    : appearance === "dark" || (appearance === "system" && darkSystem) ? "night" : "day";
 
   useLayoutEffect(() => {
     // Paint the document and supply tokens to body portals in the same commit as the shell.

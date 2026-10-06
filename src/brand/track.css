@@ -387,3 +387,9 @@
     transform: translateX(-50%) scale(1);
   }
 }
+@media (max-width: 560px) {
+  /* A phone's column is already a comfortable measure; the tight one only made a narrow strip of it. */
+  .tm .tm-track-text {
+    max-width: none;
+  }
+}

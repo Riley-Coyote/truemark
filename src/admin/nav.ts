@@ -1,4 +1,5 @@
-import { BookOpen, Boxes, Building2, ClipboardCheck, FlaskConical, Handshake, LayoutDashboard, Receipt, Settings, TicketPercent } from "lucide-react";
+import { LIVE } from "../platform/mode";
+import { Inbox, BookOpen, Boxes, Building2, ClipboardCheck, FlaskConical, Handshake, LayoutDashboard, Receipt, Settings, TicketPercent } from "lucide-react";
 import type { NavGroup, NavItem } from "../app-kit";
 
 export const HOME = "/admin";
@@ -9,6 +10,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { to: HOME, label: "Overview", icon: LayoutDashboard, end: true },
       { to: `${HOME}/orders`, label: "Orders", icon: Receipt },
+      ...(LIVE ? [{ to: `${HOME}/inbox`, label: "Inbox", icon: Inbox }] : []),
     ],
   },
   {
@@ -39,6 +41,8 @@ export type PageInfo = { title: string; search: SearchMode | null };
 const pages: Record<string, PageInfo> = {
   "": { title: "Overview", search: { placeholder: "Find an order", label: "Find an order by number, buyer or institution", mode: "jump" } },
   orders: { title: "Orders", search: { placeholder: "Search orders", label: "Search orders by number, buyer, institution, lot or code", mode: "filter" } },
+  inbox: { title: "Inbox", search: null },
+  messages: { title: "Sent messages", search: null },
   lots: { title: "Lots & certificates", search: { placeholder: "Search lots", label: "Search lots by lot number or compound", mode: "filter" } },
   journal: { title: "Journal", search: { placeholder: "Search articles", label: "Search articles by title, slug or topic", mode: "filter" } },
   products: { title: "Products & inventory", search: { placeholder: "Search products", label: "Search products by compound, size, category or lot", mode: "filter" } },

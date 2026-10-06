@@ -1,9 +1,14 @@
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { IN_FRAME, ReviewLayer, useReviewStatus } from "./review/index";
-import "./review/review.css";
-import "./review.css";
+import { LAUNCH } from "./platform/mode";
+import type * as ReviewModule from "./review/index";
+
+let loadedReview: typeof ReviewModule | undefined;
+const reviewReady = LAUNCH ? null : Promise.all([
+  import("./review/index"), import("./review/review.css"), import("./review.css"),
+]).then(([review]) => { loadedReview = review; });
+export async function prepareReview() { await reviewReady; }
 
 const links = [
   { id: "overview", label: "Overview", to: "/review" },
@@ -13,8 +18,15 @@ const links = [
 ];
 
 export default function ReviewShell({ children }: { children: ReactNode }) {
-  const { pathname, state } = useLocation();
-  const keepScroll = (state as { keepScroll?: boolean } | null)?.keepScroll;
+  if (LAUNCH) return children;
+  // main awaits this module before the first render, preserving the review bar.
+  if (!loadedReview) throw reviewReady;
+  return <Frame reviewModule={loadedReview}>{children}</Frame>;
+}
+
+function Frame({ children, reviewModule }: { children: ReactNode; reviewModule: typeof ReviewModule }) {
+  const { IN_FRAME, ReviewLayer, useReviewStatus } = reviewModule;
+  const { pathname } = useLocation();
   // "Live" only once shared notes have loaded and the live channel has joined.
   const review = useReviewStatus();
   const section =
@@ -27,11 +39,6 @@ export default function ReviewShell({ children }: { children: ReactNode }) {
           : pathname === "/visual-study" || pathname === "/type-study"
             ? null
             : "website";
-
-  useEffect(() => {
-    if (!keepScroll) window.scrollTo({ top: 0, behavior: "instant" });
-    // Only a change of page should reset scroll; keepScroll is read at that moment.
-  }, [pathname]);
 
   return (
     <div className="review-shell" data-framed={IN_FRAME ? "" : undefined}>

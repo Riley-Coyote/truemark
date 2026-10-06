@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Plus } from "lucide-react";
+import { LIVE } from "../../../platform/mode";
+import { live } from "../../../platform/live/runtime";
 import type { Address } from "../../../platform/types";
 import { Field, PageHead, SampleTag, useAccount, useTitle } from "./parts";
 
@@ -44,10 +46,12 @@ function AddressForm({
 }: {
   title: string;
   initial: Draft;
-  onSave: (draft: Draft) => void;
+  onSave: (draft: Draft) => Promise<void>;
   onCancel: () => void;
 }) {
   const [draft, setDraft] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState("");
   const [touched, setTouched] = useState<Partial<Record<Key, boolean>>>({});
   const first = useRef<HTMLInputElement>(null);
   useEffect(() => first.current?.focus(), []);
@@ -59,8 +63,9 @@ function AddressForm({
     onChange: (e: { target: { value: string } }) => setDraft((d) => ({ ...d, [key]: e.target.value })),
     onBlur: () => setTouched((t) => ({ ...t, [key]: true })),
   });
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
+    if (busy) return;
     const keys = Object.keys(blank) as Key[];
     setTouched(Object.fromEntries(keys.map((k) => [k, true])));
     const invalid = keys.find((k) => check(k, draft[k]));
@@ -68,7 +73,15 @@ function AddressForm({
       document.getElementById(`tm-acct-address-${invalid}`)?.focus();
       return;
     }
-    onSave({ ...draft, region: draft.region.trim().toUpperCase() });
+    setBusy(true);
+    setFailure("");
+    try {
+      await onSave({ ...draft, region: draft.region.trim().toUpperCase() });
+    } catch {
+      // A successful save closes the form; only a failure keeps it open.
+      setFailure("The address could not be saved. Check the details and try again.");
+      setBusy(false);
+    }
   }
   return (
     <form className="tm-acct-address is-form" onSubmit={submit} noValidate aria-label={title}>
@@ -84,9 +97,10 @@ function AddressForm({
         <Field {...bind("postal")} label="ZIP code" autoComplete="postal-code" inputMode="numeric" maxLength={10} />
         <Field {...bind("phone")} label="Phone" optional wide type="tel" autoComplete="tel" />
       </div>
+      {failure && <p className="tm-field-error" role="alert">{failure}</p>}
       <div className="tm-acct-actions">
-        <button type="submit" className="tm-button tm-button-primary">
-          Save address
+        <button type="submit" className="tm-button tm-button-primary" disabled={busy} aria-busy={busy || undefined}>
+          {busy ? "Saving…" : "Save address"}
         </button>
         <button type="button" className="tm-acct-quiet" onClick={onCancel}>
           Cancel
@@ -107,7 +121,7 @@ export default function Addresses() {
   function returnFocus(id: string) {
     window.requestAnimationFrame(() => document.getElementById(`tm-acct-edit-${id}`)?.focus());
   }
-  function save(id: string | null, draft: Draft) {
+  async function save(id: string | null, draft: Draft) {
     const next: Address = {
       id: id ?? `preview-${++count.current}`,
       ...draft,
@@ -115,10 +129,12 @@ export default function Addresses() {
       phone: draft.phone.trim() || undefined,
       country: "United States",
     };
-    setAddresses((list) => (id ? list.map((a) => (a.id === id ? next : a)) : [...list, next]));
+    // Live keeps the address on the research account; the preview keeps it on this page.
+    const saved = LIVE ? await live().saveAddress(buyer.id, next) : next;
+    setAddresses((list) => (id ? list.map((a) => (a.id === id ? saved : a)) : [...list, saved]));
     setEditing(null);
-    setNote(id ? `${next.label} address updated.` : `${next.label} address added.`);
-    returnFocus(next.id);
+    setNote(id ? `${saved.label} address updated.` : `${saved.label} address added.`);
+    returnFocus(saved.id);
   }
 
   return (
@@ -127,7 +143,7 @@ export default function Addresses() {
         eyebrow="Addresses"
         title="Delivery addresses."
         sub="Where your lots are received."
-        aside={<SampleTag>Changes are kept in this preview only</SampleTag>}
+        aside={LIVE ? null : <SampleTag>Changes are kept in this preview only</SampleTag>}
       >
       </PageHead>
       <p className="tm-acct-live" aria-live="polite">

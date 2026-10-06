@@ -8,6 +8,7 @@
 import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import { Button, EmptyState, Skeleton, formatCount, formatDate, formatMoney, plural } from "../../app-kit";
+import { LIVE } from "../../platform/mode";
 import {
   EmailButton,
   EmailFigure,
@@ -186,7 +187,6 @@ export function WhatYouReceive({ partner, prefs }: { partner: Partner; prefs: Pa
                 ["Earned", formatMoney(week.earned)],
                 ["Through your links", `${formatCount(week.viaLink)} of ${formatCount(week.orders)}`],
                 ["With your code", `${formatCount(week.viaCode)} of ${formatCount(week.orders)}`],
-                ["Best link", "Per-link results arrive at launch"],
               ]}
             />
             <EmailText>
@@ -214,7 +214,7 @@ export function WhatYouReceive({ partner, prefs }: { partner: Partner; prefs: Pa
           What you’ll receive
         </h2>
         <div className="kit-card-meta">
-          <span className="pp-card-aside">Built from your own records · nothing is sent in the preview</span>
+          <span className="pp-card-aside">{LIVE ? "Built from your own records" : "Built from your own records · nothing is sent in the preview"}</span>
         </div>
       </header>
       <div className="kit-card-body pp-receive-body">

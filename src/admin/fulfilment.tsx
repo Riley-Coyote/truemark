@@ -9,6 +9,7 @@ import type { FormEvent } from "react";
 import { Button, Segmented } from "../app-kit";
 import { store } from "../platform/store";
 import type { Order, OrderStatus } from "../platform/types";
+import type { Shipment } from "../platform/shipping";
 import { TextField } from "./fields";
 
 export const CARRIERS = ["UPS", "FedEx"] as const;
@@ -73,8 +74,8 @@ export const NEXT: Partial<Record<OrderStatus, Next>> = {
 type Step = { kind: "idle" } | { kind: "pack" } | { kind: "ship"; carrier: Carrier; tracking: string; error?: string };
 
 /** The drawer's footer while an order still has a step to take. */
-export function Fulfilment({ order, onDone }: { order: Order; onDone: (message: string) => void }) {
-  const next = NEXT[order.status];
+export function Fulfilment({ order, shipment, onDone }: { order: Order; shipment?: Shipment | null; onDone: (message: string) => void }) {
+  const next = order.status === "placed" && order.payment !== "authorized" ? undefined : NEXT[order.status];
   const [step, setStep] = useState<Step>({ kind: "idle" });
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState<string | null>(null);
@@ -213,6 +214,12 @@ export function Fulfilment({ order, onDone }: { order: Order; onDone: (message: 
       </form>
     );
   }
+
+  if (order.status === "packed" && shipment && !["failed", "cancelled"].includes(shipment.status)) return <div className="cc-actions">
+    <p className="cc-footnote">ShipStation marks this order shipped when its label is printed.</p>
+    <Button variant="text" onClick={() => go({ kind: "ship", carrier: "UPS", tracking: "" }, "tracking")}>Enter tracking by hand</Button>
+    {problem}
+  </div>;
 
   return (
     <div className="cc-actions">

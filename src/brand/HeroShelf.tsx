@@ -8,6 +8,7 @@ import { canTurnShelf, SHELF_INTERVAL, SHELF_TOUCH_PAUSE, shelfOffset, wrapShelf
 import type { Product } from "../data";
 import { tone } from "../shop/ui";
 import { sheenMask, useLight } from "./light";
+import { rememberVial } from "../Navigation";
 import { Trace } from "./Trace";
 import "./hero.css";
 
@@ -71,6 +72,13 @@ export function HeroShelf() {
   const reduced = usePrefersReducedMotion();
   const [mobile, setMobile] = useState(() => window.matchMedia("(max-width: 960px)").matches);
   const [front, setFront] = useState(middle);
+  // Desktop: the vial a visitor points at (or focuses) is chosen; the lot card moves to it
+  // and the trace's peak glides under it. `chosenYet` hands the first card's entrance over to that.
+  const [chosen, setChosen] = useState(middle);
+  const [chosenYet, setChosenYet] = useState(false);
+  const choose = (i: number) => { setChosen(i); setChosenYet(true); };
+  const lastPointer = useRef<string>("mouse");
+  const [peak, setPeak] = useState(0.5);
   if (front >= shelf.length && front !== middle) setFront(middle);
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -106,6 +114,24 @@ export function HeroShelf() {
       if (item) track.current.scrollLeft = item.offsetLeft - (track.current.clientWidth - item.offsetWidth) / 2;
     }
   }, [mobile, reduced, middle]);
+  useEffect(() => {
+    const section = scene.current;
+    if (!section) return;
+    const measure = () => {
+      const trace = section.querySelector<HTMLElement>(".tm-bhero-trace");
+      const target = mobile
+        ? section.querySelector<HTMLElement>(".tm-bhero-title .tm-brand-dot")
+        : (track.current?.children[chosen] as HTMLElement | undefined)?.querySelector<HTMLElement>(".tm-shelf-stage img") ?? null;
+      if (!trace || !target) return;
+      const box = trace.getBoundingClientRect(), at = target.getBoundingClientRect();
+      if (box.width > 0) setPeak(Math.min(0.96, Math.max(0.04, (at.left + at.width / 2 - box.left) / box.width)));
+    };
+    measure();
+    void document.fonts?.ready.then(measure);
+    const observer = new ResizeObserver(measure);
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [mobile, chosen]);
   useLight(scene);
   return (
     <>
@@ -147,6 +173,7 @@ export function HeroShelf() {
         </div>
 
         <div className={`tm-shelf${mobile && !reduced ? " is-carousel" : ""}`} ref={track} role="list" aria-label="The collection, arranged by colour"
+          data-chosen={!mobile && chosenYet ? "true" : undefined}
           onFocusCapture={(event) => { if (event.target.matches(":focus-visible")) setFocused(true); }}
           onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}
           onPointerDown={(event) => { if (!mobile) return; pause(); pointer.current = { x: event.clientX, y: event.clientY, swiped: false }; }}
@@ -178,13 +205,20 @@ export function HeroShelf() {
               key={product.id}
               role="listitem"
               className="tm-shelf-vial"
-              data-front={mobile ? i === front : i === middle}
+              data-front={mobile ? i === front : i === chosen}
+              onPointerEnter={(event) => { if (!mobile && event.pointerType !== "touch") choose(i); }}
+              onPointerDownCapture={(event) => { lastPointer.current = event.pointerType; }}
+              onFocus={(event) => { if (!mobile && event.target.matches(":focus-visible")) choose(i); }}
               aria-hidden={hiddenVial || undefined}
               tabIndex={hiddenVial ? -1 : undefined}
               aria-label={mobile && !reduced && i !== front ? `Show ${product.name} ${product.size}` : undefined}
               to={`/product/${product.id}`}
               onClick={(event) => {
-                if (!mobile) return;
+                rememberVial(product.id, event.currentTarget.querySelector<HTMLElement>(".tm-shelf-stage img"));
+                if (!mobile) {
+                  if (lastPointer.current === "touch" && i !== chosen) { event.preventDefault(); choose(i); }
+                  return;
+                }
                 pause();
                 if (pointer.current?.swiped) { event.preventDefault(); pointer.current = null; return; }
                 if (!reduced && i !== front) { event.preventDefault(); setFront(i); }
@@ -192,7 +226,7 @@ export function HeroShelf() {
               style={{ ...tone(product), "--tm-i": Math.abs(i - middle), "--tm-offset": offset } as CSSProperties}
             >
               <span className="tm-shelf-stage" data-sheen>
-                {(mobile || i === middle) && <LotChip product={product} />}
+                <LotChip product={product} />
                 <span className="tm-shelf-shadow" aria-hidden="true" />
                 <img
                   src={productCutout(product, "lg")}
@@ -201,6 +235,7 @@ export function HeroShelf() {
                   alt={`${product.name}, ${product.size}`}
                   loading={Math.abs(i - middle) <= 1 ? "eager" : "lazy"}
                   draggable={false}
+                  data-vial={product.id}
                 />
                 <span
                   className="tm-sheen"
@@ -215,7 +250,7 @@ export function HeroShelf() {
             </Link>
           ); })}
         </div>
-        <Trace className="tm-bhero-trace" peakAt={0.5} caption="≥99% purity specification · HPLC" />
+        <Trace className="tm-bhero-trace" peakAt={peak} height={mobile ? 88 : 104} pulse caption="≥99% purity specification · HPLC" />
       </section>
 
       <section className="tm tm-trust" aria-label="Our standard">

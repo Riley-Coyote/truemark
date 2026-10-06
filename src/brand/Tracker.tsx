@@ -2,11 +2,23 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Check, Copy } from "lucide-react";
+import { LIVE } from "../platform/mode";
 import type { Lot, Order, OrderEvent, OrderStatus, PaymentStatus, ShippingMethod } from "../platform/types";
 import { productById, productCutout } from "../shop/catalog";
 import { usePrefersReducedMotion } from "../shop/motion";
 import { tone } from "../shop/ui";
 import "./tracker.css";
+
+/** The carrier's own tracking page, for the carriers a ShipStation label can name. */
+function carrierTracking(carrier: string | undefined, tracking: string): string | null {
+  const name = (carrier ?? "").toLowerCase();
+  const number = encodeURIComponent(tracking);
+  if (name.startsWith("ups")) return `https://www.ups.com/track?tracknum=${number}`;
+  if (name.startsWith("fedex")) return `https://www.fedex.com/fedextrack/?trknbr=${number}`;
+  if (name.includes("usps") || name.includes("stamps")) return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${number}`;
+  if (name.startsWith("dhl")) return `https://www.dhl.com/us-en/home/tracking/tracking-express.html?submit=1&tracking-id=${number}`;
+  return null;
+}
 
 /*
  * An order's journey, in the home page's paper-trail language: five stations on a
@@ -360,7 +372,15 @@ export function Tracker({
                   {tracking ? (
                     <>
                       <CopyNumber text={tracking} />
-                      <span className="tm-tracker-sub">The carrier&rsquo;s tracking page opens at launch</span>
+                      {!LIVE ? (
+                        <span className="tm-tracker-sub">The carrier&rsquo;s tracking page opens at launch</span>
+                      ) : carrierTracking(carrier, tracking) ? (
+                        <a className="tm-tracker-link" href={carrierTracking(carrier, tracking)!} target="_blank" rel="noreferrer">
+                          Track with {carrier} <ArrowUpRight size={14} strokeWidth={1.6} aria-hidden="true" />
+                        </a>
+                      ) : (
+                        <span className="tm-tracker-sub">Use it on the carrier&rsquo;s site</span>
+                      )}
                     </>
                   ) : (
                     <span className="tm-tracker-sub">Appears here once it ships</span>

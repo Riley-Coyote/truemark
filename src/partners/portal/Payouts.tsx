@@ -19,6 +19,7 @@ import {
   plural,
 } from "../../app-kit";
 import type { Column } from "../../app-kit";
+import { LIVE } from "../../platform/mode";
 import { store, useResource } from "../../platform/store";
 import type { Payout, Referral } from "../../platform/types";
 import { paidToDate, periodLabel, upcoming } from "../metrics";
@@ -221,13 +222,15 @@ export default function Payouts() {
           </span>
           <span className="pp-method-text">
             <span className="pp-method-name">Bank transfer</span>
-            <span className="kit-quiet">Account details are added at launch.</span>
+            <span className="kit-quiet">{LIVE ? "TrueMark arranges the account details with you directly." : "Account details are added at launch."}</span>
           </span>
         </div>
-        <Button disabled title="Arrives with the backend">
-          Change method
-        </Button>
-        <p className="pp-footnote">Changing the method arrives with the backend.</p>
+        {!LIVE && (
+          <Button disabled title="Arrives with the backend">
+            Change method
+          </Button>
+        )}
+        {!LIVE && <p className="pp-footnote">Changing the method arrives with the backend.</p>}
       </Card>
 
       <div className="kit-card kit-span-12">

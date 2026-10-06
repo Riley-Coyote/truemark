@@ -1,3 +1,5 @@
+import { LIVE } from "../../../platform/mode";
+import { live } from "../../../platform/live/runtime";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, FocusEvent, FormEvent, ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
@@ -49,7 +51,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function check(key: Key, raw: string): string | undefined {
   const value = raw.trim();
   if (key === "name") return value ? undefined : "Enter your name.";
-  if (key === "organization") return value ? undefined : "Enter your institution or company.";
+  if (key === "organization") return LIVE || value ? undefined : "Enter your institution or company.";
   if (key === "email") {
     if (!value) return "Enter your work email.";
     return EMAIL.test(value) ? undefined : "Enter a full email address, like name@institution.edu.";
@@ -125,6 +127,9 @@ export default function Contact() {
   });
   const [errors, setErrors] = useState<Errors>({});
   const [attempted, setAttempted] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [sendError, setSendError] = useState("");
+  const [website, setWebsite] = useState("");
   const [sent, setSent] = useState(false);
   useReveal(root);
 
@@ -167,19 +172,25 @@ export default function Contact() {
     if (value.trim() || attempted) setErrors((e) => ({ ...e, [key]: check(key, value) }));
   };
 
-  function send(event: FormEvent<HTMLFormElement>) {
+  async function send(event: FormEvent<HTMLFormElement>) {
     // Design preview: nothing is transmitted. There is no action, no request, no storage.
     event.preventDefault();
     setAttempted(true);
     const next: Errors = {};
     for (const key of order) {
-      const problem = check(key, values[key]);
+      const problem = LIVE && key === "organization" ? undefined : check(key, values[key]);
       if (problem) next[key] = problem;
     }
     const first = order.find((key) => next[key]);
     focusNext.current = first ?? null;
     setErrors(next);
-    if (!first) setSent(true);
+    if (!first) {
+      if (!LIVE) { setSent(true); return; }
+      setBusy(true); setSendError("");
+      try { await live().messages.sendContact({...values, website}); setSent(true); }
+      catch (error) { setSendError(error instanceof Error ? error.message : "Check the form and try again."); }
+      finally { setBusy(false); }
+    }
   }
 
   function backToForm() {
@@ -227,20 +238,23 @@ export default function Contact() {
           {sent ? (
             <div className="tm-contact-sent">
               <h2 ref={sentTitle} tabIndex={-1} className="tm-contact-sent-title">
-                Design preview: messages are not sent.
+                {LIVE ? "Message sent." : "Design preview: messages are not sent."}
               </h2>
-              <div className="tm-contact-sent-route">
+              {LIVE ? <p className="tm-contact-note">We'll reply within one business day at {values.email.trim()}.</p> : <div className="tm-contact-sent-route">
                 <p className="tm-contact-route-title">{route.label}</p>
                 <a className="tm-contact-email" href={`mailto:${route.email}`}>
                   {route.email}
                 </a>
-              </div>
+              </div>}
               <button type="button" className="tm-button tm-button-outline" onClick={backToForm}>
                 Back to the form
               </button>
             </div>
           ) : (
-            <form ref={form} className="tm-contact-form" noValidate onSubmit={send}>
+            <>
+            <h2 className="tm-contact-route-title tm-contact-compose-title">Send a message</h2>
+            <form ref={form} className="tm-contact-form" noValidate onSubmit={send} aria-label="Send a message">
+              {LIVE && <input name="website" style={{position:"absolute",width:1,height:1,padding:0,border:0,clipPath:"inset(50%)",overflow:"hidden",whiteSpace:"nowrap"}} aria-hidden="true" tabIndex={-1} autoComplete="off" value={website} onChange={e=>setWebsite(e.target.value)}/>}
               <Field id={fieldId("name")} label="Name" error={errors.name} half>
                 <input
                   id={fieldId("name")}
@@ -262,7 +276,7 @@ export default function Contact() {
                   type="text"
                   autoComplete="organization"
                   placeholder="Institution or company"
-                  required
+                  required={!LIVE}
                   value={values.organization}
                   onChange={change("organization")}
                   onBlur={leave("organization")}
@@ -322,12 +336,14 @@ export default function Contact() {
                 />
               </Field>
               <div className="tm-contact-send">
-                <button className="tm-button tm-button-primary" type="submit">
+                <button className="tm-button tm-button-primary" type="submit" disabled={busy}>
                   Send message
                 </button>
+                {sendError && <p className="tm-contact-error" role="alert">{sendError}</p>}
                 <p className="tm-contact-note">Accounts are opened to verified research organizations only.</p>
               </div>
             </form>
+            </>
           )}
         </div>
       </section>

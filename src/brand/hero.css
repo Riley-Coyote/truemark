@@ -322,13 +322,13 @@
   .tm .tm-shelf-vial {
     scroll-snap-align: center;
   }
+  /* Two by two, each line centred in its half. */
   .tm-trust-item {
     grid-column: span 6;
+    text-align: center;
   }
-}
-@media (max-width: 560px) {
-  .tm-trust-item {
-    grid-column: 1 / -1;
+  .tm .tm-trust-text {
+    margin-inline: auto;
   }
 }
 
@@ -387,4 +387,58 @@
   .tm-shelf .tm-lotchip { transition: none; }
   .tm-shelf [data-front="true"] .tm-lotchip { transition-delay: 0s; }
   .tm-shelf .tm-shelf-vial :is(img, .tm-sheen) { transition: none; transform: none; }
+}
+
+/* The living trace. On a phone it sits straight under the headline, its peak beneath the
+   brand dot of "Verified.", so the claim and its proof share the first screen; the rest of
+   the hero follows. On desktop it stays under the shelf, its peak under the chosen vial. */
+@media (max-width: 960px) {
+  .tm-bhero-head { order: 0; }
+  .tm-bhero-trace {
+    order: 1;
+    margin-top: var(--tm-space-4);
+  }
+  .tm-bhero-aside {
+    order: 2;
+    margin-top: var(--tm-space-5);
+  }
+  .tm-shelf { order: 3; }
+}
+/* Desktop: each vial carries its lot card; only the chosen one shows, and moves with the choice.
+   Before anyone chooses, the first card keeps its entrance after the vials rise. */
+@media (min-width: 961px) {
+  .tm-shelf .tm-lotchip {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(calc(var(--tm-space-3) / 2));
+    animation: none;
+    transition: opacity var(--tm-dur-quick) var(--tm-ease-enter), transform var(--tm-dur-slow) var(--tm-ease-enter), visibility var(--tm-dur-quick);
+  }
+  .tm-shelf [data-front="true"] .tm-lotchip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%);
+  }
+  .tm-shelf:not([data-chosen]) [data-front="true"] .tm-lotchip {
+    animation: tm-lotchip-in 800ms var(--tm-ease-enter) 2250ms both;
+  }
+}
+@media (prefers-reduced-motion: reduce) and (min-width: 961px) {
+  .tm-shelf .tm-lotchip { transition: none; }
+  .tm-shelf:not([data-chosen]) [data-front="true"] .tm-lotchip { animation: none; }
+}
+@media (max-width: 560px) {
+  /* The whole hero fits a phone's first screen, its two buttons included. */
+  .tm.tm-bhero {
+    padding-top: var(--tm-space-6);
+  }
+  .tm.tm-bhero .tm-pill-eyebrow {
+    margin-bottom: var(--tm-space-5);
+  }
+  .tm .tm-bhero-lead {
+    max-width: none;
+  }
+  .tm .tm-bhero-aside .tm-actions {
+    margin-top: var(--tm-space-5);
+  }
 }

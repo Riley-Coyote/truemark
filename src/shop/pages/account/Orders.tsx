@@ -1,3 +1,5 @@
+import { LIVE } from "../../../platform/mode";
+import { paymentLabel as paymentStatusLabel } from "../../../admin/metrics";
 import { useId, useState } from "react";
 import type { CSSProperties } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -76,13 +78,14 @@ export function OrderTable({ orders, label }: { orders: Order[]; label: string }
                   );
                 })}
               </span>
-              <span className="tm-acct-units">{units(order)} vials</span>
+              <span className="tm-acct-units">{units(order)} {units(order) === 1 ? "vial" : "vials"}</span>
             </span>
             <span role="cell" className="c-total">
               {money(order.total)}
             </span>
             <span role="cell" className="c-status">
-              <StatusChip tone={orderTone(order.status)}>{orderStatusLabel[order.status]}</StatusChip>
+              <StatusChip tone={orderTone(order.status)}>{LIVE && order.payment === "pending" ? "Awaiting payment" : orderStatusLabel[order.status]}</StatusChip>
+              {LIVE && order.payment === "pending" && (!order.paymentExpiresAt || Date.parse(order.paymentExpiresAt) > Date.now()) && <Link className="tm-textlink" to={`/checkout/pay/${order.id}`}>Complete payment</Link>}
               <ArrowRight className="tm-acct-go" size={16} strokeWidth={1.6} aria-hidden="true" />
             </span>
           </div>
@@ -165,7 +168,7 @@ function OrderEmails({
           );
         })}
       </ul>
-      <p className="tm-acct-email-note">Design preview · emails are sent at launch.</p>
+      {!LIVE && <p className="tm-acct-email-note">Design preview · emails are sent at launch.</p>}
     </section>
   );
 }
@@ -230,12 +233,14 @@ export function OrderDetail() {
           <button type="button" className="tm-button tm-button-primary" onClick={onReorder}>
             Reorder
           </button>
-          <span className="tm-acct-later">
-            <button type="button" className="tm-acct-quiet" disabled aria-describedby="tm-acct-invoice-note">
-              Invoice
-            </button>
-            <span id="tm-acct-invoice-note">Available at launch</span>
-          </span>
+          {!LIVE && (
+            <span className="tm-acct-later">
+              <button type="button" className="tm-acct-quiet" disabled aria-describedby="tm-acct-invoice-note">
+                Invoice
+              </button>
+              <span id="tm-acct-invoice-note">Available at launch</span>
+            </span>
+          )}
         </div>
         <p className="tm-acct-live" aria-live="polite">
           {note}
@@ -249,7 +254,7 @@ export function OrderDetail() {
       <section className="tm-acct-block tm-acct-rise" aria-labelledby="tm-acct-lines-title" style={{ "--tm-i": 1 } as CSSProperties}>
         <div className="tm-acct-section-head">
           <h2 id="tm-acct-lines-title" className="tm-acct-label">
-            In this order <span>{vials} vials</span>
+            In this order <span>{vials} {vials === 1 ? "vial" : "vials"}</span>
           </h2>
         </div>
         <ul className="tm-acct-lines">
@@ -327,7 +332,7 @@ export function OrderDetail() {
             <h2 id="tm-acct-summary-title" className="tm-acct-label">
               Summary
             </h2>
-            <SampleTag />
+            {!LIVE && <SampleTag />}
           </div>
           <dl className="tm-acct-dl tm-acct-totals">
             <div>
@@ -356,7 +361,7 @@ export function OrderDetail() {
             <div>
               <dt>Payment</dt>
               <dd>
-                <StatusChip tone={paymentTone(paymentOf(found))}>{paymentLabel[paymentOf(found)]}</StatusChip>
+                <StatusChip tone={paymentTone(paymentOf(found))}>{LIVE ? paymentStatusLabel(paymentOf(found)) : paymentLabel[paymentOf(found)]}</StatusChip>
               </dd>
             </div>
           </dl>

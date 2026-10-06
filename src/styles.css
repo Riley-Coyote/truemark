@@ -16,6 +16,8 @@
   line-height: 1.6;
   scroll-behavior: smooth;
   font-optical-sizing: auto;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 * {
   box-sizing: border-box;
@@ -32,6 +34,28 @@ textarea {
 button,
 a {
   -webkit-tap-highlight-color: transparent;
+}
+/* Touch: a quick second tap on a control never zooms the page. */
+button,
+a,
+input,
+select,
+textarea,
+label,
+summary,
+[role="button"] {
+  touch-action: manipulation;
+}
+.tm-nowrap {
+  white-space: nowrap;
+}
+/* iOS zooms into any field set below 16px when it takes the keyboard. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 button {
   cursor: pointer;

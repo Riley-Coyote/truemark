@@ -9,3 +9,5 @@ dist/
 *.log
 
 .claude/worktrees/
+dist-functions/
+supabase/.temp/

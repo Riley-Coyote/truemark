@@ -64,7 +64,7 @@ const allReferrals = (): Referral[] => {
 const allPayouts = () => [...read<Payout[]>("tm-preview-assistant-payouts", []), ...seed.payouts];
 const allDiscounts = () => [...read<Discount[]>("tm-preview-assistant-discounts", []), ...seed.discounts];
 const round2 = (n: number) => Math.round(n * 100) / 100;
-const settings = (): StorefrontSettings => read(KEYS.settings, defaultSettings);
+const settings = (): StorefrontSettings => ({ ...defaultSettings, ...read(KEYS.settings, defaultSettings), taxMode: "off", taxShipping: false });
 const money = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
 const allApplications = (): Application[] => {
   const overrides = read<Record<string, Partial<Application>>>(KEYS.applications, {});

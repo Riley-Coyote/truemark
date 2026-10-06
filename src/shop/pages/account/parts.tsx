@@ -3,11 +3,12 @@ import type { ComponentProps, ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { CircleAlert } from "lucide-react";
 import type { Product } from "../../../data";
+import { LIVE } from "../../../platform/mode";
 import type { Resource } from "../../../platform/store";
 import type { Buyer, Lot, Order } from "../../../platform/types";
 import { productCutout } from "../../catalog";
 import { useShop } from "../../context";
-import { tone } from "../../ui";
+import { pictureLoading, tone } from "../../ui";
 import { productFor } from "./lib";
 import type { Tone } from "./lib";
 import "./account.css";
@@ -54,7 +55,7 @@ export function useReorder() {
 export function Thumb({ product, size = "md" }: { product: Product; size?: "sm" | "md" }) {
   return (
     <span className={`tm-acct-thumb is-${size}`} style={tone(product)} aria-hidden="true">
-      <img src={productCutout(product, "sm")} alt="" loading="lazy" draggable={false} />
+      <img src={productCutout(product, "sm")} alt="" {...pictureLoading(productCutout(product, "sm"))} draggable={false} />
     </span>
   );
 }
@@ -91,7 +92,8 @@ export function PageHead({
     <header className="tm-acct-head">
       <div className="tm-acct-head-top">
         <p className="tm-eyebrow">{eyebrow}</p>
-        {aside ?? <SampleTag />}
+        {/* A real account holds real records: only the preview says its data is a sample. */}
+        {aside ?? (LIVE ? null : <SampleTag />)}
       </div>
       <h1 className={display ? "tm-display" : "tm-heading"}>
         {title}

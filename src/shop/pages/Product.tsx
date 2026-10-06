@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { stockProblem } from "../../platform/commerce";
+import { LIVE } from "../../platform/mode";
 import { categoryName, money, products } from "../../data";
 import { compoundsForBrowsing, describe, specFor } from "../catalog";
 import { useShop } from "../context";
+import { announceMobileAdd } from "../MobileAdd";
 import { useReveal } from "../motion";
-import { ProofFigures, Quantity, tone } from "../ui";
+import { ProductName, ProofFigures, Quantity, tone } from "../ui";
 import { useLight } from "../../brand/light";
 import { ContinueExploring } from "../../brand/ContinueExploring";
 import { ProductStage } from "../../brand/ProductStage";
@@ -94,7 +96,7 @@ export default function ProductPage() {
         <div className="tm-buy-head">
           <p className="tm-eyebrow">{categoryName(product.category)}</p>
           <h1 id="tm-product-title" className="tm-display tm-product-name">
-            {product.name}
+            <ProductName name={product.name} />
           </h1>
           <p className="tm-product-sub">
             {product.size} <span>·</span> {product.form}
@@ -162,7 +164,10 @@ export default function ProductPage() {
                   type="button"
                   className="tm-button tm-button-primary tm-button-wide"
                   disabled={Boolean(unavailable)}
-                  onClick={() => add(product.id, quantity)}
+                  onClick={() => {
+                    add(product.id, quantity);
+                    announceMobileAdd(product.id, document.querySelector<HTMLImageElement>(".tm-product-stage img"));
+                  }}
                 >
                   Add to bag
                 </button>
@@ -183,7 +188,7 @@ export default function ProductPage() {
               Read the record <ArrowUpRight size={15} strokeWidth={1.6} />
             </span>
           </Link>
-          <p className="tm-fineprint">Design preview. No order is placed and no payment is collected.</p>
+          {!LIVE && <p className="tm-fineprint">Design preview. No order is placed and no payment is collected.</p>}
         </div>
       </section>
 

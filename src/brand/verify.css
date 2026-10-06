@@ -1,33 +1,44 @@
 /* Verify: the client's page in their order. Lookup, certificate, how it works, what results mean. */
 
+/* The lookup is the page's reason for being: a compact band, the client's line as its title,
+   the field right beneath it, and the explanation after. */
 .tm-vhero {
-  padding-block: var(--tm-space-9);
+  padding-block: var(--tm-head-top) var(--tm-space-7);
   align-items: center;
   overflow: hidden;
 }
 .tm-vhero-copy {
   grid-column: 1 / span 7;
+  display: grid;
+  justify-items: start;
+  gap: var(--tm-space-5);
 }
-.tm.tm-vhero .tm-display {
-  font-size: clamp(2.75rem, 5.2vw, 4.5rem);
-  line-height: var(--tm-leading-display);
+.tm .tm-vhero-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-page) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-glow);
 }
-.tm-night .tm-display span {
+.tm-vhero-title span {
   color: var(--tm-glow-3);
 }
-.tm.tm-vhero .tm-section-note {
-  max-width: 46ch;
-  margin-top: var(--tm-space-7);
-}
 .tm-vhero-form.tm-lookup {
+  width: 100%;
   max-width: 34rem;
+  margin-top: 0;
+}
+.tm .tm-vhero-note {
+  max-width: 46ch;
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-glow-3);
 }
 .tm .tm-vhero-try {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--tm-space-3);
-  margin: var(--tm-space-5) 0 0;
+  margin: calc(var(--tm-space-2) * -1) 0 0;
   font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
   color: var(--tm-glow-3);
 }
@@ -56,7 +67,7 @@
 /* Where the number is: the vial, and a loupe over the LOT line of its label.
    The cut-out is 578 x 1112; the lot line is centred at 17.5% across, 58.24% down. */
 .tm-lothint {
-  --tm-lh-w: clamp(10rem, 15vw, 13.5rem);
+  --tm-lh-w: clamp(7rem, 9vw, 9rem);
   --tm-lh-k: 2;
   --tm-lh-l: calc(var(--tm-lh-w) * 0.62);
   --tm-lh-ratio: 1.9239;
@@ -67,7 +78,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--tm-space-6);
+  gap: var(--tm-space-5);
   margin: 0;
 }
 .tm-lothint-vial {
@@ -130,11 +141,14 @@
   }
 }
 
-/* The certificate, where the page promised it would be. */
+/* The certificate, where the page promised it would be. Before a lookup it takes no room. */
 .tm-vresult {
   --tm-bg: var(--tm-lilac-50);
-  padding-block: var(--tm-space-9);
+  padding-block: var(--tm-space-8);
   scroll-margin-top: calc(var(--tm-header-height) + var(--review-bar-height, 0px));
+}
+.tm-vresult.is-idle {
+  padding-block: 0;
 }
 .tm-vresult-empty {
   grid-column: 3 / span 8;
@@ -162,6 +176,19 @@
 }
 .tm-vresult-missing .tm-section-note {
   max-width: 46ch;
+}
+/* The lot reads whole: it moves to its own line rather than splitting at a hyphen,
+   and an implausibly long entry is cut short instead of widening the page. */
+.tm .tm-vresult-title {
+  max-width: 100%;
+}
+.tm-vresult-title .tm-mono {
+  display: inline-block;
+  max-width: calc(100% - 0.5em); /* room for the full stop that follows */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 .tm-vresult-missing .tm-textlink {
   margin-top: var(--tm-space-3);
@@ -279,9 +306,33 @@
   .tm-vsteps-head {
     grid-column: 1 / -1;
   }
+  /* On a phone the hint is a line under the form: the loupe alone, beside its caption. */
   .tm-lothint {
-    --tm-lh-w: 9rem;
-    margin-top: var(--tm-space-8);
+    --tm-lh-w: 7.5rem;
+    --tm-lh-k: 2.4;
+    flex-direction: row;
+    justify-self: start;
+    gap: var(--tm-space-4);
+    margin-top: var(--tm-space-5);
+  }
+  .tm-lothint-vial {
+    width: auto;
+    animation: none;
+  }
+  .tm-lothint-vial > img,
+  .tm-lothint-glow {
+    display: none;
+  }
+  .tm-lothint-loupe {
+    position: relative;
+    left: auto;
+    top: auto;
+    display: block;
+    box-shadow: none;
+    animation: none;
+  }
+  .tm .tm-lothint figcaption {
+    text-align: left;
   }
   .tm-vsteps-list {
     grid-template-columns: minmax(0, 1fr);
@@ -298,5 +349,26 @@
 @media (max-width: 560px) {
   .tm .tm-vmeans-list {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Phones ---------- */
+
+@media (max-width: 960px) {
+  /* After the certificate, the vial stands centred beneath it. */
+  .tm-vresult-vial {
+    align-items: center;
+  }
+}
+@media (max-width: 560px) {
+  .tm-vhero-copy {
+    gap: var(--tm-space-4);
+  }
+  /* Each sentence on its own line. */
+  .tm-vhero-title span {
+    display: block;
+  }
+  .tm-vresult {
+    padding-block: var(--tm-space-7);
   }
 }

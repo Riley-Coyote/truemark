@@ -6,6 +6,8 @@
  * storage). The backend keeps them at launch.
  */
 import { useCallback, useEffect, useState } from "react";
+import { LIVE } from "../platform/mode";
+import { live } from "../platform/live/runtime";
 import { STORE_CHANGE, read, write } from "../platform/storage";
 
 export const DEFAULT_GOAL = 250;
@@ -50,7 +52,7 @@ export const DEFAULT_PREFS: PartnerPrefs = {
   phone: null,
 };
 
-const keyFor = (partnerId: string) => `tm-preview-partner-prefs-${partnerId}`;
+const keyFor = (partnerId: string) => `${LIVE ? "tm-live" : "tm-preview"}-partner-prefs-${partnerId}`;
 
 /** Stored preferences over the defaults, so a missing or older record never breaks a screen. */
 export function readPrefs(partnerId: string): PartnerPrefs {
@@ -73,12 +75,20 @@ export function usePartnerPrefs(partnerId: string): [PartnerPrefs, (patch: Parti
   const [prefs, setPrefs] = useState(() => readPrefs(partnerId));
   useEffect(() => {
     setPrefs(readPrefs(partnerId));
+    let active = true;
+    const loadLive = () => {
+      if (!LIVE) return;
+      void live().messages.preferences().then(p => { if (active) setPrefs(current => ({...current,phone:p.phone,
+        alerts:Object.fromEntries(alertEvents.map(e=>[e.id,{...DEFAULT_PREFS.alerts[e.id],...p.alerts[e.id],dashboard:true}])) as AlertMatrix})); }).catch(() => {});
+    };
+    loadLive();
     const refresh = (event: Event) => {
+      if (LIVE) { setPrefs(current => ({...current,goal:readPrefs(partnerId).goal})); loadLive(); return; }
       const key = (event as CustomEvent<string | null>).detail;
       if (key === null || key === undefined || key === keyFor(partnerId)) setPrefs(readPrefs(partnerId));
     };
     window.addEventListener(STORE_CHANGE, refresh);
-    return () => window.removeEventListener(STORE_CHANGE, refresh);
+    return () => { active = false; window.removeEventListener(STORE_CHANGE, refresh); };
   }, [partnerId]);
   const update = useCallback((patch: Partial<PartnerPrefs>) => savePrefs(partnerId, patch), [partnerId]);
   return [prefs, update];

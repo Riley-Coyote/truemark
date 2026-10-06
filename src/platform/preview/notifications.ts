@@ -20,7 +20,18 @@ export type NoticeKind =
   | "referral.created"
   | "commission.approved"
   | "payout.sent"
-  | "partner.welcome";
+  | "partner.welcome"
+  | "order.paid"
+  | "order.cancelled"
+  | "order.refunded"
+  | "payment.failed"
+  | "application.submitted"
+  | "application.approved"
+  | "application.declined"
+  | "partner_application.submitted"
+  | "partner.milestone"
+  | "contact.received"
+  | "system.alert";
 
 export type Notice = {
   id: string;

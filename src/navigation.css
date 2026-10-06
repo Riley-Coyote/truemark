@@ -1,0 +1,85 @@
+/* Moving forward between pages (src/Navigation.tsx).
+   On a phone the next page slides in from the right edge over the last, which eases back and
+   dims a little: the iPhone push, and the mirror of Safari's own swipe back, which moves the
+   whole page the same way. Wider screens change pages at once, as pages do. Either way a tapped
+   vial flies to its product page as one solid picture. Going back is Safari's own: a swipe, or
+   an instant tap. */
+
+:root {
+  --tm-ease-glide: cubic-bezier(0.32, 0.72, 0, 1);
+  --tm-dur-glide: 420ms;
+  --tm-dur-glide-fade: 220ms;
+  --tm-glide-shade: rgba(16, 10, 40, 0.16);
+}
+
+/* The two pages are stacked, never blended. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+
+/* Wider screens: the page changes at once; only the vial travels, over the new page. */
+::view-transition-old(root) {
+  animation: none;
+  opacity: 0;
+}
+::view-transition-new(root) {
+  animation: none;
+}
+
+/* Phones: the iPhone push. */
+@media (max-width: 760px) {
+  ::view-transition-old(root) {
+    opacity: 1;
+    animation: tm-glide-recede var(--tm-dur-glide) var(--tm-ease-glide) both;
+  }
+  ::view-transition-new(root) {
+    box-shadow: 0 0 40px var(--tm-glide-shade);
+    animation: tm-glide-push var(--tm-dur-glide) var(--tm-ease-glide) both;
+  }
+}
+
+@keyframes tm-glide-push {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes tm-glide-recede {
+  to {
+    transform: translateX(-30%);
+    filter: brightness(0.92);
+  }
+}
+
+/* The tapped vial travels above both pages as the picture that was tapped, already on screen,
+   and lands where the product page shows it; the page's own vial takes over as it settles. */
+::view-transition-group(tm-vial) {
+  z-index: 3;
+  animation-duration: var(--tm-dur-glide);
+  animation-timing-function: var(--tm-ease-glide);
+}
+::view-transition-old(tm-vial) {
+  animation: none;
+}
+::view-transition-new(tm-vial) {
+  animation: none;
+  opacity: 0;
+}
+/* With nowhere to land (its place is out of view), the vial fades instead of hanging in the air. */
+::view-transition-old(tm-vial):only-child {
+  animation: tm-glide-fade-out var(--tm-dur-glide-fade) ease-out both;
+}
+@keyframes tm-glide-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Reduce Motion: pages change in place (Navigation.tsx skips the transition; this is a backstop). */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

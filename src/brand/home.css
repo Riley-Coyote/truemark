@@ -588,14 +588,15 @@
   .tm-trail-aside {
     grid-column: 1 / -1;
   }
-  /* The track turns to run down the page. */
+  /* The track turns to run down the page, from the first station's centre to the last one's:
+     the stations stand in equal rows, so the last centre lies (stops − 1) / stops of the way down. */
   .tm-trail-rail::before {
-    top: 0;
-    bottom: 0;
+    top: calc(var(--tm-node) / 2 + var(--tm-space-1) / 2);
+    bottom: auto;
     left: calc(var(--tm-node) / 2);
     right: auto;
     width: 1px;
-    height: auto;
+    height: calc(100% * (var(--tm-trail-stops, 6) - 1) / var(--tm-trail-stops, 6));
     background: var(--tm-line-strong);
   }
   .tm-trail-track {
@@ -648,6 +649,9 @@
     animation-name: tm-bead-down;
   }
   .tm-trail { padding-top: calc(var(--tm-space-7) + var(--tm-space-2)); }
+  /* The record follows its link closely; the section's own row gap is enough. */
+  .tm-trail-record { margin-top: var(--tm-space-4); }
+  .tm-trail-lot { padding-bottom: var(--tm-space-6); }
   .tm-supply-list { grid-template-columns: minmax(0, 1fr); }
 
 }
@@ -690,13 +694,23 @@
   }
   .tm-class-grid {
     grid-template-columns: minmax(0, 1fr);
+    gap: var(--tm-space-3);
   }
+  /* A row each: the name on one line, its members beneath, the vial standing at the right. */
   .tm .tm-class {
-    min-height: 11rem;
+    min-height: 0;
+    padding: var(--tm-space-5) 30% var(--tm-space-5) var(--tm-space-5);
+  }
+  .tm-class-name {
+    max-width: none;
+    margin-top: var(--tm-space-3);
+  }
+  .tm-class-members {
+    max-width: none;
   }
   .tm-class-vial {
-    width: 18%;
-    bottom: -30%;
+    width: 4.5rem;
+    bottom: -2.5rem;
   }
   .tm-supply-list {
     grid-template-columns: minmax(0, 1fr);
@@ -751,4 +765,85 @@
   .tm-vband-cert .tm-coa { padding: var(--tm-space-5) var(--tm-space-4); }
   .tm-vband-cert .tm-coa-head { flex-wrap: wrap; }
   .tm-vband-cert .tm-coa-rows > div { gap: var(--tm-space-2); }
+}
+
+/* ---------- A live lot's stations ---------- */
+
+/* Every station shows; the lot travels to the one it is at, and the rest wait, unlit. */
+@media (min-width: 961px) {
+  .tm-trail-record[data-stops] .tm-trail-track {
+    grid-template-columns: repeat(var(--tm-trail-stops), minmax(0, 1fr));
+  }
+}
+.tm-trail-record.is-visible[data-stops] .tm-trail-progress {
+  animation: tm-trail-reach calc(var(--tm-leg) * (var(--tm-trail-done) - 1)) linear 500ms forwards;
+}
+@keyframes tm-trail-reach {
+  to {
+    width: calc((100% + var(--tm-gutter)) * (var(--tm-trail-done) - 1) / var(--tm-trail-stops));
+  }
+}
+.tm-trail-record.is-visible :is(li.is-current, li.is-next) :is(.tm-trail-node, .tm-trail-step) {
+  animation: none;
+}
+.tm-trail-track li.is-current .tm-trail-node {
+  border-color: var(--tm-ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tm-ink) 10%, transparent);
+}
+.tm-trail-track li.is-current .tm-trail-step {
+  color: var(--tm-ink);
+}
+@keyframes tm-trail-reach-down {
+  to {
+    height: calc(100% * (var(--tm-trail-done) - 1) / var(--tm-trail-stops));
+  }
+}
+@media (max-width: 960px) {
+  .tm-trail-record.is-visible[data-stops] .tm-trail-progress {
+    animation-name: tm-trail-reach-down;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tm-trail-record.is-visible[data-stops] .tm-trail-progress {
+    animation: none;
+    width: calc((100% + var(--tm-gutter)) * (var(--tm-trail-done) - 1) / var(--tm-trail-stops));
+  }
+  .tm-trail-record.is-visible :is(li.is-current, li.is-next) .tm-trail-node {
+    background-color: var(--tm-paper);
+  }
+  .tm-trail-record.is-visible li.is-next .tm-trail-node {
+    border-color: var(--tm-ink-4);
+  }
+  .tm-trail-record.is-visible li.is-next .tm-trail-step {
+    color: var(--tm-ink-3);
+  }
+}
+@media (prefers-reduced-motion: reduce) and (max-width: 960px) {
+  .tm-trail-record.is-visible[data-stops] .tm-trail-progress {
+    width: 1px;
+    height: calc(100% * (var(--tm-trail-done) - 1) / var(--tm-trail-stops));
+  }
+}
+@media (max-width: 560px) {
+  /* No room beside the peak on a phone: the caption reads as the chart's title instead. */
+  .tm-vband-trace .tm-trace-caption {
+    left: 0 !important;
+    right: auto;
+    max-width: 55%;
+    text-align: left;
+  }
+}
+@media (max-width: 560px) {
+  /* The sample lot's whole peptide reads on one line, the way the specification table sets it. */
+  .tm-trail-lot .tm-chain-bead {
+    width: calc(var(--tm-space-4) + 2px);
+    height: calc(var(--tm-space-4) + 2px);
+    font-size: var(--tm-type-nano);
+  }
+  .tm-trail-lot .tm-chain-bead + .tm-chain-bead {
+    margin-left: var(--tm-space-1);
+  }
+  .tm-trail-lot .tm-chain-bead + .tm-chain-bead::before {
+    width: var(--tm-space-1);
+  }
 }

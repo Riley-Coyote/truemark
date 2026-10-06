@@ -45,6 +45,7 @@ export function ProductStage({
               aria-hidden={i === index ? undefined : true}
               loading={i === index ? "eager" : "lazy"}
               draggable={false}
+              data-vial={product.id}
             />
           ))}
           <span

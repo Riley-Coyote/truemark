@@ -8,7 +8,9 @@ export type Row = Record<string, unknown>;
 export function settings(row: Row): StorefrontSettings {
   return { freeShippingThreshold: row.free_shipping_threshold == null ? null : Number(row.free_shipping_threshold),
     freeShippingMethod: String(row.free_shipping_method), insuranceMode: row.insurance_mode as StorefrontSettings["insuranceMode"],
-    insuranceRate: row.insurance_rate == null ? null : Number(row.insurance_rate) };
+    insuranceRate: row.insurance_rate == null ? null : Number(row.insurance_rate),
+    taxMode: row.tax_mode === "rates" ? "rates" : "off", taxShipping: row.tax_shipping === true,
+    shippingRatesConfirmed: row.shipping_rates_confirmed === true };
 }
 const optional = (value: unknown) => value == null ? undefined : String(value);
 const date = (value: unknown) => value == null ? undefined : String(value).slice(0, 10);
@@ -18,7 +20,7 @@ export function category(row: Row): Category {
 }
 export function product(row: Row): Product {
   return { id: String(row.id), name: String(row.name), size: String(row.size), category: String(row.category),
-    price: Number(row.price), description: optional(row.description), stock: row.stock == null ? null : Number(row.stock), active: row.active !== false, image: optional(row.image), color: String(row.color ?? "#777777"),
+    price: row.price == null ? undefined : Number(row.price), description: optional(row.description), stock: row.stock == null ? null : Number(row.stock), active: row.active !== false, image: optional(row.image), color: String(row.color ?? "#777777"),
     colorInk: String(row.color_ink ?? "#333333"), form: row.form as Product["form"], lot: String(row.lot), tag: row.tag as Product["tag"] };
 }
 export function buyer(row: Row): Buyer {
@@ -57,6 +59,7 @@ export function order(row: Row): Order {
     shipping: { method: row.shipping_method_id as Order["shipping"]["method"], price: Number(row.shipping_price),
       carrier: optional(row.carrier), tracking: optional(row.tracking) }, subtotal: Number(row.subtotal),
     discount: row.discount_code ? { code: String(row.discount_code), amount: Number(row.discount_amount), partnerId: optional(row.discount_partner_id) } : undefined,
+    tax: Number(row.tax ?? 0), refunded: Number(row.refunded ?? 0), paymentExpiresAt: optional(row.payment_expires_at), paidAt: optional(row.paid_at), paymentProvider: optional(row.payment_provider),
     insurance: Number(row.insurance ?? 0), insuranceApplied: Boolean(row.insurance_applied), total: Number(row.total),
     lines: ((row.order_lines ?? []) as Row[]).map((line) => ({ productId: String(line.product_id), quantity: Number(line.quantity), unitPrice: Number(line.unit_price), lot: String(line.lot) })),
     events: ((row.order_events ?? []) as Row[]).map((event) => ({ status: event.status as Order["status"], at: String(event.at), note: optional(event.note) })).sort((a, b) => a.at.localeCompare(b.at)) };
@@ -80,9 +83,9 @@ export function payout(row: Row): Payout {
   return { id: String(row.id), partnerId: String(row.partner_id), periodStart: String(row.period_start), periodEnd: String(row.period_end),
     amount: Number(row.amount), referrals: Number(row.referrals), status: row.status as Payout["status"], paidAt: date(row.paid_at), method: String(row.method) };
 }
-export const shipping = (row: Row): ShippingMethod => ({ id: row.id as ShippingMethod["id"], label: String(row.label), detail: String(row.detail), price: Number(row.price) });
+export const shipping = (row: Row): ShippingMethod => ({ id: row.id as ShippingMethod["id"], label: String(row.label), detail: String(row.detail), price: Number(row.price), active: row.active !== false });
 export const visit = (row: Row): Visit => ({ date: String(row.date), clicks: Number(row.clicks) });
-const noticeKinds = new Set(["order.placed", "order.packed", "order.shipped", "order.delivered", "referral.created", "commission.approved", "payout.sent", "partner.welcome"]);
+const noticeKinds = new Set(["order.placed", "order.packed", "order.shipped", "order.delivered", "referral.created", "commission.approved", "payout.sent", "partner.welcome", "payment.failed", "order.cancelled", "order.refunded", "application.approved", "application.declined", "application.submitted", "partner_application.submitted", "contact.received", "system.alert", "partner.milestone"]);
 export function notice(row: Row): Notice | null {
   // Older database versions also write payment/cancellation alerts. The app's
   // Those transitions appear on the order's event line.
@@ -91,3 +94,10 @@ export function notice(row: Row): Notice | null {
     title: String(row.title), body: String(row.body), amount: row.amount == null ? undefined : Number(row.amount),
     href: optional(row.href), at: String(row.at), read: Boolean(row.read) };
 }
+
+/** Public tracking returns only this subset; it never fetches buyer identity or prices. */
+export type TrackedOrder = Pick<Order, "number" | "status" | "createdAt" | "events"> & {
+  shipping: Pick<Order["shipping"], "method" | "carrier" | "tracking">;
+  lines: Omit<Order["lines"][number], "unitPrice">[];
+  city: string | null; region: string | null;
+};

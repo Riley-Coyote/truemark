@@ -532,7 +532,7 @@
 
 .tm-acct-apply {
   --tm-bg: var(--tm-studio);
-  padding-block: var(--tm-space-8) var(--tm-space-silence);
+  padding-block: var(--tm-head-top) var(--tm-space-silence);
   align-items: start;
 }
 .tm-acct-apply-head {
@@ -652,9 +652,10 @@
   font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
   color: var(--tm-ink-3);
 }
+/* A step of the form, a level below the page's title. */
 .tm-acct .tm-acct-step-title {
   margin: 0;
-  font: var(--tm-weight-light) var(--tm-type-h2) / var(--tm-leading-heading) var(--tm-font-sans);
+  font: var(--tm-weight-light) var(--tm-type-h3) / var(--tm-leading-heading) var(--tm-font-sans);
   letter-spacing: var(--tm-track-heading);
   color: var(--tm-ink);
 }
@@ -749,7 +750,7 @@
 
 .tm-acct-frame {
   --tm-bg: var(--tm-paper);
-  padding-block: var(--tm-space-8) var(--tm-space-silence);
+  padding-block: var(--tm-head-top) var(--tm-space-silence);
   align-items: start;
 }
 .tm-acct-side {
@@ -840,14 +841,19 @@
   min-width: 0;
 }
 .tm-acct .tm-acct-head {
-  margin-bottom: var(--tm-space-8);
+  margin-bottom: var(--tm-space-7);
 }
 .tm-acct .tm-acct-head-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--tm-space-4);
-  margin-bottom: var(--tm-space-5);
+  margin-bottom: var(--tm-space-3);
+}
+/* The account's pages are pages to use: their titles take the shared modest size. */
+.tm-acct .tm-acct-head .tm-heading {
+  font-size: var(--tm-type-page);
+  letter-spacing: var(--tm-track-heading);
 }
 .tm-acct .tm-acct-head-top .tm-eyebrow {
   margin: 0;
@@ -1569,7 +1575,7 @@
     grid-column: 1 / -1;
   }
   .tm-acct .tm-acct-head {
-    margin-bottom: var(--tm-space-7);
+    margin-bottom: var(--tm-space-6);
   }
   .tm-acct .tm-acct-block {
     margin-top: var(--tm-space-7);
@@ -1693,5 +1699,95 @@
   .tm-acct-email-preheader {
     grid-row: 3;
     white-space: normal;
+  }
+}
+
+/* ---------- Text updates ---------- */
+
+/* The number, the consent and the save, each with room of its own. */
+.tm-acct .tm-acct-sms {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-4);
+  max-width: 34rem;
+}
+.tm-acct .tm-acct-sms .tm-acct-actions {
+  margin-top: 0;
+}
+.tm-acct-consent {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  cursor: pointer;
+}
+.tm-acct-consent-input {
+  position: absolute;
+  width: var(--tm-space-5);
+  height: var(--tm-space-5);
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.tm-acct-consent-box {
+  display: grid;
+  place-items: center;
+  width: var(--tm-space-5);
+  height: var(--tm-space-5);
+  border: 1px solid var(--tm-ink-3);
+  border-radius: var(--tm-radius-xs);
+  background: var(--tm-paper);
+  color: var(--tm-paper);
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-acct-consent-box svg {
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity var(--tm-dur-quick) var(--tm-ease-enter), transform var(--tm-dur-base) var(--tm-ease-micro);
+}
+.tm-acct-consent:hover .tm-acct-consent-box {
+  border-color: var(--tm-ink);
+}
+.tm-acct-consent:active .tm-acct-consent-box {
+  transform: scale(0.92);
+}
+.tm-acct-consent:has(.tm-acct-consent-input:focus-visible) .tm-acct-consent-box {
+  border-color: var(--tm-ink);
+  box-shadow: inset 0 0 0 1px var(--tm-ink);
+}
+.tm-acct-consent:has(.tm-acct-consent-input:checked) .tm-acct-consent-box {
+  border-color: var(--tm-ink);
+  background: var(--tm-ink);
+}
+.tm-acct-consent:has(.tm-acct-consent-input:checked) .tm-acct-consent-box svg {
+  opacity: 1;
+  transform: none;
+}
+.tm-acct-consent:has(.tm-acct-consent-input:disabled) {
+  cursor: default;
+  opacity: 0.6;
+}
+.tm-acct .tm-acct-saved {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tm-acct-consent-box,
+  .tm-acct-consent-box svg {
+    transition: none;
+  }
+}
+
+@media (max-width: 960px) {
+  /* The application's step dots stay small to the eye, with room for a thumb around them. */
+  .tm-acct .tm-acct-rail button {
+    padding: var(--tm-space-2);
+    margin: calc(var(--tm-space-2) * -1);
   }
 }

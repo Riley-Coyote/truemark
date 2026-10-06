@@ -397,6 +397,13 @@ export const products: Product[] = [
   },
 ];
 
+/**
+ * The catalog as built, captured before live mode replaces `products` in place with the
+ * database's (signed-out visitors get a price-free showcase). The preview's sample world is
+ * computed from this copy, so it never depends on who is signed in.
+ */
+export const sampleCatalog: readonly Product[] = products.map((product) => ({ ...product }));
+
 export const categoryName = (id: string) =>
   categories.find((c) => c.id === id)?.name ?? id;
 export const money = (price: number) =>

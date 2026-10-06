@@ -1,4 +1,4 @@
-import { LIVE } from "../platform/mode";
+import { LIVE, PATH_ROUTER } from "../platform/mode";
 /**
  * The partner program's words and rules, in one place: the public pages, the
  * application and the portal all read from here, so a partner is held to the
@@ -26,8 +26,11 @@ export function ordinal(day: number): string {
 export function partnerLink(path: string, code: string): string {
   // The review site shows the brand's own address. A live link must land on the
   // deployment it came from, which routes by hash inside its own folder.
-  if (!LIVE) return `${SITE}${path}?ref=${encodeURIComponent(code)}`;
-  return `${location.origin}${location.pathname}#${path}?ref=${encodeURIComponent(code)}`;
+  const ref = `?ref=${encodeURIComponent(code)}`;
+  if (!LIVE) return `${SITE}${path}${ref}`;
+  // The launch site routes by path from its own base, wherever the partner happens to be in the portal.
+  if (PATH_ROUTER) return `${location.origin}${new URL(import.meta.env.BASE_URL ?? "/", location.href).pathname.replace(/\/$/, "")}${path}${ref}`;
+  return `${location.origin}${location.pathname}#${path}${ref}`;
 }
 
 export type DestinationKind = "home" | "shop" | "compound" | "verify";

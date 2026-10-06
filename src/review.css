@@ -217,6 +217,6 @@ html:has(.rl-root :is(.rl-dock, .rl-dock-pill)) :is(.tm-footer, .kit-content, .r
 
 /* While the page has a modal or a phone menu open (the bag, an order's drawer, the menu), the
    dock steps aside, so it never covers their own actions. It returns when they close. */
-html:has(:is(.modal-panel, .kit-drawer)[aria-modal="true"], .tm-mmenu, .kit-mmenu) .rl-root :is(.rl-dock, .rl-dock-pill) {
+html:has(:is(.modal-panel, .kit-drawer, .tm-chat-panel)[aria-modal="true"], .tm-mmenu, .kit-mmenu) .rl-root :is(.rl-dock, .rl-dock-pill) {
   visibility: hidden;
 }

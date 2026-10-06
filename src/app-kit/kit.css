@@ -71,6 +71,49 @@ html[data-command-theme="night"] {
   --kit-logo: url("/images/brand/kit/lockup-white.svg");
 }
 
+/* Purple, the default: the brand's own night, as the client first saw and chose it.
+   The canvas sits a step below the night (#1a1239); panels rise to #2e2458 with a lit top
+   edge, and the revenue trace glows. Restored from the command center before 948f144. */
+.kit[data-theme="violet"],
+html[data-command-theme="violet"] {
+  color-scheme: dark;
+  --kit-bg: var(--tm-night-deep);
+  --kit-panel: var(--tm-night-raised);
+  --kit-field: color-mix(in srgb, var(--tm-glow) 3%, transparent);
+  --kit-lift: color-mix(in srgb, var(--tm-glow) 9%, transparent);
+  --kit-ink: var(--tm-glow);
+  --kit-ink-2: var(--tm-glow-2);
+  --kit-ink-3: var(--tm-glow-3);
+  --kit-ink-4: var(--tm-glow-4);
+  --kit-hover-line: var(--kit-ink-3);
+  --kit-line: var(--tm-night-line);
+  --kit-line-strong: color-mix(in srgb, var(--tm-glow) 17%, transparent);
+  --kit-focus: var(--tm-glow-2);
+  --kit-wash: color-mix(in srgb, var(--tm-glow) 5%, transparent);
+  --kit-wash-strong: color-mix(in srgb, var(--tm-glow) 9%, transparent);
+  --kit-grid: color-mix(in srgb, var(--tm-glow) 6%, transparent);
+  --kit-edge: inset 0 1px 0 color-mix(in srgb, var(--tm-glow) 14%, transparent);
+  --kit-shadow: var(--tm-shadow-night);
+  --kit-shadow-whisper: 0 1px 2px color-mix(in srgb, var(--tm-night-deep) 60%, transparent);
+  --kit-primary-shadow: var(--tm-shadow-whisper), inset 0 1px 0 color-mix(in srgb, var(--tm-glow) 14%, transparent);
+  --kit-scrim: color-mix(in srgb, var(--tm-night-deep) 64%, transparent);
+  --kit-glass: color-mix(in srgb, var(--tm-night-deep) 86%, transparent);
+  --kit-series: var(--tm-glow);
+  --kit-series-soft: color-mix(in srgb, var(--tm-glow) 30%, transparent);
+  --kit-series-fill: color-mix(in srgb, var(--tm-glow) 16%, transparent);
+  --kit-primary: var(--tm-glow);
+  --kit-primary-hover: var(--tm-glow-hover);
+  --kit-primary-ink: var(--tm-night);
+  --kit-primary-focus: var(--tm-ink-3);
+  --kit-selection: color-mix(in srgb, var(--tm-glow) 22%, transparent);
+  --kit-tone-signal: var(--tm-signal-night);
+  --kit-tone-signal-ink: var(--kit-tone-signal);
+  --kit-tone-pending: #c99a4e;
+  --kit-tone-danger: #d9776e;
+  --kit-tone-neutral: var(--tm-glow-3);
+  --kit-logo: url("/images/brand/kit/lockup-white.svg");
+}
+
 /* Independent of studio: the partner portal keeps its original palette and depth. */
 .kit[data-theme="day"],
 html[data-command-theme="day"] {
@@ -308,6 +351,7 @@ html:has(.kit[data-theme="studio"]) {
   flex: none;
 }
 .kit[data-theme="night"] .kit-mark-studio,
+.kit[data-theme="violet"] .kit-mark-studio,
 .kit[data-theme="studio"] .kit-mark-night {
   display: none;
 }

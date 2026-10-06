@@ -656,6 +656,23 @@
   padding-top: var(--tm-space-5);
   border-top: 1px solid var(--kit-line);
 }
+/* Text-message consent: the box keeps its size and sits with the first line of the terms. */
+.pp-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tm-space-3);
+  margin-block: var(--tm-space-4);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--kit-ink-2);
+  cursor: pointer;
+}
+.pp-consent .pp-box {
+  flex: none;
+  margin-top: calc(var(--tm-space-1) / 2);
+}
+.pp-consent:hover .pp-box:not(:disabled) {
+  border-color: var(--kit-ink-3);
+}
 .pp-alert-notes {
   margin-top: var(--tm-space-5);
 }

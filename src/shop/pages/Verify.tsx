@@ -85,20 +85,12 @@ export default function Verify() {
   }
 
   return (
-    <div className="tm-page tm-verify-page" ref={root}>
+    <div className="tm-page tm-verify-page tm-page-task" ref={root}>
       <section className="tm tm-night tm-vhero" aria-labelledby="tm-verify-title">
         <div className="tm-vhero-copy">
-          <p className="tm-eyebrow">Verification</p>
-          <h1 id="tm-verify-title" className="tm-display">
-            Enter a lot number.
-            <br />
-            <span>Read the certificate.</span>
+          <h1 id="tm-verify-title" className="tm-vhero-title">
+            Enter a lot number. <span>Read the certificate.</span>
           </h1>
-          <p className="tm-section-note">
-            Every vial carries a QR code and a printed lot number. The code opens
-            this page; the number opens the Certificate of Analysis for that batch.
-            No account required.
-          </p>
           <form className="tm-lookup tm-vhero-form" onSubmit={submit} role="search">
             <label className="sr-only" htmlFor="tm-verify-lot">
               Lot number
@@ -124,6 +116,11 @@ export default function Verify() {
               </button>
             </p>
           )}
+          <p className="tm-vhero-note">
+            Every vial carries a QR code and a printed lot number. The code opens
+            this page; the number opens the Certificate of Analysis for that batch.
+            No account required.
+          </p>
         </div>
         <LotHint />
       </section>
@@ -131,16 +128,12 @@ export default function Verify() {
       <section
         ref={result}
         id="tm-certificate"
-        className="tm tm-vresult"
+        className={`tm tm-vresult${submitted ? "" : " is-idle"}`}
         aria-live="polite"
         aria-label="Certificate of Analysis"
       >
-        {!submitted ? (
-          <div className="tm-vresult-empty">
-            <p className="tm-vresult-kicker">Certificate of Analysis</p>
-            <p className="tm-section-note">The certificate for your lot will appear here after lookup.</p>
-          </div>
-        ) : lookup.loading ? (
+        {/* Before a lookup there is nothing to show: the section stays, empty, so the result is announced. */}
+        {!submitted ? null : lookup.loading ? (
           <div className="tm-vresult-empty" aria-busy="true">
             <p className="tm-vresult-kicker">Certificate of Analysis</p>
             <p className="tm-section-note">

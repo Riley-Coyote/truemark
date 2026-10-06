@@ -50,6 +50,22 @@
 .tm .tm-heading span {
   color: var(--tm-ink-3);
 }
+/* A page the reader came to use opens with this: one modest title (tokens.css, --tm-type-page). */
+.tm .tm-page-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-page) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+  text-wrap: balance;
+}
+.tm .tm-page-title span {
+  color: var(--tm-ink-3);
+}
+/* On such a page no section heading outranks the page's own title. */
+.tm-page-task .tm .tm-heading {
+  font-size: var(--tm-type-page);
+  letter-spacing: var(--tm-track-heading);
+}
 .tm .tm-lead {
   margin: var(--tm-space-6) 0 0;
   max-width: var(--tm-measure-tight);
@@ -1169,9 +1185,12 @@
   .tm-section-head > .tm-textlink {
     margin-top: var(--tm-space-5);
   }
+  /* Rows of figures are spaced by the grid, so the last row adds nothing to the section's end. */
+  .tm-specs {
+    row-gap: var(--tm-space-7);
+  }
   .tm-specs > div {
     grid-column: span 6;
-    margin-bottom: var(--tm-space-7);
   }
   .tm-record {
     row-gap: var(--tm-space-8);
@@ -1206,9 +1225,25 @@
   }
 }
 @media (max-width: 560px) {
-  .tm-specs > div,
   .tm-process li {
     grid-column: 1 / -1;
+  }
+  /* A section's heading sits close to what it introduces. */
+  .tm-section-head {
+    margin-bottom: var(--tm-space-6);
+  }
+  /* The four figures read two by two on a phone, not one per screen. */
+  .tm-specs {
+    row-gap: var(--tm-space-6);
+  }
+  .tm-specs > div {
+    gap: var(--tm-space-4);
+  }
+  .tm-specs dd {
+    gap: var(--tm-space-3);
+  }
+  .tm-specs .tm-figure {
+    font-size: var(--tm-type-h1);
   }
   .tm-record-card {
     margin-left: var(--tm-space-4);

@@ -58,6 +58,7 @@ export type Application = {
 export type ShippingMethodId = "cold-2day" | "cold-overnight";
 
 export type ShippingMethod = {
+  active?: boolean;
   id: ShippingMethodId;
   label: string;
   detail: string;
@@ -69,10 +70,14 @@ export type StorefrontSettings = {
   freeShippingMethod: string;
   insuranceMode: "off" | "optional" | "automatic";
   insuranceRate: number | null;
+  /** False until the owner saves the shipping prices; checkout labels them as samples until then. */
+  shippingRatesConfirmed: boolean;
+  taxMode: "off" | "rates";
+  taxShipping: boolean;
 };
 
 export type OrderStatus = "placed" | "paid" | "packed" | "shipped" | "delivered" | "cancelled" | "refunded";
-export type PaymentStatus = "authorized" | "captured" | "refunded" | "failed";
+export type PaymentStatus = "pending" | "authorized" | "captured" | "partially_refunded" | "refunded" | "failed";
 
 export type OrderLine = {
   productId: string;
@@ -95,6 +100,11 @@ export type Order = {
   shipping: { method: ShippingMethodId; price: Money; carrier?: string; tracking?: string };
   subtotal: Money;
   /** Absent on legacy preview orders; equivalent to zero. */
+  tax?: Money;
+  refunded?: Money;
+  paymentExpiresAt?: string;
+  paidAt?: string;
+  paymentProvider?: string;
   insurance?: Money;
   insuranceApplied?: boolean;
   discount?: { code: string; amount: Money; partnerId?: string };

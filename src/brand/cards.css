@@ -157,10 +157,20 @@
 .tm-card-plus svg {
   transition: transform var(--tm-dur-slow) var(--tm-ease-micro);
 }
-.tm-card-plus:hover {
-  background: var(--tm-ink);
-  border-color: var(--tm-ink);
-  color: var(--tm-paper);
+/* Hover only where there is hover: on a phone a tapped control would otherwise stay lit. */
+@media (hover: hover) {
+  .tm-card-plus:hover {
+    background: var(--tm-ink);
+    border-color: var(--tm-ink);
+    color: var(--tm-paper);
+  }
+  .tm-card-step:hover,
+  .tm-card-size-step button:hover {
+    background: color-mix(in srgb, var(--tm-paper) 14%, transparent);
+  }
+  .tm-card-size-add:hover {
+    background: var(--tm-wash);
+  }
 }
 .tm-card-plus:active {
   transform: scale(0.94);
@@ -177,7 +187,7 @@
   order: 2;
   display: flex;
   flex-direction: column;
-  min-width: 9.5rem;
+  min-width: 12rem;
   padding: var(--tm-space-1);
   border: 1px solid var(--tm-line);
   border-radius: var(--tm-radius-md);
@@ -185,11 +195,13 @@
   box-shadow: var(--tm-shadow-lift);
   animation: tm-card-menu var(--tm-dur-base) var(--tm-ease-enter) both;
 }
-.tm-card-sizes button {
+.tm-card-size-add {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: var(--tm-space-4);
-  padding: var(--tm-space-3);
+  min-height: var(--tm-control-sm);
+  padding: var(--tm-space-2) var(--tm-space-3);
   border: 1px solid transparent;
   border-radius: var(--tm-radius-sm);
   background: transparent;
@@ -199,23 +211,149 @@
   cursor: pointer;
   transition: background-color var(--tm-dur-quick) var(--tm-ease-enter);
 }
-.tm-card-sizes button span {
+.tm-card-size-add span {
   color: var(--tm-ink-3);
 }
-.tm-card-sizes button:hover {
-  background: var(--tm-wash);
-}
-.tm-card-sizes button:active {
+.tm-card-size-add:active {
   background: var(--tm-line);
 }
-.tm-card-sizes button:focus-visible {
+.tm-card-size-add:focus-visible {
   outline: none;
   border-color: var(--tm-ink-3);
+}
+/* A size already in the bag: its name and price, and its own − and + around the count. */
+.tm-card-size-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-3);
+  min-height: var(--tm-control-sm);
+  padding: var(--tm-space-1) var(--tm-space-1) var(--tm-space-1) var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.tm-card-size-row .tm-card-size em {
+  font-size: var(--tm-type-micro);
+}
+.tm-card-size-step {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--tm-space-1);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-ink);
+  color: var(--tm-paper);
+}
+.tm-card-size-step button {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: transparent;
+  color: var(--tm-paper);
+  cursor: pointer;
+  transition:
+    background-color var(--tm-dur-quick) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-card-size-step button:active {
+  transform: scale(0.9);
+}
+.tm-card-size-step button:focus-visible {
+  outline: none;
+  border-color: var(--tm-paper);
+}
+.tm-card-size-step .tm-card-count {
+  min-width: 1.25rem;
 }
 @keyframes tm-card-menu {
   from {
     opacity: 0;
     transform: translateY(calc(var(--tm-space-2) * -1));
+  }
+}
+
+/* In the bag: the disc you pressed stays lit and grows a counter, − and + around the count.
+   Across several sizes its + opens the sizes, and turns to a close mark while they are open. */
+.tm-card-stepper {
+  display: inline-flex;
+  align-items: center;
+  height: 2.5rem;
+  padding: 0 var(--tm-space-1);
+  border: 1px solid var(--tm-ink);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-ink);
+  box-shadow: var(--tm-shadow-whisper);
+  color: var(--tm-paper);
+  animation: tm-card-grow var(--tm-dur-base) var(--tm-ease-enter) both;
+}
+.tm-card-step {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: transparent;
+  color: var(--tm-paper);
+  cursor: pointer;
+  transition:
+    background-color var(--tm-dur-quick) var(--tm-ease-enter),
+    border-color var(--tm-dur-quick) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-card-step:active {
+  transform: scale(0.9);
+}
+.tm-card-step:focus-visible {
+  outline: none;
+  border-color: var(--tm-paper);
+}
+.tm-card-step:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.tm-card-step svg {
+  transition: transform var(--tm-dur-slow) var(--tm-ease-micro);
+}
+.tm-card-step.is-more[aria-expanded="true"] svg {
+  transform: rotate(45deg);
+}
+.tm-card-count {
+  min-width: 1.75rem;
+  text-align: center;
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.tm-card-sizes .tm-card-size {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--tm-space-1);
+  color: var(--tm-ink);
+  white-space: nowrap;
+}
+.tm-card-size em {
+  font-style: normal;
+  font-size: var(--tm-type-nano);
+  color: var(--tm-ink-3);
+}
+@keyframes tm-card-grow {
+  from {
+    opacity: 0.6;
+    transform: scale(0.92);
+  }
+}
+
+/* On a phone's narrow card the counter needs the top edge: the tag steps down to the
+   stage's lower corner while the product is in the bag. */
+@media (max-width: 760px) {
+  .tm-card:has(.tm-card-stepper) .tm-card-tag {
+    top: auto;
+    bottom: var(--tm-space-4);
   }
 }
 
@@ -225,16 +363,113 @@
     width: 2.75rem;
     height: 2.75rem;
   }
+  .tm-card-stepper {
+    height: 2.75rem;
+  }
+  .tm-card-step {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  .tm-card-size-step button {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  .tm-card-size-add,
+  .tm-card-size-row {
+    min-height: var(--tm-control);
+  }
+}
+
+/* The compact card, for the catalog's denser grid: smaller type and the essentials only,
+   the tag after the size, and a smaller disc that keeps a fingertip's target. */
+.tm-card.is-compact {
+  gap: var(--tm-space-2);
+}
+.tm-card.is-compact .tm-card-stage {
+  border-radius: var(--tm-radius-md);
+}
+.tm-card.is-compact .tm-card-link::after {
+  border-radius: var(--tm-radius-md);
+}
+.tm-card.is-compact .tm-card-add {
+  top: var(--tm-space-2);
+  right: var(--tm-space-2);
+}
+.tm-card.is-compact .tm-card-plus {
+  position: relative;
+  width: var(--tm-space-6);
+  height: var(--tm-space-6);
+}
+.tm-card.is-compact .tm-card-plus::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--tm-space-2) * -1);
+}
+/* Its counter is slimmer; on a phone it spans the card, so − and + stay a thumb apart. */
+.tm-card.is-compact .tm-card-stepper {
+  height: var(--tm-space-6);
+  padding: 0 var(--tm-space-1);
+}
+.tm-card.is-compact .tm-card-step {
+  position: relative;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+.tm-card.is-compact .tm-card-step::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--tm-space-2) * -1) calc(var(--tm-space-1) * -1);
+}
+.tm-card.is-compact .tm-card-count {
+  min-width: 1.25rem;
+}
+@media (max-width: 760px) {
+  .tm-card.is-compact .tm-card-add.is-in {
+    left: var(--tm-space-2);
+  }
+  .tm-card.is-compact .tm-card-stepper {
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+.tm-card.is-compact .tm-card-body {
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--tm-space-1);
+  padding-inline: 0;
+}
+.tm .tm-card.is-compact .tm-card-name {
+  font-size: var(--tm-type-ui);
+}
+.tm .tm-card.is-compact .tm-card-price {
+  text-align: left;
+}
+.tm .tm-card.is-compact .tm-card-meta {
+  font-size: var(--tm-type-micro);
+}
+.tm-card.is-compact .tm-card-meta span {
+  display: none;
+}
+.tm .tm-card-flag {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.2 var(--tm-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .tm-card-vial,
   .tm-card-shadow,
-  .tm-card-plus svg {
+  .tm-card-plus svg,
+  .tm-card-step svg {
     transition: none;
   }
-  .tm-card-sizes {
+  .tm-card-sizes,
+  .tm-card-stepper {
     animation: none;
+  }
+  .tm-card-step {
+    transition: none;
   }
 }
 
@@ -245,51 +480,11 @@
 
 /* ---------- The catalog page ---------- */
 
-.brand-refinement .tm-catalog-head {
-  --tm-bg: var(--tm-paper);
-}
-.brand-refinement .tm-catalog-grid {
-  padding-top: var(--tm-space-7);
-}
-.brand-refinement .tm-grid {
-  row-gap: var(--tm-space-7);
-}
-.tm-catalog-note .tm-offer {
-  margin-top: var(--tm-space-5);
-}
-/* The first-order offer: a quiet line, marked with the logo's dot. */
-.tm .tm-offer {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--tm-space-2);
-  padding: var(--tm-space-2) var(--tm-space-4);
-  border: 1px solid var(--tm-line-strong);
-  border-radius: var(--tm-radius-pill);
-  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.3 var(--tm-font-sans);
-  color: var(--tm-ink-2);
-  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
-}
-.tm-offer .tm-brand-dot {
-  width: var(--tm-space-2);
-  height: var(--tm-space-2);
-  margin: 0;
-}
+/* The offer's code, set like a label. */
 .tm-offer-code {
   font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-display);
   letter-spacing: 0.14em;
   color: var(--tm-ink);
-}
-.tm .tm-offer:hover {
-  border-color: var(--tm-ink-3);
-  color: var(--tm-ink);
-}
-.tm .tm-offer:active {
-  border-color: var(--tm-ink-2);
-}
-.brand-refinement .tm .tm-offer:focus-visible {
-  outline: none;
-  border-color: var(--tm-ink);
 }
 
 /* ---------- The product page ---------- */

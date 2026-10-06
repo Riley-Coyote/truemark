@@ -6,9 +6,11 @@ import { assetUrl } from "../assetUrl";
 import { compoundClasses, faqs } from "../data";
 import { HomeAssistantEntry } from "../assistant/Assistant";
 import { productById, productCutout, sampleRecord, specFor } from "../shop/catalog";
+import { pictureLoading } from "../shop/ui";
 import { findRecord, recordFromLot } from "../shop/records";
 import { LIVE } from "../platform/mode";
 import { store, useResource } from "../platform/store";
+import type { Lot } from "../platform/types";
 import { Certificate } from "./Certificate";
 import { SequenceChain } from "./SequenceChain";
 import { Trace } from "./Trace";
@@ -25,15 +27,51 @@ function scene(name: string) {
   };
 }
 
+type Station = { step: string; iso?: string; date: string; detail: string; state: "done" | "current" | "next"; release?: boolean };
+
+const stationDate = (iso?: string | null) =>
+  iso ? { iso, date: new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", timeZone: "UTC" }).format(new Date(iso)) } : { date: "—" };
+
+/**
+ * A live lot walks the client's six stations. The record keeps three dates (received, tested,
+ * released) and a status; a station passed without a recorded date says "Done", the one the lot
+ * is at says "Now", and the rest wait.
+ */
+function liveStations(record: Lot): Station[] {
+  const { status } = record;
+  const at = { quarantine: 1, testing: 3, released: 5, archived: 6, rejected: 4 }[status];
+  const state = (index: number): Station["state"] => (index < at ? "done" : index === at ? "current" : "next");
+  const when = (index: number, iso?: string | null) => {
+    const kind = state(index);
+    if (kind === "done") return iso ? stationDate(iso) : { date: "Done" };
+    return { date: kind === "current" ? "Now" : "Next" };
+  };
+  const rejected = status === "rejected";
+  return [
+    { step: "Received", ...when(0, record.receivedAt), detail: "Batch logged", state: state(0) },
+    { step: "Quarantined", ...when(1, record.receivedAt), detail: "Held at −20 °C", state: state(1) },
+    { step: "Sampled", ...when(2), detail: "Sent to laboratory", state: state(2) },
+    { step: status === "testing" ? "Testing" : "Tested", ...when(3, record.testedAt), detail: "HPLC · MS", state: state(3) },
+    rejected
+      ? { step: "Not released", date: "—", detail: "Did not pass release", state: "next" }
+      : { step: "Released", ...(state(4) === "next" ? { date: "Pending" } : when(4, record.releasedAt)), detail: "Certificate published", state: state(4), release: true },
+    rejected
+      ? { step: "Shipped", date: "—", detail: "Not shipped", state: "next" }
+      : { step: status === "released" ? "Shipping" : "Shipped", ...when(5), detail: "Cold chain", state: state(5) },
+  ];
+}
+
 export function PaperTrail() {
   const current = useResource(() => LIVE ? store.lots.get(lot) : Promise.resolve(null));
   const product = productById(sampleRecord.productId);
   const sequence = product ? specFor(product).sequence : undefined;
-  const trail = LIVE ? [
-    { step: "Received", iso: current.data?.receivedAt, detail: "Batch logged" },
-    { step: "Tested", iso: current.data?.testedAt, detail: "HPLC · MS" },
-    { step: "Released", iso: current.data?.releasedAt, detail: "Certificate published" },
-  ].flatMap((stop) => stop.iso ? [{ ...stop, iso: stop.iso, date: new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "short", timeZone: "UTC" }).format(new Date(stop.iso)) }] : []) : sampleRecord.trail;
+  const trail: Station[] = LIVE
+    ? current.data ? liveStations(current.data) : []
+    : sampleRecord.trail.map((stop) => ({ ...stop, state: "done", release: stop.step === "Released" }));
+  const done = trail.filter((stop) => stop.state === "done").length;
+  // The lot travels to the station it is at: the one in progress, or else the last one passed.
+  const at = trail.findIndex((stop) => stop.state === "current");
+  const reached = at >= 0 ? at + 1 : done;
   return (
     <section className="tm tm-trail" aria-labelledby="tm-trail-title">
       <header className="tm-trail-head" data-reveal>
@@ -54,7 +92,12 @@ export function PaperTrail() {
         </Link>
       </div>
 
-      <div className="tm-trail-record" data-reveal>
+      <div
+        className="tm-trail-record"
+        data-reveal
+        data-stops={LIVE ? trail.length : undefined}
+        style={LIVE ? ({ "--tm-trail-stops": trail.length, "--tm-trail-done": reached } as CSSProperties) : undefined}
+      >
         <div className="tm-trail-lot">
           <p className="tm-trail-id">
             <span className="tm-trail-label">Lot</span>
@@ -70,20 +113,24 @@ export function PaperTrail() {
             {trail.map((stop, i) => (
               <li
                 key={stop.step}
-                className={stop.step === "Released" ? "is-release" : undefined}
+                className={`is-${stop.state}${stop.release && stop.state === "done" ? " is-release" : ""}`}
                 style={{ "--tm-i": i } as CSSProperties}
               >
                 <span className="tm-trail-node" aria-hidden="true" />
-                <time className="tm-trail-date" dateTime={stop.iso}>
-                  {stop.date}
-                </time>
+                {stop.iso ? (
+                  <time className="tm-trail-date" dateTime={stop.iso}>
+                    {stop.date}
+                  </time>
+                ) : (
+                  <span className="tm-trail-date">{stop.date}</span>
+                )}
                 <span className="tm-trail-step">{stop.step}</span>
                 <span className="tm-trail-detail">{stop.detail}</span>
               </li>
             ))}
           </ol>
-          {trail.length > 0 && <span className="tm-trail-progress" aria-hidden="true" />}
-          {LIVE && trail.length === 0 && <p className="tm-section-note" role="status">{current.loading ? "Loading lot record…" : current.error ? "Lot record unavailable." : "Certificate on release"}</p>}
+          {reached > 0 && <span className="tm-trail-progress" aria-hidden="true" />}
+          {LIVE && trail.length === 0 && <p className="tm-section-note" role="status">{current.loading ? "Loading lot record…" : "Lot record unavailable."}</p>}
         </div>
       </div>
     </section>
@@ -104,7 +151,7 @@ export function Classes() {
           width={2400}
           height={1357}
           alt="Five TrueMark vials on lilac pedestals: NAD+, GHK-Cu, Retatrutide, Tesamorelin and BPC-157."
-          loading="lazy"
+          {...pictureLoading(photo.src)}
         />
       </div>
       <header className="tm-classes-head" data-reveal>
@@ -136,7 +183,7 @@ export function Classes() {
                 <span className="tm-class-members">{c.members}</span>
                 {product && (
                   <span className="tm-class-vial" aria-hidden="true">
-                    <img src={productCutout(product, "sm")} alt="" loading="lazy" draggable={false} />
+                    <img src={productCutout(product, "sm")} alt="" {...pictureLoading(productCutout(product, "sm"))} draggable={false} />
                   </span>
                 )}
               </Link>

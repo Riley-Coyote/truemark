@@ -50,6 +50,10 @@
   z-index: 2;
   animation: tm-vial-settle 700ms var(--tm-ease-enter) both;
 }
+/* A vial that flew here from the card that was tapped has already arrived (src/Navigation.tsx). */
+.tm-pstage-vial img.is-active[data-landed] {
+  animation: none;
+}
 /* The chosen size is set down on the plinth; the last one leaves. */
 @keyframes tm-vial-settle {
   from {

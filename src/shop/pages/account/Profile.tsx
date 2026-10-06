@@ -1,6 +1,12 @@
-import { useState } from "react";
+import { LIVE } from "../../../platform/mode";
+import { live } from "../../../platform/live/runtime";
+import { CONSENT } from "../../../platform/live/messages";
+import type { MessagePreferences } from "../../../platform/live/messages";
+import { useResource } from "../../../platform/store";
+import { useId, useState } from "react";
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
+import { Check } from "lucide-react";
 import type { BuyerStatus } from "../../../platform/types";
 import { buyerStatusLabel, longDate } from "./lib";
 import { PageHead, SectionHead, useAccount, useTitle } from "./parts";
@@ -68,6 +74,7 @@ export default function Profile() {
           </dl>
         </section>
       </div>
+      {LIVE && <TextUpdates email={buyer.email} />}
       <section className="tm-acct-block tm-acct-signout" aria-labelledby="tm-acct-signout-title">
         <SectionHead id="tm-acct-signout-title" label="Session" />
         <div className="tm-acct-actions">
@@ -87,10 +94,25 @@ export default function Profile() {
             {state === "busy" ? "Signing out…" : "Sign out"}
           </button>
           <p className="tm-acct-intro" role={state === "failed" ? "alert" : undefined}>
-            {state === "failed" ? "Signing out did not complete. Try again." : "Ends this preview session in this browser."}
+            {state === "failed" ? "Signing out did not complete. Try again." : LIVE ? "Signs you out on this device." : "Ends this preview session in this browser."}
           </p>
         </div>
       </section>
     </>
   );
+}
+
+function TextUpdates({email}: {email:string}) {
+  const prefs=useResource(()=>live().messages.preferences());
+  return <section className="tm-acct-block" aria-labelledby="tm-text-updates"><SectionHead id="tm-text-updates" label="Text updates"/>
+    {prefs.data?<TextUpdateForm email={email} initial={prefs.data}/>:<p className="tm-acct-intro" role={prefs.error?"alert":"status"}>{prefs.error?.message??"Loading…"}</p>}
+  </section>;
+}
+function TextUpdateForm({email,initial}: {email:string;initial:MessagePreferences}) {
+  const [phone,setPhone]=useState(initial.phone??""),[consent,setConsent]=useState(initial.smsConsent),[busy,setBusy]=useState(false),[error,setError]=useState(""),[saved,setSaved]=useState(false);const id=useId();
+  return <form className="tm-acct-sms" onSubmit={async e=>{e.preventDefault();setBusy(true);setError("");setSaved(false);try{const next=await live().messages.savePreferences({shipping:{text:Boolean(phone.trim())&&consent}},phone,consent);setPhone(next.phone??"");setConsent(next.smsConsent);setSaved(true);}catch(e){setError(e instanceof Error?e.message:"Please try again.");}finally{setBusy(false);}}}>
+    <div className="tm-field"><div className="tm-field-top"><label htmlFor={id}>Mobile number for text updates</label></div><input id={id} type="tel" inputMode="tel" autoComplete="tel-national" placeholder="(555) 555-0123" value={phone} onChange={e=>{setPhone(e.target.value);setSaved(false);}} disabled={busy}/></div>
+    <label className="tm-acct-consent"><input type="checkbox" className="tm-acct-consent-input" checked={consent} onChange={e=>{setConsent(e.target.checked);setSaved(false);}} disabled={busy}/><span className="tm-acct-consent-box" aria-hidden="true"><Check size={14} strokeWidth={2.2}/></span><span>{CONSENT.buyer}</span></label>
+    <div className="tm-acct-actions"><button className="tm-button tm-button-primary" type="submit" disabled={busy}>{busy?"Saving…":"Save"}</button><span className="tm-acct-saved" role="status">{saved?"Saved.":""}</span></div>{error&&<p className="tm-field-error" role="alert">{error}</p>}<p className="tm-acct-intro">Order and account emails always go to {email}.</p>
+  </form>;
 }

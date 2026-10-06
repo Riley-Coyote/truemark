@@ -1,3 +1,7 @@
+import { live } from "../../../platform/live/runtime";
+import { PaymentOutcomes } from "./Pay";
+import type { Outcome } from "../../../platform/live/payments";
+import type { Order } from "../../../platform/types";
 import { InsuranceRow, useInsuranceChoice, clearInsuranceChoice } from "../../Insurance";
 import { priceQuote, shippingPrice, insurancePrice } from "../../../platform/pricing";
 import { LIVE } from "../../../platform/mode";
@@ -6,6 +10,7 @@ import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Check, ChevronDown, CircleAlert, LockKeyhole, Plus } from "lucide-react";
 import { money } from "../../../data";
+import { productById } from "../../catalog";
 import { store, useResource } from "../../../platform/store";
 import type { Address, Buyer, BuyerStatus, ShippingMethod, ShippingMethodId } from "../../../platform/types";
 import { useShop } from "../../context";
@@ -63,6 +68,10 @@ const addressLine = (a: Address) =>
 
 /* ---------- Small parts ---------- */
 
+function PaymentLock({ disabled, children }: { disabled: boolean; children: ReactNode }) {
+  return LIVE ? <fieldset className="tm-payment-lock" disabled={disabled}>{children}</fieldset> : <>{children}</>;
+}
+
 function FieldError({ id, children }: { id: string; children: ReactNode }) {
   return (
     <p id={id} className="tm-field-error">
@@ -77,6 +86,7 @@ function Step({
   done,
   summary,
   onChange,
+  locked,
   tag,
   headingRef,
   children,
@@ -85,6 +95,7 @@ function Step({
   done: boolean;
   summary?: ReactNode;
   onChange?: () => void;
+  locked?: boolean;
   tag?: string;
   headingRef: (el: HTMLHeadingElement | null) => void;
   children?: ReactNode;
@@ -103,7 +114,7 @@ function Step({
       {done ? (
         <div className="tm-step-summary">
           <div className="tm-step-summary-text">{summary}</div>
-          <button type="button" className="tm-text-button" onClick={onChange}>
+          <button type="button" className="tm-text-button" disabled={locked} onClick={onChange}>
             Change<span className="sr-only"> {title.toLowerCase()}</span>
           </button>
         </div>
@@ -363,6 +374,7 @@ function AddressForm({ onUse, onCancel }: { onUse: (address: Address) => void; o
         })}
       </div>
       <p className="tm-address-country">Country · United States</p>
+      {LIVE && <p className="tm-step-fine">Saved to your research account for your next order.</p>}
       <div className="tm-step-actions">
         <button type="submit" className="tm-button tm-button-primary">
           Use this address
@@ -414,6 +426,11 @@ function OrderSummary({
   method,
   total,
   titleId,
+  tax,
+  taxMode,
+  addressChosen,
+  sampleRates,
+  locked,
 }: {
   lines: BagLine[];
   subtotal: number;
@@ -424,6 +441,11 @@ function OrderSummary({
   method: ShippingMethod | null;
   total: number;
   titleId: string;
+  tax: number;
+  taxMode: "off" | "rates";
+  addressChosen: boolean;
+  sampleRates: boolean;
+  locked: boolean;
 }) {
   return (
     <>
@@ -431,7 +453,7 @@ function OrderSummary({
         <h2 id={titleId} className="tm-summary-title">
           Order summary
         </h2>
-        <Link className="tm-quiet-link" to="/cart">
+        <Link className="tm-quiet-link" aria-disabled={locked || undefined} onClick={(event) => { if (locked) event.preventDefault(); }} to="/cart">
           Edit bag
         </Link>
       </div>
@@ -452,7 +474,7 @@ function OrderSummary({
           </li>
         ))}
       </ul>
-      <CodeControl code={code} />
+      <PaymentLock disabled={locked}><CodeControl code={code} /></PaymentLock>
       <dl className="tm-totals">
         <div className="tm-totals-row">
           <dt>Subtotal</dt>
@@ -462,14 +484,13 @@ function OrderSummary({
         <InsuranceRow amount={insurance} applied={insuranceApplied} />
         <div className="tm-totals-row">
           <dt>
-            Shipping<span className="tm-totals-sub"> · sample rate</span>
+            Shipping{sampleRates && <span className="tm-totals-sub"> · sample rate</span>}
           </dt>
           <dd>{method ? method.price === 0 ? "Free" : money(method.price) : "Choose delivery"}</dd>
         </div>
-        <div className="tm-totals-row">
-          <dt>Tax</dt>
-          <dd className="tm-totals-quiet">Calculated at launch</dd>
-        </div>
+        {(!LIVE || taxMode === "rates") && <div className="tm-totals-row">
+          <dt>Tax</dt><dd className={!LIVE || !addressChosen ? "tm-totals-quiet" : undefined}>{!LIVE ? "Calculated at launch" : addressChosen ? money(tax) : "Calculated after your address"}</dd>
+        </div>}
       </dl>
       <p className="tm-totals-row tm-totals-total">
         <span>Total</span>
@@ -507,6 +528,10 @@ export default function Checkout() {
   const [attested, setAttested] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
+  const paymentMode = useResource(() => LIVE ? live().payments.mode() : Promise.resolve("off" as const));
+  const taxRates = useResource(() => LIVE ? live().payments.rates() : Promise.resolve([]));
+  const [heldOrder, setHeldOrder] = useState<Order | null>(null);
+  const [outcome, setOutcome] = useState<Outcome>("approve");
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const headings = useRef<Partial<Record<StepId, HTMLHeadingElement | null>>>({});
@@ -516,11 +541,12 @@ export default function Checkout() {
   const sheetTitle = useId();
   const asideTitle = useId();
 
-  const addresses = [...(buyer?.addresses ?? []), ...added];
+  // An address added here joins the account's own once it is saved there; list it once.
+  const addresses = [...(buyer?.addresses ?? []), ...added.filter((a) => !buyer?.addresses.some((saved) => saved.id === a.id))];
   const address = addresses.find((a) => a.id === addressId) ?? null;
   const discountAmount = code.discount ? discountOn(subtotal, code.discount) : 0;
   const selectedMethod = methods.data?.find((m) => m.id === methodId) ?? null;
-  const priced = settings.data ? priceQuote(subtotal, code.discount?.percent ?? 0, selectedMethod, settings.data, insured) : null;
+  const priced = settings.data ? priceQuote(subtotal, code.discount?.percent ?? 0, selectedMethod, settings.data, insured, LIVE ? address : null, taxRates.data ?? []) : null;
   const method = selectedMethod ? { ...selectedMethod, price: priced?.shipping ?? selectedMethod.price } : null;
 
   // Preselect the account's first saved address once it is known; drop a selection that left.
@@ -574,7 +600,7 @@ export default function Checkout() {
     }
   }
 
-  const total = priced?.total ?? roundMoney(subtotal - discountAmount + (method?.price ?? 0));
+  const total = heldOrder?.total ?? priced?.total ?? roundMoney(subtotal - discountAmount + (method?.price ?? 0));
 
   const needs: string[] = [];
   if (!buyer) needs.push("a research account");
@@ -582,17 +608,19 @@ export default function Checkout() {
   if (!address || adding) needs.push("a shipping address");
   if (!method) needs.push("a delivery method");
   if (!settings.data || settings.loading || settings.error) needs.push("shipping settings");
-  if (issues.length || catalogChecking || catalogError) needs.push("available stock");
+  if (!heldOrder && (issues.length || catalogChecking || catalogError)) needs.push("available stock");
+  if (LIVE && (paymentMode.loading || paymentMode.error || !paymentMode.data || paymentMode.data === "live")) needs.push("payments");
+  if (LIVE && settings.data?.taxMode === "rates" && (taxRates.loading || taxRates.error)) needs.push("tax rates");
   if (code.checking) needs.push("code verification");
   if (!attested) needs.push("the research-use confirmation");
-  const canPlace = needs.length === 0 && lines.length > 0 && !placing;
+  const canPlace = needs.length === 0 && (heldOrder !== null || lines.length > 0) && !placing;
 
   async function place() {
     if (!canPlace || !buyer || !address || !method) return;
     setPlacing(true);
     setPlaceError(null);
     try {
-      const order = await store.orders.place(buyer.id, {
+      const order = heldOrder ?? await store.orders.place(buyer.id, {
         lines: lines.map((line) => ({ productId: line.product.id, quantity: line.quantity })),
         address,
         shipping: method.id,
@@ -600,6 +628,14 @@ export default function Checkout() {
         discountCode: code.discount?.code,
         via: code.source === "link" ? "link" : "code",
       });
+      if (LIVE && paymentMode.data === "simulated") {
+        setHeldOrder(order);
+        const result = await live().payments.pay(order.id, outcome);
+        if (result.status === "failed") {
+          setPlaceError("The payment was declined. Choose an outcome and try again.");
+          setPlacing(false); return;
+        }
+      }
       clearBagCode();
       clearInsuranceChoice();
       navigate(`/checkout/confirmation/${order.id}`, { replace: true });
@@ -611,13 +647,13 @@ export default function Checkout() {
     }
   }
 
-  if (!lines.length && !issues.length) {
+  if (!heldOrder && !lines.length && !issues.length) {
     return (
       <div className="tm-page tm-purchase">
         <section className="tm tm-purchase-empty" aria-labelledby="tm-checkout-title">
           <div className="tm-empty-page">
             <p className="tm-eyebrow">Checkout</p>
-            <h1 id="tm-checkout-title" className="tm-display">
+            <h1 id="tm-checkout-title" className="tm-page-title">
               Your bag is empty.
             </h1>
             <Link className="tm-button tm-button-primary" to="/products">
@@ -629,7 +665,14 @@ export default function Checkout() {
     );
   }
 
-  const summaryProps = { lines, subtotal, code, discountAmount, method, total, insurance: priced?.insurance ?? 0, insuranceApplied: priced?.insuranceApplied ?? false };
+  const sampleRates = !LIVE || settings.data?.shippingRatesConfirmed !== true;
+  const heldLines: BagLine[] | null = heldOrder ? heldOrder.lines.flatMap((line) => {
+    const product = productById(line.productId);
+    return product ? [{ product, quantity: line.quantity, total: roundMoney(line.quantity * line.unitPrice) }] : [];
+  }) : null;
+  const summaryProps = { lines: heldLines ?? lines, subtotal: heldOrder?.subtotal ?? subtotal, code, discountAmount: heldOrder?.discount?.amount ?? discountAmount, method: heldOrder && method ? { ...method, price: heldOrder.shipping.price } : method, total,
+    tax: heldOrder?.tax ?? priced?.tax ?? 0, taxMode: settings.data?.taxMode ?? "off", addressChosen: address !== null, sampleRates, locked: heldOrder !== null,
+    insurance: heldOrder?.insurance ?? priced?.insurance ?? 0, insuranceApplied: heldOrder?.insuranceApplied ?? priced?.insuranceApplied ?? false };
   const listFormat = new Intl.ListFormat("en", { style: "long", type: "conjunction" });
 
   return (
@@ -665,9 +708,11 @@ export default function Checkout() {
         </div>
 
         <div className="tm-steps">
+          <PaymentLock disabled={heldOrder !== null}>
           {/* 01 */}
           <Step
             id="account"
+            locked={heldOrder !== null}
             done={accountDone}
             headingRef={(el) => {
               headings.current.account = el;
@@ -738,6 +783,7 @@ export default function Checkout() {
           {/* 02 */}
           <Step
             id="address"
+            locked={heldOrder !== null}
             done={addressComplete}
             headingRef={(el) => {
               headings.current.address = el;
@@ -771,6 +817,14 @@ export default function Checkout() {
                   setAdding(false);
                   setAddressDone(true);
                   setFocusTarget(nextOpen("address", { address: true }));
+                  // Live keeps it on the research account for next time. The order ships to it either way,
+                  // so a failed save changes nothing here.
+                  if (LIVE && buyer) {
+                    void live().saveAddress(buyer.id, { ...next, label: buyer.addresses.length ? "Delivery address" : "Laboratory" }).then((saved) => {
+                      setAdded((list) => list.map((a) => (a.id === next.id ? saved : a)));
+                      setAddressId((current) => (current === next.id ? saved.id : current));
+                    }, () => undefined);
+                  }
                 }}
                 onCancel={() => {
                   setAdding(false);
@@ -798,8 +852,9 @@ export default function Checkout() {
           {/* 03 */}
           <Step
             id="delivery"
+            locked={heldOrder !== null}
             done={deliveryComplete}
-            tag="Sample rates"
+            tag={!LIVE || settings.data?.shippingRatesConfirmed !== true ? "Sample rates" : undefined}
             headingRef={(el) => {
               headings.current.delivery = el;
             }}
@@ -810,7 +865,7 @@ export default function Checkout() {
             summary={
               method && (
                 <span>
-                  {method.label} · {method.price === 0 ? "Free" : money(method.price)} <span className="tm-step-summary-quiet">sample rate</span>
+                  {method.label} · {method.price === 0 ? "Free" : money(method.price)} {sampleRates && <span className="tm-step-summary-quiet">sample rate</span>}
                 </span>
               )
             }
@@ -873,9 +928,11 @@ export default function Checkout() {
             )}
           </Step>
 
+          </PaymentLock>
           {/* 04 */}
           <Step
             id="payment"
+            tag={LIVE && paymentMode.data === "simulated" ? "Simulated" : undefined}
             done={false}
             headingRef={(el) => {
               headings.current.payment = el;
@@ -902,12 +959,24 @@ export default function Checkout() {
                 </div>
               </div>
               </>}
+              {/* In live, the panel holds what the payment step actually does: its note and, while
+                  payments are simulated, the test outcomes. */}
+              {LIVE && <p id="tm-secure-note" className="tm-step-note">
+                {paymentMode.data === "simulated" ? "Payments are simulated on this site. No card is charged." : paymentMode.data === "live" ? "Card payments are being connected. Please try again soon." : "Payments connect at launch; this order is placed and held as authorized."}
+              </p>}
+              {LIVE && paymentMode.data === "simulated" && <PaymentOutcomes value={outcome} onChange={setOutcome} disabled={placing} />}
             </div>
-            <p id="tm-secure-note" className="tm-step-note">
-              {LIVE ? "Payments connect at launch; this order is placed and held as authorized." : <>Card details are entered in your payment partner’s secure form and never touch
-              TrueMark’s servers. Connected at launch.</>}
-            </p>
+            {!LIVE && <p id="tm-secure-note" className="tm-step-note">
+              Card details are entered in your payment partner’s secure form and never touch
+              TrueMark’s servers. Connected at launch.
+            </p>}
 
+            {heldOrder && <><p className="tm-step-note">Order {heldOrder.number} is held for 30 minutes while you complete payment.</p><button type="button" className="tm-text-button" disabled={placing} onClick={async () => {
+              setPlacing(true); setPlaceError(null);
+              try { await live().payments.cancelUnpaid(heldOrder.id); setHeldOrder(null); reloadCatalog?.(); }
+              catch (error) { setPlaceError(error instanceof Error ? error.message : "The order could not be cancelled. Try again."); }
+              finally { setPlacing(false); }
+            }}>Cancel order and edit bag</button></>}
             <label className="tm-check">
               <input
                 type="checkbox"
@@ -925,7 +994,7 @@ export default function Checkout() {
               </span>
             </label>
 
-            <StockNotice issues={issues} checking={catalogChecking} error={catalogError} onRetry={reloadCatalog} />
+            {!heldOrder && <StockNotice issues={issues} checking={catalogChecking} error={catalogError} onRetry={reloadCatalog} />}
             <div className="tm-place">
               <p className="tm-totals-row tm-totals-total tm-place-total">
                 <span>Total</span>
@@ -938,14 +1007,14 @@ export default function Checkout() {
                 aria-describedby="tm-place-needs"
                 onClick={place}
               >
-                {placing ? "Placing the order" : "Place order"}
+                {placing ? "Placing the order" : heldOrder ? "Try payment again" : "Place order"}
               </button>
               <p id="tm-place-needs" className="tm-place-needs" aria-live="polite">
                 {needs.length > 0 ? `Still needed: ${listFormat.format(needs)}.` : "Ready to place."}
               </p>
               {placeError && <FieldError id="tm-place-error">{placeError}</FieldError>}
               <p className="tm-step-fine">
-                {LIVE ? "No payment is collected at this step." : "Design preview. No payment is collected; the order is kept in this browser."}
+                {LIVE ? paymentMode.data === "simulated" ? "Simulated payment. No card is charged." : "No payment is collected at this step." : "Design preview. No payment is collected; the order is kept in this browser."}
               </p>
             </div>
           </Step>

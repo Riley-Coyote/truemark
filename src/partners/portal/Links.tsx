@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { Card, Facts, PageHeader, Segmented, Select, Skeleton, StatusChip } from "../../app-kit";
+import { LIVE } from "../../platform/mode";
 import { store, useResource } from "../../platform/store";
 import { productCutout } from "../../shop/catalog";
 import { tone } from "../../shop/ui";
@@ -92,7 +93,7 @@ export default function Links() {
             <p className="pp-builder-note">{destination.note}</p>
           )}
           <Link className="kit-link" to={`${path}?ref=${encodeURIComponent(partner.code)}`} target="_blank" rel="noreferrer">
-            Open in this preview
+            {LIVE ? "Open the link" : "Open in this preview"}
             <ArrowUpRight aria-hidden="true" strokeWidth={1.6} />
           </Link>
         </div>

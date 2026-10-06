@@ -7,22 +7,17 @@
 .tm-trackpage {
   /* Local tokens. */
   --tm-trackpage-form: 28rem; /* the lookup's measure */
-  --tm-trackpage-photo: 4 / 5; /* the frost photograph, cropped upright */
   --tm-trackpage-icon-drop: 0.2em; /* sets an error's icon on its first line */
 }
 
 .tm-trackpage-lookup,
 .tm-trackpage-status {
   --tm-bg: var(--tm-paper);
-  min-height: calc(100svh - var(--review-bar-height, 0px) - var(--tm-header-height) - var(--tm-notice-height));
-  padding-top: var(--tm-space-8);
-  padding-bottom: var(--tm-space-9);
+  padding-top: var(--tm-head-top);
+  padding-bottom: var(--tm-space-8);
   row-gap: var(--tm-space-6);
   align-content: start;
   align-items: start;
-}
-.tm-trackpage-status {
-  min-height: 0;
 }
 .tm .tm-trackpage-finding {
   grid-column: 1 / -1;
@@ -38,15 +33,19 @@
   min-width: 0;
 }
 .tm .tm-trackpage-copy .tm-section-note {
-  margin-top: var(--tm-space-6);
+  margin-top: var(--tm-space-3);
 }
+/* The frost photograph stands as tall as the lookup beside it, no taller. */
 .tm-trackpage-photo {
   grid-column: 8 / -1;
+  align-self: stretch;
   margin: 0;
-  aspect-ratio: var(--tm-trackpage-photo);
   overflow: hidden;
   border-radius: var(--tm-radius-xl);
   background: var(--tm-lilac-studio);
+}
+.tm-trackpage-photo picture {
+  display: contents;
 }
 .tm-trackpage-photo img {
   display: block;
@@ -60,7 +59,7 @@
   flex-direction: column;
   gap: var(--tm-space-5);
   max-width: var(--tm-trackpage-form);
-  margin-top: var(--tm-space-7);
+  margin-top: var(--tm-space-5);
 }
 .tm-trackpage-field {
   display: flex;
@@ -265,9 +264,7 @@
 @media (max-width: 960px) {
   .tm-trackpage-lookup,
   .tm-trackpage-status {
-    min-height: 0;
-    padding-top: var(--tm-space-7);
-    padding-bottom: var(--tm-space-8);
+    padding-bottom: var(--tm-space-7);
   }
   .tm-trackpage-copy,
   .tm-trackpage-head,

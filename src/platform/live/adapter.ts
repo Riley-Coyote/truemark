@@ -9,6 +9,10 @@ import * as map from "./rows";
 import { createContentAdapter } from "./content";
 import { createAccounts } from "./accounts";
 import { createTeam } from "./team";
+import { createMessages } from "./messages";
+import { createPayments } from "./payments";
+import { createConnections } from "./connections";
+import { createShipping } from "./shipping";
 import type { AccountOptions } from "./accounts";
 import type { Profile } from "../accounts";
 
@@ -35,7 +39,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
       let query = client.from(table).select(select);
       for (const [key, value] of Object.entries(filters)) query = query.eq(key, value);
       // Stable pagination, also for tables whose key is not an `id` column.
-      const key = table === "lots" ? "lot" : table === "discounts" ? "code" : table === "visits" ? "date" : "id";
+      const key = table === "tax_rates" ? "region" : table === "lots" ? "lot" : table === "discounts" ? "code" : table === "visits" ? "date" : table === "contact_routes" ? "topic" : "id";
       const page = unwrap<map.Row[]>(await query.order(key).range(offset, offset + 999).returns<map.Row[]>());
       result.push(...page);
       if (page.length < 1000) return result;
@@ -167,6 +171,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
   const auth = {
     ...accounts.auth,
     profile,
+    hasSession: async () => Boolean(await userId()),
     async signIn(email: string, password: string) {
       const { error } = await client.auth.signInWithPassword({ email, password });
       if (error) throw new Error(error.message);
@@ -257,10 +262,14 @@ export function createLiveAdapter(client: SupabaseClient, options: {
     channel.subscribe((status) => { if (status === "SUBSCRIBED") changed(); });
   }
   return { store, auth, owner, team, notices, startRealtime, stopRealtime, partnerApplications: accounts.applications,
+    shipping: createShipping(client, rows, rpc, changed),
+    messages: createMessages(rows, rpc, changed),
+    payments: createPayments(client, rows, rpc, changed),
+    connections: createConnections((table) => rows(table), rpc, changed),
     content: createContentAdapter(client, rows, rpc, changed),
     async quote(draft: OrderDraft) {
-      const [products, settings, methods, discount] = await Promise.all([store.catalog.products(), store.settings.get(),
-        store.catalog.shippingMethods(), draft.discountCode ? store.catalog.validateCode(draft.discountCode) : null]);
+      const [products, settings, methods, discount, rates] = await Promise.all([store.catalog.products(), store.settings.get(),
+        store.catalog.shippingMethods(), draft.discountCode ? store.catalog.validateCode(draft.discountCode) : null, rows("tax_rates")]);
       const selected = methods.find((method) => method.id === draft.shipping);
       if (!selected) throw new Error("Shipping method unavailable.");
       if (draft.discountCode && !discount) throw new Error("Discount unavailable.");
@@ -276,10 +285,30 @@ export function createLiveAdapter(client: SupabaseClient, options: {
         return { productId, quantity, unitPrice: product.price, lot: product.lot };
       });
       const subtotal = roundMoney(lines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0));
-      const priced = priceQuote(subtotal, discount?.percent ?? 0, selected, settings, draft.insurance);
+      const priced = priceQuote(subtotal, discount?.percent ?? 0, selected, settings, draft.insurance, draft.address, rates.map((r) => ({ region: String(r.region), rate: Number(r.rate) })));
       return { ...priced, lines, discount, method: { ...selected, price: priced.shipping } };
     },
-    products: async () => (await rows("products", "*", { active: "true" })).map(map.product),
+    showcase: async () => (await rpc<map.Row[]>("catalog_showcase")).map(map.product),
+    products: () => store.catalog.products(),
+    trackOrder: (number: string, email: string) => rpc<map.TrackedOrder | null>("track_order", { number, email }),
+    uploads: {
+      async prepare(files: File[]) {
+        const data = unwrap(await client.functions.invoke<{ claim: string; files: { uploadId: string; path: string; token: string }[] }>("uploads/application", {
+          body: { files: files.map(({ name, size, type }) => ({ name, size, type })) },
+        }));
+        return data;
+      },
+      async upload(path: string, token: string, file: File) {
+        unwrap(await client.storage.from("application-files").uploadToSignedUrl(path, token, file));
+      },
+      claim: (claim: string, email: string, uploadIds: string[]) => rpc<number>("claim_application_uploads", { claim, email, upload_ids: uploadIds }),
+      async list(applicationId: string) {
+        return await rows("application_uploads", "*", { application_id: applicationId }) as (map.Row & { id: string; name: string; size: number; path: string })[];
+      },
+      async open(path: string) {
+        return unwrap(await client.storage.from("application-files").createSignedUrl(path, 60)).signedUrl;
+      },
+    },
     recordVisit: (code: string) => rpc<void>("record_visit", { code }),
     async saveAddress(buyerId: string, address: Address) {
       // The buyer id is further constrained by the address table's RLS.

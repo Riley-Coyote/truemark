@@ -1,3 +1,5 @@
+import { LIVE } from "../../../platform/mode";
+import { live } from "../../../platform/live/runtime";
 import type { CSSProperties, ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
@@ -37,16 +39,18 @@ function Shell({ children, label }: { children: ReactNode; label: string }) {
   );
 }
 
-export default function Confirmation() {
+export default function Confirmation({ released = false }: { released?: boolean }) {
   const { orderId = "" } = useParams();
   const order = useResource(() => store.orders.get(orderId), [orderId]);
+  const payments = useResource(() => LIVE ? live().payments.list(orderId) : Promise.resolve([]), [orderId]);
+  const settings = useResource(() => store.settings.get());
   const methods = useResource(() => store.catalog.shippingMethods(), []);
 
   if (order.data === undefined && order.error) {
     return (
       <Shell label="Order">
         <p className="tm-eyebrow">Order</p>
-        <h1 className="tm-display">
+        <h1 className="tm-page-title">
           The order
           <br />
           <span>could not be loaded.</span>
@@ -72,14 +76,15 @@ export default function Confirmation() {
     return (
       <Shell label="Order not found">
         <p className="tm-eyebrow">Order not found</p>
-        <h1 className="tm-display">
+        <h1 className="tm-page-title">
           No order matches
           <br />
           <span className="tm-mono tm-confirm-missing">{orderId || "this link"}</span>
         </h1>
         <p className="tm-section-note">
-          Orders placed in this design preview are kept in the browser that placed them. Check the
-          link, or find the order in your research account.
+          {LIVE
+            ? "Check the link, or find the order in your research account."
+            : "Orders placed in this design preview are kept in the browser that placed them. Check the link, or find the order in your research account."}
         </p>
         <div className="tm-step-actions">
           <Link className="tm-button tm-button-primary" to="/account">
@@ -94,10 +99,17 @@ export default function Confirmation() {
   }
 
   const placed = order.data;
-  return <Placed order={placed} method={methods.data?.find((m) => m.id === placed.shipping.method)} />;
+  if (LIVE && (released || (placed.status === "cancelled" && placed.payment === "failed"))) return <Shell label="Order"><h1 className="tm-page-title">This order was released.</h1><p className="tm-section-note">Payment wasn't completed in time.</p><Link className="tm-button tm-button-primary" to="/products">Shop again</Link></Shell>;
+  if (LIVE && placed.payment === "pending") {
+    const last = payments.data?.filter((p) => p.kind === "charge").at(-1);
+    const failed = last?.status === "failed";
+    const time = placed.paymentExpiresAt ? new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York", timeZoneName: "short" }).format(new Date(placed.paymentExpiresAt)) : "";
+    return <Shell label="Payment"><h1 className="tm-page-title">{failed ? "Your payment didn't go through." : "Payment processing."}</h1><p className="tm-section-note" role="status">{failed ? `Order ${placed.number} is held until ${time}.` : "We'll confirm your order here in a moment."}</p>{failed && <Link className="tm-button tm-button-primary" to={`/checkout/pay/${placed.id}`}>Complete payment</Link>}</Shell>;
+  }
+  return <Placed sampleRates={!LIVE || settings.data?.shippingRatesConfirmed !== true} order={placed} method={methods.data?.find((m) => m.id === placed.shipping.method)} />;
 }
 
-function Placed({ order, method }: { order: Order; method?: ShippingMethod }) {
+function Placed({ order, method, sampleRates }: { order: Order; method?: ShippingMethod; sampleRates: boolean }) {
   const cancelled = order.status === "cancelled" || order.status === "refunded";
   const reached = REACHED[order.status] ?? 0;
   const count = order.lines.reduce((sum, line) => sum + line.quantity, 0);
@@ -207,14 +219,14 @@ function Placed({ order, method }: { order: Order; method?: ShippingMethod }) {
             )}
             <div className="tm-totals-row">
               <dt>
-                Shipping<span className="tm-totals-sub"> · sample rate</span>
+                Shipping{sampleRates && <span className="tm-totals-sub"> · sample rate</span>}
               </dt>
               <dd>{money(order.shipping.price)}</dd>
             </div>
             {(order.insuranceApplied || (order.insurance ?? 0) > 0) && <div className="tm-totals-row"><dt>Insurance</dt><dd>{money(order.insurance ?? 0)}</dd></div>}
             <div className="tm-totals-row">
               <dt>Tax</dt>
-              <dd className="tm-totals-quiet">Calculated at launch</dd>
+              <dd className={!LIVE ? "tm-totals-quiet" : undefined}>{LIVE ? money(order.tax ?? 0) : "Calculated at launch"}</dd>
             </div>
           </dl>
           <p className="tm-totals-row tm-totals-total">
@@ -253,7 +265,7 @@ function Placed({ order, method }: { order: Order; method?: ShippingMethod }) {
           <Link className="tm-button tm-button-primary tm-button-block" to={`/account/orders/${order.id}`}>
             View in your account
           </Link>
-          <p className="tm-summary-note">Design preview · sample data. No payment was collected.</p>
+          {!LIVE && <p className="tm-summary-note">Design preview · sample data. No payment was collected.</p>}
         </aside>
       </section>
     </div>

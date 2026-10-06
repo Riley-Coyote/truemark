@@ -48,14 +48,16 @@ export function CertificateLibrary() {
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(12);
   const lots = certificateLibrary(library.data ?? [], query);
+  // Until a lot is released there is nothing to count or search: the note says so on its own.
+  const any = !library.loading && !library.error && certificateLibrary(library.data ?? [], "").length > 0;
   return <section className="tm kit tm-certificate-library" data-theme="studio" aria-labelledby="tm-library-title">
     <header className="tm-library-head">
       <p className="tm-eyebrow">Certificate library</p>
       <div className="tm-library-heading"><h2 id="tm-library-title" className="tm-heading">Every certificate on file.</h2>
-        {!library.loading && !library.error && <p className="tm-eyebrow tm-library-count" aria-live="polite">{plural(lots.length, "certificate")}</p>}
+        {any && <p className="tm-eyebrow tm-library-count" aria-live="polite">{plural(lots.length, "certificate")}</p>}
       </div>
     </header>
-    <div className="tm-library-search"><SearchField label="Search certificates by lot number or compound" placeholder="Lot number or compound" value={query} onChange={(value) => { setQuery(value); setLimit(12); }} /></div>
+    {any && <div className="tm-library-search"><SearchField label="Search certificates by lot number or compound" placeholder="Lot number or compound" value={query} onChange={(value) => { setQuery(value); setLimit(12); }} /></div>}
     <div className="tm-library-records" aria-busy={library.loading}>
       {library.loading ? <p className="tm-section-note" role="status">Loading certificates…</p>
         : library.error ? <EmptyState title="Certificates could not be loaded." note={library.error.message} action={<Button onClick={library.reload}>Try again</Button>} />

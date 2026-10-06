@@ -22,7 +22,7 @@ function AcceptanceCard() {
   // A different link always gets a fresh form; passwords never carry between invites.
   return <div className="kit cc-gate" data-theme={theme}>
     <main className="cc-gate-card" aria-label="Join the TrueMark team">
-      <img className="cc-gate-lockup" src={assetUrl(`images/brand/kit/lockup-${theme === "night" ? "white" : "black"}.svg`)} alt="TrueMark BioLabs" width="164" height="40" />
+      <img className="cc-gate-lockup" src={assetUrl(`images/brand/kit/lockup-${theme === "day" ? "black" : "white"}.svg`)} alt="TrueMark BioLabs" width="164" height="40" />
       <p className="kit-label">Command center</p>
       <InvitationForm key={token} token={token} />
     </main>

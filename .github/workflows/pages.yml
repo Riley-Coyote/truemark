@@ -45,7 +45,17 @@ jobs:
           VITE_REVIEW_SUPABASE_ANON_KEY: ${{ vars.REVIEW_SUPABASE_ANON_KEY }}
         run: |
           npx tsc -b
-          npx vite build --outDir dist/live --emptyOutDir
+          npx vite build --outDir dist/live --emptyOutDir --base /truemark/live/
+      - name: Build the launch site
+        env:
+          VITE_PLATFORM: live
+          VITE_LAUNCH: '1'
+          VITE_ROUTER: path
+          VITE_REVIEW_SUPABASE_URL: ${{ vars.REVIEW_SUPABASE_URL }}
+          VITE_REVIEW_SUPABASE_ANON_KEY: ${{ vars.REVIEW_SUPABASE_ANON_KEY }}
+        run: npx vite build --outDir dist/launch --emptyOutDir --base /truemark/launch/
+      - name: Write Pages fallback
+        run: node scripts/pages-404.mjs
       - name: Build the first design
         run: |
           git worktree add ../first-design archive/07-pages-september-22

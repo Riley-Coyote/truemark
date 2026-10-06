@@ -114,7 +114,14 @@
   --tm-space-8: 4rem;
   --tm-space-9: 6rem;
   --tm-space-10: 8rem;
-  --tm-space-silence: clamp(6rem, 11vw, 10rem);
+  /* The space at each edge of a section. Two sections meet with twice this between them, so it
+     is sized for that meeting: room to breathe, never a stretch of empty page. */
+  --tm-space-silence: clamp(4rem, 6vw, 5.5rem);
+  /* The head of a page the reader came to use (the catalog, verify, track, contact, a policy):
+     a short title and the task right after it, not a poster. */
+  --tm-head-top: var(--tm-space-7);
+  --tm-head-bottom: var(--tm-space-6);
+  --tm-type-page: var(--tm-type-h2);
 
   /* Grid. */
   --tm-margin: clamp(1.25rem, 4.6vw, 4.5rem);
@@ -154,6 +161,8 @@
   --tm-swatch: 1.375rem;
   --tm-logo-width: 9.5rem;
   --tm-type-nano: 0.625rem;
+  /* The research-use strip holds one line at every width, so it keeps this size on a phone. */
+  --tm-type-notice: 0.625rem;
   --tm-ink-hover: #332763;
   --tm-glow-hover: #fbfcfd;
   --tm-scrim: rgba(24, 16, 52, 0.46);
@@ -178,4 +187,16 @@
 
   --tm-header-height: 4.5rem;
   --tm-notice-height: 2rem;
+}
+
+/* On a phone the silence between sections is sized for the screen, and the smallest labels
+   step up enough that a lot number or a kicker never needs squinting at. */
+@media (max-width: 560px) {
+  :root {
+    --tm-space-silence: var(--tm-space-7);
+    --tm-type-nano: 0.7rem;
+    --tm-head-top: var(--tm-space-5);
+    --tm-head-bottom: var(--tm-space-5);
+    --tm-type-page: var(--tm-type-h3);
+  }
 }

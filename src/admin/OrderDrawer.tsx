@@ -1,3 +1,7 @@
+import { LIVE } from "../platform/mode";
+import { live } from "../platform/live/runtime";
+import { StoredEmail } from "./SentMessages";
+import { PaymentSection } from "./PaymentSection";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -25,9 +29,10 @@ import type { BuyerEmailKind } from "../shop/pages/account/emails";
 import { useWorldNow } from "./alerts";
 import { Fulfilment, NEXT } from "./fulfilment";
 import { HOME } from "./nav";
-import { STAGE_LIMIT, formatLimit, formatWait, isLate, orderTone, paymentTone, stepTone, units, waitInStage } from "./metrics";
+import { STAGE_LIMIT, formatLimit, formatWait, isLate, orderTone, paymentLabel, paymentTone, stepTone, units, waitInStage } from "./metrics";
 import type { OpenStage } from "./metrics";
 import { commissionState } from "./program";
+import { ShipmentSection } from "./ShipmentSection";
 
 const MINUS = "−";
 
@@ -67,7 +72,7 @@ export function OrderStatusChip({ order, now }: { order: Order; now: string }) {
 
 /** Payment follows suit: captured in the signal tone, authorized quiet, refunded in the danger tone. */
 export function PaymentChip({ payment, label }: { payment: PaymentStatus; label?: string }) {
-  return <StateChip tone={paymentTone(payment)} label={label ?? statusLabel(payment)} />;
+  return <StateChip tone={paymentTone(payment)} label={label ?? paymentLabel(payment)} />;
 }
 
 /** The steps that email the customer, and the email each one sends. */
@@ -164,6 +169,7 @@ function ThroughPartner({
 
 export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }) {
   const order = useResource(() => store.orders.get(id), [id]);
+  const shipment = useResource(() => LIVE && order.data ? live().shipping.get(order.data.id) : Promise.resolve(null), [order.data?.id]);
   const context = useResource(
     () => Promise.all([store.buyers.list(), store.partners.list(), store.catalog.shippingMethods(), store.lots.list()]),
     [],
@@ -174,6 +180,8 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
   const [openEmail, setOpenEmail] = useState<BuyerEmailKind | null>(null);
   const liveRef = useRef<HTMLParagraphElement>(null);
   const baseId = useId();
+  // A link may name the order by its number; messages are filed under its id, known once it loads.
+  const outbox = useResource(() => LIVE && order.data ? live().messages.outbox(order.data.id) : Promise.resolve([]), [order.data?.id]);
   const o = order.data;
   const next = o ? NEXT[o.status] : undefined;
 
@@ -231,10 +239,10 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
       tags={
         <>
           <OrderStatusChip order={o} now={now} />
-          <PaymentChip payment={payment} label={`Payment ${statusLabel(payment).toLowerCase()}`} />
+          <PaymentChip payment={payment} label={`Payment ${paymentLabel(payment).toLowerCase()}`} />
         </>
       }
-      footer={next ? <Fulfilment order={o} onDone={setMessage} /> : undefined}
+      footer={next ? <Fulfilment order={o} shipment={shipment.data} onDone={setMessage} /> : undefined}
       onClose={onClose}
     >
       <div className="cc-live" aria-live="polite">
@@ -250,8 +258,11 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
         <ol className="kit-timeline cc-journey" aria-label={`Events for ${o.number}`}>
           {events.map((event, i) => {
             // Only a step on the order's journey sent its email; nothing after a cancellation did.
-            const kind = EMAIL_FOR[event.status];
-            const email = kind && sent.some((s) => s.kind === kind && s.at === event.at) ? kind : undefined;
+            const confirmed = outbox.data?.find(r => r.template === "buyer.order_confirmed" && r.status === "sent");
+            const firstStep = confirmed ? [...events].reverse().find(e => (e.status === "placed" || e.status === "paid") && Date.parse(e.at) <= Date.parse(confirmed.created_at))?.status : undefined;
+            const kind = LIVE && (event.status === "placed" || event.status === "paid") ? (event.status === firstStep ? "confirmed" : undefined) : EMAIL_FOR[event.status];
+            const stored = kind ? outbox.data?.find(r => r.template === `buyer.order_${kind === "confirmed" ? "confirmed" : kind}` && r.status === "sent") : undefined;
+            const email = LIVE ? (stored ? kind : undefined) : kind && sent.some(s => s.kind === kind && s.at === event.at) ? kind : undefined;
             const panelId = `${baseId}-email-${i}`;
             const open = Boolean(email && openEmail === email);
             return (
@@ -263,12 +274,13 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
                     {formatDateTime(event.at)}
                     {event.note ? ` · ${event.note}` : ""}
                   </span>
-                  {email && buyer && (
+                  {email && (LIVE || buyer) && (
                     <>
                       <span className="cc-notified">
                         <span className="cc-notified-text">
                           <Check aria-hidden="true" strokeWidth={1.8} />
                           Customer notified
+                          {LIVE && stored?.provider === "simulator" && <span className="kit-chip">Simulated</span>}
                         </span>
                         <button
                           type="button"
@@ -281,7 +293,7 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
                         </button>
                       </span>
                       <div id={panelId} className="cc-email-reveal" hidden={!open}>
-                        {open && <BuyerEmail kind={email} order={o} to={buyer} method={method} lots={lots} />}
+                        {open && (LIVE ? stored?.body_html && <StoredEmail html={stored.body_html} /> : buyer && <BuyerEmail kind={email} order={o} to={buyer} method={method} lots={lots} />)}
                       </div>
                     </>
                   )}
@@ -290,8 +302,11 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
             );
           })}
         </ol>
-        <p className="cc-footnote">Emails are previews. Sending arrives with the backend.</p>
+        {!LIVE && <p className="cc-footnote">Emails are previews. Sending arrives with the backend.</p>}
       </Section>
+
+      {LIVE && <PaymentSection order={o} />}
+      {LIVE && <ShipmentSection shipment={shipment.data} />}
 
       <Section title="Lines">
         <ul className="cc-lines">

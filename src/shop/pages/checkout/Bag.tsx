@@ -12,7 +12,7 @@ import type { Discount } from "../../../platform/types";
 import { productCutout } from "../../catalog";
 import { pairsFor } from "../../pairs";
 import { readReferral, useShop } from "../../context";
-import { Quantity } from "../../ui";
+import { ProductName, Quantity } from "../../ui";
 import { ShippingProgress, useShipping } from "../../ShippingProgress";
 import { priceQuote, defaultSettings, roundMoney } from "../../../platform/pricing";
 import "./checkout.css";
@@ -424,7 +424,7 @@ export function BagContents() {
               <Thumb product={product} />
               <div className="tm-bag-info">
                 <Link className="tm-line-name" to={`/product/${product.id}`} onClick={closeCart}>
-                  {product.name}
+                  <ProductName name={product.name} />
                 </Link>
                 <p className="tm-line-meta">
                   {product.size} · <span className="tm-mono">{product.lot}</span>
@@ -467,12 +467,14 @@ export function BagContents() {
         </dl>
         <ShippingProgress base={priced?.base ?? subtotal} count={count} settings={shipping.data?.settings} />
         {shipping.error && <p role="alert" className="tm-bag-note">Shipping could not be loaded. <button className="tm-text-button" onClick={shipping.reload}>Try again</button></p>}
-        <Link className="tm-button tm-button-primary" to="/checkout" aria-disabled={blocked || undefined} tabIndex={blocked ? -1 : undefined} onClick={(event) => { if (blocked) event.preventDefault(); else closeCart(); }}>
-          Check out
-        </Link>
-        <Link className="tm-textlink" to="/cart" onClick={closeCart}>
-          View bag <ArrowRight size={16} strokeWidth={1.6} />
-        </Link>
+        <div className="tm-bag-actions">
+          <Link className="tm-button tm-button-primary" to="/checkout" aria-disabled={blocked || undefined} tabIndex={blocked ? -1 : undefined} onClick={(event) => { if (blocked) event.preventDefault(); else closeCart(); }}>
+            Check out
+          </Link>
+          <Link className="tm-textlink" to="/cart" onClick={closeCart}>
+            View bag <ArrowRight size={16} strokeWidth={1.6} />
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -498,7 +500,7 @@ export function CartPage() {
         <section className="tm tm-purchase-empty" aria-labelledby="tm-cart-title">
           <div className="tm-empty-page">
             <p className="tm-eyebrow">Your bag</p>
-            <h1 id="tm-cart-title" className="tm-display">
+            <h1 id="tm-cart-title" className="tm-page-title">
               Your bag is empty.
             </h1>
             <Link ref={focus.fallback} className="tm-button tm-button-primary" to="/products">
@@ -529,7 +531,7 @@ export function CartPage() {
               <div className="tm-cart-line-body">
                 <h2 className="tm-cart-name">
                   <Link className="tm-line-name" to={`/product/${product.id}`}>
-                    {product.name}
+                    <ProductName name={product.name} />
                   </Link>
                 </h2>
                 <p className="tm-cart-price">{money(lineTotal)}</p>

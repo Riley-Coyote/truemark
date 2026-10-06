@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Minus, Plus } from "lucide-react";
@@ -6,6 +7,37 @@ import type { Product } from "../data";
 import { productImage, productSrcSet, sampleRecord } from "./catalog";
 import type { Compound } from "./catalog";
 import type { LotRecord } from "./records";
+
+/**
+ * Pictures already shown during this visit. A page that comes back (Back, Forward, a filter
+ * cleared) paints them in its first frame instead of loading them again; the rest still wait
+ * until the reader nears them.
+ */
+const shownPictures = new Set<string>();
+export function pictureLoading(src: string, eager = false) {
+  const seen = shownPictures.has(src);
+  return {
+    loading: eager || seen ? "eager" : "lazy",
+    decoding: seen ? "sync" : undefined,
+    onLoad: () => {
+      shownPictures.add(src);
+    },
+  } as const;
+}
+
+/** A compound's name wraps only between words: "BPC-157 / TB-500" never splits at a hyphen. */
+export function ProductName({ name }: { name: string }) {
+  return (
+    <>
+      {name.split(" ").map((word, i) => (
+        <Fragment key={i}>
+          {i > 0 && " "}
+          {word.includes("-") ? <span className="tm-nowrap">{word}</span> : word}
+        </Fragment>
+      ))}
+    </>
+  );
+}
 
 /** Hand a product's label colours to CSS as --tm-tone / --tm-tone-ink. */
 export function tone(product: Product): CSSProperties {

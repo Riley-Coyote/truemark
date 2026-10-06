@@ -1,3 +1,4 @@
+import { statusLabel } from "../app-kit";
 /**
  * Figures for the command center (the Overview, Orders and Partners), computed
  * from orders. The sample data runs to TODAY in seed.ts, so every window counts
@@ -457,3 +458,7 @@ export function topCompounds(orders: Order[], limit = 5): CompoundRevenue[] {
 
 /** "3 orders", "1 order". */
 export const orderCount = (n: number) => `${formatCount(n)} ${n === 1 ? "order" : "orders"}`;
+
+export function paymentLabel(payment: PaymentStatus): string {
+  return payment === "pending" ? "Awaiting payment" : payment === "partially_refunded" ? "Partly refunded" : statusLabel(payment);
+}

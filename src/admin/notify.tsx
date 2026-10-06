@@ -5,7 +5,7 @@ import { LIVE, storageKey } from "../platform/mode";
  * the store. Choices are kept on this device in the preview; sending arrives with
  * the backend.
  */
-import { useId, useSyncExternalStore } from "react";
+import { useId, useState, useSyncExternalStore } from "react";
 import { Button, DataTable, EmptyState, SampleTag, Skeleton, formatDateTime, formatMoney } from "../app-kit";
 import {
   EmailButton,
@@ -16,13 +16,16 @@ import {
   EmailText,
   SmsPreview,
 } from "../platform/email/EmailPreview";
+import type { Resource } from "../platform/store";
 import { store, useResource } from "../platform/store";
 import type { Buyer, Order, Partner, ShippingMethod } from "../platform/types";
 import { productById } from "../shop/catalog";
-import { Switch } from "./fields";
+import { TextField, Switch } from "./fields";
 import { TEAM } from "./team";
 import type { Operator } from "./team";
 import { live } from "../platform/live/runtime";
+import { CONSENT } from "../platform/live/messages";
+import type { MessagePreferences, TeamAlerts } from "../platform/live/messages";
 import { teamRoleLabel } from "../platform/team";
 import "../platform/live/team.css";
 
@@ -134,16 +137,27 @@ export function NewOrderAlerts() {
 }
 
 function LiveOrderAlerts() {
-  const members = useResource(() => live().team.members());
-  return <div className="kit-card">
+  const members = useResource(() => live().messages.teamPreferences());
+  const own = useResource(async () => ({profile: await live().auth.profile(), prefs: await live().messages.preferences()}));
+  if (!own.data) return <p className="kit-note" role={own.error ? "alert" : "status"}>{own.error?.message ?? "Loading…"}</p>;
+  return <TeamAlertForm initial={own.data.prefs} userId={own.data.profile?.id} members={members} />;
+}
+function TeamAlertForm({initial, userId, members}: {initial: MessagePreferences; userId?: string; members: Resource<TeamAlerts[]>}) {
+  const [prefs, setPrefs] = useState(initial), [busy,setBusy] = useState(false), [error,setError] = useState("");
+  const id=useId();
+  const toggle=(event: string, channel: string, on: boolean) => setPrefs(p=>({...p,alerts:{...p.alerts,[event]:{...p.alerts[event],[channel]:on}}}));
+  return <div className="kit-card cc-alerts">
     <DataTable caption="New-order alerts" rows={members.data} loading={members.loading} error={members.error} onRetry={members.reload}
-      rowKey={(member) => member.id} stickyHeader={false} empty={{ title: "No team members yet." }} columns={[
-        { key: "email", header: "Team member", mobile: "primary", cell: (member) => <span className="cc-alerts-person"><span>{member.email}</span><span className="kit-quiet">{teamRoleLabel(member.role)}</span></span> },
-        { key: "bell", header: "In the command center", mobile: "secondary", cell: () => <><span className="cc-team-mobile-label">In the command center: </span>On</> },
-        { key: "emailAlerts", header: "Email", cell: () => <span className="kit-quiet"><span className="cc-team-mobile-label">Email: </span>Off</span> },
-        { key: "textAlerts", header: "Text", cell: () => <span className="kit-quiet"><span className="cc-team-mobile-label">Text: </span>Off</span> },
-      ]} />
-    <div className="cc-card-foot"><p className="cc-footnote">Email and text alerts connect with your email and SMS accounts.</p></div>
+      rowKey={member=>member.user_id} stickyHeader={false} empty={{title:"No team members yet."}} columns={[
+        {key:"person",header:"Team member",mobile:"primary",cell:member=><span className="cc-alerts-person"><span id={`${id}-${member.user_id}`}>{member.email}</span><span className="kit-quiet">{teamRoleLabel(member.role as "owner"|"staff")}</span></span>},
+        ...([{event:"newOrder",channel:"email",key:"new_order_email",label:"New orders: Email"},{event:"newOrder",channel:"text",key:"new_order_text",label:"New orders: Text"},{event:"applications",channel:"email",key:"applications_email",label:"Applications: Email"}] as const).map(c=>({key:c.key,header:c.label,cell:(member: {user_id:string;new_order_email:boolean;new_order_text:boolean;applications_email:boolean})=>member.user_id===userId?<><span className="kit-sr" id={`${id}-${c.key}`}>{c.label}</span><Switch checked={prefs.alerts[c.event]?.[c.channel]??false} onChange={on=>toggle(c.event,c.channel,on)} labelledBy={`${id}-${c.key} ${id}-${member.user_id}`} disabled={busy}/></>:member[c.key]?"On":"Off"})),
+      ]}/>
+    <form className="cc-setting-card cc-stack" onSubmit={async e=>{e.preventDefault();setBusy(true);setError("");try{setPrefs(await live().messages.savePreferences(prefs.alerts,prefs.phone,prefs.smsConsent));members.reload();}catch(e){setError(e instanceof Error?e.message:"Please try again.");}finally{setBusy(false);}}}>
+      <TextField label="Mobile number for text alerts" inputMode="tel" value={prefs.phone??""} onChange={phone=>setPrefs(p=>({...p,phone}))}/>
+      <label className="cc-message-consent"><input type="checkbox" className="cc-message-box" checked={prefs.smsConsent} disabled={busy} onChange={e=>setPrefs(p=>({...p,smsConsent:e.target.checked}))}/>{CONSENT.team}</label>
+      <Button type="submit" disabled={busy}>Save</Button>{error&&<p className="kit-field-error" role="alert">{error}</p>}
+    </form>
+    <div className="cc-card-foot"><p className="cc-footnote">Each person chooses their own alerts. In-app alerts are always on.</p></div>
   </div>;
 }
 

@@ -8,7 +8,7 @@ import { assetUrl } from "../assetUrl";
 
 export type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean };
 export type NavGroup = { label: string; items: NavItem[] };
-export type Theme = "night" | "day" | "studio";
+export type Theme = "violet" | "night" | "day" | "studio";
 
 function readCollapsed(key: string): boolean {
   try {
@@ -20,7 +20,7 @@ function readCollapsed(key: string): boolean {
 
 function BrandMark({ theme }: { theme: Theme }) {
   if (theme !== "studio") {
-    const variant = theme === "night" ? "white" : "black";
+    const variant = theme === "day" ? "black" : "white";
     return (
       <>
         <img className="kit-command-lockup" src={assetUrl(`images/brand/kit/lockup-${variant}.svg`)} alt="TrueMark BioLabs" width="164" height="40" />

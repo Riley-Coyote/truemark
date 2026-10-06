@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
+import { ArrowUp, MessageCircle, Square, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { Drawer } from "../app-kit/Drawer";
 import { Card } from "../app-kit/components";
-import { Modal } from "../shop/Modal";
 import { Certificate } from "../brand/Certificate";
 import { LIVE } from "../platform/mode";
 import { STORE_CHANGE, worldNow } from "../platform/storage";
 import { useShop } from "../shop/context";
+import { SheetSkirt, useScrollLock, useSheetDrag, useSheetFocus, useSheetPresence, useVisibleViewport, viewportBox } from "../shop/sheet";
 import { browserAssistant, currentScope, previewGate, reviewKey } from "./browser";
 import { runTurn } from "./engine";
 import { AssistantError, OFFLINE, type Persona } from "./protocol";
@@ -79,6 +80,59 @@ function useConversationViewport(open: boolean) {
     return () => { viewport.removeEventListener("resize", measure); viewport.removeEventListener("scroll", measure); window.removeEventListener("resize", measure); };
   }, [open]);
   return style;
+}
+
+/* ---------- The storefront chat: a sheet on phones, a panel beside the page on desktop ---------- */
+
+/** The chat's layer (assistant.css, .tm-chat); its strip of paper lies one beneath. */
+const CHAT_LAYER = 90;
+
+function ChatSheet({ title, subtitle, compact = false, onClose, children }: { title: string; subtitle?: string; compact?: boolean; onClose: () => void; children: ReactNode }) {
+  const panel = useRef<HTMLElement>(null), heading = useId();
+  const seen = useVisibleViewport();
+  const { state, requestClose } = useSheetPresence(onClose);
+  useScrollLock();
+  // On a touch screen the sheet itself takes focus, so the keyboard does not rise over the
+  // suggestions before the reader asks for it.
+  useSheetFocus(panel, requestClose, "fine");
+  const drag = useSheetDrag(panel, requestClose);
+
+  // Before the conversation starts the sheet is only as tall as what it holds, so it never opens
+  // onto an empty page; with the first message it grows to its full height.
+  useLayoutEffect(() => {
+    const sheet = panel.current;
+    if (!sheet) return;
+    if (!compact) { sheet.style.removeProperty("--tm-chat-fit"); return; }
+    const measure = () => {
+      const head = sheet.querySelector<HTMLElement>(".tm-chat-head"), compose = sheet.querySelector<HTMLElement>(".tm-chat-compose");
+      const log = sheet.querySelector<HTMLElement>(".tm-chat-log"), flow = sheet.querySelector<HTMLElement>(".tm-chat-flow");
+      if (!head || !compose || !log || !flow) return;
+      const items = Array.from(flow.children) as HTMLElement[];
+      const gap = parseFloat(getComputedStyle(flow).rowGap) || 0;
+      const content = items.reduce((total, item) => total + item.offsetHeight, 0) + gap * Math.max(0, items.length - 1);
+      const padding = parseFloat(getComputedStyle(log).paddingTop) + parseFloat(getComputedStyle(log).paddingBottom);
+      sheet.style.setProperty("--tm-chat-fit", `${Math.ceil(head.offsetHeight + content + padding + compose.offsetHeight)}px`);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(sheet.querySelector(".tm-chat-flow") ?? sheet);
+    return () => observer.disconnect();
+  }, [compact]);
+
+  return <><div className="tm-chat" data-state={state} style={viewportBox(seen, "tm-chat")}>
+    <div className="tm-chat-scrim" aria-hidden="true" onClick={requestClose} />
+    <section ref={panel} className="tm-chat-panel" role="dialog" aria-modal="true" aria-labelledby={heading} tabIndex={-1}>
+      <header className="tm-chat-head" {...drag}>
+        <span className="tm-chat-grabber" aria-hidden="true" />
+        <div className="tm-chat-titles">
+          <h2 id={heading} className="tm-chat-title">{title}</h2>
+          {subtitle && <p className="tm-chat-subtitle">{subtitle}</p>}
+        </div>
+        <button type="button" className="tm-chat-close" aria-label="Close" onClick={requestClose}><X size={18} strokeWidth={1.8} aria-hidden="true" /></button>
+      </header>
+      {children}
+    </section>
+  </div><SheetSkirt seen={seen} state={state} layer={CHAT_LAYER} /></>;
 }
 
 function Conversation({ access, surface, open, onClose, request, addToBag }: { access: Access; surface: Persona; open: boolean; onClose: () => void; request: { id: number; text: string }; addToBag?: (id: string, quantity: number) => void }) {
@@ -183,31 +237,94 @@ function Conversation({ access, surface, open, onClose, request, addToBag }: { a
       {(persona === "visitor" || !LIVE) && <p className="assistant-note">{!LIVE && "Preview · sample data"}{persona === "visitor" && `${LIVE ? "" : " · "}Chats are saved to improve answers.`}</p>}
     </form>
   </div>;
-  if (surface === "visitor") return <div className="assistant-storefront" style={viewportStyle}><Modal title={titles[persona]} onClose={onClose} side>{body}</Modal></div>;
+  if (surface === "visitor") {
+    const typing = status === "loading";
+    const chat = <div className="assistant tm-chat-body" data-persona={persona}>
+      <div className="tm-chat-log" ref={list} role="log" aria-label="Conversation" aria-live="off" onScroll={() => { const el = list.current; if (el) stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }}>
+        <div className="tm-chat-flow">
+          {!entries.length && <div className="tm-chat-intro">
+            <p className="tm-chat-hello">How can we help?</p>
+            <p className="tm-chat-sub">Ask about a compound, a lot’s certificate, shipping or your order.</p>
+            <div className="tm-chat-suggestions">{prompts.visitor.map((prompt) => <button key={prompt} type="button" className="tm-chat-chip" disabled={busy} onClick={() => void send(prompt)}>{prompt}</button>)}</div>
+          </div>}
+          {entries.map((entry) => entry.who === "user"
+            ? <div className="tm-chat-msg is-user" key={entry.id}><span className="assistant-a11y">You said</span><div className="tm-chat-bubble">{entry.text && <MessageText text={entry.text} />}</div></div>
+            : <div className="tm-chat-msg is-assistant" key={entry.id}><span className="assistant-a11y">TrueMark said</span>{entry.text && <MessageText text={entry.text} />}{entry.artifact && <Result artifact={entry.artifact} rewrite={(text) => void send(text)} close={onClose} disabled={busy} />}</div>)}
+          {typing && <div className="tm-chat-typing" aria-hidden="true"><i /><i /><i /></div>}
+          {confirmation && <section className="assistant-confirm tm-chat-confirm" aria-label="Confirm action"><p className="assistant-label">Your confirmation</p><p>{confirmation.action.title}</p><ConfirmationDetails action={confirmation.action} /><div className="assistant-actions"><button type="button" className="assistant-button" onClick={() => confirmation.settle(true)}>Confirm</button><button type="button" className="assistant-button" onClick={() => confirmation.settle(false)}>Cancel</button></div></section>}
+          {error && <div className="tm-chat-error" role="alert"><p>{error}</p><div className="tm-chat-error-actions">
+            <button type="button" className="tm-chat-link" onClick={() => { const last = lastQuestion.current; if (last) void send(last.text, last.daily); }}>Try again</button>
+            <button type="button" className="tm-chat-link" onClick={() => { setConversationVersion((n) => n + 1); setEntries([]); setInput(""); setError(""); setAnnouncement(""); setStatus("idle"); }}>New conversation</button>
+            {error.includes("sign in") && <Link className="tm-chat-link" to="/access" onClick={onClose}>Sign in</Link>}
+          </div></div>}
+        </div>
+      </div>
+      <div className="assistant-a11y" role="status" aria-live="polite">{error || (status === "loading" ? "Looking into it…" : status === "streaming" ? "Answer arriving…" : status === "confirming" ? "Waiting for your confirmation." : entries.length ? "Ready." : "")}</div>
+      <div className="assistant-a11y" aria-live="polite" aria-atomic="true">{announcement}</div>
+      <form className="tm-chat-compose" onSubmit={(event) => { event.preventDefault(); void send(input); }}>
+        <label className="assistant-a11y" htmlFor={field}>Your question</label>
+        <div className="tm-chat-field">
+          {/* The field stays usable while an answer arrives, so the keyboard never drops between messages. */}
+          <input id={field} type="text" enterKeyHint="send" autoComplete="off" maxLength={6000} value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask a question" />
+          {busy
+            ? <button type="button" className="tm-chat-send is-stop" onClick={stop} aria-label="Stop the answer"><Square size={14} strokeWidth={2.4} aria-hidden="true" /></button>
+            : <button type="submit" className="tm-chat-send" disabled={!input.trim()} aria-label="Send"><ArrowUp size={18} strokeWidth={2} aria-hidden="true" /></button>}
+        </div>
+        <p className="tm-chat-fine">{!LIVE && "Preview · sample data · "}Chats are saved to improve answers. <Link to="/contact" onClick={onClose}>Contact TrueMark</Link></p>
+      </form>
+    </div>;
+    return <ChatSheet title={titles[persona]} compact={!entries.length && !error && !confirmation} onClose={onClose}>{chat}</ChatSheet>;
+  }
   const drawer = <div className="assistant-kit" style={viewportStyle}><Drawer title={titles[persona]} eyebrow={persona === "owner" ? "Command" : "Partner portal"} onClose={onClose}>{body}</Drawer></div>;
   return <>{portalAnchor}{kitRoot && createPortal(drawer, kitRoot)}</>;
+}
+
+/* ---------- The storefront entry: one place to ask, in the header ---------- */
+
+let available = false;
+const availability = new Set<() => void>();
+function setAvailable(value: boolean) {
+  if (value === available) return;
+  available = value;
+  availability.forEach((notify) => notify());
+}
+/** Whether the storefront assistant can open here (preview needs a review link). */
+export function useAssistantAvailable() {
+  return useSyncExternalStore((notify) => { availability.add(notify); return () => { availability.delete(notify); }; }, () => available, () => false);
+}
+/** Open the storefront assistant; with text, that question is asked straight away. */
+export function openAssistant(text = "") {
+  window.dispatchEvent(new CustomEvent(OPEN, { detail: text }));
+}
+/** The header's way in: "Ask" beside the bag on desktop, a chat mark on phones. */
+export function AskButton() {
+  const ready = useAssistantAvailable();
+  if (!ready) return null;
+  return <button type="button" className="tm-textool tm-ask" aria-haspopup="dialog" aria-label="Ask TrueMark a question" onClick={() => openAssistant()}>
+    <MessageCircle className="tm-ask-icon" size={20} strokeWidth={1.6} aria-hidden="true" />
+    <span className="tm-ask-label">Ask</span>
+  </button>;
 }
 
 export function StorefrontAssistant() {
   const access = useAccess("visitor"), { add, closeCart, cart } = useShop(); const location = useLocation();
   const [open, setOpen] = useState(false), [request, setRequest] = useState({ id: 0, text: "" });
-  const [bottom, setBottom] = useState(0);
   const addToBag = useCallback((id: string, quantity: number) => {
     if ((cart.find((item) => item.id === id)?.quantity ?? 0) + quantity > 99) throw new Error("The bag allows up to 99 of an item. Please choose a smaller quantity.");
     add(id, quantity); closeCart();
   }, [add, closeCart, cart]);
-  useEffect(() => { const handler = (e: Event) => { setRequest((r) => ({ id: r.id + 1, text: (e as CustomEvent<string>).detail })); setOpen(true); }; window.addEventListener(OPEN, handler); return () => window.removeEventListener(OPEN, handler); }, []);
-  useEffect(() => {
-    const measure = () => setBottom(Array.from(document.querySelectorAll<HTMLElement>(".rl-dock, .rl-dock-pill, .tm-addbar")).reduce((room, el) => {
-      const rect = el.getBoundingClientRect(); return rect.height && getComputedStyle(el).visibility !== "hidden" ? Math.max(room, window.innerHeight - rect.top) : room;
-    }, 0));
-    measure(); const observer = new MutationObserver(measure);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "hidden", "data-drawer"] });
-    window.addEventListener("resize", measure); return () => { observer.disconnect(); window.removeEventListener("resize", measure); };
-  }, []);
+  useEffect(() => { const handler = (e: Event) => { setRequest((r) => ({ id: r.id + 1, text: (e as CustomEvent<string>).detail ?? "" })); setOpen(true); }; window.addEventListener(OPEN, handler); return () => window.removeEventListener(OPEN, handler); }, []);
+  useEffect(() => { setAvailable(Boolean(access?.allowed)); }, [access?.allowed]);
+  useEffect(() => () => setAvailable(false), []);
+  // A new page means the reader has moved on: the chat closes as that page appears, never over it.
+  // The conversation is kept for next time.
+  const [page, setPage] = useState(location.pathname);
+  if (page !== location.pathname) {
+    setPage(location.pathname);
+    setOpen(false);
+  }
   if (!access?.allowed) return null;
-  const launcher = ["/verify", "/handling"].includes(location.pathname) || location.pathname.startsWith("/product/") || location.pathname === "/account" || location.pathname.startsWith("/account/");
-  return <>{launcher && <button type="button" className="assistant-launcher" style={{ "--tm-assistant-bottom": `${bottom}px` } as CSSProperties} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>Ask a question</button>}<Conversation key={access.version} access={access} surface="visitor" open={open} onClose={() => setOpen(false)} request={request} addToBag={addToBag} /></>;
+  return <Conversation key={access.version} access={access} surface="visitor" open={open} onClose={() => setOpen(false)} request={request} addToBag={addToBag} />;
 }
 export function HomeAssistantEntry() {
   const access = useAccess("visitor"), [text, setText] = useState(""); const id = useId();

@@ -1,3 +1,5 @@
+import { LIVE } from "../platform/mode";
+import { live } from "../platform/live/runtime";
 import { useMemo, useState } from "react";
 import { Check, FileText } from "lucide-react";
 import {
@@ -125,6 +127,8 @@ export default function Applications() {
 type Step = { kind: "idle" } | { kind: "approve" } | { kind: "decline"; note: string; error?: string };
 
 function ApplicationDrawer({ id, onClose }: { id: string; onClose: () => void }) {
+  const uploads = useResource(() => LIVE ? live().uploads.list(id) : Promise.resolve([]), [id]);
+  const [opening, setOpening] = useState<string | null>(null);
   const list = useResource(() => store.applications.list(), []);
   const [step, setStep] = useState<Step>({ kind: "idle" });
   const [saving, setSaving] = useState(false);
@@ -290,19 +294,29 @@ function ApplicationDrawer({ id, onClose }: { id: string; onClose: () => void })
       </Section>
 
       <Section title="Documents">
-        {a.documents.length ? (
+        {LIVE ? uploads.loading ? <DrawerLoading /> : uploads.error ? (
+          <EmptyState compact title={uploads.error.message} action={<Button onClick={uploads.reload}>Try again</Button>} />
+        ) : uploads.data?.length ? (
           <ul className="cc-files">
-            {a.documents.map((file) => (
-              <li key={file}>
-                <FileText aria-hidden="true" strokeWidth={1.5} />
-                {file}
-              </li>
-            ))}
+            {uploads.data.map((file) => <li key={file.id}>
+              <FileText aria-hidden="true" strokeWidth={1.5} />
+              {file.name} · {file.size} bytes
+              <Button disabled={opening !== null} onClick={async () => {
+                const tab = window.open("about:blank", "_blank");
+                if (tab) tab.opener = null;
+                setOpening(file.id); setFailed(null);
+                try {
+                  const url = await live().uploads.open(file.path);
+                  if (tab) tab.location.href = url;
+                } catch (error) { tab?.close(); setFailed(error instanceof Error ? error.message : null); }
+                finally { setOpening(null); }
+              }}>Open</Button>
+            </li>)}
           </ul>
-        ) : (
-          <p className="kit-note">No documents attached.</p>
-        )}
-        <p className="cc-footnote">File names only. Documents are not stored in this preview.</p>
+        ) : <p className="kit-note">No documents attached.</p> : <>
+          {a.documents.length ? <ul className="cc-files">{a.documents.map((file) => <li key={file}><FileText aria-hidden="true" strokeWidth={1.5} />{file}</li>)}</ul> : <p className="kit-note">No documents attached.</p>}
+          <p className="cc-footnote">File names only. Documents are not stored in this preview.</p>
+        </>}
       </Section>
     </Drawer>
   );

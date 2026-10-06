@@ -2615,3 +2615,60 @@ html[data-command-theme] .rl-root {
   --rl-trace-light: var(--kit-ink-2);
   --rl-trace-fill: var(--kit-wash);
 }
+
+/* WP-26: shipping composes the existing command-center fields and controls. */
+.cc-shipment { display: grid; justify-items: start; gap: var(--tm-space-3); }
+.cc-shipment-state { display: inline-flex; align-items: center; gap: var(--tm-space-2); margin: 0; color: var(--kit-ink); overflow-wrap: anywhere; }
+.cc-shipping-methods { display: grid; gap: var(--tm-space-4); }
+.cc-shipping-method { display: grid; gap: var(--tm-space-3); }
+.cc-shipping-method + .cc-shipping-method { border-top: 1px solid var(--kit-line); padding-top: var(--tm-space-4); }
+
+/* WP-24: stored messages use the existing command-center spacing and surfaces. */
+.cc-message-body { white-space: pre-wrap; overflow-wrap: anywhere; color: var(--kit-ink); }
+.cc-stored-email { overflow: auto; max-width: 100%; }
+.cc-stored-email iframe { display: block; width: 600px; height: 700px; border: 0; background: var(--tm-paper); }
+/* One service per row: its name and state, what that state means, its health, the owner's switch. */
+.cc-connection { display: grid; gap: var(--tm-space-2); padding-block: var(--tm-space-5); }
+.cc-connection + .cc-connection { border-top: 1px solid var(--kit-line); }
+.cc-connection p { margin: 0; }
+.cc-connection-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--tm-space-3); }
+.cc-connection-name { margin: 0; font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-label) var(--tm-font-sans); color: var(--kit-ink); }
+.cc-connection-mode { display: inline-flex; align-items: center; gap: var(--tm-space-2); color: var(--kit-ink-2); white-space: nowrap; }
+.cc-connection-text { color: var(--kit-ink-2); }
+.cc-connection-health { color: var(--kit-ink-3); font-size: var(--tm-type-micro); }
+.cc-connection-controls { display: grid; justify-items: start; gap: var(--tm-space-3); margin-top: var(--tm-space-2); }
+.cc-connections-foot { display: flex; justify-content: space-between; align-items: center; gap: var(--tm-space-3); padding-top: var(--tm-space-4); border-top: 1px solid var(--kit-line); }
+.cc-stack { display: grid; gap: var(--tm-space-4); }
+#connections { scroll-margin-top: calc(var(--kit-topbar) + var(--kit-offset) + var(--tm-space-6)); }
+.cc-message-consent { display: flex; align-items: flex-start; gap: var(--tm-space-3); color: var(--kit-ink-2); }
+
+.cc-message-box { appearance: none; flex: 0 0 auto; width: 1.125rem; height: 1.125rem; margin: 0; border: 1px solid var(--kit-line); border-radius: var(--tm-radius-sm); background: var(--kit-field); }
+.cc-message-box:hover:not(:disabled) { border-color: var(--kit-ink-3); }
+.cc-message-box:active:not(:disabled) { background: var(--kit-wash); }
+.cc-message-box:checked { background: var(--kit-ink); border-color: var(--kit-ink); }
+.cc-message-box:checked::after { content: ""; display: block; width: 5px; height: 9px; border: solid var(--kit-field); border-width: 0 2px 2px 0; transform: translate(5px, 1px) rotate(45deg); }
+.cc-message-box:focus-visible { outline: none; border-color: var(--kit-ink); box-shadow: inset 0 0 0 1px var(--kit-ink); }
+.cc-message-box:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Each charge or refund: what and how much, its state, then when and its reference. */
+.cc-payment-list { list-style: none; margin: 0 0 var(--tm-space-5); padding: 0; display: grid; gap: var(--tm-space-5); }
+.cc-payment-row { display: grid; gap: var(--tm-space-1); }
+.cc-payment-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--tm-space-3); }
+.cc-payment-what { color: var(--kit-ink); }
+.cc-payment-status { display: inline-flex; align-items: center; gap: var(--tm-space-2); color: var(--kit-ink-2); white-space: nowrap; }
+.cc-payment-meta { color: var(--kit-ink-3); font-size: var(--tm-type-micro); overflow-wrap: anywhere; }
+.cc-payment-why { color: var(--kit-ink-2); font-size: var(--tm-type-ui); }
+.cc-tax-controls { border: 0; min-width: 0; padding: 0; margin: 0; display: grid; gap: var(--tm-space-4); }
+.cc-tax-table { width: 100%; border-collapse: collapse; text-align: left; }
+.cc-tax-table th, .cc-tax-table td { padding: var(--tm-space-2) 0; border-bottom: 1px solid var(--tm-line); }
+.cc-tax-table td:last-child { display: flex; flex-wrap: wrap; gap: var(--tm-space-2); }
+.cc-tax-form { display: flex; flex-wrap: wrap; gap: var(--tm-space-4); align-items: end; }
+.cc-tax-shipping { position: relative; display: flex; align-items: center; gap: var(--tm-space-2); cursor: pointer; }
+.cc-tax-checkbox { position: absolute; width: var(--tm-space-5); height: var(--tm-space-5); opacity: 0; }
+.cc-tax-checkbox-mark { display: grid; place-items: center; width: var(--tm-space-5); height: var(--tm-space-5); border: 1px solid var(--kit-line-strong); border-radius: var(--tm-radius-sm); background: var(--kit-field); }
+.cc-tax-checkbox-mark svg { visibility: hidden; }
+.cc-tax-checkbox:checked + .cc-tax-checkbox-mark svg { visibility: visible; }
+.cc-tax-shipping:hover .cc-tax-checkbox:not(:disabled) + .cc-tax-checkbox-mark { border-color: var(--kit-hover-line); }
+.cc-tax-checkbox:focus-visible + .cc-tax-checkbox-mark { border-color: var(--kit-focus); }
+.cc-tax-shipping:active .cc-tax-checkbox:not(:disabled) + .cc-tax-checkbox-mark { background: var(--kit-wash); }
+.cc-tax-checkbox:disabled + .cc-tax-checkbox-mark { opacity: 0.4; cursor: not-allowed; }

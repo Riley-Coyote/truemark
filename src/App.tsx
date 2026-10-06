@@ -1,9 +1,11 @@
+import { live } from "./platform/live/runtime";
+import { catalogAccess, catalogReloadNeeded, rememberLink } from "./platform/live/bootstrap";
 import { LIVE } from "./platform/mode";
 import { store, useResource } from "./platform/store";
 import { setCategories } from "./data";
 import { refreshCatalog } from "./shop/catalog";
 import { stockProblem } from "./platform/commerce";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { products } from "./data";
 import { SectionLink } from "./SectionLink";
@@ -15,6 +17,7 @@ import Home from "./shop/Home";
 import { Modal } from "./shop/Modal";
 import { BagContents, CartPage } from "./shop/pages/checkout/Bag";
 import Checkout from "./shop/pages/checkout/Checkout";
+import Pay from "./shop/pages/checkout/Pay";
 import Confirmation from "./shop/pages/checkout/Confirmation";
 import Apply from "./shop/pages/account/Apply";
 import Account from "./shop/pages/account/Account";
@@ -34,7 +37,6 @@ import Quality from "./shop/pages/content/Quality";
 
 function RouteEffects() {
   const location = useLocation();
-  const previousPath = useRef(location.pathname);
   useEffect(() => {
     const title = location.pathname.startsWith("/product/")
       ? (products.find((p) => location.pathname.endsWith(p.id))?.name ??
@@ -57,22 +59,33 @@ function RouteEffects() {
     document.title = title ? `${title} — TrueMark BioLabs` : "TrueMark BioLabs";
     const referral = new URLSearchParams(location.search).get("ref");
     if (referral) rememberReferral(referral);
-    const keepScroll = (location.state as { keepScroll?: boolean } | null)?.keepScroll;
-    if (location.pathname !== previousPath.current) {
-      if (!keepScroll) window.scrollTo({ top: 0, behavior: "instant" });
-      previousPath.current = location.pathname;
-    }
   }, [location]);
   return null;
+}
+
+export const gatedShopPath = (path: string) => ["/products", "/product/", "/cart", "/checkout", "/account"].some((prefix) => path.startsWith(prefix));
+export function shopAccess(path: string, loading: boolean, signedIn: boolean) {
+  return loading ? "wait" : gatedShopPath(path) && !signedIn ? "redirect" : "render";
 }
 
 export default function App() {
   const [cart, setCart] = useState<CartItem[]>(loadCart);
   const [cartOpen, setCartOpen] = useState(false);
   const location = useLocation();
+  const session = useResource(() => LIVE ? live().auth.hasSession() : Promise.resolve(true), []);
+  useEffect(() => {
+    if (!LIVE) return;
+    const ref = new URLSearchParams(location.search).get("ref");
+    if (ref) void rememberLink(ref).catch(() => { /* Referral capture does not block sign-in. */ });
+  }, [location.search]);
+  const gated = LIVE && gatedShopPath(location.pathname);
+  useEffect(() => {
+    if (!LIVE || session.loading) return;
+    if (catalogReloadNeeded(catalogAccess(), Boolean(session.data), gated, sessionStorage)) window.location.reload();
+  }, [gated, session.loading, session.data]);
   const catalog = useResource(async () => {
     if (!LIVE) return;
-    const [current, classes] = await Promise.all([store.catalog.products(), store.catalog.categories()]);
+    const [current, classes] = await Promise.all([await live().auth.hasSession() ? store.catalog.products() : live().showcase(), store.catalog.categories()]);
     const retired = products.filter((old) => !current.some((product) => product.id === old.id)).map((product) => ({ ...product, active: false }));
     products.splice(0, products.length, ...current, ...retired);
     setCategories(classes.map((category) => ({ ...category, vial: current.find((product) => product.category === category.id)?.id })));
@@ -101,7 +114,6 @@ export default function App() {
           )
         : [...current, { id, quantity }];
     });
-    setCartOpen(true);
   }
   function change(id: string, quantity: number) {
     setCart((current) =>
@@ -113,6 +125,14 @@ export default function App() {
               : item,
           ),
     );
+  }
+  if (LIVE) {
+    // Wait only for the first answer. A save elsewhere re-checks the session, and blanking
+    // the shop meanwhile would remount every page and lose its place, focus and messages.
+    const access = shopAccess(location.pathname, session.loading && session.data === undefined, Boolean(session.data));
+    if (access === "wait") return null;
+    if (access === "redirect") return <Navigate to="/access" replace state={{ from: location.pathname + location.search }} />;
+    if (gated && session.data && catalogAccess() === "showcase") return null;
   }
   return (
     <ShopContext.Provider
@@ -143,6 +163,7 @@ export default function App() {
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout/confirmation/:orderId" element={<Confirmation />} />
+            {LIVE && <Route path="/checkout/pay/:orderId" element={<Pay />} />}
             <Route path="/track/:number?" element={<Track />} />
             <Route path="/access/apply" element={<Apply />} />
             <Route path="/my-account" element={<Navigate to="/account" replace />} />
@@ -161,7 +182,7 @@ export default function App() {
         </main>
         <Footer />
         {cartOpen && (
-          <Modal title="Your bag" onClose={() => setCartOpen(false)} side>
+          <Modal title="Your bag" onClose={() => setCartOpen(false)} side field="never">
             <BagContents />
           </Modal>
         )}

@@ -67,7 +67,7 @@ export function TeamGate({ children }: { children: ReactNode }) {
       <main className="cc-gate-card" aria-label="Command center sign in">
         <img
           className="cc-gate-lockup"
-          src={assetUrl(`images/brand/kit/lockup-${theme === "night" ? "white" : "black"}.svg`)}
+          src={assetUrl(`images/brand/kit/lockup-${theme === "day" ? "black" : "white"}.svg`)}
           alt="TrueMark BioLabs"
           width="164"
           height="40"

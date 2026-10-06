@@ -432,9 +432,20 @@
   .tm .tm-gate-title {
     font-size: clamp(2rem, 8.4vw, 2.75rem);
   }
-  .tm .tm-gate-lead,
-  .tm-gate-lotline {
+  .tm .tm-gate-lead {
     display: none;
+  }
+  /* The lot line stays on the desktop; a phone keeps only its way in without an account. */
+  .tm-gate-lotline {
+    margin-top: var(--tm-space-4);
+    padding-top: 0;
+  }
+  .tm-gate-lotline > :not(.tm-gate-verify) {
+    display: none;
+  }
+  .tm .tm-gate-verify {
+    margin-top: 0;
+    min-height: var(--tm-control-sm);
   }
   .tm-gate-trace {
     margin-inline: calc(var(--tm-margin) * -1);

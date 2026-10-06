@@ -1,3 +1,5 @@
+import { live } from "../platform/live/runtime";
+import { useResource } from "../platform/store";
 import { LIVE } from "../platform/mode";
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
@@ -11,7 +13,7 @@ import { productCutout } from "./catalog";
 import { useShop } from "./context";
 import { Modal } from "./Modal";
 import { MobileAdd } from "./MobileAdd";
-import { StorefrontAssistant } from "../assistant/Assistant";
+import { AskButton, StorefrontAssistant } from "../assistant/Assistant";
 import "./tokens.css";
 import "./chrome.css";
 import "./shop.css";
@@ -30,6 +32,8 @@ const primaryNav = [
 ];
 
 export function Header() {
+  const session = useResource(() => LIVE ? live().auth.hasSession() : Promise.resolve(true), []);
+  const locked = LIVE && !session.data;
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -53,6 +57,8 @@ export function Header() {
       }
     }
     function onPointer(event: PointerEvent) {
+      // The scrim closes the menu on its own click, so the tap that dismisses never lands on the page.
+      if (event.target instanceof Element && event.target.closest(".tm-mmenu-scrim")) return;
       if (header.current && event.target instanceof Node && !header.current.contains(event.target)) setMenuOpen(false);
     }
     document.addEventListener("keydown", onKey);
@@ -77,6 +83,7 @@ export function Header() {
           <p>Research use only · Not for human consumption</p>
         </div>
       </div>
+      {menuOpen && <div className="tm-mmenu-scrim" aria-hidden="true" onClick={() => setMenuOpen(false)} />}
       <header className="tm-header" ref={header}>
         <div className="tm-header-inner">
           <Link className="tm-logo" to="/" aria-label="TrueMark BioLabs home">
@@ -84,26 +91,27 @@ export function Header() {
           </Link>
           <nav className="tm-nav" aria-label="Main navigation">
             {primaryNav.map((item) => (
-              <NavLink key={item.to} to={item.to}>
+              <NavLink key={item.to} to={locked && item.to === "/products" ? "/access" : item.to} state={locked && item.to === "/products" ? { from: "/products" } : undefined}>
                 {item.label}
               </NavLink>
             ))}
           </nav>
           <div className="tm-tools">
-            <button className="tm-textool tm-hide-small" onClick={() => setSearchOpen(true)}>
+            {!locked && <button className="tm-textool tm-hide-small" onClick={() => setSearchOpen(true)}>
               Search
-            </button>
+            </button>}
             <Link className="tm-textool tm-hide-small" to="/account">
               Account
             </Link>
-            <button
+            <AskButton />
+            {!locked && <button
               className="tm-textool"
               data-cart-target
               aria-label={`Open cart, ${count} ${count === 1 ? "item" : "items"}`}
               onClick={openCart}
             >
               Cart ({count})
-            </button>
+            </button>}
             <button
               ref={menuButton}
               type="button"
@@ -121,14 +129,15 @@ export function Header() {
           <div id={menuId} className="tm-mmenu">
             <nav className="tm-mobile-nav" aria-label="Menu">
               {primaryNav.map((item) => (
-                <NavLink key={item.to} to={item.to}>
+                // Closed as it is tapped, so the menu is gone before the next page glides in.
+                <NavLink key={item.to} to={locked && item.to === "/products" ? "/access" : item.to} state={locked && item.to === "/products" ? { from: "/products" } : undefined} onClick={() => setMenuOpen(false)}>
                   {item.label}
                   <ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" />
                 </NavLink>
               ))}
             </nav>
             <div className="tm-mmenu-foot">
-              <button
+              {!locked && <button
                 type="button"
                 className="tm-mmenu-tool"
                 onClick={() => {
@@ -138,8 +147,8 @@ export function Header() {
               >
                 <Search size={16} strokeWidth={1.6} aria-hidden="true" />
                 Search
-              </button>
-              <Link className="tm-mmenu-tool" to="/account">
+              </button>}
+              <Link className="tm-mmenu-tool" to="/account" onClick={() => setMenuOpen(false)}>
                 Research account
               </Link>
             </div>
@@ -149,13 +158,17 @@ export function Header() {
       </header>
       <MobileAdd />
       <StorefrontAssistant />
-      {searchOpen && (
-        <Modal title="Find a compound" onClose={() => setSearchOpen(false)}>
+      {!locked && searchOpen && (
+        <Modal title="Find a compound" onClose={() => setSearchOpen(false)} field="always">
           <div className="search-input-wrap">
             <Search size={20} strokeWidth={1.6} />
             <input
               type="search"
               autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              enterKeyHint="search"
               aria-label="Search the catalog"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -164,7 +177,7 @@ export function Header() {
           </div>
           <div className="search-results">
             {matches.map((product) => (
-              <Link key={product.id} to={`/product/${product.id}`}>
+              <Link key={product.id} to={`/product/${product.id}`} onClick={() => setSearchOpen(false)}>
                 <span className="tm-search-thumb" aria-hidden="true">
                   <img src={productCutout(product, "sm")} alt="" />
                 </span>

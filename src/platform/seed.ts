@@ -6,7 +6,7 @@ import { LIVE } from "./mode";
  * BPC-157 preview record; other sample lots exist only to show each state.
  * Rates and prices marked "sample" are placeholders for the client to set.
  */
-import { products } from "../data";
+import { sampleCatalog as products } from "../data";
 import type {
   Address,
   Application,

@@ -1,7 +1,7 @@
 /* The client's legal pages, set for reading: an index beside one calm column. */
 
 .tm-legal {
-  padding-top: var(--tm-space-9);
+  padding-top: var(--tm-head-top);
   align-items: start;
 }
 .tm-legal-index {
@@ -40,8 +40,8 @@
 }
 .tm .tm-legal-title {
   margin: 0;
-  font: var(--tm-weight-light) var(--tm-type-h1) / var(--tm-leading-heading) var(--tm-font-display);
-  letter-spacing: var(--tm-track-display);
+  font: var(--tm-weight-light) var(--tm-type-page) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
   color: var(--tm-ink);
   text-wrap: balance;
 }
@@ -51,8 +51,8 @@
   color: var(--tm-ink-2);
 }
 .tm .tm-legal-updated {
-  margin: var(--tm-space-5) 0 0;
-  padding-bottom: var(--tm-space-6);
+  margin: var(--tm-space-4) 0 0;
+  padding-bottom: var(--tm-space-5);
   border-bottom: 1px solid var(--tm-line);
   font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-display);
   letter-spacing: 0.14em;
@@ -99,18 +99,27 @@
   background: var(--tm-ink-4);
 }
 
+/* Narrower screens: the index is one row of links above the page, sliding sideways if it must. */
 @media (max-width: 960px) {
   .tm-legal-index {
     position: static;
     grid-column: 1 / -1;
     flex-direction: row;
-    flex-wrap: wrap;
-    gap: var(--tm-space-1) var(--tm-space-5);
-    margin-bottom: var(--tm-space-7);
+    flex-wrap: nowrap;
+    gap: var(--tm-space-5);
+    overflow-x: auto;
+    margin: 0 calc(var(--tm-pad) * -1) var(--tm-space-5);
+    padding-inline: var(--tm-pad);
+    scrollbar-width: none;
+  }
+  .tm-legal-index::-webkit-scrollbar {
+    display: none;
+  }
+  .tm-legal-index a {
+    flex: none;
   }
   .tm-legal-index .tm-eyebrow {
-    flex-basis: 100%;
-    margin-bottom: 0;
+    display: none;
   }
   .tm-legal-doc {
     grid-column: 1 / -1;

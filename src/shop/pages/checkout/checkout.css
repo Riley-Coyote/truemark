@@ -8,12 +8,17 @@
 
 .tm-purchase .tm-cart,
 .tm-purchase .tm-checkout {
-  padding-block: var(--tm-space-8) var(--tm-space-silence);
+  padding-block: var(--tm-head-top) var(--tm-space-silence);
   row-gap: var(--tm-space-8);
   align-items: start;
 }
 .tm-purchase-head {
   grid-column: 1 / span 7;
+}
+/* Bag, checkout and payment are pages to use: their titles take the shared modest size. */
+.tm .tm-purchase-head .tm-heading {
+  font-size: var(--tm-type-page);
+  letter-spacing: var(--tm-track-heading);
 }
 .tm .tm-purchase-head .tm-heading span {
   color: var(--tm-ink-3);
@@ -27,7 +32,10 @@
   color: var(--tm-ink-3);
 }
 .tm-purchase .tm-purchase-empty {
-  padding-block: var(--tm-space-7) var(--tm-space-9);
+  padding-block: var(--tm-head-top) var(--tm-space-9);
+}
+.tm.tm-purchase-empty .tm-empty-page {
+  padding-block: 0;
 }
 .tm .tm-purchase-empty .tm-section-note {
   max-width: var(--tm-measure-base);
@@ -491,12 +499,41 @@
   font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
   color: var(--tm-ink-3);
 }
+.tm-bag-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-3);
+}
 .tm-bag-foot .tm-button {
   width: 100%;
 }
 .tm-bag-foot .tm-textlink {
   align-self: flex-start;
   margin-top: var(--tm-space-2);
+}
+/* On a phone the bag keeps room for its lines: a tighter summary, and the two ways on side by side. */
+@media (max-width: 560px) {
+  .tm-bag-foot {
+    gap: var(--tm-space-2);
+    padding: var(--tm-space-4) var(--tm-bag-pad) calc(var(--tm-space-5) + env(safe-area-inset-bottom, 0px));
+  }
+  .tm .tm-bag-subtotal span:last-child {
+    font-size: var(--tm-type-lead);
+  }
+  .tm-bag-actions {
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: var(--tm-space-5);
+    margin-top: var(--tm-space-2);
+  }
+  .tm-bag-foot .tm-bag-actions .tm-button {
+    flex: 1;
+  }
+  .tm-bag-foot .tm-bag-actions .tm-textlink {
+    align-self: center;
+    margin-top: 0;
+    white-space: nowrap;
+  }
 }
 .tm-bag-empty {
   grid-column: 1 / -1;
@@ -1610,7 +1647,6 @@
   }
   .brand-refinement .side-modal .modal-panel:has(> .tm-bag) {
     --tm-bag-pad: var(--tm-margin);
-    border-radius: 0;
   }
   .tm-cart-line,
   .tm-confirm-line {
@@ -1720,3 +1756,29 @@
 .tm-stock-notice p { margin: 0 0 var(--tm-space-3); overflow-wrap: anywhere; }
 .tm-stock-notice .tm-text-button { text-decoration: underline; }
 .tm-button[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+/* Preserve the four-step layout while disabling a held order's details. */
+.tm-payment-lock { display: contents; border: 0; margin: 0; padding: 0; min-width: 0; }
+.tm-payment-lock:disabled .tm-choice { cursor: default; }
+
+/* ---------- Phones: each step uses the full width ---------- */
+
+@media (max-width: 560px) {
+  /* The step's number sits beside its title instead of holding a column of its own. */
+  .tm-step,
+  .tm-steps > .tm-step {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--tm-space-3);
+  }
+  .tm-step-index {
+    grid-column: 1;
+  }
+  .tm .tm-step-title,
+  .tm .tm-step.is-done .tm-step-title {
+    grid-column: 2;
+  }
+  .tm-step-tag,
+  .tm-step-summary,
+  .tm-step-body {
+    grid-column: 1 / -1;
+  }
+}

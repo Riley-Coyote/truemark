@@ -158,23 +158,125 @@
   -webkit-appearance: none;
   appearance: none;
 }
+/* They come and go as pages do (navigation.css): the same glide, the same time. On a wider
+   screen search is a dialog that settles in and the bag a panel from the right edge; on a phone
+   both are sheets risen from the bottom (Modal.tsx, sheet.tsx). */
 .brand-refinement .modal-backdrop {
+  --tm-sheet-ease: var(--tm-ease-glide, cubic-bezier(0.32, 0.72, 0, 1));
   background: var(--tm-scrim);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  animation: none;
+  transition:
+    background-color var(--tm-dur-slow) var(--tm-sheet-ease),
+    backdrop-filter var(--tm-dur-slow) var(--tm-sheet-ease),
+    -webkit-backdrop-filter var(--tm-dur-slow) var(--tm-sheet-ease);
+}
+.brand-refinement .modal-backdrop:not([data-state="open"]) {
+  background: transparent;
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
 }
 .brand-refinement .modal-panel {
   background: var(--tm-paper);
   border-radius: var(--tm-radius-lg);
   box-shadow: var(--tm-shadow-float);
+  outline: none;
+  animation: none;
+  transition: transform var(--tm-dur-slow) var(--tm-sheet-ease), opacity var(--tm-dur-slow) var(--tm-sheet-ease);
+}
+.brand-refinement .modal-backdrop:not([data-state="open"]) .modal-panel {
+  opacity: 0;
+  transform: translateY(var(--tm-space-4)) scale(0.98);
 }
 .brand-refinement .side-modal .modal-panel {
   border-radius: var(--tm-radius-lg) 0 0 var(--tm-radius-lg);
+}
+.brand-refinement .side-modal:not([data-state="open"]) .modal-panel {
+  opacity: 1;
+  transform: translateX(100%);
 }
 .brand-refinement .modal-heading h2 {
   font: var(--tm-weight-light) var(--tm-type-h3) / var(--tm-leading-heading) var(--tm-font-sans);
   letter-spacing: var(--tm-track-heading);
   color: var(--tm-ink);
+}
+/* The handle a sheet is pulled down by, shown on phones only. */
+.modal-grab {
+  display: none;
+}
+@media (max-width: 760px) {
+  /* The visible screen, measured (sheet.tsx); the whole screen until the first measure. */
+  .brand-refinement .modal-backdrop {
+    top: var(--tm-sheet-top, 0px);
+    bottom: auto;
+    height: var(--tm-sheet-height, 100dvh);
+    align-items: flex-end;
+    justify-content: stretch;
+    padding: 0;
+    overflow: hidden;
+  }
+  /* A tall sheet, a sliver of the dimmed page left above it. Its own content scrolls. */
+  .brand-refinement .modal-panel,
+  .brand-refinement .side-modal .modal-panel {
+    width: 100%;
+    max-width: none;
+    height: calc(100% - var(--tm-space-2));
+    max-height: none;
+    padding-top: var(--tm-space-6);
+    border-radius: var(--tm-radius-xl) var(--tm-radius-xl) 0 0;
+    /* The dimmed page sets it apart, as on iPhone; a shadow would only fall on the paper below. */
+    box-shadow: none;
+  }
+  .brand-refinement .modal-backdrop:not([data-state="open"]) .modal-panel,
+  .brand-refinement .side-modal:not([data-state="open"]) .modal-panel {
+    opacity: 1;
+    transform: translateY(100%);
+  }
+  .modal-grab {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: block;
+    height: var(--tm-space-5);
+    touch-action: none;
+  }
+  .modal-grab::before {
+    content: "";
+    position: absolute;
+    top: var(--tm-space-2);
+    left: 50%;
+    width: var(--tm-space-7);
+    height: var(--tm-space-1);
+    border-radius: var(--tm-radius-pill);
+    background: var(--tm-line-strong);
+    transform: translateX(-50%);
+  }
+  .brand-refinement .modal-heading h2 {
+    touch-action: none;
+  }
+  /* Search: the field stays at the top and the results scroll beneath it. */
+  .brand-refinement .modal-panel:has(> .search-results) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+  .modal-panel:has(> .search-results) > .search-results {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: calc(var(--tm-space-5) + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-refinement .modal-backdrop,
+  .brand-refinement .modal-panel {
+    transition: none;
+  }
 }
 /* The phone menu: a panel dropped from the header, the way the command center's menu drops
    from its bar. The header stays put, the button turns to a close mark, and the page stays in
@@ -190,7 +292,23 @@
   border-bottom: 1px solid var(--tm-line);
   background: var(--tm-paper);
   box-shadow: var(--tm-shadow-float);
+  overscroll-behavior: contain;
   animation: tm-menu-drop var(--tm-dur-base) var(--tm-ease-enter);
+}
+/* The page stays in view beneath the open menu, dimmed: a tap on it closes the menu and goes
+   no further, and a drag on it does not scroll the page away underneath. */
+.tm-mmenu-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 39;
+  background: color-mix(in srgb, var(--tm-scrim) 55%, transparent);
+  touch-action: none;
+  animation: tm-scrim-in var(--tm-dur-base) var(--tm-ease-enter);
+}
+@keyframes tm-scrim-in {
+  from {
+    opacity: 0;
+  }
 }
 @keyframes tm-menu-drop {
   from {
@@ -281,7 +399,8 @@
   background: var(--tm-wash);
 }
 @media (prefers-reduced-motion: reduce) {
-  .tm-mmenu {
+  .tm-mmenu,
+  .tm-mmenu-scrim {
     animation: none;
   }
   .tm-mobile-nav a svg {
@@ -423,5 +542,8 @@
   }
   .tm-footer-meta {
     flex-direction: column;
+  }
+  .tm-footer-inner {
+    padding-top: var(--tm-space-7);
   }
 }

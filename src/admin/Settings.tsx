@@ -1,4 +1,7 @@
+import { TaxSettings } from "./TaxSettings";
 import { AssistantSettings } from "../assistant/Settings";
+import { ShippingMethods } from "./ShippingMethods";
+import Connections from "./Connections";
 import { CommerceSettings } from "./Commerce";
 import { AppearanceControl } from "./appearance";
 import { LIVE } from "../platform/mode";
@@ -75,17 +78,20 @@ export default function Settings() {
 
       <Block title="Shipping" note="When standard delivery is free. The threshold applies after discounts.">
         <div className="kit-card cc-setting-card"><CommerceSettings kind="shipping" /></div>
+        {LIVE && <ShippingMethods />}
       </Block>
       <Block title="Insurance" note="Shipment insurance, ready when the client decides.">
         <div className="kit-card cc-setting-card"><CommerceSettings kind="insurance" /></div>
       </Block>
 
+      {LIVE && profile.data?.role === "owner" && <Block title="Sales tax" note="Enter the rate for each state where you collect sales tax. Orders to other states have no tax."><TaxSettings /></Block>}
+
       <Block title="Assistant" note="Choose models that support tool use.">
         <AssistantSettings />
       </Block>
 
-      <Block title="Payments" note="Card payments run through your processor, which connects at launch.">
-        <div className="kit-card">
+      <Block title="Payments" note={LIVE ? "Payments run through the payments connection. See Connections." : "Card payments run through your processor, which connects at launch."}>
+        {!LIVE && <div className="kit-card">
           <EmptyState
             compact
             title="Connect your processor at launch."
@@ -101,7 +107,7 @@ export default function Settings() {
               </div>
             }
           />
-        </div>
+        </div>}
       </Block>
 
       <Block title="Compliance" note="The checks every order passes through. They keep the shop a supplier to verified laboratories.">
@@ -128,6 +134,8 @@ export default function Settings() {
       </Block>
 
       </>}
+
+      <Connections owner={profile.data?.role === "owner"} />
 
       <Block title="Team" note="Who operates the command center, and what each role can change.">
         {LIVE ? <LiveTeam canManage={profile.data?.role === "owner"} openId={openId} onOpen={(id) => setOpenId(id, { replace: id === null })} /> : <div className="kit-card">

@@ -8,6 +8,33 @@ import { store } from "../../../platform/store";
 import type { Application } from "../../../platform/types";
 import { AreaField, Field, SelectField, useTitle } from "./parts";
 
+type UploadApi = {
+  prepare: (files: File[]) => Promise<{ claim: string; files: { uploadId: string; path: string; token: string }[] }>;
+  upload: (path: string, token: string, file: File) => Promise<void>;
+  claim: (claim: string, email: string, ids: string[]) => Promise<number>;
+};
+/** Keep uploads, account creation and claiming strictly in that order. */
+export async function submitWithDocuments<T>(files: File[], email: string, api: UploadApi,
+  signUp: () => Promise<T>, progress: (name: string, text: string) => void): Promise<T> {
+  let prepared: Awaited<ReturnType<UploadApi["prepare"]>> | undefined;
+  if (files.length) {
+    try { prepared = await api.prepare(files); }
+    catch { throw new Error(`${files[0].name} couldn't be uploaded. Remove it or try again.`); }
+    for (const [index, file] of files.entries()) {
+      progress(file.name, `Uploading ${file.name}…`);
+      try {
+        const signed = prepared.files[index];
+        if (!signed) throw new Error("Missing upload URL");
+        await api.upload(signed.path, signed.token, file);
+      } catch { throw new Error(`${file.name} couldn't be uploaded. Remove it or try again.`); }
+      progress(file.name, "Uploaded");
+    }
+  }
+  const result = await signUp();
+  if (prepared) await api.claim(prepared.claim, email, prepared.files.map((file) => file.uploadId));
+  return result;
+}
+
 const institutionTypes = [
   "University",
   "Contract research organization",
@@ -111,6 +138,8 @@ export default function Apply() {
     intendedUse: "",
   });
   const [confirmed, setConfirmed] = useState<string[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
+  const [progress, setProgress] = useState<Record<string, string>>({});
   const [documents, setDocuments] = useState<string[]>([]);
   const [touched, setTouched] = useState<Partial<Record<Key, boolean>>>({});
   const [step, setStep] = useState(0);
@@ -175,6 +204,7 @@ export default function Apply() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (status === "busy") return;
     if (!stepIsValid()) return;
     if (step < steps.length - 1) {
       goTo(step + 1);
@@ -193,11 +223,12 @@ export default function Apply() {
       researchArea: values.researchArea.trim(),
       intendedUse: values.intendedUse.trim(),
       attestations: attestations.map((a) => a.id).filter((id) => confirmed.includes(id)),
-      documents,
+      documents: LIVE ? [] : documents,
     };
     try {
       if (LIVE) {
-        const result = await live().auth.signUp(draft, password);
+        const result = await submitWithDocuments(files, draft.email, live().uploads, () => live().auth.signUp(draft, password),
+          (name, text) => setProgress((current) => ({ ...current, [name]: text })));
         setConfirmationRequired(result.confirmationRequired);
         setPassword("");
         setReceived(draft);
@@ -210,7 +241,9 @@ export default function Apply() {
   }
 
   function addDocuments(event: ChangeEvent<HTMLInputElement>) {
-    const names = Array.from(event.target.files ?? [], (file) => file.name);
+    const picked = Array.from(event.target.files ?? []);
+    if (LIVE) setFiles((list) => [...list, ...picked.filter((file) => !list.some((old) => old.name === file.name))]);
+    const names = picked.map((file) => file.name);
     setDocuments((list) => [...list, ...names.filter((n) => !list.includes(n))]);
     event.target.value = "";
   }
@@ -220,11 +253,11 @@ export default function Apply() {
   const attestError = error("attestations");
 
   return (
-    <div className="tm-page tm-acct">
+    <div className="tm-page tm-acct tm-page-task">
       <section className="tm tm-acct-apply" aria-labelledby="tm-acct-apply-title">
         <header className="tm-acct-apply-head">
           <p className="tm-eyebrow">Research account</p>
-          <h1 id="tm-acct-apply-title" className="tm-display">
+          <h1 id="tm-acct-apply-title" className="tm-page-title">
             Apply for an account.
             <br />
             <span>Four short steps.</span>
@@ -382,15 +415,15 @@ export default function Apply() {
                       Supporting documents <span>(optional)</span>
                     </p>
                     <p className="tm-acct-hint" id="tm-acct-docs-hint">
-                      For example, an institutional letter or a purchasing approval. In this preview only the file names
-                      are recorded; nothing is uploaded.
+                      {LIVE ? "For example, an institutional letter or a purchasing approval. PDF, PNG, JPG or WEBP, up to 10 MB each, at most 5 files." : "For example, an institutional letter or a purchasing approval. In this preview only the file names are recorded; nothing is uploaded."}
                     </p>
                     <div className="tm-acct-file">
                       <input
                         id="tm-acct-docs"
                         type="file"
                         multiple
-                        accept=".pdf,.png,.jpg,.jpeg"
+                        accept={LIVE ? ".pdf,.png,.jpg,.jpeg,.webp" : ".pdf,.png,.jpg,.jpeg"}
+                        disabled={status === "busy"}
                         className="sr-only"
                         aria-describedby="tm-acct-docs-hint"
                         onChange={addDocuments}
@@ -404,12 +437,13 @@ export default function Apply() {
                       <ul className="tm-acct-doclist" aria-labelledby="tm-acct-docs-title">
                         {documents.map((doc) => (
                           <li key={doc}>
-                            <span>{doc}</span>
+                            <span>{doc}{LIVE && progress[doc] && <span role="status"> · {progress[doc]}</span>}</span>
                             <button
                               type="button"
                               className="tm-acct-icon"
                               aria-label={`Remove ${doc}`}
-                              onClick={() => setDocuments((list) => list.filter((d) => d !== doc))}
+                              disabled={status === "busy"}
+                              onClick={() => { setDocuments((list) => list.filter((d) => d !== doc)); setFiles((list) => list.filter((file) => file.name !== doc)); }}
                             >
                               <X size={14} strokeWidth={1.8} />
                             </button>

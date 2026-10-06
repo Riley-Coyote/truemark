@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { assetUrl } from "../assetUrl";
 import { categoryLabel } from "./articles";
 import type { Article, SceneName } from "./articles";
+import { pictureLoading } from "../shop/ui";
 import "./journal.css";
 
 export type ArticlePresentation = Article & { kicker?: string; coverUrl?: string | null };
@@ -29,7 +30,7 @@ export function ArticlePhoto({
   sizes: string;
   eager?: boolean;
 }) {
-  if ("coverUrl" in article) return article.coverUrl ? <img src={article.coverUrl} alt="" loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : "auto"} draggable={false} /> : null;
+  if ("coverUrl" in article) return article.coverUrl ? <img src={article.coverUrl} alt="" {...pictureLoading(article.coverUrl, eager)} fetchPriority={eager ? "high" : "auto"} draggable={false} /> : null;
   const { scene, focus } = article.image;
   const { width, height } = sceneSize[scene];
   const small = assetUrl(`images/scenes/${scene}-sm.webp`);
@@ -42,7 +43,7 @@ export function ArticlePhoto({
       width={width}
       height={height}
       alt=""
-      loading={eager ? "eager" : "lazy"}
+      {...pictureLoading(large, eager)}
       fetchPriority={eager ? "high" : "auto"}
       draggable={false}
       style={{ "--tm-focus": focus } as CSSProperties}

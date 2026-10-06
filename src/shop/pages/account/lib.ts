@@ -70,8 +70,10 @@ export function orderTone(status: OrderStatus): Tone {
 }
 
 export const paymentLabel: Record<PaymentStatus, string> = {
+  pending: "Awaiting payment",
   authorized: "Authorized",
   captured: "Paid",
+  partially_refunded: "Partly refunded",
   refunded: "Refunded",
   failed: "Failed",
 };

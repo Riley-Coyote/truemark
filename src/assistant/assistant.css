@@ -1,4 +1,4 @@
-.assistant, .assistant-home, .assistant-launcher {
+.assistant, .assistant-home {
   --tm-assistant-ink: var(--tm-ink);
   --tm-assistant-muted: var(--tm-ink-2);
   --tm-assistant-line: var(--tm-line-strong);
@@ -32,8 +32,8 @@
 }
 .assistant-button { padding: var(--tm-space-2) var(--tm-space-3); min-height: var(--tm-control-sm); cursor: pointer; }
 .assistant-button:hover:not(:disabled) { background: var(--tm-assistant-wash, var(--tm-wash)); border-color: currentColor; }
-.assistant-button:active:not(:disabled), .assistant-launcher:active { background: var(--tm-assistant-wash, var(--tm-wash)); }
-.assistant :is(button, a, input, textarea):focus-visible, .assistant-home :is(input, button):focus-visible, .assistant-launcher:focus-visible {
+.assistant-button:active:not(:disabled) { background: var(--tm-assistant-wash, var(--tm-wash)); }
+.assistant :is(button, a, input, textarea):focus-visible, .assistant-home :is(input, button):focus-visible {
   outline: none; border-color: currentColor; box-shadow: inset 0 0 0 1px currentColor;
 }
 .assistant :is(button, input, textarea):disabled, .assistant-home button:disabled { opacity: .5; cursor: not-allowed; }
@@ -82,11 +82,6 @@
 .assistant-certificate .tm-coa-rows div { flex-wrap: wrap; gap: var(--tm-space-2); }
 .assistant-certificate .tm-coa-rows dd { margin: 0; }
 .assistant-certificate .is-result { opacity: 1; transition: none; }
-.brand-refinement .assistant-storefront .modal-backdrop { z-index: 80; top: var(--tm-assistant-viewport-top, 0px); bottom: auto; height: var(--tm-assistant-viewport-height, 100dvh); }
-.brand-refinement .assistant-storefront .side-modal .modal-panel { box-sizing: border-box; display: flex; flex-direction: column; min-width: 0; width: min(31rem, 100%); height: 100%; max-height: 100%; overflow: hidden; background: var(--tm-paper); padding-bottom: calc(var(--tm-space-5) + env(safe-area-inset-bottom, 0px)); }
-.brand-refinement .assistant-storefront .modal-heading { flex: none; }
-.brand-refinement .assistant-storefront .modal-heading h2 { font: var(--tm-weight-light) var(--tm-type-h3) / var(--tm-leading-heading) var(--tm-font-display); }
-.assistant-storefront .assistant { flex: 1; }
 .assistant-kit .kit-drawer {
   --tm-assistant-drawer-top: max(var(--kit-offset), var(--tm-assistant-viewport-top, 0px));
   top: var(--tm-assistant-drawer-top); bottom: auto;
@@ -96,12 +91,6 @@
 .assistant-kit .kit-drawer-body { display: flex; flex-direction: column; min-width: 0; overflow: hidden; padding-bottom: calc(var(--tm-space-5) + env(safe-area-inset-bottom, 0px)); }
 .assistant-kit { display: contents; }
 .assistant-kit .assistant { flex: 1; }
-.assistant-launcher {
-  position: fixed; right: var(--tm-space-5); bottom: calc(var(--tm-assistant-bottom, 0px) + var(--tm-space-4) + env(safe-area-inset-bottom, 0px));
-  z-index: 38; border: 1px solid var(--tm-line-strong); border-radius: var(--tm-radius-pill); background: var(--tm-paper);
-  box-shadow: var(--tm-shadow-whisper); padding: var(--tm-space-3) var(--tm-space-5); cursor: pointer;
-}
-.assistant-launcher:hover { border-color: var(--tm-ink); }
 .assistant-home { grid-column: 1 / -1; border-top: 1px solid var(--tm-line-strong); padding-top: var(--tm-space-5); margin-top: var(--tm-space-5); }
 .assistant-home label { display: block; margin-bottom: var(--tm-space-3); font-family: var(--tm-font-display); font-weight: var(--tm-weight-light); font-size: var(--tm-type-lead); }
 .assistant-home > div { display: flex; gap: var(--tm-space-2); max-width: 38rem; }
@@ -111,13 +100,458 @@
 .assistant-entry-compose input { flex: 1; width: 0; min-width: 0; padding: var(--tm-space-3); }
 .assistant-entry-compose button { flex: none; }
 @media (max-width: 760px) {
-  .brand-refinement .assistant-storefront .modal-backdrop { padding: 0; }
-  .brand-refinement .assistant-storefront .side-modal .modal-panel { width: 100%; border-radius: 0; padding-bottom: calc(var(--tm-space-4) + env(safe-area-inset-bottom, 0px)); }
   .assistant-compose :is(input, textarea), .assistant-home input, .assistant-entry-compose input { font-size: max(16px, var(--tm-type-body)); }
   .assistant-compose textarea { max-height: 5rem; }
   .assistant-button { min-height: var(--tm-control); }
-  .assistant-launcher { right: var(--tm-space-4); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .assistant *, .assistant-storefront *, .assistant-kit *, .assistant-home * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .assistant *, .tm-chat *, .assistant-kit *, .assistant-home * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* ---------- The storefront chat (ChatSheet in Assistant.tsx) ---------- */
+
+/* The sheet moves as pages do (navigation.css): the same glide, the same time. */
+.tm-chat {
+  --tm-chat-dur: var(--tm-dur-slow);
+  --tm-chat-ease: var(--tm-ease-glide, cubic-bezier(0.32, 0.72, 0, 1));
+}
+.tm-chat {
+  --tm-chat-pad: var(--tm-space-4);
+  --tm-chat-dot: calc(var(--tm-space-1) * 1.5);
+  --tm-chat-dot-cycle: 1.2s;
+  --tm-chat-dot-step: 160ms;
+  position: fixed;
+  z-index: 90;
+  left: 0;
+  right: 0;
+  /* The visible screen, measured; 100dvh until the first measure. */
+  top: var(--tm-chat-top, 0px);
+  height: var(--tm-chat-height, 100dvh);
+}
+.tm-chat-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--tm-scrim);
+  transition: opacity var(--tm-chat-dur) var(--tm-chat-ease);
+}
+.tm-chat-panel {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--tm-paper);
+  color: var(--tm-ink);
+  box-shadow: var(--tm-shadow-float);
+  outline: none;
+}
+.tm-chat[data-state="entering"] .tm-chat-scrim,
+.tm-chat[data-state="leaving"] .tm-chat-scrim {
+  opacity: 0;
+}
+
+/* Its height: as tall as what it holds before the conversation starts (--tm-chat-fit, measured),
+   then the full height, growing between the two. */
+.tm-chat-panel {
+  height: min(var(--tm-chat-fit, 100vh), var(--tm-chat-full));
+  transition: transform var(--tm-chat-dur) var(--tm-chat-ease);
+}
+/* Only an open sheet grows: it arrives already at its measured height. */
+.tm-chat[data-state="open"] .tm-chat-panel {
+  transition: transform var(--tm-chat-dur) var(--tm-chat-ease), height var(--tm-chat-dur) var(--tm-chat-ease);
+}
+
+/* Desktop: a panel in the corner of the window, beside the page. */
+@media (min-width: 761px) {
+  .tm-chat-panel {
+    --tm-chat-full: min(44rem, calc(100% - var(--tm-space-6)));
+    right: var(--tm-space-3);
+    bottom: var(--tm-space-3);
+    width: min(26rem, calc(100% - var(--tm-space-6)));
+    border-radius: var(--tm-radius-xl);
+  }
+  .tm-chat[data-state="entering"] .tm-chat-panel,
+  .tm-chat[data-state="leaving"] .tm-chat-panel {
+    transform: translateX(calc(100% + var(--tm-space-4)));
+  }
+  .tm-chat-grabber {
+    display: none;
+  }
+}
+
+/* Phones: a sheet risen from the bottom, at least a sliver of the page left dimmed above it. */
+@media (max-width: 760px) {
+  .tm-chat-panel {
+    --tm-chat-full: calc(100% - var(--tm-space-2));
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--tm-radius-xl) var(--tm-radius-xl) 0 0;
+    /* The dimmed page sets it apart, as on iPhone; a shadow would only fall on the paper below. */
+    box-shadow: none;
+  }
+  .tm-chat[data-state="entering"] .tm-chat-panel,
+  .tm-chat[data-state="leaving"] .tm-chat-panel {
+    transform: translateY(100%);
+  }
+}
+
+.tm-chat-head {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+  padding: var(--tm-space-4) var(--tm-chat-pad) var(--tm-space-3);
+  border-bottom: 1px solid var(--tm-line);
+  touch-action: none;
+}
+.tm-chat-grabber {
+  position: absolute;
+  top: var(--tm-space-2);
+  left: 50%;
+  width: var(--tm-space-7);
+  height: var(--tm-space-1);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-line-strong);
+  transform: translateX(-50%);
+}
+.tm-chat-titles {
+  flex: 1;
+  min-width: 0;
+}
+.tm .tm-chat-title,
+.tm-chat-title {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-body) / 1.3 var(--tm-font-display);
+  letter-spacing: 0;
+  color: var(--tm-ink);
+}
+.tm-chat-subtitle {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-chat-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--tm-control-sm);
+  height: var(--tm-control-sm);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-wash);
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-chat-close:hover {
+  background: var(--tm-line);
+  color: var(--tm-ink);
+}
+.tm-chat-close:active {
+  transform: scale(0.94);
+}
+.tm-chat-close:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink-3);
+}
+
+.tm-chat-body.assistant {
+  flex: 1;
+  gap: 0;
+  height: auto;
+  min-height: 0;
+}
+.tm-chat-log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: var(--tm-space-4) var(--tm-chat-pad);
+}
+/* Short conversations sit at the bottom, by the field, the way messages do. */
+.tm-chat-flow {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--tm-space-4);
+}
+.tm-chat-intro {
+  display: grid;
+  gap: var(--tm-space-2);
+}
+.tm-chat-hello {
+  font: var(--tm-weight-light) var(--tm-type-lead) / 1.35 var(--tm-font-display);
+  color: var(--tm-ink);
+}
+.tm-chat-sub {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tm-space-2);
+  margin-top: var(--tm-space-2);
+}
+.tm-chat-chip {
+  min-height: var(--tm-control-sm);
+  padding: 0 var(--tm-space-4);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  color: var(--tm-ink);
+  cursor: pointer;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-chat-chip:hover:not(:disabled) {
+  border-color: var(--tm-ink-3);
+}
+.tm-chat-chip:active:not(:disabled) {
+  background: var(--tm-wash);
+  transform: scale(0.97);
+}
+.tm-chat-chip:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+}
+.tm-chat-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tm-chat-msg {
+  display: grid;
+  gap: var(--tm-space-2);
+  min-width: 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1.55 var(--tm-font-sans);
+  animation: tm-chat-in var(--tm-dur-base) var(--tm-chat-ease) both;
+}
+.tm-chat-msg.is-user {
+  justify-self: end;
+  align-self: flex-end;
+  max-width: 82%;
+}
+.tm-chat-bubble {
+  padding: var(--tm-space-2) var(--tm-space-4);
+  border-radius: var(--tm-radius-lg) var(--tm-radius-lg) var(--tm-radius-xs) var(--tm-radius-lg);
+  background: var(--tm-ink);
+  color: var(--tm-paper);
+}
+.tm-chat .tm-chat-bubble :is(p, li, a, strong, em) {
+  color: inherit;
+}
+.tm-chat .tm-chat-msg.is-assistant :is(p, li) {
+  color: var(--tm-ink);
+}
+.tm-chat-msg.is-assistant {
+  align-self: flex-start;
+  max-width: 100%;
+  color: var(--tm-ink);
+}
+@keyframes tm-chat-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--tm-space-2));
+  }
+}
+.tm-chat-typing {
+  align-self: flex-start;
+  display: inline-flex;
+  gap: var(--tm-space-1);
+  padding: var(--tm-space-3) var(--tm-space-4);
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-wash);
+}
+.tm-chat-typing i {
+  width: var(--tm-chat-dot);
+  height: var(--tm-chat-dot);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-ink-3);
+  animation: tm-chat-dot var(--tm-chat-dot-cycle) var(--tm-ease-breathe) infinite;
+}
+.tm-chat-typing i:nth-child(2) {
+  animation-delay: var(--tm-chat-dot-step);
+}
+.tm-chat-typing i:nth-child(3) {
+  animation-delay: calc(var(--tm-chat-dot-step) * 2);
+}
+@keyframes tm-chat-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(calc(var(--tm-chat-dot) / -2));
+  }
+}
+.tm-chat-error {
+  display: grid;
+  gap: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-chat-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tm-space-4);
+}
+.tm-chat-link {
+  padding: var(--tm-space-1) 0;
+  border: 0;
+  border-bottom: 1px solid var(--tm-line-strong);
+  background: none;
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink);
+  cursor: pointer;
+}
+.tm-chat-link:hover {
+  border-bottom-color: var(--tm-ink);
+}
+.tm-chat-link:focus-visible {
+  outline: none;
+  border-bottom-color: var(--tm-ink);
+}
+.tm-chat-confirm {
+  background: var(--tm-paper);
+}
+
+.tm-chat-compose {
+  flex: none;
+  padding: var(--tm-space-3) var(--tm-chat-pad) calc(var(--tm-space-3) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--tm-line);
+  background: var(--tm-paper);
+}
+.tm-chat-field {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  padding: var(--tm-space-1) var(--tm-space-1) var(--tm-space-1) var(--tm-space-4);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-chat-field:focus-within {
+  border-color: var(--tm-ink);
+}
+.tm-chat-field input {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  min-height: var(--tm-control-sm);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1.3 var(--tm-font-sans);
+  color: var(--tm-ink);
+  outline: none;
+}
+/* The pill shows focus with its own border; the field inside draws nothing of its own. */
+.tm-chat .tm-chat-field input:focus,
+.tm-chat .tm-chat-field input:focus-visible {
+  outline: none;
+  border: 0;
+  box-shadow: none;
+}
+.tm-chat-field input::placeholder {
+  color: var(--tm-ink-3);
+}
+.tm-chat-send {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--tm-control-sm);
+  height: var(--tm-control-sm);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-ink);
+  color: var(--tm-paper);
+  cursor: pointer;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-chat-send:hover:not(:disabled) {
+  background: var(--tm-ink-hover);
+}
+.tm-chat-send:active:not(:disabled) {
+  transform: scale(0.92);
+}
+.tm-chat-send:focus-visible {
+  outline: none;
+  border-color: var(--tm-paper);
+  box-shadow: inset 0 0 0 1px var(--tm-ink);
+}
+.tm-chat-send:disabled {
+  background: var(--tm-line);
+  color: var(--tm-ink-3);
+  cursor: default;
+}
+.tm-chat-send.is-stop {
+  background: var(--tm-wash);
+  color: var(--tm-ink);
+}
+.tm-chat-fine {
+  margin: var(--tm-space-2) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-chat-fine a {
+  color: var(--tm-ink-2);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.tm-chat-fine a:hover {
+  color: var(--tm-ink);
+}
+
+/* The header's way in: "Ask" among the words on desktop, a chat mark on phones. */
+.brand-refinement .tm-ask {
+  display: inline-flex;
+  align-items: center;
+}
+.tm-ask-icon {
+  display: none;
+}
+@media (max-width: 960px) {
+  .brand-refinement .tm-ask {
+    justify-content: center;
+    width: var(--tm-control-sm);
+    height: var(--tm-control-sm);
+    padding: 0;
+    border-bottom: 0;
+    border-radius: var(--tm-radius-pill);
+    color: var(--tm-ink);
+  }
+  .brand-refinement .tm-ask:focus-visible {
+    box-shadow: inset 0 0 0 1px var(--tm-ink-3);
+  }
+  .tm-ask-icon {
+    display: block;
+  }
+  .tm-ask-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-chat-scrim,
+  .tm-chat-panel {
+    transition: none;
+  }
+  .tm-chat-typing i {
+    animation: none;
+    opacity: 0.6;
+  }
 }

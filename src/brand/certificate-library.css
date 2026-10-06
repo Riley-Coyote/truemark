@@ -2,7 +2,11 @@
 .tm-library-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--tm-space-3) var(--tm-space-5); }
 .tm .tm-library-count { color: var(--tm-ink-3); white-space: nowrap; }
 .tm-library-search { grid-column: 1 / span 6; margin-block: var(--tm-space-6); }
+/* With nothing released yet there is no search, and the note sits under the heading. */
+.tm-library-head + .tm-library-records { margin-top: var(--tm-space-5); }
 .tm-library-table { width: 100%; border-collapse: collapse; margin-bottom: var(--tm-space-6); text-align: left; }
+/* The section's own space closes it; a last table adds none of its own. */
+.tm-library-records > :last-child { margin-bottom: 0; }
 .tm-library-table :is(th, td) { padding: var(--tm-space-4) var(--tm-space-3); border-bottom: 1px solid var(--tm-line); vertical-align: middle; }
 .tm-library-table th { border-top: 1px solid var(--tm-line); }
 .tm-library-table tbody tr { transition: background-color var(--tm-dur-base) var(--tm-ease-enter); }

@@ -48,6 +48,14 @@ export function createAccounts(client: SupabaseClient, rows: (table: string, sel
         write(USER_KEY, null);
       }
     },
+    async recoverVerifiedSession(session: Session) {
+      const current = await profile();
+      gate = current?.role === "owner" || current?.role === "staff" ? "team" : current?.role === "partner" ? "partner" : "shop";
+      write(GATE_KEY, gate); write(USER_KEY, session.user.id);
+      setRecovery({ userId: session.user.id, email: session.user.email ?? "", gate });
+      options.onRecovery?.(gate);
+      return gate;
+    },
     async requestPasswordReset(email: string, source: RecoveryGate) {
       gate = source; write(GATE_KEY, gate);
       try {

@@ -162,8 +162,8 @@ export default function Gate() {
             <h2 className="tm-gate-heading">{mode === "signin" ? "Sign in" : "Create account"}</h2>
             <p className="tm-gate-sub">
               {mode === "signin"
-                ? "Sign in to browse products, verify lots and place orders."
-                : "Open a free research account to browse products, verify lots and place orders."}
+                ? "Sign in to browse products and place orders."
+                : "Open a free research account to browse products and place orders."}
             </p>
 
             <div className="tm-segmented" role="group" aria-label="Account">
