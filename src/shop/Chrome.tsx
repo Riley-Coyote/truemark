@@ -8,7 +8,7 @@ import "@fontsource/poppins/300.css";
 import "@fontsource/poppins/400.css";
 import "@fontsource/poppins/500.css";
 import { BrandLogo } from "../BrandLogo";
-import { categoryName, products } from "../data";
+import { categoryName, products, business } from "../data";
 import { productCutout } from "./catalog";
 import { useShop } from "./context";
 import { Modal } from "./Modal";
@@ -273,9 +273,9 @@ export function Footer() {
         ))}
         <div className="tm-footer-legal">
           <p>
-            Research use only. All products supplied by TrueMark BioLabs are
-            intended solely for laboratory research applications. They are not
-            for human or veterinary use and are not intended to diagnose, treat,
+            <strong>Research use only.</strong> All products supplied by TrueMark BioLabs are
+            intended solely for laboratory research applications. They are{" "}
+            <strong>not for human or veterinary use</strong> and are not intended to diagnose, treat,
             cure, or prevent any disease. No product listed here has been
             approved by the FDA for any therapeutic purpose. Nothing on this site
             constitutes medical advice. Purchasers are responsible for ensuring
@@ -284,6 +284,11 @@ export function Footer() {
             these materials.
           </p>
           <div className="tm-footer-meta">
+            <address className="tm-footer-address">
+              <span>{business.legalName} DBA {business.tradeName}</span>
+              {/* Each address line stays whole; a narrow footer wraps only between them. */}
+              <span>Mailing address: {business.mailingAddress.map((line) => line.replace(/ /g, "\u00a0")).join(", ")}</span>
+            </address>
             <span>© 2026 TrueMark BioLabs · Research use only · Not for human consumption</span>
             {!LIVE && <span className="tm-preview-tag">Design preview · sample data</span>}
           </div>

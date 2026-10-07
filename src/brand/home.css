@@ -474,7 +474,7 @@
   grid-column: 1 / -1;
   margin: calc(var(--tm-space-7) * -1) 0 0;
 }
-.tm-vband-trace:not(.is-visible) :is(.tm-trace-line, .tm-trace-peak, .tm-trace-caption) {
+.tm-vband-trace:not(.is-visible) :is(.tm-trace-line, .tm-trace-caption) {
   animation-play-state: paused;
 }
 

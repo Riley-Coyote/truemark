@@ -6,6 +6,7 @@ import {
   articleById,
   categoryLabel,
   relatedArticles,
+  articleClosing,
   researchUseNotice,
   sectionId,
 } from "../../../brand/articles";
@@ -183,6 +184,7 @@ function PreviewArticle() {
           {sections.length > 1 && <Contents sections={sections} current={current} />}
           <div className="tm-article-body">
             <Body blocks={article.body} />
+            <p className="tm-article-closing">{articleClosing}</p>
             <footer className="tm-article-notice">
               <p>
                 <span>{researchUseNotice.lead}</span> {researchUseNotice.text}

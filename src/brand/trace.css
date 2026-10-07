@@ -1,4 +1,4 @@
-/* The HPLC trace motif (Trace.tsx): a baseline that draws in, one peak lit by the brand gradient. */
+/* The HPLC trace motif (Trace.tsx): one ink line that draws in, stronger up its peak; colour comes only as light. */
 .tm-trace {
   position: relative;
   width: auto;
@@ -14,101 +14,28 @@
   stroke-dashoffset: 1;
   animation: tm-draw 2400ms var(--tm-ease-breathe) 500ms forwards;
 }
-/* The baseline's ink, which the gradient stroke starts and ends in; the pulse's
-   ink is stronger, so the travelling light reads along the baseline too. */
+/* The baseline's ink, and the stronger ink the line rises to at the top of its peak. */
 .tm-trace-light {
   --tm-trace-ink: var(--tm-ink-4);
-  --tm-trace-pulse-ink: var(--tm-ink-2);
+  --tm-trace-peak-ink: var(--tm-ink-2);
 }
 .tm-trace-night {
   --tm-trace-ink: var(--tm-glow-4);
-  --tm-trace-pulse-ink: var(--tm-glow);
+  --tm-trace-peak-ink: var(--tm-glow);
 }
 
-/* The living trace (pulse): once drawn, a light runs along the line on a loop, taking the
-   gradient's colours over the peak, and the peak's glow flares as it passes. The light is a
-   comet: dashes of different lengths on the normalised path (pathLength 1) share one leading
-   point, so a bright head trails a fading tail. The group carries the fade in and out. */
-.tm-trace-pulse {
-  display: none;
-  opacity: 0;
+/* The lit trace's colours (Trace.tsx `lit`): the same line in the brand gradient, shown only
+   where the scene's light has just crossed it. The component draws the mask during a pass;
+   between passes nothing shows. */
+.tm-trace-lit {
+  position: absolute;
+  inset-inline: 0;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(transparent, transparent);
+  mask-image: linear-gradient(transparent, transparent);
 }
-.tm-trace-comet {
-  fill: none;
-  stroke-linecap: round;
-}
-.tm-trace-comet.is-head { stroke-width: 2.25; stroke-dasharray: 0.018 2; stroke-dashoffset: 0.018; }
-.tm-trace-comet.is-body { stroke-width: 1.75; stroke-dasharray: 0.045 2; stroke-dashoffset: 0.045; opacity: 0.5; }
-.tm-trace-comet.is-glow { stroke-width: 6; stroke-dasharray: 0.045 2; stroke-dashoffset: 0.045; opacity: 0.4; }
-.tm-trace-comet.is-tail { stroke-width: 1.5; stroke-dasharray: 0.09 2; stroke-dashoffset: 0.09; opacity: 0.2; }
-.tm-trace-flare {
-  opacity: 0;
-}
-.tm-trace[data-pulse="true"] .tm-trace-pulse {
-  display: inline;
-  animation: tm-trace-pulse var(--tm-trace-cycle) linear var(--tm-trace-start) infinite;
-}
-.tm-trace[data-pulse="true"] .tm-trace-comet {
-  animation: tm-trace-head var(--tm-trace-cycle) linear var(--tm-trace-start) infinite;
-}
-.tm-trace[data-pulse="true"] :is(.tm-trace-comet.is-body, .tm-trace-comet.is-glow) {
-  animation-name: tm-trace-body;
-}
-.tm-trace[data-pulse="true"] .tm-trace-comet.is-tail {
-  animation-name: tm-trace-tail;
-}
-.tm-trace[data-pulse="true"] .tm-trace-flare {
-  animation: tm-trace-flare var(--tm-trace-cycle) ease-in-out var(--tm-trace-flare-start) infinite;
-}
-.tm-trace[data-paused="true"] :is(.tm-trace-pulse, .tm-trace-comet, .tm-trace-flare) {
-  animation-play-state: paused;
-}
-
-/* The group fades the light in as it enters and out as it leaves; it rests for the last third. */
-@keyframes tm-trace-pulse {
-  0%,
-  66%,
-  100% {
-    opacity: 0;
-  }
-  3%,
-  60% {
-    opacity: 1;
-  }
-}
-/* Each dash travels its leading point from 0 to 1.09 (past the end) in 66% of the cycle:
-   dashoffset runs from its length L to L - 1.09. */
-@keyframes tm-trace-head {
-  0% { stroke-dashoffset: 0.018; }
-  66%,
-  100% { stroke-dashoffset: -1.072; }
-}
-@keyframes tm-trace-body {
-  0% { stroke-dashoffset: 0.045; }
-  66%,
-  100% { stroke-dashoffset: -1.045; }
-}
-@keyframes tm-trace-tail {
-  0% { stroke-dashoffset: 0.09; }
-  66%,
-  100% { stroke-dashoffset: -1; }
-}
-/* Brightest at 6% of its cycle, which the component aligns with the pulse's arrival. */
-@keyframes tm-trace-flare {
-  0%,
-  100% {
-    opacity: 0;
-  }
-  6% {
-    opacity: 0.95;
-  }
-  26% {
-    opacity: 0;
-  }
-}
-.tm-trace-peak {
-  opacity: 0;
-  animation: tm-appear-to 900ms var(--tm-ease-enter) 1500ms forwards;
+.tm-trace-line.is-lit {
+  stroke-width: 1.6;
 }
 .tm-trace-caption {
   position: absolute;
@@ -142,15 +69,11 @@
     animation: none;
     stroke-dashoffset: 0;
   }
-  .tm-trace-peak,
   .tm-trace-caption {
     animation: none;
     opacity: 1;
   }
-  .tm-trace-pulse,
-  .tm-trace-comet,
-  .tm-trace-flare {
+  .tm-trace-lit {
     display: none;
-    animation: none;
   }
 }

@@ -38,9 +38,12 @@ import Quality from "./shop/pages/content/Quality";
 function RouteEffects() {
   const location = useLocation();
   useEffect(() => {
+    // A product page names its size too: the four Retatrutide pages are four pages.
+    const product = location.pathname.startsWith("/product/")
+      ? products.find((p) => p.id === decodeURIComponent(location.pathname.slice("/product/".length)))
+      : undefined;
     const title = location.pathname.startsWith("/product/")
-      ? (products.find((p) => location.pathname.endsWith(p.id))?.name ??
-        "Research compound")
+      ? (product ? `${product.name} ${product.size}` : "Research compound")
       : ({
           "/": "Research peptides. Third-party tested.",
           "/products": "Research compounds",
@@ -167,6 +170,8 @@ export default function App() {
             <Route path="/track/:number?" element={<Track />} />
             <Route path="/access/apply" element={<Apply />} />
             <Route path="/my-account" element={<Navigate to="/account" replace />} />
+            {/* The client's Terms lived at this address; old links keep working. */}
+            <Route path="/terms-and-conditions" element={<Navigate to="/terms" replace />} />
             <Route path="/account/*" element={<Account />} />
             <Route path="/quality" element={<Quality />} />
             <Route path="/handling" element={<Handling />} />

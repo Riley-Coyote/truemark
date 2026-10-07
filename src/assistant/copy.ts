@@ -16,7 +16,7 @@ export const shippingCopy = [
 ];
 export function siteAnswers(topic: string, query = "") {
   const values = topic === "faq" ? faqs.map(([question, quote]) => ({ source: "/", question, quote }))
-    : topic === "policies" ? policies.flatMap((p) => p.blocks.filter((b) => b.kind !== "heading").map((b) => ({ source: p.path, question: p.title, quote: b.text })))
+    : topic === "policies" ? policies.flatMap((p) => p.blocks.filter((b) => b.kind !== "heading" && b.kind !== "signoff").map((b) => ({ source: p.path, question: p.title, quote: b.text })))
     : (topic === "storage" ? handlingCopy : [...handlingCopy, ...shippingCopy]).map((quote) => ({ source: "/handling", question: topic, quote }));
   const words = query.toLowerCase().split(/\W+/).filter((word) => word.length > 2);
   const matches = words.length ? values.filter((row) => words.some((word) => `${row.question} ${row.quote}`.toLowerCase().includes(word))) : values;

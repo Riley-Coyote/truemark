@@ -11,6 +11,7 @@ import { rememberVial } from "../Navigation";
 import { ProductName, pictureLoading, tone } from "../shop/ui";
 import { sheenMask } from "./light";
 import "./cards.css";
+import { PURITY_SPEC } from "../platform/certificate-records";
 
 /**
  * A compound in the shop: its vial standing in the lilac studio, the colour
@@ -33,7 +34,7 @@ export function ProductCard({ compound, listItem = false, compact = false }: { c
   const tag = variants.find((v) => v.tag)?.tag;
   const sizes = multi ? `${variants.map((v) => v.size.replace(/ mg$/, "")).join(" · ")} mg` : lead.size;
   // The separator stays with the words before it, so a line never starts with "·".
-  const detail = lead.category === "lab-supplies" ? "Sterile solution" : "Lyophilized powder\u00a0· ≥99%\u00a0(HPLC)";
+  const detail = lead.category === "lab-supplies" ? "Sterile solution" : `Lyophilized powder\u00a0· ≥${PURITY_SPEC}%\u00a0(HPLC)`;
   const buyable = variants.filter((v) => v.price !== undefined);
   const inBag = (id: string) => cart.find((item) => item.id === id)?.quantity ?? 0;
   const atLimit = (id: string) => {

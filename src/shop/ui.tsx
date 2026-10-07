@@ -7,6 +7,7 @@ import type { Product } from "../data";
 import { productImage, productSrcSet, sampleRecord } from "./catalog";
 import type { Compound } from "./catalog";
 import type { LotRecord } from "./records";
+import { PURITY_SPEC } from "../platform/certificate-records";
 
 /**
  * Pictures already shown during this visit. A page that comes back (Back, Forward, a filter
@@ -118,16 +119,17 @@ export function CompoundTile({ compound, listItem = false }: { compound: Compoun
 }
 
 export const proofFigures = [
-  { label: "Purity specification", figure: "≥99", unit: "%", text: "Measured by HPLC on every lot before it is released." },
+  { label: "Purity specification", figure: `≥${PURITY_SPEC}`, unit: "%", text: "Measured by HPLC on every lot before it is released." },
   { label: "Identity", figure: "MS", unit: "", text: "Confirmed by mass spectrometry, lot by lot." },
   { label: "Storage", figure: "−20", unit: "°C", text: "Held cold, then shipped with temperature control when applicable." },
   { label: "Release", figure: "0", unit: "", text: "Lots released without an approved certificate." },
 ];
 
-export function ProofFigures() {
+/** `storage: false` leaves out the cold-storage figure, for a lab supply kept at room temperature. */
+export function ProofFigures({ storage = true }: { storage?: boolean }) {
   return (
     <dl className="tm-specs">
-      {proofFigures.map((proof, i) => (
+      {proofFigures.filter((proof) => storage || proof.label !== "Storage").map((proof, i) => (
         <div key={proof.label} data-reveal style={{ "--tm-i": i } as CSSProperties}>
           <dt>{proof.label}</dt>
           <dd>

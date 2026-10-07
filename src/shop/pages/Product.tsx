@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { claimText, contentValue, resultGroups, splitLabel } from "../../platform/certificate-records";
+import { claimText, contentValue, resultGroups, splitLabel, PURITY_SPEC } from "../../platform/certificate-records";
 import { stockProblem } from "../../platform/commerce";
 import { useReleasedLots } from "../../platform/released";
 import type { LotResult } from "../../platform/types";
 import { LIVE } from "../../platform/mode";
 import { categoryName, money, products } from "../../data";
-import { compoundsForBrowsing, describe, specFor } from "../catalog";
+import { compoundsForBrowsing, describe, researchUseNote, specFor, traceability } from "../catalog";
 import { useShop } from "../context";
 import { recordFromLot } from "../records";
 import { announceMobileAdd } from "../MobileAdd";
@@ -55,16 +55,18 @@ export default function ProductPage() {
   if (!product) {
     return (
       <div className="tm-page">
-        <section className="tm tm-empty-page">
-          <p className="tm-eyebrow">Not found</p>
-          <h1 className="tm-display">
-            That compound
-            <br />
-            <span>isn’t in the collection.</span>
-          </h1>
-          <Link className="tm-textlink" to="/products">
-            Browse the collection <ArrowRight size={16} strokeWidth={1.6} />
-          </Link>
+        <section className="tm">
+          <div className="tm-empty-page">
+            <p className="tm-eyebrow">Not found</p>
+            <h1 className="tm-display">
+              That compound
+              <br />
+              <span>isn’t in the collection.</span>
+            </h1>
+            <Link className="tm-textlink" to="/products">
+              Browse the collection <ArrowRight size={16} strokeWidth={1.6} />
+            </Link>
+          </div>
         </section>
       </div>
     );
@@ -86,7 +88,7 @@ export default function ProductPage() {
     ["Molecular weight", spec.weight],
     ["Sequence", spec.sequence],
     ["Blend", spec.blend],
-    ["Purity specification", product.category === "lab-supplies" ? undefined : "≥99% (HPLC)"],
+    ["Purity specification", product.category === "lab-supplies" ? undefined : `≥${PURITY_SPEC}% (HPLC)`],
     ...lotRows(lot?.results, "purity"),
     ["Identity method", product.category === "lab-supplies" ? undefined : "Mass spectrometry"],
     ...lotRows(lot?.results, "identity"),
@@ -114,6 +116,7 @@ export default function ProductPage() {
             <ProductName name={product.name} />
           </h1>
           <p className="tm-product-sub">
+            {spec.descriptor && <>{spec.descriptor} <span>·</span> </>}
             {product.size} <span>·</span> {product.form}
             {product.price !== undefined && (
               <span className="tm-product-sub-price" aria-hidden="true">
@@ -191,10 +194,11 @@ export default function ProductPage() {
           )}
 
           <ul className="tm-buy-notes">
+            <li>10 mL vial · Type I glass</li>
             <li>Shipped with temperature control when applicable</li>
             <li>Certificate of analysis for every lot</li>
-            <li>For laboratory research use only</li>
           </ul>
+          <p className="tm-buy-notice">{researchUseNote}</p>
 
           {lot && certificate ? (
             // The whole card opens the certificate in place; its PDF and the lot's page are inside.
@@ -233,7 +237,18 @@ export default function ProductPage() {
             Read our standard <ArrowRight size={16} strokeWidth={1.6} />
           </Link>
         </header>
-        <ProofFigures />
+        <ProofFigures storage={product.category !== "lab-supplies"} />
+        <div className="tm-traceability" data-reveal>
+          <h3 className="tm-traceability-title">Testing and traceability</h3>
+          <ul className="tm-traceability-list">
+            {traceability(product).map(([title, text]) => (
+              <li key={title}>
+                <p className="tm-traceability-name">{title}</p>
+                <p className="tm-traceability-text">{text}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       <section className="tm tm-product-spec" aria-labelledby="tm-spec-title">

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { assetUrl } from "../../../assetUrl";
 import { BrandDot } from "../../../brand/HeroShelf";
 import { Trace } from "../../../brand/Trace";
+import { PURITY_SPEC } from "../../../platform/certificate-records";
 import { Track } from "../../../brand/Track";
 import type { TrackStop } from "../../../brand/Track";
 import { useReveal } from "../../motion";
@@ -53,7 +54,7 @@ const process: TrackStop[] = [
 ];
 
 const specification: [test: string, method: string, requirement: string][] = [
-  ["Purity", "HPLC", "≥ 99%"],
+  ["Purity", "HPLC", `≥\u00a0${PURITY_SPEC}%`],
   ["Identity", "Mass spectrometry", "Mass confirmed"],
   ["Endotoxin", "LAL assay", "< 0.25 EU/mg"],
   ["Sterility", "Culture", "No growth"],
@@ -180,7 +181,7 @@ function Specification() {
         aria-hidden="true"
       >
         <Trace theme="night" peakAt={peakAt} height={120} />
-        <span className="tm-quality-trace-caption">≥&nbsp;99% purity specification · HPLC</span>
+        <span className="tm-quality-trace-caption">≥&nbsp;{PURITY_SPEC}% purity specification · HPLC</span>
       </div>
       <div className="tm-quality-sheet" data-reveal>
         <table>

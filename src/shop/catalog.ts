@@ -97,6 +97,8 @@ export function refreshCatalog() {
 }
 
 export type CompoundSpec = {
+  /** What the compound is, as the client's subtitle names it ("Pentadecapeptide"). */
+  descriptor?: string;
   cas?: string;
   formula?: string;
   weight?: string;
@@ -109,6 +111,21 @@ export type CompoundSpec = {
 
 const powder: CompoundSpec = { form: "Lyophilized powder", storage: "−20 °C, protected from light" };
 
+/** The client's "Testing and traceability" notes from every product page, NFC now a QR code and
+ *  shipping worded as their review of Sept 30 asked. A lab supply keeps its own storage, so it
+ *  carries no cold-chain note. */
+export function traceability(product: Product): [title: string, text: string][] {
+  return [
+    ["Tested on receipt", "Every lot is sampled and sent to a contracted laboratory for HPLC purity and MS identity testing before release."],
+    ["Quarantined until release", "Lots are held in temperature-controlled quarantine and released only after the Certificate of Analysis is approved."],
+    ["Traceable to source batch", "The printed lot number and QR code on each vial resolve to the CoA and the full testing record for that batch."],
+    ...(product.category === "lab-supplies" ? [] : [["Cold chain to your door", "Stored at −20 °C and shipped with temperature control when applicable."] as [string, string]]),
+  ];
+}
+
+/** The client's notice beside the buy button on every product page, word for word. */
+export const researchUseNote = "Research use only. Not for human or veterinary administration. Supplied to verified research organizations for laboratory research applications.";
+
 /**
  * Compound data as published on the client's current site (captured 2026-09-24).
  * Only BPC-157 lists identifiers there; the rest stay blank until the client supplies them.
@@ -116,6 +133,7 @@ const powder: CompoundSpec = { form: "Lyophilized powder", storage: "−20 °C, 
 const specs: Record<string, CompoundSpec> = {
   "BPC-157": {
     ...powder,
+    descriptor: "Pentadecapeptide",
     cas: "137525-51-0",
     formula: "C62H98N16O22",
     weight: "1419.53 g/mol",

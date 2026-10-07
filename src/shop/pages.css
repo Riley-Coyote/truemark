@@ -768,6 +768,67 @@
   border-radius: var(--tm-radius-pill);
   background: var(--tm-tone);
 }
+/* The client's research-use notice, under the notes and above the lot. */
+.tm .tm-buy-notice {
+  margin: var(--tm-space-4) 0 0;
+  max-width: var(--tm-measure-base);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+/* "Testing and traceability": the client's four notes, a quiet row under the figures. */
+.tm-traceability {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  row-gap: var(--tm-space-5);
+  margin-top: var(--tm-space-8);
+}
+.tm .tm-traceability-title {
+  grid-column: 1 / -1;
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-micro) / var(--tm-leading-label) var(--tm-font-sans);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-traceability-list {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  row-gap: var(--tm-space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-traceability-list li {
+  grid-column: span 3;
+  padding-top: var(--tm-space-4);
+  border-top: 1px solid var(--tm-line);
+}
+.tm .tm-traceability-name {
+  margin: 0 0 var(--tm-space-2);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm .tm-traceability-text {
+  margin: 0;
+  max-width: 30ch;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+@media (max-width: 960px) {
+  .tm-traceability-list li {
+    grid-column: span 6;
+  }
+}
+@media (max-width: 560px) {
+  .tm-traceability-list li {
+    grid-column: 1 / -1;
+  }
+  .tm .tm-traceability-text {
+    max-width: none;
+  }
+}
 .tm .tm-lot-card {
   display: grid;
   grid-template-columns: 1fr auto;

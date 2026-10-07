@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { productById, productCutout } from "../shop/catalog";
 import { store, useResource } from "../platform/store";
 import { usePrefersReducedMotion } from "../shop/motion";
-import { canTurnShelf, SHELF_INTERVAL, SHELF_TOUCH_PAUSE, shelfOffset, wrapShelf } from "./carousel";
+import { canTurnShelf, SHELF_INTERVAL, SHELF_TOUCH_PAUSE, shelfIds, shelfOffset, wrapShelf } from "./carousel";
 import type { Product } from "../data";
 import { tone } from "../shop/ui";
 import { sheenMask, useLight } from "./light";
@@ -12,16 +12,6 @@ import { rememberVial } from "../Navigation";
 import { Trace } from "./Trace";
 import "./hero.css";
 
-/** The shelf, arranged by category colour as the brand guide asks for group shots. */
-const shelfIds = [
-  "ghk-cu-100-mg",
-  "melanotan-ii-10-mg",
-  "nad-500-mg",
-  "bpc-157-10-mg",
-  "semax-10-mg",
-  "tesamorelin-10-mg",
-  "retatrutide-10-mg",
-];
 
 const trust = [
   ["Research use only", "Supplied for laboratory research applications."],
@@ -143,7 +133,8 @@ export function HeroShelf() {
     return () => observer.disconnect();
   }, [mobile, chosen]);
   // The studio has one fixed key, so the glass catches only its slow passes, never the pointer.
-  useLight(scene, { follow: false });
+  // The first pass waits until the trace has drawn in, so the light crosses the whole line.
+  useLight(scene, { follow: false, firstPass: 3000 });
   return (
     <>
       <section className="tm tm-bhero" aria-labelledby="tm-bhero-title" ref={scene}>
@@ -262,7 +253,7 @@ export function HeroShelf() {
             </Link>
           ); })}
         </div>
-        <Trace className="tm-bhero-trace" peakAt={peak} height={mobile ? 88 : 104} pulse caption="≥99% purity specification · HPLC" />
+        <Trace className="tm-bhero-trace" peakAt={peak} height={mobile ? 88 : 104} lit caption="Every lot shown tested ≥99% by HPLC" />
       </section>
 
       <section className="tm tm-trust" aria-label="Our standard">

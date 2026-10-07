@@ -124,12 +124,7 @@
   animation: tm-draw var(--tm-about-sweep) linear var(--tm-about-leg) forwards;
   animation-play-state: paused;
 }
-/* The peak lights as the drawn line crests it, a little under halfway along its path. */
-.tm-about-verb-list .tm-trace-peak {
-  animation: tm-appear-to var(--tm-dur-slow) var(--tm-ease-enter) calc(var(--tm-about-leg) + var(--tm-about-sweep) * 0.42) forwards;
-  animation-play-state: paused;
-}
-.tm-about-verb-list li.is-visible :is(.tm-trace-line, .tm-trace-peak) {
+.tm-about-verb-list li.is-visible .tm-trace-line {
   animation-play-state: running;
 }
 .tm-about-verb-number {
@@ -288,10 +283,6 @@
     animation: none;
     stroke-dashoffset: 0;
   }
-  .tm-about-verb-list .tm-trace-peak {
-    animation: none;
-    opacity: 1;
-  }
 }
 
 /* ---------- Narrow screens ---------- */
@@ -362,9 +353,6 @@
   .tm-about-verb-list li:nth-child(3).is-visible::before,
   .tm-about-verb-list .tm-trace-line {
     animation-delay: 0s;
-  }
-  .tm-about-verb-list .tm-trace-peak {
-    animation-delay: calc(var(--tm-about-sweep) * 0.42);
   }
   .tm-about-principle-list li {
     display: block;

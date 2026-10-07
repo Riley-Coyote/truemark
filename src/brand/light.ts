@@ -27,8 +27,10 @@ export function sheenMask(src: string): CSSProperties {
  * on its own: the first shortly after the scene appears (`firstPass`), then one
  * every `period` (or never again, with `repeat: false`). Each pass leaves from
  * the rest and ends beyond the right edge, where nothing is lit, so the light
- * never visibly jumps. With reduced motion, or `ambient: false`, there are no
- * passes; the light follows the pointer only. At rest the loop sleeps.
+ * never visibly jumps. Each pass announces itself on the scene (`tm-light-pass`),
+ * for anything that answers the light in its own way. With reduced motion, or
+ * `ambient: false`, there are no passes; the light follows the pointer only. At
+ * rest the loop sleeps.
  */
 export function useLight(
   root: RefObject<HTMLElement | null>,
@@ -58,6 +60,9 @@ export function useLight(
     let frame = 0;
     let wake = 0;
     let visible = true;
+    let inPass = false;
+    // Whatever in the scene answers the light (the hero's trace) finds it by this, and hears each pass begin.
+    scene.setAttribute("data-light", "");
 
     const place = (x: number, y: number) => {
       const box = scene.getBoundingClientRect();
@@ -109,6 +114,8 @@ export function useLight(
       const box = scene.getBoundingClientRect();
       const nowLed = pointer !== null && t - lastMove < idle;
       const a = ambient(t, box);
+      if (a.moving && !inPass) scene.dispatchEvent(new CustomEvent("tm-light-pass"));
+      inPass = a.moving;
       const target = nowLed && pointer ? pointer : a;
       // Changing hands, between the pointer and the ambient light, the light glides.
       if (nowLed !== led) {
@@ -171,6 +178,7 @@ export function useLight(
       seen.disconnect();
       scene.removeEventListener("pointermove", onMove);
       scene.removeEventListener("pointerleave", onLeave);
+      scene.removeAttribute("data-light");
       if (frame) cancelAnimationFrame(frame);
       if (wake) window.clearTimeout(wake);
     };

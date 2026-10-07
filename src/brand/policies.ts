@@ -3,7 +3,11 @@
  * (captured 2026-09-24; structure read from the live pages 2026-09-25).
  * Update here when the client revises them; nothing else holds this copy.
  */
-export type PolicyBlock = { kind: "heading" | "paragraph" | "item"; text: string };
+/**
+ * A block of the client's words, unchanged. `strong` and `links` carry their page's own emphasis and links:
+ * phrases of `text` to set in bold, or to link (an app path, or a mail address). A `signoff` closes a page.
+ */
+export type PolicyBlock = { kind: "heading" | "paragraph" | "item" | "signoff"; text: string; strong?: string[]; links?: [phrase: string, href: string][] };
 export type Policy = { path: string; title: string; updated: string; standfirst?: string; blocks: PolicyBlock[] };
 
 export const policies: Policy[] = [
@@ -18,8 +22,8 @@ export const policies: Policy[] = [
       { kind: "paragraph", text: "You must be at least 21 years old to create an account or purchase products from TRUEMARK Biolabs." },
       { kind: "paragraph", text: "By creating an account, you confirm that the information you provide is accurate and that you are legally permitted to purchase and receive research compounds in your jurisdiction." },
       { kind: "heading", text: "2. Research Use Only" },
-      { kind: "paragraph", text: "All products offered by TRUEMARK Biolabs are sold strictly for laboratory research and analytical purposes only." },
-      { kind: "paragraph", text: "Our products are not intended for human consumption, veterinary use, diagnostic purposes, therapeutic use, or the treatment, prevention, or cure of any disease or medical condition." },
+      { kind: "paragraph", text: "All products offered by TRUEMARK Biolabs are sold strictly for laboratory research and analytical purposes only.", strong: ["strictly for laboratory research and analytical purposes only"] },
+      { kind: "paragraph", text: "Our products are not intended for human consumption, veterinary use, diagnostic purposes, therapeutic use, or the treatment, prevention, or cure of any disease or medical condition.", strong: ["not intended for human consumption, veterinary use, diagnostic purposes, therapeutic use, or the treatment, prevention, or cure of any disease or medical condition"] },
       { kind: "paragraph", text: "Customers are responsible for ensuring that all products are used in accordance with applicable laws, regulations, laboratory standards, and safety requirements." },
       { kind: "paragraph", text: "TRUEMARK Biolabs does not authorize or recommend the use of its products in humans or animals." },
       { kind: "heading", text: "3. Product Information" },
@@ -82,6 +86,7 @@ export const policies: Policy[] = [
       { kind: "paragraph", text: "Any disputes arising from these Terms & Conditions or your use of the website shall be handled in accordance with applicable law." },
       { kind: "heading", text: "14. Contact Us" },
       { kind: "paragraph", text: "If you have questions about these Terms & Conditions, please contact TRUEMARK Biolabs through the contact information provided on our website." },
+      { kind: "signoff", text: "TRUEMARK Biolabs Research compounds, verified by lot.", strong: ["TRUEMARK Biolabs"] },
     ],
   },
   {
@@ -92,10 +97,10 @@ export const policies: Policy[] = [
     blocks: [
       { kind: "paragraph", text: "This Privacy Policy explains how TrueMark (“TrueMark,” “we,” “us,” or “our”) collects, uses, discloses, and safeguards information when you visit our website, create an account, place an order, or use our lot-verification tool to look up a Certificate of Analysis. By using our site, you agree to the practices described in this policy. Our products are sold strictly for research use only and are not intended for human or animal consumption; this policy covers data privacy only and does not amend our Terms of Sale." },
       { kind: "heading", text: "Information We Collect" },
-      { kind: "paragraph", text: "Account & order information. When you create an account or place an order, we collect your name, email address, shipping and billing address, phone number, and payment details (processed securely by our payment provider — we do not store full card numbers on our servers)." },
-      { kind: "paragraph", text: "Lot verification data. When you enter a lot number on our Verify page, we log the lot number, timestamp, and general location of the request to detect misuse and to improve the tool. We do not require an account to use lot verification." },
-      { kind: "paragraph", text: "Usage data. We automatically collect information about your device, browser, IP address, pages viewed, and referring URLs through cookies and similar technologies, as described below." },
-      { kind: "paragraph", text: "Communications. If you contact us through our contact form or email, we retain the content of that message and our replies to provide support and keep a record of the correspondence." },
+      { kind: "paragraph", strong: ["Account & order information."], text: "Account & order information. When you create an account or place an order, we collect your name, email address, shipping and billing address, phone number, and payment details (processed securely by our payment provider — we do not store full card numbers on our servers)." },
+      { kind: "paragraph", strong: ["Lot verification data."], text: "Lot verification data. When you enter a lot number on our Verify page, we log the lot number, timestamp, and general location of the request to detect misuse and to improve the tool. We do not require an account to use lot verification." },
+      { kind: "paragraph", strong: ["Usage data."], text: "Usage data. We automatically collect information about your device, browser, IP address, pages viewed, and referring URLs through cookies and similar technologies, as described below." },
+      { kind: "paragraph", strong: ["Communications."], text: "Communications. If you contact us through our contact form or email, we retain the content of that message and our replies to provide support and keep a record of the correspondence." },
       { kind: "heading", text: "How We Use Your Information" },
       { kind: "paragraph", text: "We use the information we collect to:" },
       { kind: "item", text: "Process, fulfil, and ship your orders, and send order and shipping confirmations." },
@@ -111,9 +116,9 @@ export const policies: Policy[] = [
       { kind: "paragraph", text: "We may use privacy-respecting analytics tools to understand aggregate site traffic. We do not sell your personal information to third-party advertisers." },
       { kind: "heading", text: "How We Share Your Information" },
       { kind: "paragraph", text: "We do not sell your personal information. We share information only as needed to run our business:" },
-      { kind: "item", text: "Service providers — payment processors, shipping carriers, email delivery services, and website hosting providers, each bound by confidentiality and data-protection obligations." },
-      { kind: "item", text: "Legal & safety — where required to comply with a law, regulation, subpoena, or to protect the rights, property, or safety of TrueMark, our customers, or others." },
-      { kind: "item", text: "Business transfers — in connection with a merger, acquisition, or sale of assets, subject to this policy continuing to apply to your information." },
+      { kind: "item", strong: ["Service providers"], text: "Service providers — payment processors, shipping carriers, email delivery services, and website hosting providers, each bound by confidentiality and data-protection obligations." },
+      { kind: "item", strong: ["Legal & safety"], text: "Legal & safety — where required to comply with a law, regulation, subpoena, or to protect the rights, property, or safety of TrueMark, our customers, or others." },
+      { kind: "item", strong: ["Business transfers"], text: "Business transfers — in connection with a merger, acquisition, or sale of assets, subject to this policy continuing to apply to your information." },
       { kind: "heading", text: "Data Retention" },
       { kind: "paragraph", text: "We retain account and order information for as long as your account is active and as needed to meet accounting, tax, and legal record-keeping requirements. Lot-verification logs are retained for a limited period to support fraud detection and are periodically purged. You may request earlier deletion as described under “Your Rights” below, subject to any legal retention obligations." },
       { kind: "heading", text: "Data Security" },
@@ -127,7 +132,7 @@ export const policies: Policy[] = [
       { kind: "heading", text: "Changes to This Policy" },
       { kind: "paragraph", text: "We may update this Privacy Policy from time to time to reflect changes in our practices or for legal reasons. We will post the revised policy on this page with an updated “Last updated” date, and, for material changes, provide a more prominent notice." },
       { kind: "heading", text: "Contact Us" },
-      { kind: "paragraph", text: "If you have questions about this Privacy Policy or how we handle your information, contact us at privacy@truemark.com or through our Contact page." },
+      { kind: "paragraph", text: "If you have questions about this Privacy Policy or how we handle your information, contact us at privacy@truemark.com or through our Contact page.", links: [["privacy@truemark.com", "mailto:privacy@truemark.com"], ["Contact page", "/contact"]] },
     ],
   },
   {
@@ -141,7 +146,7 @@ export const policies: Policy[] = [
       { kind: "heading", text: "2. Eligible Returns" },
       { kind: "paragraph", text: "We accept returns only for products that arrive damaged, defective, or incorrect." },
       { kind: "heading", text: "3. Return Period" },
-      { kind: "paragraph", text: "Return requests must be submitted within 7 days of delivery. Please include your order number and clear photos of the product and packaging." },
+      { kind: "paragraph", text: "Return requests must be submitted within 7 days of delivery. Please include your order number and clear photos of the product and packaging.", strong: ["7 days of delivery"] },
       { kind: "heading", text: "4. Condition of Products" },
       { kind: "paragraph", text: "Returned products must remain unopened and in their original condition. Opened, used, altered, or improperly stored products are not eligible for return." },
       { kind: "heading", text: "5. Damaged or Incorrect Orders" },
@@ -156,6 +161,7 @@ export const policies: Policy[] = [
       { kind: "paragraph", text: "Refund processing times may vary depending on your payment provider or financial institution. TRUEMARK Biolabs is not responsible for delays caused by third-party payment processors." },
       { kind: "heading", text: "10. Contact Us" },
       { kind: "paragraph", text: "For questions regarding returns, refunds, or cancellations, please contact TRUEMARK Biolabs through the contact information provided on our website." },
+      { kind: "signoff", text: "TRUEMARK Biolabs", strong: ["TRUEMARK Biolabs"] },
     ],
   },
   {
@@ -166,7 +172,7 @@ export const policies: Policy[] = [
       { kind: "heading", text: "1. Shipping Overview" },
       { kind: "paragraph", text: "TRUEMARK Biolabs ships research products to eligible locations where the purchase and shipment of such products are permitted by applicable laws and regulations." },
       { kind: "heading", text: "2. Order Processing" },
-      { kind: "paragraph", text: "Orders are typically processed within 1–3 business days after payment is confirmed. Processing times may vary depending on order volume and product availability." },
+      { kind: "paragraph", text: "Orders are typically processed within 1–3 business days after payment is confirmed. Processing times may vary depending on order volume and product availability.", strong: ["1–3 business days"] },
       { kind: "heading", text: "3. Shipping Methods" },
       { kind: "paragraph", text: "Available shipping options and estimated delivery times will be displayed during checkout. Delivery times are estimates and are not guaranteed." },
       { kind: "heading", text: "4. Shipping Address" },
@@ -183,6 +189,7 @@ export const policies: Policy[] = [
       { kind: "paragraph", text: "If your order arrives damaged or appears to be lost in transit, please contact us as soon as possible with your order and tracking information so we can assist with the issue." },
       { kind: "heading", text: "10. Contact Us" },
       { kind: "paragraph", text: "For questions regarding shipping or delivery, please contact TRUEMARK Biolabs through the contact information provided on our website." },
+      { kind: "signoff", text: "TRUEMARK Biolabs", strong: ["TRUEMARK Biolabs"] },
     ],
   },
 ];

@@ -56,6 +56,8 @@ export const pendingCertificates = data.pending;
 
 /** The certificates' own release specification for HPLC purity, in percent ("95.0"). */
 export const PURITY_MINIMUM = data.specification.purity;
+/** The same specification as the shop states it ("95", read "≥95%"): one figure, so the claim and the release gate agree. */
+export const PURITY_SPEC = String(Number(PURITY_MINIMUM));
 export const IDENTITY_METHOD = "HPLC (RT + UV vs. reference)";
 /** Results for one component of a blend carry its name after this separator: "Purity · BPC-157". */
 export const COMPONENT_SEPARATOR = " · ";

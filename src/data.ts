@@ -113,6 +113,13 @@ export const compoundClasses: Category[] = [
   }
 ].map((category, index) => ({ ...category, position: index + 1, onHome: true }));
 
+/** The client's legal name and mailing address, as they gave them (Oct 6). */
+export const business = {
+  legalName: "TrueMark Supply Group LLC",
+  tradeName: "TrueMark BioLabs",
+  mailingAddress: ["5900 Balcones Drive, Suite #34195", "Austin, TX 78731"],
+};
+
 export const categories: { id: string; name: string; short: string }[] = [
   { id: "all", name: "All compounds", short: "All compounds" },
   ...compoundClasses,

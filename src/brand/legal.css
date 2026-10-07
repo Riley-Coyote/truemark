@@ -76,6 +76,19 @@
 .tm .tm-legal-body p {
   margin: 0 0 var(--tm-space-4);
 }
+/* The client's own emphasis and links, as their pages set them. */
+.tm .tm-legal-body strong {
+  font-weight: var(--tm-weight-medium);
+  color: var(--tm-ink);
+}
+.tm .tm-legal-body a { color: var(--tm-ink); text-decoration: underline; text-decoration-color: var(--tm-ink-3); text-underline-offset: var(--tm-space-1); }
+.tm .tm-legal-body a:hover { color: var(--tm-ink-2); }
+.tm .tm-legal-body a:focus-visible { outline: none; color: var(--tm-ink); text-decoration-color: var(--tm-ink); }
+.tm .tm-legal-body a:active { color: var(--tm-ink-3); }
+/* The page's closing line: the client's name, after the last section. */
+.tm .tm-legal-body .tm-legal-signoff {
+  margin-top: var(--tm-space-6);
+}
 .tm .tm-legal-body ul {
   margin: 0 0 var(--tm-space-5);
   padding: 0;

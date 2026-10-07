@@ -110,6 +110,18 @@
   font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
   color: var(--tm-ink-3);
 }
+/* The mailing address, under the hours: a postal block, not a place to visit. */
+.tm .tm-contact-post {
+  margin-top: var(--tm-space-6);
+  padding-top: var(--tm-space-5);
+  border-top: 1px solid var(--tm-line-strong);
+}
+.tm .tm-contact-address {
+  margin-top: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  font-style: normal;
+  color: var(--tm-ink-2);
+}
 
 .tm-contact-compose {
   grid-column: 7 / -1;

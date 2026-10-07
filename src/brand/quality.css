@@ -127,7 +127,7 @@
   margin: calc(var(--tm-quality-trace-h) * -0.42) calc(var(--tm-pad) * -1) 0;
   pointer-events: none;
 }
-.tm-quality-trace:not(.is-visible) :is(.tm-trace-line, .tm-trace-peak) {
+.tm-quality-trace:not(.is-visible) .tm-trace-line {
   animation-play-state: paused;
 }
 .tm-quality-trace-caption {

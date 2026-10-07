@@ -49,6 +49,9 @@ export type Article = {
 const author = "TrueMark Quality Team";
 const review = "Reviewed by the quality unit";
 
+/** The italic line that closed the client's articles, above the notice; the template closes every article with it. */
+export const articleClosing = "Research use only. This article is educational and does not constitute medical, clinical, or veterinary guidance.";
+
 export const researchUseNotice = {
   lead: "Research use only.",
   text: "This article is educational material for laboratory researchers. It is not medical advice, and the materials discussed are not for human or veterinary use.",

@@ -313,8 +313,17 @@
   font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
   color: var(--tm-ink-3);
 }
-.tm-article-figure:not(.is-visible) :is(.tm-trace-line, .tm-trace-peak, .tm-trace-caption) {
+.tm-article-figure:not(.is-visible) :is(.tm-trace-line, .tm-trace-caption) {
   animation-play-state: paused;
+}
+
+/* The article's own closing line, in italics as the client set it, then the notice. */
+.tm .tm-article-body > .tm-article-closing {
+  margin: var(--tm-space-7) 0 0;
+  font-style: italic;
+}
+.tm-article-closing + .tm-article-notice {
+  margin-top: var(--tm-space-6);
 }
 
 /* The research-use notice, once, where the article ends. */

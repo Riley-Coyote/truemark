@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useReveal } from "../../motion";
 import "../../../brand/contact.css";
+import { business } from "../../../data";
 
 /*
  * The client's Contact page, in their order and words
@@ -245,6 +246,18 @@ export default function Contact() {
             <span className="tm-contact-hours-time">Mon–Fri · 9:00–17:00 ET</span>
             <span className="tm-contact-hours-reply">Response within 1 business day</span>
           </p>
+          <div className="tm-contact-post" data-reveal>
+            <h2 className="tm-contact-route-title">Mailing address</h2>
+            <address className="tm-contact-address">
+              {business.legalName}
+              <br />
+              DBA {business.tradeName}
+              <br />
+              {business.mailingAddress[0]}
+              <br />
+              {business.mailingAddress[1]}
+            </address>
+          </div>
         </div>
 
         <div className="tm-contact-compose" data-reveal style={{ "--tm-i": 1 } as CSSProperties}>

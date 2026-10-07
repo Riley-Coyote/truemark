@@ -7,7 +7,7 @@ import { content } from "../platform/content";
 import { useResource } from "../platform/store";
 import { useReveal } from "../shop/motion";
 import NotFound from "../shop/pages/content/NotFound";
-import { articleCategories, researchUseNotice } from "./articles";
+import { articleCategories, articleClosing, researchUseNotice } from "./articles";
 import { Contents, useCurrentSection } from "./ArticleNavigation";
 import { ArticlePhoto, JournalCard } from "./JournalCard";
 import { presentArticle } from "./journal-data";
@@ -44,7 +44,7 @@ export function LiveArticle() {
       </header>
       <div className="tm tm-article-main">
         {sections.length > 1 && <Contents sections={sections} current={current} />}
-        <div className="tm-article-body"><Markdown source={entry.bodyMd} /><footer className="tm-article-notice"><p><span>{researchUseNotice.lead}</span> {researchUseNotice.text}</p></footer></div>
+        <div className="tm-article-body"><Markdown source={entry.bodyMd} /><p className="tm-article-closing">{articleClosing}</p><footer className="tm-article-notice"><p><span>{researchUseNotice.lead}</span> {researchUseNotice.text}</p></footer></div>
       </div>
     </article>
     {!!related.length && <section className="tm tm-article-more" aria-labelledby="tm-article-more-title"><h2 id="tm-article-more-title" className="tm-eyebrow">Keep reading</h2><ul className="tm-journal-grid">
