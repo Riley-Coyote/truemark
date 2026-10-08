@@ -542,6 +542,16 @@
   grid-column: 9 / -1;
   align-self: end;
 }
+/* Answers carried over from the chat: a quiet line across the page, above the steps. */
+.tm .tm-acct-from-chat {
+  grid-column: 1 / -1;
+  margin: var(--tm-space-6) 0 0;
+  padding: var(--tm-space-3) var(--tm-space-4);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-lilac-100);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
 .tm-acct-rail {
   grid-column: 1 / span 3;
   position: sticky;

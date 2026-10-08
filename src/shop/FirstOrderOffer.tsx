@@ -58,8 +58,9 @@ function write(key: string, value: string) {
 }
 
 /** Another dialog, the bag, search, the chat or the menu has the reader's attention. */
+// Never over another dialog, nor over the chat while someone is using it (beside the page on desktop).
 const busy = () =>
-  document.documentElement.hasAttribute("data-scroll-locked") || Boolean(document.querySelector('.tm-mmenu, [aria-modal="true"]'));
+  document.documentElement.hasAttribute("data-scroll-locked") || Boolean(document.querySelector('.tm-mmenu, [aria-modal="true"], .tm-desk-dock:not([hidden])'));
 
 function useVariant(search: string): { variant: Variant; forced: boolean } {
   const asked = new URLSearchParams(search).get("offer");

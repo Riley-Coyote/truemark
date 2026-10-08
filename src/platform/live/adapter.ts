@@ -79,8 +79,11 @@ export function createLiveAdapter(client: SupabaseClient, options: {
       saveModels: async (draft) => { const saved = await rpc<import("../assistant-types").AssistantModels>("update_assistant_settings", { draft }); changed(); return saved; },
       identity: profile,
       capabilities: async () => rpc("assistant_capabilities"),
-      products: async () => (await rows("products")).map((row) => ({ ...map.product(row), active: Boolean(row.active),
-        stock: row.stock == null ? null : Number(row.stock), description: row.description == null ? null : String(row.description) })),
+      // Signed out, the shop's own table is closed: the chat reads the public showcase, which has no prices.
+      products: async () => await userId()
+        ? (await rows("products")).map((row) => ({ ...map.product(row), active: Boolean(row.active),
+          stock: row.stock == null ? null : Number(row.stock), description: row.description == null ? null : String(row.description) }))
+        : (await rpc<map.Row[]>("catalog_showcase")).map((row) => ({ ...map.product(row), price: undefined, active: true, stock: null, description: null })),
       productRecord: async (id) => (await rows("products", "*", { id }))[0] ?? null,
       journal: (all = false) => createContentAdapter(client, rows, rpc, changed).articles.list(all),
     },

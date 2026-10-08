@@ -6,6 +6,7 @@ import { BrandDot } from "../../../brand/HeroShelf";
 import { Trace } from "../../../brand/Trace";
 import { useReveal } from "../../motion";
 import "../../../brand/about.css";
+import { aboutLead, principles, verbs, whoWeSupply } from "../../../brand/about-copy";
 
 /*
  * The client's About page, in their order and in their words
@@ -19,39 +20,6 @@ function scene(name: string) {
     srcSet: `${assetUrl(`images/scenes/${name}-sm.webp`)} 1200w, ${assetUrl(`images/scenes/${name}.webp`)} 2400w`,
   };
 }
-
-const verbs = [
-  {
-    number: "01",
-    verb: "Supply",
-    text: "Research compounds as lyophilized powder, in Type I glass vials, organized into eight compound classes with full specification data.",
-  },
-  {
-    number: "02",
-    verb: "Test",
-    text: "Every lot is independently tested on receipt — HPLC purity, MS identity, endotoxin, sterility — and quarantined until it passes.",
-  },
-  {
-    number: "03",
-    verb: "Document",
-    text: "Every vial carries a lot number and a QR code that lead to its Certificate of Analysis. Records run from source batch to shipped box.",
-  },
-];
-
-const principles = [
-  {
-    title: "Quality is documented, not claimed",
-    text: "We publish the test results for every lot instead of asking for trust. If it isn’t on a certificate, we don’t say it.",
-  },
-  {
-    title: "Traceability is non-negotiable",
-    text: "Every vial traces back to a source batch and forward to a shipment. A lot we cannot trace is a lot we do not sell.",
-  },
-  {
-    title: "Research use only, without exception",
-    text: "Our compounds are supplied to verified research organizations for laboratory work — and we label, package, and sell them accordingly.",
-  },
-];
 
 export default function About() {
   const root = useRef<HTMLDivElement>(null);
@@ -73,10 +41,7 @@ export default function About() {
             <BrandDot />
           </h1>
         </div>
-        <p className="tm-about-lead">
-          TrueMark BioLabs is committed to delivering the highest quality research
-          compounds with precision, transparency, and absolute integrity.
-        </p>
+        <p className="tm-about-lead">{aboutLead}</p>
         <div className="tm-about-open-photo">
           <img
             src={lab.src}
@@ -148,11 +113,7 @@ export default function About() {
             <br />
             <span>organizations</span>
           </h2>
-          <p className="tm-section-note">
-            Accounts are opened to educational institutions, hospitals,
-            pharmaceutical and biotech companies, government laboratories, and
-            private and contract research organizations.
-          </p>
+          <p className="tm-section-note">{whoWeSupply}</p>
           <div className="tm-actions">
             <Link className="tm-button tm-button-primary" to="/products">
               View catalog

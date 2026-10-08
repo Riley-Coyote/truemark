@@ -12,6 +12,7 @@ import { SCENE } from "./lens-scene";
 import type { LotPhase } from "./lens-scene";
 import { BrandDot } from "./HeroShelf";
 import { Trace } from "./Trace";
+import { StorefrontAssistant } from "../assistant/Assistant";
 import "./gate.css";
 
 type Mode = "signin" | "create";
@@ -281,6 +282,8 @@ export default function Gate() {
           </div>
         </main>
       </div>
+      {/* Every visitor's first page: the desk is here too, for a question before an account. */}
+      <StorefrontAssistant />
     </div>
   );
 }

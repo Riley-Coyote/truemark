@@ -1,4 +1,4 @@
-import { LIVE } from "../platform/mode";
+import { LAUNCH, LIVE } from "../platform/mode";
 import { worldNow } from "../platform/storage";
 import { getClient } from "../platform/live/client";
 import { storedKey, keyFromSearch } from "../review/key";
@@ -10,6 +10,7 @@ import { shippingCopy, siteAnswers } from "./copy";
 import { chatContext } from "./chat-context";
 import { productCutout, specFor } from "../shop/catalog";
 import { lotPeaks } from "./lot-lines";
+import { profileFor } from "./profiles";
 import type { Product } from "../data";
 import { store } from "./store";
 import { createToolRuntime, type Scope } from "./runtime";
@@ -41,12 +42,13 @@ export async function currentScope(previewPersona: Persona): Promise<Scope> {
     return { persona: previewPersona, role: previewPersona === "visitor" ? person ? "buyer" : "anonymous" : previewPersona, id: person?.id ?? `preview-${previewPersona}`, sample: true };
   }
   const profile = await store.assistant.identity();
-  const persona = profile?.role === "owner" || profile?.role === "staff" ? "owner" : profile?.role === "partner" && await store.partners.me() ? "partner" : "visitor";
+  // The storefront's chat is the shop's desk for every account; the owner's and partners' assistants live in their own screens.
+  const persona = previewPersona === "visitor" ? "visitor" : profile?.role === "owner" || profile?.role === "staff" ? "owner" : profile?.role === "partner" && await store.partners.me() ? "partner" : "visitor";
   return { persona, role: profile?.role ?? "anonymous", id: profile?.id ?? "anonymous", sample: false };
 }
 export function browserAssistant(persona: Persona, authorizedKey: string | null, addToBag?: (id: string, quantity: number) => void, bag?: () => { id: string; quantity: number }[]) {
   return {
-    transport: createTransport({ endpoint, headers, context: () => ({ mode: LIVE ? "live" : "preview", ...(!LIVE ? { persona, reviewKey: reviewKey() } : {}),
+    transport: createTransport({ endpoint, headers, context: () => ({ mode: LIVE ? "live" : "preview", ...(!LIVE ? { persona, reviewKey: reviewKey() } : persona === "visitor" ? { surface: "visitor" } : {}),
       ...(persona === "visitor" && chatContext() ? { context: chatContext() } : {}) }) }),
     prepare: createToolRuntime({ store, now: worldNow, scope: async () => {
       if (!LIVE && (!authorizedKey || reviewKey() !== authorizedKey)) throw new Error("Open a valid review link to continue.");
@@ -55,6 +57,9 @@ export function browserAssistant(persona: Persona, authorizedKey: string | null,
     program: { disclosure, link: partnerLink, rules: { do: doRules, dont: dontRules, disclosurePlacement } },
     goal: (id) => readPrefs(id).goal, milestones: (refs) => { const result = milestones(refs); return { next: result.next, reached: result.reached, orders: result.orders, earned: result.earned }; },
     bag,
+    // Draft profiles show everywhere the client reviews (the review site and the live site); the launch
+    // build shows only the ones TrueMark has approved.
+    profile: (name) => profileFor(name, !LAUNCH),
     describeProduct: (product) => {
       const spec = specFor(product as unknown as Product);
       const rows = [

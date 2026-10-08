@@ -9,7 +9,7 @@ export class AssistantError extends Error {
   constructor(public status: number, message: string) { super(message); }
 }
 export const expectedNames: Record<Persona, readonly string[]> = {
-  visitor: ["search_catalog", "get_product", "compare_products", "lookup_lot", "shipping_info", "site_answers", "my_orders", "order_status", "my_account_status", "add_to_bag"],
+  visitor: ["search_catalog", "get_product", "compare_products", "lookup_lot", "compound_profile", "open_panel", "shipping_info", "site_answers", "my_orders", "order_status", "my_account_status", "add_to_bag"],
   owner: ["business_summary", "orders", "order", "customers", "customer", "products_and_stock", "lots", "applications", "partners", "referrals_and_payouts", "journal", "settings", "trend", "who_received_lot", "advance_order", "review_application", "approve_commissions", "record_payout", "update_product", "draft_journal_post", "create_discount_code"],
   partner: ["my_month", "my_referrals", "my_payouts", "my_links_and_visits", "program_rules", "catalog", "released_lots", "journal_posts", "make_link", "draft_post"],
 };

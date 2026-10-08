@@ -1,6 +1,6 @@
-import { REFUSAL, SYSTEM_PROMPTS, type Persona } from "./prompts.ts";
+import { REFUSAL, STEER, SYSTEM_PROMPTS, type Persona } from "./prompts.ts";
 import { toolsFor } from "./tools.ts";
-import { mustRefuse } from "./refusal.ts";
+import { boundaryOf } from "./refusal.ts";
 import { ProviderError, ZERO_USAGE, type Accounting, type Message, type Provider } from "./providers.ts";
 import type { ModelOption, Models } from "./models.ts";
 export type { Message } from "./providers.ts";
@@ -103,7 +103,9 @@ export function createHandler(deps: Dependencies) {
           // The gateway's JWT toggle is not an authorization boundary. Verify every token here.
           if (!token || !(identity = await deps.repository.identify(token))) return json(401, "Please sign in again to continue.");
         }
-        persona = selectPersona(identity);
+        // The storefront's chat is the shop's desk for everyone, the owner included: asking for it only
+        // ever narrows what an account can reach.
+        persona = body.surface === "visitor" ? "visitor" : selectPersona(identity);
         // The first forwarded address is the visitor's own, as the uploads function reads it; the last is
         // only the nearest relay, which can change between two requests of one conversation.
         const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -145,13 +147,17 @@ export function createHandler(deps: Dependencies) {
       }
       revision = await deps.repository.reserve(thread, next.messages, next.round);
       const meta = { threadId: thread.id, threadToken: token, persona, tools };
-      if (!testing && persona !== "owner" && typeof body.text === "string" && mustRefuse(body.text)) {
+      const boundary = !testing && persona !== "owner" && typeof body.text === "string" ? boundaryOf(body.text) : "pass";
+      if (boundary === "refuse") {
         const accounting: Accounting = { usage: ZERO_USAGE, cost: 0, notice: "refusal" };
         if (!await deps.repository.finish(thread.id, revision, { role: "assistant", content: REFUSAL }, accounting)) throw new Error("Conversation changed");
         return new Response(sse("notice", { kind: "refusal", text: REFUSAL }) + sse("done", { ...accounting, meta }), { headers: streamHeaders });
       }
       const model = (await deps.repository.models())[persona];
       const context = [...history, ...next.messages].slice(-24);
+      // The guard follows the question through every round of its turn: tool results answer the same question.
+      const asked = [...history, ...next.messages].reverse().find((m) => m.role === "user")?.content;
+      const steered = !testing && persona !== "owner" && typeof asked === "string" && boundaryOf(asked) === "steer";
       while (context.length > 1 && context[0].role !== "user") context.shift();
       const id = thread.id, reserved = revision, started = Date.now();
       const abort = new AbortController();
@@ -162,7 +168,7 @@ export function createHandler(deps: Dependencies) {
         let accounting: Accounting | undefined;
         try {
           for await (const event of provider!.stream({ model, max_tokens: testing ? 32 : persona === "visitor" ? 700 : 1600,
-            messages: [{ role: "system", content: testing ? "Reply with OK to confirm this connection. Do not call tools." : SYSTEM_PROMPTS[persona] + (persona === "visitor" ? pageContext(body.context) : "") }, ...context],
+            messages: [{ role: "system", content: testing ? "Reply with OK to confirm this connection. Do not call tools." : SYSTEM_PROMPTS[persona] + (steered ? STEER : "") + (persona === "visitor" ? pageContext(body.context) : "") }, ...context],
             tools: tools.map((t) => ({ type: "function", function: { name: t.name, description: t.description, parameters: t.parameters } })), tool_choice: testing || next.round >= 6 ? "none" : "auto" }, signal)) {
             if (accounting) throw new Error("Invalid stream after completion");
             if (event.event === "text") { message.content += event.data.delta; send("text", event.data); }

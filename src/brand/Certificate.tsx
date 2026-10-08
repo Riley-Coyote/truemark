@@ -27,7 +27,7 @@ function resultLabel(label: string, method: string) {
   return hplc ? `${label} (HPLC: ${hplc[1]})` : label;
 }
 
-function resultValue(value: string, unit: string) {
+export function resultValue(value: string, unit: string) {
   if (unit === "%") return `${value}%`;
   return unit ? `${value} ${unit}` : value;
 }

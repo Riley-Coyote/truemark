@@ -7,6 +7,7 @@ import { useLocation } from "react-router-dom";
 import { useReveal } from "../../motion";
 import "../../../brand/contact.css";
 import { business } from "../../../data";
+import { routes } from "../../../brand/contact-routes";
 
 /*
  * The client's Contact page, in their order and words
@@ -15,32 +16,7 @@ import { business } from "../../../data";
  * transmits anything; its sent state says so.
  */
 
-const routes = [
-  {
-    id: "account-verification",
-    label: "Account verification",
-    text: "Opening an account for your institution, or documents for an existing one.",
-    email: "accounts@truemarkbiolabs.com",
-  },
-  {
-    id: "orders-shipping",
-    label: "Orders & shipping",
-    text: "Order status, cold-chain shipments, receiving questions, and returns.",
-    email: "orders@truemarkbiolabs.com",
-  },
-  {
-    id: "testing-certificates",
-    label: "Testing & certificates",
-    text: "Reading a CoA, lot lookups that don’t resolve, or specification questions.",
-    email: "quality@truemarkbiolabs.com",
-  },
-  {
-    id: "general-support",
-    label: "General support",
-    text: "Anything else — we’ll route it to the right person.",
-    email: "help@truemarkbiolabs.com",
-  },
-];
+
 
 type Key = "name" | "organization" | "email" | "message";
 type Values = Record<Key, string> & { topic: string };

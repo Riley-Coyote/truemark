@@ -1,4 +1,5 @@
 import type { AssistantStore } from "./store";
+import type { CompoundProfile } from "./profiles";
 import type { LotRecord } from "../shop/records";
 import type { Order, OrderStatus, Partner } from "../platform/types";
 import { checkClaims, type ClaimCheck } from "./claims";
@@ -12,8 +13,12 @@ export type SpecRow = { label: string; value: string };
 export type ProductCard = { id: string; name: string; size: string; price: number | null; image: string; href: string; lot: string; purity: string | null;
   sizes: { id: string; size: string; price: number | null }[]; spec: SpecRow[] };
 export type OrderCard = { id: string; number: string; status: OrderStatus; placedAt: string; events: { status: string; at: string }[]; method: string;
-  carrier?: string; tracking?: string; total: number; lines: { name: string; size: string; quantity: number; lot: string }[]; href: string };
+  carrier?: string; tracking?: string; total: number; lines: { id: string; name: string; size: string; quantity: number; lot: string }[]; href: string };
 export type ShippingCard = { methods: { label: string; detail: string; price: number }[]; freeThreshold: number | null; bagSubtotal: number | null; remaining: number | null; policy: string };
+/** The desk's services, each a card a visitor can use without leaving the conversation. */
+export type Panel = "track" | "bag" | "code" | "policy" | "faq" | "contact" | "apply" | "articles" | "about" | "menu";
+/** One compound on the chat's shelf: its first size stands for the rest. */
+export type CatalogTile = { id: string; name: string; size: string; sizes: number; image: string; category: string; tag?: string | null };
 /** Where an answer's facts came from: a record the reader can open. */
 export type Source = { label: string; href: string };
 export type Artifact = { kind: "certificate"; record: LotRecord; coaUrl?: string; peaks?: Peak[] } |
@@ -24,6 +29,22 @@ export type Artifact = { kind: "certificate"; record: LotRecord; coaUrl?: string
   { kind: "compare"; products: ProductCard[] } |
   { kind: "order"; order: OrderCard } |
   { kind: "shipping"; shipping: ShippingCard } |
+  { kind: "catalog"; tiles: CatalogTile[]; query: string } |
+  // The desk's own explainers, drawn from the site's words: how a lot is made ready, how an account
+  // opens, how vials are kept, and a real certificate read line by line.
+  { kind: "process" } |
+  { kind: "account" } |
+  { kind: "storage" } |
+  { kind: "explain"; record: LotRecord; peaks?: Peak[]; focus: "certificate" | "purity" } |
+  // The order planner, answered in this card of the conversation.
+  { kind: "planner"; card: string } |
+  // One of the desk's services (tracking, the bag, a code, a policy, the questions, a message to the
+  // team, the application, the blog, who TrueMark is, everything it can do), opened as its card.
+  { kind: "panel"; panel: Panel; topic?: string; note?: string } |
+  // What a compound is, from its reviewed profile, with its current lot.
+  { kind: "profile"; profile: CompoundProfile; product: ProductCard | null } |
+  // Asks for a printed lot number, in place of a question back.
+  { kind: "lot-field" } |
   // What a confirmed action did, kept in the conversation as its receipt.
   { kind: "done"; text: string; href?: string; link?: string };
 export type ToolOutput = { model: unknown; artifact?: Artifact; pending?: PendingAction; source?: Source };
@@ -45,6 +66,8 @@ export type RuntimeDependencies = {
   describeProduct?: (product: Awaited<ReturnType<AssistantStore["assistant"]["products"]>>[number]) => { image: string; spec: SpecRow[] };
   peaks?: (record: LotRecord) => Peak[];
   bag?: () => { id: string; quantity: number }[];
+  /** A compound's profile by its catalog name, when one may be shown here. */
+  profile?: (name: string) => CompoundProfile | null;
 };
 
 /** What the chat says it is doing while a tool runs: the record it is reading, in plain words. */
@@ -65,7 +88,7 @@ export function activityFor(tool: ToolCall): string {
     default: return "Looking into it";
   }
 }
-const productSummary = (p: Awaited<ReturnType<AssistantStore["assistant"]["products"]>>[number]) => ({ id: p.id, name: p.name, size: p.size, price: p.price ?? null, category: p.category, form: p.form, active: p.active, stock: p.stock, description: p.description });
+const productSummary = (p: Awaited<ReturnType<AssistantStore["assistant"]["products"]>>[number]) => ({ id: p.id, name: p.name, size: p.size, price: p.price ?? null, category: p.category, form: p.form, active: p.active, stock: p.stock, description: p.description, tag: p.tag ?? null });
 const orderSummary = (o: Order) => ({ id: o.id, number: o.number, status: o.status, total: o.total, createdAt: o.createdAt });
 const matching = (query: unknown, ...parts: unknown[]) => !query || parts.join(" ").toLowerCase().includes(String(query).toLowerCase());
 function page<T>(rows: T[], input: Record<string, unknown>) {
@@ -128,7 +151,7 @@ export function createToolRuntime(deps: RuntimeDependencies) {
       const all = await s.assistant.products();
       return { id: o.id, number: o.number, status: o.status, placedAt: o.createdAt, events: o.events.slice(-7).map((e) => ({ status: e.status, at: e.at })),
         method: o.shipping.method, carrier: o.shipping.carrier, tracking: o.shipping.tracking, total: o.total,
-        lines: o.lines.map((l) => { const p = all.find((x) => x.id === l.productId); return { name: p?.name ?? l.productId, size: p?.size ?? "", quantity: l.quantity, lot: l.lot }; }),
+        lines: o.lines.map((l) => { const p = all.find((x) => x.id === l.productId); return { id: l.productId, name: p?.name ?? l.productId, size: p?.size ?? "", quantity: l.quantity, lot: l.lot }; }),
         href: `/account/orders/${encodeURIComponent(o.id)}` };
     };
     switch (tool.name) {
@@ -136,7 +159,17 @@ export function createToolRuntime(deps: RuntimeDependencies) {
         const list = (await s.assistant.products()).filter((p) => (persona === "owner" || p.active) && matching(a.query, p.name, p.size, p.category));
         const lots = tool.name === "products_and_stock" ? await s.lots.list() : [];
         const result = page(list.map((p) => ({ ...productSummary(p), ...(tool.name === "products_and_stock" ? recordedStock(p, lots) : {}) })), a);
-        return output(result, undefined, persona === "visitor" ? { label: "Catalog", href: "/products" } : undefined);
+        if (persona !== "visitor") return output(result);
+        // The shelf: one vial per compound, in the catalog's order.
+        const tiles: CatalogTile[] = [];
+        for (const p of list) {
+          const same = tiles.find((t) => t.name === p.name);
+          if (same) { same.sizes += 1; continue; }
+          tiles.push({ id: p.id, name: p.name, size: p.size, sizes: 1, image: deps.describeProduct?.(p).image ?? "", category: p.category, tag: p.tag ?? null });
+        }
+        // A narrow search names one or two compounds, which their own cards show better than a shelf.
+        const shelf = tiles.length >= 3 || (!text("query") && tiles.length > 0);
+        return output(result, shelf ? { kind: "catalog", tiles, query: text("query") } : undefined, { label: "Catalog", href: "/products" });
       }
       case "get_product": {
         const p = await product();
@@ -152,6 +185,23 @@ export function createToolRuntime(deps: RuntimeDependencies) {
         const cards = await Promise.all(found.map((p) => productCard(structuredClone(p))));
         return output({ compared: cards.map(cardModel) }, { kind: "compare", products: cards }, { label: "Product specifications", href: "/products" });
       }
+      case "open_panel": {
+        const panel = text("panel") as Panel, topic = text("topic").trim().toLowerCase();
+        return output({ opened: panel, note: "The card is shown to the shopper; add one short line, not instructions for using it." }, { kind: "panel", panel, ...(topic ? { topic } : {}) });
+      }
+      case "compound_profile": {
+        const asked = text("name").trim().toLowerCase();
+        const all = (await s.assistant.products()).filter((p) => p.active);
+        const p = all.find((x) => x.id === asked || x.name.toLowerCase() === asked || `${x.name} ${x.size}`.toLowerCase() === asked)
+          ?? all.find((x) => asked.includes(x.name.toLowerCase()) || x.name.toLowerCase().includes(asked));
+        const profile = deps.profile?.(p?.name ?? text("name")) ?? null;
+        const card = p ? await productCard(structuredClone(p)) : null;
+        // No profile yet: what the catalog has, its specification and current lot, as its card.
+        if (!profile) return output({ found: false, name: text("name"), note: "No reviewed profile for this compound yet; its specification and current lot are shown.", ...(card ? cardModel(card) : {}) },
+          card ? { kind: "product", product: card } : undefined, card ? { label: `${card.name} ${card.size}`, href: card.href } : undefined);
+        const { reviewed: _reviewed, ...shown } = profile;
+        return output({ ...shown, product: card && cardModel(card) }, { kind: "profile", profile, product: card }, { label: `${profile.name}, what it is`, href: card?.href ?? "/products" });
+      }
       case "lookup_lot": {
         const lot = await s.lots.get(text("lot").trim().toUpperCase().replace(/\s+/g, "").replace(/[–—]/g, "-"));
         const record = deps.verify(lot);
@@ -165,7 +215,7 @@ export function createToolRuntime(deps: RuntimeDependencies) {
         if (persona !== "visitor") return output(model);
         // The reader's own bag, priced from the catalog, for the distance to free shipping.
         const items = deps.bag?.() ?? [];
-        const prices = await s.assistant.products();
+        const prices = items.length ? await s.assistant.products() : [];
         const subtotal = items.length ? items.reduce((sum, item) => sum + (prices.find((p) => p.id === item.id)?.price ?? 0) * item.quantity, 0) : null;
         const threshold = settings.freeShippingThreshold;
         const remaining = threshold != null && subtotal != null ? Math.max(0, Math.round((threshold - subtotal) * 100) / 100) : null;

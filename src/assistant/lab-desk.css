@@ -61,36 +61,41 @@
   touch-action: auto;
 }
 
-/* ---------- The desk's corner mark (desktop) ---------- */
+/* ---------- The desk's way in: a named mark in the corner ---------- */
 
-/* A round mark in the page's own right margin (the storefront's .tm padding), as near the corner as that
-   margin allows, so it never stands over the page; the desk rises from the same corner. */
+/* The brand's dot and the desk's name, in the page's bottom corner on every screen; the desk rises
+   from the same corner. It arrives once the page has settled, never before the page itself. */
 .tm-desk-launcher {
-  /* Small enough to sit within a laptop's margin beside a page's primary button. */
-  --tm-desk-mark: calc(var(--tm-control-sm) + var(--tm-space-1));
   position: fixed;
   z-index: 90;
-  bottom: var(--tm-space-4);
-  right: max(var(--tm-space-3), min(var(--tm-space-5), calc(max(var(--tm-margin), calc((100vw - var(--tm-content)) / 2 + var(--tm-margin))) - var(--tm-desk-mark) - var(--tm-space-2))));
-  display: grid;
-  place-items: center;
-  width: var(--tm-desk-mark);
-  height: var(--tm-desk-mark);
-  padding: 0;
+  bottom: calc(max(var(--tm-space-4), env(safe-area-inset-bottom)) + var(--tm-desk-lift, 0px));
+  right: var(--tm-space-4);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  min-height: calc(var(--tm-control-sm) + var(--tm-space-2));
+  padding: 0 var(--tm-space-5) 0 var(--tm-space-4);
   border: 1px solid var(--tm-line-strong);
   border-radius: var(--tm-radius-pill);
   background: var(--tm-paper);
-  box-shadow: var(--tm-shadow-lift);
+  box-shadow: var(--tm-shadow-lift), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   color: var(--tm-ink);
   cursor: pointer;
-  animation: tm-chat-in var(--tm-dur-base) var(--tm-ease-enter) var(--tm-dur-quick) backwards;
-  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro), opacity var(--tm-dur-base) var(--tm-ease-enter), visibility 0s linear 0s;
+  animation: tm-desk-arrive var(--tm-dur-slow) var(--tm-ease-glide) calc(var(--tm-dur-slow) * 2) backwards;
+  transition: bottom var(--tm-dur-slow) var(--tm-ease-glide), background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter), box-shadow var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro), opacity var(--tm-dur-base) var(--tm-ease-enter), visibility 0s linear 0s;
+}
+@keyframes tm-desk-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(var(--tm-space-3));
+  }
 }
 .tm-desk-launcher:hover {
   border-color: var(--tm-ink-3);
+  box-shadow: var(--tm-shadow-float), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 .tm-desk-launcher:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
 }
 .tm-desk-launcher:focus-visible {
   outline: none;
@@ -103,37 +108,20 @@
   pointer-events: none;
   transition: opacity var(--tm-dur-base) var(--tm-ease-enter), visibility 0s linear var(--tm-dur-base);
 }
-/* The brand's dot, worn at its shoulder. */
 .tm-desk-launcher .tm-desk-presence {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: var(--tm-space-3);
-  height: var(--tm-space-3);
-  box-shadow: 0 0 0 calc(var(--tm-space-1) / 2) var(--tm-paper);
+  width: calc(var(--tm-space-2) + 2px);
+  height: calc(var(--tm-space-2) + 2px);
 }
-/* Its name, on hover and focus; while an answer waits, it says so and stays. */
 .tm-desk-launcher-label {
-  position: absolute;
-  top: 50%;
-  right: calc(100% + var(--tm-space-2));
-  padding: var(--tm-space-2) var(--tm-space-3);
-  border: 1px solid var(--tm-line);
-  border-radius: var(--tm-radius-pill);
-  background: var(--tm-paper);
-  box-shadow: var(--tm-shadow-whisper);
   font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
   color: var(--tm-ink);
   white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transform: translate(var(--tm-space-2), -50%);
-  transition: opacity var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-base) var(--tm-ease-enter);
+  /* A new name (a product's question, a waiting answer) arrives softly in the old one's place. */
+  animation: tm-desk-row var(--tm-dur-slow) var(--tm-ease-enter) backwards;
 }
-.tm-desk-launcher:is(:hover, :focus-visible) .tm-desk-launcher-label,
-.tm-desk-launcher[data-unread] .tm-desk-launcher-label {
-  opacity: 1;
-  transform: translate(0, -50%);
+/* An answer waiting while the desk stood aside. */
+.tm-desk-launcher[data-unread] {
+  border-color: var(--tm-ink);
 }
 
 /* The brand's dot as the desk's presence: still at rest, breathing while it reads. */
@@ -726,6 +714,1209 @@
   }
 }
 
+/* ---------- The opening: the desk speaks first, then offers four ways in ---------- */
+
+.tm-desk-welcome {
+  gap: var(--tm-space-3);
+}
+.tm .tm-desk-starters,
+.tm-desk-starters {
+  display: grid;
+  gap: var(--tm-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-desk-starters button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--tm-space-3);
+  width: 100%;
+  min-height: calc(var(--tm-control-sm) + var(--tm-space-3));
+  padding: var(--tm-space-2) var(--tm-space-3) var(--tm-space-2) var(--tm-space-2);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-whisper);
+  text-align: left;
+  color: var(--tm-ink);
+  cursor: pointer;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-desk-starter-icon {
+  display: grid;
+  place-items: center;
+  width: var(--tm-control-sm);
+  height: var(--tm-control-sm);
+  border-radius: var(--tm-radius-sm);
+  background: var(--tm-lilac-100);
+  color: var(--tm-ink);
+}
+.tm-desk-starter-text {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.35 var(--tm-font-sans);
+}
+.tm-desk-starter-go {
+  color: var(--tm-ink-4);
+  transition: transform var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+@media (hover: hover) {
+  .tm-desk-starters button:hover:not(:disabled) {
+    border-color: var(--tm-ink-4);
+  }
+  .tm-desk-starters button:hover:not(:disabled) .tm-desk-starter-go {
+    color: var(--tm-ink);
+    transform: translateX(2px);
+  }
+}
+.tm-desk-starters button:active:not(:disabled) {
+  background: var(--tm-wash);
+  transform: scale(0.99);
+}
+.tm-desk-starters button:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+}
+.tm-desk-starters button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.tm-desk-starters li {
+  animation: tm-desk-chip var(--tm-dur-slow) var(--tm-chat-ease) backwards;
+  animation-delay: calc(var(--tm-dur-slow) + var(--tm-i, 0) * var(--tm-desk-stagger) * 2);
+}
+
+/* ---------- Steps: how a lot is made ready, how an account opens ---------- */
+
+.tm .tm-desk-steps,
+.tm-desk-steps {
+  --tm-desk-node: 0.625rem;
+  position: relative;
+  display: grid;
+  gap: var(--tm-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* One rail down the nodes' centres, from the first station to the last. */
+.tm-desk-steps::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--tm-desk-node) / 2 + 0.3em);
+  bottom: calc(var(--tm-desk-node) / 2 + 2.6em);
+  left: calc(var(--tm-desk-node) / 2 - 0.5px);
+  width: 1px;
+  background: var(--tm-line-strong);
+}
+.tm-desk-steps li {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tm-desk-node) minmax(0, 1fr);
+  gap: var(--tm-space-3);
+}
+.tm-desk-steps .tm-desk-node {
+  margin-top: 0.3em;
+  border-color: var(--tm-ink);
+  background: var(--tm-ink);
+}
+.tm-desk-steps li.is-release .tm-desk-node {
+  border-color: var(--tm-signal);
+  background: var(--tm-signal);
+}
+.tm .tm-desk-step-title,
+.tm-desk-step-title {
+  margin: 0 0 var(--tm-space-1);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.35 var(--tm-font-display);
+  color: var(--tm-ink);
+}
+.tm-desk-step-no {
+  margin-right: var(--tm-space-2);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-display);
+  letter-spacing: 0.08em;
+  color: var(--tm-ink-3);
+}
+.tm-desk-steps li.is-release .tm-desk-step-no {
+  color: var(--tm-desk-signal-text);
+}
+.tm-desk-release {
+  display: grid;
+  gap: var(--tm-space-2);
+  padding-top: var(--tm-space-3);
+  border-top: 1px solid var(--tm-line);
+}
+.tm-desk-spec dt span {
+  color: var(--tm-ink-4);
+}
+.tm .tm-desk-offer,
+.tm-desk-offer {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  margin: 0;
+  padding: var(--tm-space-2) var(--tm-space-3);
+  border-radius: var(--tm-radius-sm);
+  background: var(--tm-lilac-100);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm-desk-account .tm-desk-add {
+  text-decoration: none;
+}
+
+/* ---------- Storage, by temperature ---------- */
+
+.tm .tm-desk-temps,
+.tm-desk-temps {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-desk-temps li {
+  display: grid;
+  grid-template-columns: 6.25rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--tm-space-3);
+  padding-block: var(--tm-space-3);
+  border-top: 1px solid var(--tm-line);
+}
+.tm-desk-temps li:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.tm-desk-temps li > span:last-child {
+  display: grid;
+  gap: var(--tm-space-1);
+}
+.tm-desk-temp {
+  font: var(--tm-weight-light) var(--tm-type-lead) / 1.1 var(--tm-font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--tm-ink);
+  white-space: nowrap;
+}
+.tm-desk-temp[data-band="2"] {
+  font-size: var(--tm-type-body);
+}
+
+/* ---------- A certificate, read line by line ---------- */
+
+.tm-desk-explain-trace {
+  display: grid;
+  gap: var(--tm-space-1);
+  margin: 0;
+}
+.tm .tm-desk-readings,
+.tm-desk-readings {
+  display: grid;
+  margin: 0;
+}
+.tm-desk-readings > div {
+  display: grid;
+  gap: var(--tm-space-1);
+  padding-block: var(--tm-space-3);
+  border-top: 1px solid var(--tm-line);
+}
+.tm .tm-desk-readings dt,
+.tm-desk-readings dt {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.35 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm-desk-reading {
+  flex: none;
+  font-weight: var(--tm-weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+.tm .tm-desk-readings dd,
+.tm-desk-readings dd {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+
+/* ---------- What a compound is ---------- */
+
+.tm .tm-desk-profile-what,
+.tm-desk-profile-what {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+/* Long values read left to right under their label, never squeezed against the right edge. */
+.tm-desk-profile-rows > div {
+  flex-direction: column;
+  gap: var(--tm-space-1);
+}
+.tm .tm-desk-profile-rows dd,
+.tm-desk-profile-rows dd {
+  text-align: left;
+}
+.tm .tm-desk-fields,
+.tm-desk-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tm-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-desk-fields li {
+  padding: 2px var(--tm-space-2);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-lilac-100);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm-desk-sequence {
+  overflow-wrap: anywhere;
+  letter-spacing: 0.08em;
+}
+.tm-desk-refs {
+  display: grid;
+  gap: var(--tm-space-2);
+}
+.tm .tm-desk-refs ol,
+.tm-desk-refs ol {
+  display: grid;
+  gap: var(--tm-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-desk-refs li {
+  display: grid;
+  gap: 2px;
+}
+.tm-desk-refs a {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--tm-ink-4);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-refs a:hover {
+  text-decoration-color: var(--tm-ink);
+}
+.tm-desk-refs a:focus-visible {
+  outline: none;
+  text-decoration-color: var(--tm-ink);
+  text-decoration-thickness: 2px;
+}
+/* A shelf vial the catalog marks (best seller, new) says so on its glass. */
+.tm-desk-shelf-tag {
+  position: absolute;
+  left: var(--tm-space-2);
+  bottom: var(--tm-space-2);
+  padding: 2px var(--tm-space-2);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-whisper);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink);
+  white-space: nowrap;
+}
+
+/* ---------- The desk's services: forms, the bag, policies, the application, the menu ---------- */
+
+.tm-desk-form {
+  gap: var(--tm-space-3);
+}
+.tm-desk-field {
+  display: grid;
+  gap: var(--tm-space-1);
+  min-width: 0;
+}
+.tm-desk-field label {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-desk-field :is(input, textarea) {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--tm-control-sm);
+  padding: var(--tm-space-2) var(--tm-space-3);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-paper);
+  font: var(--tm-weight-regular) max(16px, var(--tm-type-ui)) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-field textarea {
+  resize: vertical;
+  min-height: 6rem;
+}
+.tm-desk-field :is(input, textarea)::placeholder {
+  color: var(--tm-ink-4);
+}
+.tm-desk-field :is(input, textarea):hover {
+  border-color: var(--tm-ink-3);
+}
+.tm-chat-body .tm-desk-field :is(input, textarea):focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+  box-shadow: none;
+}
+.tm-desk-field[data-invalid] :is(input, textarea) {
+  border-color: var(--tm-danger);
+}
+.tm .tm-desk-field-error,
+.tm-desk-field-error {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.45 var(--tm-font-sans);
+  color: var(--tm-danger);
+}
+.tm-desk-field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: var(--tm-space-3);
+}
+/* Wrapping chips for a choice of few (a topic, a kind of institution), not a sideways shelf. */
+.tm-desk-classes.tm-desk-topics {
+  flex-wrap: wrap;
+  margin-inline: 0;
+  padding-inline: 0;
+  overflow: visible;
+}
+.tm-desk-honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  opacity: 0;
+  pointer-events: none;
+}
+/* The bag's quantity, changed in place. */
+.tm-desk-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+}
+.tm-desk-stepper button {
+  display: grid;
+  place-items: center;
+  width: calc(var(--tm-control-sm) - var(--tm-space-2));
+  height: calc(var(--tm-control-sm) - var(--tm-space-2));
+  padding: 0;
+  border: 0;
+  border-radius: var(--tm-radius-pill);
+  background: none;
+  color: var(--tm-ink);
+  cursor: pointer;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+@media (hover: hover) {
+  .tm-desk-stepper button:hover:not(:disabled) {
+    background: var(--tm-wash);
+  }
+}
+.tm-desk-stepper button:active:not(:disabled) {
+  transform: scale(0.92);
+}
+.tm-desk-stepper button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.tm-chat-body .tm-desk-stepper button:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--tm-ink);
+}
+.tm-desk-stepper output {
+  min-width: 1.75em;
+  text-align: center;
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+}
+/* Each bag line: the vial, its name and lot with the quantity beneath, and the price at the right, so
+   a long name never shares its line with the buttons. */
+.tm-desk-bag .tm-plan-lines li {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "thumb id price" "thumb step step";
+  align-items: start;
+  row-gap: var(--tm-space-2);
+}
+.tm-desk-bag .tm-plan-lines .tm-desk-thumb {
+  grid-area: thumb;
+}
+.tm-desk-bag .tm-plan-line-id {
+  grid-area: id;
+}
+.tm-desk-bag .tm-desk-stepper {
+  grid-area: step;
+  justify-self: start;
+}
+.tm-desk-bag .tm-plan-line-price {
+  grid-area: price;
+}
+/* A policy or the questions: sections that open in place. */
+.tm-desk-accordion {
+  display: grid;
+}
+.tm-desk-accordion > div {
+  border-top: 1px solid var(--tm-line);
+}
+.tm-desk-accordion > div:first-child {
+  border-top: 0;
+}
+.tm .tm-desk-accordion h3,
+.tm-desk-accordion h3 {
+  margin: 0;
+  font: inherit;
+}
+.tm-desk-accordion button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--tm-space-3);
+  width: 100%;
+  padding: var(--tm-space-3) 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink);
+  cursor: pointer;
+}
+.tm-desk-accordion button svg {
+  flex: none;
+  color: var(--tm-ink-3);
+  transition: transform var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-accordion [data-open] button svg {
+  transform: rotate(180deg);
+}
+.tm-chat-body .tm-desk-accordion button:focus-visible {
+  outline: none;
+  box-shadow: none;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+.tm-desk-accordion [role="region"] {
+  display: grid;
+  gap: var(--tm-space-2);
+  padding-bottom: var(--tm-space-3);
+  animation: tm-desk-row var(--tm-dur-slow) var(--tm-ease-enter) backwards;
+}
+.tm-desk-accordion [role="region"][hidden] {
+  display: none;
+}
+.tm .tm-desk-accordion [role="region"] p,
+.tm-desk-accordion [role="region"] p {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.55 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm .tm-desk-policy-item,
+.tm-desk-policy-item {
+  padding-left: var(--tm-space-3);
+  border-left: 1px solid var(--tm-line-strong);
+}
+/* The application: where it is in four steps. */
+.tm .tm-desk-apply-rail,
+.tm-desk-apply-rail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--tm-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-desk-apply-rail li {
+  padding-top: var(--tm-space-2);
+  border-top: 2px solid var(--tm-line);
+  font: var(--tm-weight-regular) var(--tm-type-nano) / 1.35 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-apply-rail li[data-state="done"] {
+  border-top-color: var(--tm-ink-3);
+}
+.tm-desk-apply-rail li[data-state="current"] {
+  border-top-color: var(--tm-ink);
+  color: var(--tm-ink);
+}
+.tm-desk-checks {
+  gap: var(--tm-space-2);
+}
+.tm-desk-check {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink);
+  cursor: pointer;
+}
+.tm-desk-check input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.tm-desk-check-box {
+  display: grid;
+  place-items: center;
+  width: calc(var(--tm-space-4) + var(--tm-space-1));
+  height: calc(var(--tm-space-4) + var(--tm-space-1));
+  margin-top: 1px;
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-sm);
+  background: var(--tm-paper);
+  color: transparent;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-check:hover .tm-desk-check-box {
+  border-color: var(--tm-ink-3);
+}
+.tm-desk-check input:checked + .tm-desk-check-box {
+  border-color: var(--tm-ink);
+  background: var(--tm-ink);
+  color: var(--tm-paper);
+}
+.tm-desk-check input:focus-visible + .tm-desk-check-box {
+  border-color: var(--tm-ink);
+  box-shadow: 0 0 0 1px var(--tm-ink);
+}
+/* The research blog: each article a row to open, its class and length above, its title, its line. */
+.tm-desk-rows.tm-desk-articles a {
+  display: grid;
+  justify-content: stretch;
+  gap: var(--tm-space-1);
+}
+.tm-desk-rows.tm-desk-articles a:is(:hover, :focus-visible) span:first-child {
+  text-decoration: none;
+}
+.tm-desk-rows.tm-desk-articles a:is(:hover, :focus-visible) .tm-desk-name {
+  text-decoration: underline;
+  text-decoration-color: var(--tm-ink-4);
+  text-underline-offset: 3px;
+}
+/* Everything the desk can do, by what it is for. */
+.tm-desk-menu {
+  gap: var(--tm-space-4);
+}
+.tm-desk-menu section {
+  display: grid;
+  gap: var(--tm-space-2);
+}
+.tm .tm-desk-menu ul,
+.tm-desk-menu ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-desk-menu button {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+  width: 100%;
+  padding: var(--tm-space-2) 0;
+  border: 0;
+  border-top: 1px solid var(--tm-line);
+  background: none;
+  text-align: left;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink);
+  cursor: pointer;
+  transition: color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-menu li:first-child button {
+  border-top: 0;
+}
+.tm-desk-menu button svg {
+  flex: none;
+  color: var(--tm-ink-3);
+}
+@media (hover: hover) {
+  .tm-desk-menu button:hover {
+    color: var(--tm-ink-2);
+  }
+  .tm-desk-menu button:hover svg {
+    color: var(--tm-ink);
+  }
+}
+.tm-chat-body .tm-desk-menu button:focus-visible {
+  outline: none;
+  box-shadow: none;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+/* Below the opening's starters, the way to everything else. */
+/* What TrueMark holds to: each principle named first, in ink, its sentence beneath. */
+.tm .tm-desk-principles,
+.tm-desk-principles {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-desk-principles li {
+  display: grid;
+  gap: var(--tm-space-1);
+  padding-block: var(--tm-space-3);
+  border-top: 1px solid var(--tm-line);
+}
+.tm .tm-desk-principles .tm-desk-step-title,
+.tm-desk-principles .tm-desk-step-title {
+  margin: 0;
+}
+.tm-desk-more {
+  justify-self: start;
+  padding: var(--tm-space-1) 0;
+  border: 0;
+  border-bottom: 1px solid var(--tm-line-strong);
+  background: none;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  animation: tm-desk-chip var(--tm-dur-slow) var(--tm-chat-ease) backwards;
+  animation-delay: calc(var(--tm-dur-slow) + 5 * var(--tm-desk-stagger) * 2);
+  transition: color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-more:hover {
+  color: var(--tm-ink);
+  border-bottom-color: var(--tm-ink);
+}
+.tm-chat-body .tm-desk-more:focus-visible {
+  outline: none;
+  box-shadow: none;
+  color: var(--tm-ink);
+  border-bottom-color: var(--tm-ink);
+}
+
+/* ---------- The order planner ---------- */
+
+/* The planner's way in stands first among the starters, its mark in ink. */
+.tm-desk-starters li:first-child button[data-featured] .tm-desk-starter-icon {
+  background: var(--tm-ink);
+  color: var(--tm-paper);
+}
+
+.tm-desk-planner {
+  gap: var(--tm-space-4);
+}
+/* What has been answered: one line each, kept above the question, each can be changed. */
+.tm .tm-plan-answers,
+.tm-plan-answers {
+  display: grid;
+  margin: 0;
+}
+.tm-plan-answers > div {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--tm-space-3);
+  padding-block: var(--tm-space-2);
+  border-top: 1px solid var(--tm-line);
+}
+.tm-plan-answers > div:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.tm .tm-plan-answers dt,
+.tm-plan-answers dt {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm .tm-plan-answers dd,
+.tm-plan-answers dd {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--tm-space-3);
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm-plan-change {
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.3 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+  cursor: pointer;
+  transition: color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-plan-change:hover {
+  color: var(--tm-ink);
+  border-bottom-color: var(--tm-line-strong);
+}
+.tm-plan-change:focus-visible {
+  outline: none;
+  color: var(--tm-ink);
+  border-bottom-color: var(--tm-ink);
+}
+.tm-plan-answers + .tm-plan-current {
+  padding-top: var(--tm-space-4);
+  border-top: 1px solid var(--tm-line);
+}
+/* The question being asked arrives as a new line does. */
+.tm-plan-current {
+  animation: tm-desk-chip var(--tm-dur-slow) var(--tm-chat-ease) backwards;
+}
+.tm-plan-step {
+  display: grid;
+  gap: var(--tm-space-3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.tm .tm-plan-q,
+.tm-plan-q {
+  margin: 0;
+  padding: 0;
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1.3 var(--tm-font-display);
+  color: var(--tm-ink);
+}
+.tm-plan-q:focus {
+  outline: none;
+}
+/* A fieldset's legend stands outside its layout; the question's body is laid out beneath it. */
+fieldset.tm-plan-step {
+  display: block;
+}
+.tm-plan-body {
+  display: grid;
+  gap: var(--tm-space-3);
+  min-width: 0;
+  margin-top: var(--tm-space-1);
+}
+.tm-plan-body > .tm-desk-note:first-child {
+  margin-top: 0;
+}
+.tm-plan-body > .tm-desk-note:first-child + * {
+  margin-top: var(--tm-space-1);
+}
+.tm-plan-choices {
+  display: grid;
+  gap: var(--tm-space-2);
+}
+.tm-plan-choices button {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--tm-space-3);
+  min-height: calc(var(--tm-control-sm) + var(--tm-space-2));
+  padding: var(--tm-space-2) var(--tm-space-4);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-paper);
+  text-align: left;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.35 var(--tm-font-sans);
+  color: var(--tm-ink);
+  cursor: pointer;
+  animation: tm-desk-chip var(--tm-dur-slow) var(--tm-chat-ease) backwards;
+  animation-delay: calc(var(--tm-dur-quick) + var(--tm-i, 0) * var(--tm-desk-stagger) * 1.5);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-plan-choices button .tm-desk-note {
+  flex: none;
+  text-align: right;
+}
+@media (hover: hover) {
+  .tm-plan-choices button:hover {
+    border-color: var(--tm-ink-3);
+  }
+}
+.tm-plan-choices button:active {
+  background: var(--tm-wash);
+  transform: scale(0.99);
+}
+.tm-plan-choices button:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+}
+.tm-plan-choices button[aria-pressed="true"] {
+  border-color: var(--tm-ink);
+  box-shadow: inset 0 0 0 1px var(--tm-ink);
+}
+/* The planner's shelf runs to the card's edges, as the catalog's does. */
+.tm-plan-pick .tm-desk-classes,
+.tm-plan-pick .tm-desk-shelf {
+  margin-inline: calc(var(--tm-space-4) * -1);
+}
+.tm-desk-shelf-vial {
+  position: relative;
+}
+.tm-plan-tick {
+  position: absolute;
+  top: var(--tm-space-2);
+  right: var(--tm-space-2);
+  display: grid;
+  place-items: center;
+  width: calc(var(--tm-space-4) + var(--tm-space-1));
+  height: calc(var(--tm-space-4) + var(--tm-space-1));
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  color: transparent;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-plan-pick button[aria-pressed="true"] .tm-desk-shelf-vial {
+  border-color: var(--tm-ink);
+}
+.tm-plan-pick button[aria-pressed="true"] .tm-plan-tick {
+  border-color: var(--tm-ink);
+  background: var(--tm-ink);
+  color: var(--tm-paper);
+}
+.tm-plan-next {
+  justify-self: start;
+}
+.tm-plan-next:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+/* How much: a slider per compound, and the vials it comes to. */
+.tm .tm-plan-amounts,
+.tm-plan-amounts {
+  display: grid;
+  gap: var(--tm-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-plan-amounts li {
+  display: grid;
+  gap: var(--tm-space-2);
+}
+.tm-plan-amount-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--tm-space-3);
+}
+.tm-plan-amount {
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1.3 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+}
+.tm-plan-amounts input[type="range"] {
+  width: 100%;
+  height: var(--tm-control-sm);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.tm-plan-amounts input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: var(--tm-radius-pill);
+  background: linear-gradient(to right, var(--tm-ink) calc(var(--tm-plan-fill, 0) * 100%), var(--tm-line-strong) 0);
+}
+.tm-plan-amounts input[type="range"]::-moz-range-track {
+  height: 2px;
+  border-radius: var(--tm-radius-pill);
+  background: linear-gradient(to right, var(--tm-ink) calc(var(--tm-plan-fill, 0) * 100%), var(--tm-line-strong) 0);
+}
+.tm-plan-amounts input[type="range"]::-webkit-slider-thumb {
+  width: calc(var(--tm-space-5) + var(--tm-space-1));
+  height: calc(var(--tm-space-5) + var(--tm-space-1));
+  margin-top: calc((var(--tm-space-5) + var(--tm-space-1)) / -2 + 1px);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-lift);
+  -webkit-appearance: none;
+  transition: transform var(--tm-dur-quick) var(--tm-ease-micro), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-plan-amounts input[type="range"]::-moz-range-thumb {
+  width: calc(var(--tm-space-5) + var(--tm-space-1));
+  height: calc(var(--tm-space-5) + var(--tm-space-1));
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-shadow-lift);
+}
+.tm-plan-amounts input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.08);
+}
+.tm-plan-amounts input[type="range"]:focus,
+.tm-plan-amounts input[type="range"]:focus-visible {
+  outline: none;
+  /* Its thumb shows focus, so the field takes none of the chat's focus box. */
+  box-shadow: none;
+}
+.tm-plan-amounts input[type="range"]:focus-visible::-webkit-slider-thumb {
+  border-color: var(--tm-ink);
+}
+.tm-plan-amounts input[type="range"]:focus-visible::-moz-range-thumb {
+  border-color: var(--tm-ink);
+}
+.tm .tm-plan-made,
+.tm-plan-made {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-3);
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+}
+.tm-plan-saves {
+  color: var(--tm-desk-signal-text);
+}
+/* The plan: each vial line, then shipping and the total. */
+.tm .tm-plan-lines,
+.tm-plan-lines {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-plan-lines li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--tm-space-3);
+  padding-block: var(--tm-space-2);
+  border-top: 1px solid var(--tm-line);
+  animation: tm-desk-row var(--tm-dur-slow) var(--tm-ease-enter) backwards;
+  animation-delay: calc(var(--tm-i, 0) * var(--tm-desk-stagger));
+}
+.tm-plan-lines li:first-child {
+  border-top: 0;
+}
+.tm-plan-line-id {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.tm-plan-line-qty,
+.tm-plan-line-price {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.3 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+}
+.tm-plan-line-qty {
+  color: var(--tm-ink-3);
+}
+.tm .tm-plan-totals,
+.tm-plan-totals {
+  display: grid;
+  margin: 0;
+  padding-top: var(--tm-space-2);
+  border-top: 1px solid var(--tm-line-strong);
+}
+.tm-plan-totals > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-3);
+  padding-block: var(--tm-space-1);
+}
+.tm .tm-plan-totals dt,
+.tm-plan-totals dt,
+.tm .tm-plan-totals dd,
+.tm-plan-totals dd {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-2);
+}
+.tm-plan-total dt,
+.tm-plan-total dd {
+  font-weight: var(--tm-weight-medium);
+  color: var(--tm-ink);
+}
+.tm .tm-plan-heads-up,
+.tm-plan-heads-up {
+  margin: 0;
+  padding: var(--tm-space-2) var(--tm-space-3);
+  border-radius: var(--tm-radius-sm);
+  background: var(--tm-wash);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-plan-summary p.tm-desk-add[data-added] {
+  margin: 0;
+}
+.tm-plan-restart {
+  justify-self: start;
+  font-weight: var(--tm-weight-regular);
+  font-size: var(--tm-type-micro);
+  color: var(--tm-ink-3);
+}
+
+/* ---------- The shelf: the catalog as vials ---------- */
+
+.tm-desk-catalog {
+  gap: var(--tm-space-3);
+  padding-inline: 0;
+}
+.tm-desk-classes,
+.tm-desk-shelf {
+  /* The card's own edge, kept inside each row that scrolls sideways. */
+  padding-inline: var(--tm-space-4);
+  scroll-padding-inline: var(--tm-space-4);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.tm-desk-classes::-webkit-scrollbar,
+.tm-desk-shelf::-webkit-scrollbar {
+  display: none;
+}
+.tm-desk-classes {
+  display: flex;
+  gap: var(--tm-space-2);
+}
+.tm-desk-classes button {
+  flex: none;
+  min-height: var(--tm-control-sm);
+  padding: 0 var(--tm-space-3);
+  border: 1px solid var(--tm-line);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-desk-classes button:hover {
+  border-color: var(--tm-ink-3);
+  color: var(--tm-ink);
+}
+.tm-desk-classes button:active {
+  transform: scale(0.97);
+}
+.tm-desk-classes button:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+}
+.tm-desk-classes button[aria-pressed="true"] {
+  border-color: var(--tm-ink);
+  color: var(--tm-ink);
+}
+.tm .tm-desk-shelf,
+.tm-desk-shelf {
+  display: flex;
+  gap: var(--tm-space-2);
+  margin: 0;
+  padding-block: 0;
+  list-style: none;
+  scroll-snap-type: x mandatory;
+}
+.tm-desk-shelf li {
+  flex: none;
+  scroll-snap-align: start;
+}
+.tm-desk-shelf button {
+  display: grid;
+  justify-items: start;
+  gap: var(--tm-space-1);
+  width: 6.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: var(--tm-ink);
+  cursor: pointer;
+}
+.tm-desk-shelf-vial {
+  display: grid;
+  place-items: end center;
+  width: 100%;
+  aspect-ratio: 5 / 6;
+  margin-bottom: var(--tm-space-1);
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-sm);
+  background: var(--tm-lilac-100);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-shelf-vial img {
+  display: block;
+  width: 64%;
+  height: auto;
+  margin-bottom: 8%;
+  transition: transform var(--tm-dur-slow) var(--tm-chat-ease);
+}
+.tm-desk-shelf button:hover .tm-desk-shelf-vial img {
+  transform: translateY(calc(var(--tm-space-1) * -1));
+}
+.tm-desk-shelf button:active .tm-desk-shelf-vial {
+  transform: scale(0.98);
+}
+.tm-desk-shelf button:focus-visible {
+  outline: none;
+}
+.tm-desk-shelf button:focus-visible .tm-desk-shelf-vial {
+  border-color: var(--tm-ink);
+}
+.tm-desk-shelf-name {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.25 var(--tm-font-display);
+  color: var(--tm-ink);
+}
+
+.tm-desk-signin {
+  color: var(--tm-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--tm-ink-4);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-signin:hover {
+  text-decoration-color: var(--tm-ink);
+}
+.tm-desk-signin:focus-visible {
+  outline: none;
+  text-decoration-color: var(--tm-ink);
+  text-decoration-thickness: 2px;
+}
+
+/* ---------- The lot field ---------- */
+
+.tm-desk-lotfield-row {
+  display: flex;
+  gap: var(--tm-space-2);
+}
+.tm-desk-lotfield input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tm-control-sm);
+  padding: 0 var(--tm-space-3);
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  font-size: max(16px, var(--tm-type-ui));
+  color: var(--tm-ink);
+  text-transform: uppercase;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-desk-lotfield input::placeholder {
+  text-transform: none;
+  color: var(--tm-ink-4);
+}
+.tm-desk-lotfield input:hover {
+  border-color: var(--tm-ink-3);
+}
+.tm-desk-lotfield input:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+}
+.tm-desk-lotfield .tm-desk-add:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .tm-desk-rows {
   margin: 0;
   padding: var(--tm-space-2) var(--tm-space-4);
@@ -859,7 +2050,7 @@
     box-shadow: none;
   }
 }
-.tm-chat-msg[data-fresh] :is(.tm-desk-spec > div, .tm-desk-compare thead th, .tm-desk-compare tbody, .tm-desk-methods li, .tm-desk-track li, .tm-desk-lines li, .tm-desk-rows li) {
+.tm-chat-msg[data-fresh] :is(.tm-desk-spec > div, .tm-desk-compare thead th, .tm-desk-compare tbody, .tm-desk-methods li, .tm-desk-track li, .tm-desk-lines li, .tm-desk-rows li, .tm-desk-shelf li, .tm-desk-steps li, .tm-desk-temps li, .tm-desk-readings > div) {
   animation: tm-desk-row var(--tm-dur-slow) var(--tm-ease-enter) backwards;
   animation-delay: calc(var(--tm-dur-quick) / 2 + var(--tm-i, 0) * var(--tm-desk-stagger));
 }
@@ -1055,7 +2246,21 @@
   .tm-chat-body .tm-chat-error,
   .tm-desk-done svg *,
   .tm-desk-add[data-added] svg *,
-  .tm-desk-price[data-switched] {
+  .tm-desk-price[data-switched],
+  .tm-chat-msg[data-fresh] .tm-desk-shelf li,
+  .tm-chat-msg[data-fresh] :is(.tm-desk-steps li, .tm-desk-temps li, .tm-desk-readings > div),
+  .tm-desk-starters li,
+  .tm-desk-starters button,
+  .tm-desk-starter-go,
+  .tm-plan-current,
+  .tm-desk-accordion [role="region"],
+  .tm-desk-accordion button svg,
+  .tm-desk-more,
+  .tm-plan-choices button,
+  .tm-plan-lines li,
+  .tm-plan-tick,
+  .tm-desk-shelf-vial,
+  .tm-desk-shelf-vial img {
     animation: none;
     transition: none;
   }

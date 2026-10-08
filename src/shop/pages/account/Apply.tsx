@@ -7,6 +7,7 @@ import { ArrowRight, CircleAlert, Paperclip, X } from "lucide-react";
 import { store } from "../../../platform/store";
 import type { Application } from "../../../platform/types";
 import { AreaField, Field, SelectField, useTitle } from "./parts";
+import { USE_MAX, attestations, institutionTypes, clearDraft, problem, readDraft, type Key, type Values } from "./application";
 
 type UploadApi = {
   prepare: (files: File[]) => Promise<{ claim: string; files: { uploadId: string; path: string; token: string }[] }>;
@@ -35,38 +36,6 @@ export async function submitWithDocuments<T>(files: File[], email: string, api: 
   return result;
 }
 
-const institutionTypes = [
-  "University",
-  "Contract research organization",
-  "Biotechnology company",
-  "Independent laboratory",
-  "Other",
-];
-
-/** Ids match the sample applications in the store. */
-const attestations = [
-  { id: "research-only", label: "The materials are for laboratory research use only." },
-  { id: "not-for-human-use", label: "They are not for human or veterinary use." },
-  { id: "storage-sop", label: "They will be stored and handled under our laboratory’s procedures." },
-  { id: "terms", label: "I accept TrueMark’s terms of sale." },
-];
-
-type Values = {
-  name: string;
-  email: string;
-  role: string;
-  institution: string;
-  institutionType: string;
-  website: string;
-  country: string;
-  researchArea: string;
-  intendedUse: string;
-};
-type Key = keyof Values | "attestations";
-
-const USE_MIN = 30;
-const USE_MAX = 800;
-
 const steps: { index: string; label: string; title: string; note: string; keys: Key[] }[] = [
   { index: "01", label: "You", title: "About you.", note: "The researcher the account is for.", keys: ["name", "email", "role"] },
   {
@@ -92,41 +61,14 @@ const steps: { index: string; label: string; title: string; note: string; keys: 
   },
 ];
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const WEBSITE = /^(https?:\/\/)?[^\s/$.?#]+\.[^\s]{2,}$/i;
 
-function problem(key: Key, values: Values, confirmed: string[]): string | undefined {
-  if (key === "attestations") {
-    return confirmed.length === attestations.length ? undefined : "Confirm all four statements to continue.";
-  }
-  const v = values[key].trim();
-  switch (key) {
-    case "name":
-      return v.length > 1 ? undefined : "Enter your full name.";
-    case "email":
-      return !v ? "Enter your email." : EMAIL.test(v) ? undefined : "Enter a full email address.";
-    case "role":
-      return v ? undefined : "Enter your role in the lab.";
-    case "institution":
-      return v ? undefined : "Enter the institution’s name.";
-    case "institutionType":
-      return v ? undefined : "Choose the type of institution.";
-    case "website":
-      return !v || WEBSITE.test(v) ? undefined : "Enter a full web address, or leave it blank.";
-    case "country":
-      return v ? undefined : "Enter the country.";
-    case "researchArea":
-      return v ? undefined : "Enter your research area.";
-    case "intendedUse":
-      return v.length >= USE_MIN ? undefined : `A sentence or two is enough, at least ${USE_MIN} characters.`;
-    default:
-      return undefined;
-  }
-}
 
 export default function Apply() {
   useTitle("Apply for a research account");
-  const [values, setValues] = useState<Values>({
+  // Answers gathered in the chat arrive filled in; the page asks for what the chat does not (a password, documents).
+  const [fromChat] = useState(readDraft);
+  useEffect(() => { if (fromChat) clearDraft(); }, [fromChat]);
+  const [values, setValues] = useState<Values>(fromChat?.values ?? {
     name: "",
     email: "",
     role: "",
@@ -137,13 +79,13 @@ export default function Apply() {
     researchArea: "",
     intendedUse: "",
   });
-  const [confirmed, setConfirmed] = useState<string[]>([]);
+  const [confirmed, setConfirmed] = useState<string[]>(fromChat?.confirmed ?? []);
   const [files, setFiles] = useState<File[]>([]);
   const [progress, setProgress] = useState<Record<string, string>>({});
   const [documents, setDocuments] = useState<string[]>([]);
   const [touched, setTouched] = useState<Partial<Record<Key, boolean>>>({});
   const [step, setStep] = useState(0);
-  const [furthest, setFurthest] = useState(0);
+  const [furthest, setFurthest] = useState(fromChat && !LIVE ? 3 : 0);
   const [status, setStatus] = useState<"idle" | "busy" | "failed">("idle");
   const [received, setReceived] = useState<(Pick<Application, "name" | "email" | "institution"> & { id?: string }) | null>(null);
   const [password, setPassword] = useState("");
@@ -267,6 +209,11 @@ export default function Apply() {
           Research accounts are for laboratories and research institutions. Every application is reviewed before an
           account can order.
         </p>
+        {fromChat && !received && (
+          <p className="tm-acct-from-chat" role="status">
+            Your answers from the chat are filled in. {LIVE ? "Choose a password, then check each step and submit." : "Check each step, then submit."}
+          </p>
+        )}
 
         <nav className="tm-acct-rail" aria-label="Application steps">
           <ol>

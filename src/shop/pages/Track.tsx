@@ -1,6 +1,6 @@
 import { LIVE } from "../../platform/mode";
-import { live } from "../../platform/live/runtime";
 import type { TrackedOrder } from "../../platform/live/rows";
+import { EMAIL, ORDER_NUMBER, lookUp, normaliseNumber } from "../track-lookup";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
@@ -18,34 +18,12 @@ import "../../brand/track-page.css";
  * order goes straight to it from /track/<number>.
  */
 
-const ORDER_NUMBER = /^TM-\d{5}$/;
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const LONG_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-/** "tm 10478", "10478" and "TM10478" all mean TM-10478. */
-function normaliseNumber(input: string): string {
-  const compact = input.trim().toUpperCase().replace(/[\s–—]/g, "");
-  const digits = compact.replace(/^TM-?/, "");
-  return /^\d{5}$/.test(digits) ? `TM-${digits}` : compact;
-}
 
 const longDate = (iso: string) => {
   const d = new Date(iso);
   return `${d.getUTCDate()} ${LONG_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 };
-
-/**
- * An order by its number and the email it was placed with. Both reads happen
- * whether or not the number exists, and a miss gives the same answer either way,
- * so the page never tells anyone which orders exist. At launch the backend makes
- * this check itself.
- */
-async function lookUp(number: string, email: string): Promise<Order | TrackedOrder | null> {
-  if (LIVE) return live().trackOrder(number, email);
-  const [order, buyers] = await Promise.all([store.orders.get(number), store.buyers.list()]);
-  const buyer = order ? buyers.find((b) => b.id === order.buyerId) : undefined;
-  return order && buyer && buyer.email.toLowerCase() === email.trim().toLowerCase() ? order : null;
-}
 
 /** The order's state in a line, and a softer second line. */
 function headline(order: Order): [string, string] {

@@ -1,20 +1,23 @@
-import { memo, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { memo, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { ArrowDown, ArrowUp, MessageCircle, Minus, Square, X } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { Drawer } from "../app-kit/Drawer";
 import { Card } from "../app-kit/components";
 import { Certificate } from "../brand/Certificate";
 import { LIVE } from "../platform/mode";
 import { STORE_CHANGE, worldNow } from "../platform/storage";
-import { useShop } from "../shop/context";
+import { ShopContext } from "../shop/context";
 import { SheetSkirt, useScrollLock, useSheetDrag, useSheetFocus, useSheetPresence, useVisibleViewport, viewportBox } from "../shop/sheet";
 import { usePrefersReducedMotion } from "../shop/motion";
 import { browserAssistant, currentScope, previewGate, reviewKey } from "./browser";
 import { runTurn } from "./engine";
 import { AssistantError, OFFLINE, type Persona } from "./protocol";
-import type { Artifact, PendingAction, Scope, Source } from "./runtime";
-import { Activity, DeskRecord, DeskText, FollowUps, Sources, Welcome, followUpsFor } from "./LabDesk";
+import { activityFor, type Artifact, type PendingAction, type Scope, type Source, type ToolOutput } from "./runtime";
+import { QUICK_SCHEMAS, quickTurn } from "./quick";
+import { planInProgress, startPlan, updatePlan } from "./planner-store";
+import { rememberProduct, returningProduct } from "./recent";
+import { Activity, DeskRecord, DeskText, FollowUps, Sources, Welcome, followUpsFor, type Opening } from "./LabDesk";
 import { chatContext, setChatContext, type ChatContext } from "./chat-context";
 import { productById } from "../shop/catalog";
 import { MessageText } from "./MessageText";
@@ -28,7 +31,7 @@ const prompts: Record<Persona, string[]> = {
 };
 const titles = { visitor: "Ask TrueMark", owner: "Assistant", partner: "Your assistant" };
 const OPEN = "tm-assistant-open";
-type Entry = { id: string; who: "user" | "assistant"; text?: string; artifact?: Artifact; close?: { sources: Source[]; followups: string[] }; at?: number };
+type Entry = { id: string; who: "user" | "assistant"; text?: string; artifact?: Artifact; close?: { sources: Source[]; followups: string[] }; at?: number; arrive?: boolean };
 /** Just arrived: only a new line plays its arrival, never one drawn again when the desk reopens. */
 const FRESH_MS = 2500;
 type Access = { allowed: boolean; scope: Scope; key: string | null; version: number };
@@ -248,43 +251,59 @@ function ChatSheet({ title, subtitle, working = false, onClose, children }: { ti
 
 /** What a passing page keeps clear of the corner mark: its primary actions. */
 const KEEP_CLEAR = ".tm-button-primary, .tm-buy-row, [data-keep-clear]";
+/** What stays at the foot of the screen (the review tools): the mark rises to stand just above it. */
+const STAND_ABOVE = ".rl-dock, .rl-dock-pill, .rl-ask, [data-chat-above]";
 
 /**
- * The desk's place on a desktop window: a round mark in the page's right margin that opens it, the
- * desk rising from the same corner. It stands aside while a page's primary action passes beneath it
- * (only a narrow window brings them together), breathes while an answer is being written, and marks
- * an answer that arrived while the desk was away.
+ * The desk's way in, on every screen: the brand's dot and the desk's name in the bottom corner, the
+ * desk rising from the same corner. It stands just above anything that stays at the foot of the
+ * screen, aside while a page's primary action passes beneath it, breathes while an answer is being
+ * written, and marks an answer that arrived while the desk was away.
  */
 function CornerMark({ title, label, working = false, unread = false, onOpen, markRef }: { title: string; label: string; working?: boolean; unread?: boolean; onOpen: () => void; markRef?: RefObject<HTMLButtonElement | null> }) {
   const own = useRef<HTMLButtonElement>(null), mark = markRef ?? own;
   const [clear, setClear] = useState(true);
+  const [lift, setLift] = useState(0); const lifted = useRef(0);
   useEffect(() => {
-    let frame = 0;
+    let frame = 0, settle = 0;
+    const shown = (el: HTMLElement) => { const style = getComputedStyle(el); return style.visibility !== "hidden" && style.display !== "none" && Number(style.opacity) > 0.05; };
     const check = () => {
       frame = 0;
       const self = mark.current;
       if (!self) return;
       const r = self.getBoundingClientRect();
+      // How high it stands: just above whatever stays at the foot of the screen in its column.
+      let next = 0;
+      for (const el of document.querySelectorAll<HTMLElement>(STAND_ABOVE)) {
+        const o = el.getBoundingClientRect();
+        if (!o.width || o.right <= r.left - 4 || o.left >= r.right + 4 || !shown(el)) continue;
+        next = Math.max(next, Math.round(window.innerHeight - o.top));
+      }
+      // Where it will be once risen, for the primary actions it gives way to.
+      const shift = next - lifted.current, top = r.top - shift, bottom = r.bottom - shift;
+      lifted.current = next; setLift(next);
       setClear(![...document.querySelectorAll<HTMLElement>(KEEP_CLEAR)].some((el) => {
         const o = el.getBoundingClientRect();
-        return o.width > 0 && o.right > r.left - 4 && o.left < r.right + 4 && o.bottom > r.top - 4 && o.top < r.bottom + 4;
+        return o.width > 0 && o.right > r.left - 4 && o.left < r.right + 4 && o.bottom > top - 4 && o.top < bottom + 4;
       }));
     };
     const queue = () => { if (!frame) frame = requestAnimationFrame(check); };
+    // Things arriving at the foot of the screen rise into place; look again once they have.
+    const later = () => { queue(); window.clearTimeout(settle); settle = window.setTimeout(queue, 600); };
     check();
     window.addEventListener("scroll", queue, { passive: true, capture: true });
-    window.addEventListener("resize", queue);
+    window.addEventListener("resize", later);
     // Pages arrive and change beneath it.
-    const changes = new MutationObserver(queue);
+    const changes = new MutationObserver(later);
     changes.observe(document.body, { childList: true, subtree: true });
-    return () => { cancelAnimationFrame(frame); window.removeEventListener("scroll", queue, { capture: true }); window.removeEventListener("resize", queue); changes.disconnect(); };
+    return () => { cancelAnimationFrame(frame); window.clearTimeout(settle); window.removeEventListener("scroll", queue, { capture: true }); window.removeEventListener("resize", later); changes.disconnect(); };
   }, [mark]);
+  // Named, always: the brand's dot and the desk's name. While an answer waits, it says so.
   return <button ref={mark} type="button" className="tm-desk-launcher" data-yield={clear ? undefined : ""} data-unread={unread || undefined} aria-haspopup="dialog"
+    style={lift ? { "--tm-desk-lift": `${lift}px` } as CSSProperties : undefined}
     aria-label={`${label}${unread ? ", new answer" : ""}`} onClick={onOpen}>
-    <MessageCircle size={18} strokeWidth={1.7} aria-hidden="true" />
     <span className={`tm-desk-presence${working ? " is-working" : ""}`} aria-hidden="true" />
-    {/* Named on hover and focus; while an answer waits, it says so. */}
-    <span className="tm-desk-launcher-label" aria-hidden="true">{unread ? "New answer" : title}</span>
+    <span key={unread ? "unread" : title} className="tm-desk-launcher-label" aria-hidden="true">{unread ? "New answer" : title}</span>
   </button>;
 }
 
@@ -351,7 +370,7 @@ const DeskLine = memo(function DeskLine({ entry, last, busy, live, actions }: { 
   if (entry.who === "user") return <div className="tm-chat-msg is-user" data-entry={entry.id} data-fresh={fresh}><span className="assistant-a11y">You said</span><div className="tm-chat-bubble">{entry.text && <MessageText text={entry.text} />}</div></div>;
   // Each answer keeps its sources; only the newest offers what to ask next.
   if (entry.close) return <div className="tm-desk-close" data-fresh={fresh}><Sources sources={entry.close.sources} onNavigate={actions.navigated} />{last && <FollowUps items={entry.close.followups} onAsk={actions.ask} disabled={busy} />}</div>;
-  return <div className="tm-chat-msg is-assistant" data-fresh={fresh}><span className="assistant-a11y">TrueMark said</span>{entry.text && <DeskText text={entry.text} live={live} />}{entry.artifact && <DeskRecord artifact={entry.artifact} onAdd={actions.add} onNavigate={actions.navigated} />}</div>;
+  return <div className="tm-chat-msg is-assistant" data-fresh={fresh}><span className="assistant-a11y">TrueMark said</span>{entry.text && <DeskText text={entry.text} live={live} arrive={entry.arrive && fresh !== undefined} />}{entry.artifact && <DeskRecord artifact={entry.artifact} onAdd={actions.add} onNavigate={actions.navigated} onAsk={actions.ask} />}</div>;
 });
 
 /** The desk's field. It keeps its own words, so typing redraws the field alone, never the conversation. */
@@ -392,10 +411,11 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
   const away = useRef(minimized); away.current = minimized;
   useEffect(() => { if (!minimized) setUnread(false); }, [minimized]);
   // Where the reader was when the conversation began: its opening stays as it was said.
-  const [opening, setOpening] = useState<ChatContext | null>(null);
-  const turnSources = useRef<Source[]>([]), turnKinds = useRef<Artifact["kind"][]>([]);
+  const [opening, setOpening] = useState<Opening | null>(null);
+  const turnSources = useRef<Source[]>([]), turnKinds = useRef<Artifact["kind"][]>([]), turnLot = useRef<string | undefined>(undefined);
+  // The lot whose certificate the conversation showed last, for "how do I read this certificate?".
+  const lastLot = useRef<string | undefined>(undefined);
   const cartItems = useRef(cart); cartItems.current = cart;
-  const navigate = useNavigate();
   const current = useRef<AbortController | null>(null), running = useRef(false), lastRequest = useRef(0);
   const bag = useRef(addToBag); bag.current = addToBag;
   const lastQuestion = useRef<{ text: string; daily: boolean } | null>(null);
@@ -426,15 +446,72 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
   // bar's backdrop-filter makes it unsuitable as a fixed-position containing block.
   useLayoutEffect(() => { if (surface !== "visitor") setKitRoot(anchor.current?.closest<HTMLElement>(".kit") ?? null); }, [surface, open]);
 
+  // The conversation as plain lines for a message to the team, and the inbox it belongs in.
+  const entriesNow = useRef(entries); entriesNow.current = entries;
+  const contactFrom = useCallback((): { topic: string; note: string } => {
+    const all = entriesNow.current, where = chatContext();
+    const plain = (text: string) => text.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/\*\*|__|[*`]/g, "").replace(/\s+/g, " ").trim();
+    const lines = all.filter((e) => e.text && e.text !== "Talk to a person").slice(-6).map((e) => `${e.who === "user" ? "Me" : "TrueMark"}: ${plain(e.text!).slice(0, 300)}`);
+    const about = where?.product ? `About: ${where.product.name} ${where.product.size}, lot ${where.product.lot}` : "";
+    const note = [about, lines.length ? `From my chat with TrueMark:\n${lines.join("\n")}` : ""].filter(Boolean).join("\n\n");
+    const kinds = all.map((e) => e.artifact?.kind);
+    const topic = kinds.includes("order") || where?.page.startsWith("/account") ? "orders-shipping"
+      : kinds.includes("certificate") || kinds.includes("explain") || where?.page.startsWith("/verify") ? "testing-certificates" : "general-support";
+    return { topic, note };
+  }, []);
+  const withContact = useCallback((artifact: Artifact): Artifact => artifact.kind === "panel" && artifact.panel === "contact" && !artifact.note
+    ? { ...artifact, ...contactFrom(), ...(artifact.topic ? { topic: artifact.topic } : {}) } : artifact, [contactFrom]);
+
   const send = useCallback(async (text: string, daily = false) => {
     if (running.current || !text.trim()) return;
     running.current = true; const controller = new AbortController(); current.current = controller;
     lastQuestion.current = { text, daily };
     const turn = crypto.randomUUID(); setError(""); setInput(""); setAnnouncement(""); setStatus("loading"); setActivity(""); stickToBottom.current = true;
-    turnSources.current = []; turnKinds.current = [];
+    turnSources.current = []; turnKinds.current = []; turnLot.current = undefined;
     if (!daily) {
-      if (surface === "visitor") { setOpening((then) => then ?? chatContext()); ask(turn); }
+      if (surface === "visitor") {
+        // How the conversation began: the page, and what the desk knew of the reader then.
+        const began: Opening = { ...(chatContext() ?? { page: "/" }), planned: Boolean(planInProgress()), recent: returningProduct() };
+        setOpening((then) => then ?? began); ask(turn);
+      }
       setEntries((items) => [...items, { id: turn, who: "user", text, at: Date.now() }]);
+    }
+    // The desk's own questions answer at once from the records; a failure there falls back to the model.
+    const quick = surface === "visitor" && !daily ? quickTurn(text, chatContext(), lastLot.current, Boolean(planInProgress())) : null;
+    if (quick) {
+      try {
+        let output: ToolOutput | null = null;
+        if (quick.call) { setActivity(activityFor(quick.call)); output = await bridge.prepare(quick.call, QUICK_SCHEMAS, "visitor"); }
+        if (controller.signal.aborted) throw new DOMException("Cancelled", "AbortError");
+        const answer = quick.answer(output);
+        if (answer.artifact?.kind === "certificate" || answer.artifact?.kind === "explain") lastLot.current = answer.artifact.record.lot;
+        if (answer.artifact?.kind === "product") rememberProduct(answer.artifact.product.id);
+        if (answer.artifact?.kind === "profile" && answer.artifact.product) rememberProduct(answer.artifact.product.id);
+        // The planner opens in this card: a fresh plan, the one in progress, or that plan with a compound added.
+        if (answer.plan) {
+          const card = crypto.randomUUID(), seed = answer.plan.seed ?? {}, existing = planInProgress();
+          if (answer.plan.mode === "fresh" || !existing) startPlan({ ...seed, card });
+          else if (answer.plan.mode === "add") updatePlan((p) => ({ ...seed, picks: [...new Set([...p.picks, ...(seed.picks ?? [])])], added: false, card }));
+          else updatePlan(() => ({ card }));
+          answer.artifact = { kind: "planner", card };
+        }
+        if (answer.artifact) answer.artifact = withContact(answer.artifact);
+        const kinds = answer.artifact ? [answer.artifact.kind] : [];
+        const shownLot = answer.artifact?.kind === "product" ? answer.artifact.product.lot : answer.artifact?.kind === "profile" ? answer.artifact.product?.lot : undefined;
+        const close = { sources: answer.source ? [answer.source] : [], followups: followUpsFor(kinds, text, chatContext(), shownLot) };
+        // It writes itself in above its record, as any answer does.
+        setEntries((items) => [...items, { id: `${turn}:quick`, who: "assistant", text: answer.lead, artifact: answer.artifact, arrive: true, at: Date.now() },
+          ...(close.sources.length || close.followups.length ? [{ id: `${turn}:close`, who: "assistant" as const, close, at: Date.now() }] : [])]);
+        setAnnouncement(answer.lead);
+        setActivity(""); setStatus("idle");
+        if (away.current) setUnread(true);
+        running.current = false; current.current = null;
+        return;
+      } catch {
+        setActivity("");
+        if (controller.signal.aborted) { setStatus("idle"); running.current = false; current.current = null; return; }
+        // The model can still answer it.
+      }
     }
     try {
       const final = await runTurn(text, bridge.transport, bridge.prepare, {
@@ -445,7 +522,8 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
           const id = `${turn}:${round}`;
           setEntries((items) => items.some((item) => item.id === id) ? items.map((item) => item.id === id ? { ...item, text: value } : item) : [...items, { id, who: "assistant", text: value, at: Date.now() }]);
         },
-        artifact: (artifact) => { if (!controller.signal.aborted) { turnKinds.current.push(artifact.kind); setEntries((items) => [...items, { id: crypto.randomUUID(), who: "assistant", artifact, at: Date.now() }]); setActivity("Writing"); } },
+        artifact: (raw) => { const artifact = withContact(raw); if (!controller.signal.aborted) { turnKinds.current.push(artifact.kind); if (artifact.kind === "product") { turnLot.current = artifact.product.lot; rememberProduct(artifact.product.id); }
+          if (artifact.kind === "profile" && artifact.product) { turnLot.current = artifact.product.lot; rememberProduct(artifact.product.id); } if (artifact.kind === "certificate") lastLot.current = artifact.record.lot; setEntries((items) => [...items, { id: crypto.randomUUID(), who: "assistant", artifact, at: Date.now() }]); setActivity("Writing"); } },
         activity: (label) => { if (!controller.signal.aborted) setActivity(label); },
         source: (source) => { turnSources.current.push(source); },
         confirm: (action, signal) => new Promise<boolean>((resolve) => {
@@ -459,7 +537,7 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
       if (daily && final) { setBrief(final); try { sessionStorage.setItem(cacheKey, final); } catch { /* In-memory state still caches this open session. */ } }
       // The storefront desk closes each answer with where its facts came from and what to ask next.
       if (surface === "visitor" && !daily) {
-        const close = { sources: [...turnSources.current], followups: followUpsFor(turnKinds.current, text, chatContext()) };
+        const close = { sources: [...turnSources.current], followups: followUpsFor(turnKinds.current, text, chatContext(), turnLot.current) };
         if (close.sources.length || close.followups.length) setEntries((items) => [...items, { id: crypto.randomUUID(), who: "assistant", close, at: Date.now() }]);
       }
       setAnnouncement(final);
@@ -473,7 +551,7 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
       setStatus(failure instanceof AssistantError ? failure.status === 429 ? "rate-limited" : failure.status === 503 ? "offline" : "error" : "error");
       setError(failure instanceof Error ? failure.message : OFFLINE);
     } finally { running.current = false; current.current = null; }
-  }, [bridge, cacheKey, surface, ask]);
+  }, [bridge, cacheKey, surface, ask, withContact]);
 
   useEffect(() => {
     if (!open) return;
@@ -518,18 +596,8 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
     // A record opened from the desk: on a phone the sheet steps aside for the page; on desktop the
     // desk stays beside it.
     const navigated = () => { if (!docked) onClose(); };
-    const talkToPerson = () => {
-      // The conversation as plain lines: no markdown marks in the message the team reads.
-      const plain = (text: string) => text.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/\*\*|__|[*`]/g, "").replace(/\s+/g, " ").trim();
-      const lines = entries.filter((e) => e.text).slice(-6).map((e) => `${e.who === "user" ? "Me" : "TrueMark"}: ${plain(e.text!).slice(0, 300)}`);
-      const about = context?.product ? `About: ${context.product.name} ${context.product.size}, lot ${context.product.lot}` : "";
-      const message = [about, lines.length ? `From my chat with TrueMark:\n${lines.join("\n")}` : ""].filter(Boolean).join("\n\n");
-      const kinds = entries.map((e) => e.artifact?.kind);
-      const topic = kinds.includes("order") || context?.page.startsWith("/account") ? "orders-shipping"
-        : kinds.includes("certificate") || context?.page.startsWith("/verify") ? "testing-certificates" : "general-support";
-      navigate("/contact", { state: { prefill: { topic, message } } });
-      navigated();
-    };
+    // A person, from inside the chat: the message card opens here, the conversation so far written into it.
+    const talkToPerson = () => { void send("Talk to a person"); };
     const started = entries.length > 0;
     deskLatest.current = { ask: (text) => void send(text), navigated, add: onAdd };
     const chat = <div className="tm assistant tm-chat-body" data-persona={persona} data-above={edges.above || undefined} data-below={edges.below || undefined}>
@@ -616,16 +684,20 @@ function useDocked() {
 }
 
 export function StorefrontAssistant() {
-  const access = useAccess("visitor"), { add, closeCart, cart } = useShop(); const location = useLocation();
+  // Beside the shop it can fill the bag; on the sign-in page, which stands outside the shop, it answers only.
+  const shop = useContext(ShopContext), cart = useMemo(() => shop?.cart ?? [], [shop?.cart]);
+  const access = useAccess("visitor"); const location = useLocation();
   const [open, setOpen] = useState(false), [minimized, setMinimized] = useState(false), [request, setRequest] = useState({ id: 0, text: "" });
   const docked = useDocked();
   const cartNow = useRef(cart); cartNow.current = cart;
+  const add = shop?.add, closeCart = shop?.closeCart;
   const addToBag = useCallback((id: string, quantity: number) => {
+    if (!add || !closeCart) throw new Error("Sign in to add to your bag.");
     if ((cart.find((item) => item.id === id)?.quantity ?? 0) + quantity > 99) throw new Error("The bag allows up to 99 of an item. Please choose a smaller quantity.");
     add(id, quantity); closeCart();
   }, [add, closeCart, cart]);
   // A card's own Add button is the reader's click, like the product page's.
-  const addFromCard = useCallback((id: string, quantity: number) => { add(id, quantity); closeCart(); }, [add, closeCart]);
+  const addFromCard = useCallback((id: string, quantity: number) => { add?.(id, quantity); closeCart?.(); }, [add, closeCart]);
   // Where the reader is: the product and its lot, the bag, whether they are signed in.
   const context = useMemo<ChatContext>(() => {
     const productId = location.pathname.match(/^\/product\/([^/]+)/)?.[1];
@@ -639,6 +711,16 @@ export function StorefrontAssistant() {
     };
   }, [location.pathname, location.search, cart, access?.scope.role]);
   useEffect(() => { setChatContext(context); }, [context]);
+  // On a product page the corner mark, after a moment, asks about that product by name.
+  const [nudge, setNudge] = useState<string | null>(null);
+  const viewing = context.product;
+  useEffect(() => {
+    setNudge(null);
+    if (!viewing) return;
+    rememberProduct(viewing.id);
+    const later = window.setTimeout(() => setNudge(`Questions about ${viewing.name}?`), 6000);
+    return () => window.clearTimeout(later);
+  }, [viewing?.id, viewing?.name]);
   useEffect(() => () => setChatContext(null), []);
   useEffect(() => { const handler = (e: Event) => { setRequest((r) => ({ id: r.id + 1, text: (e as CustomEvent<string>).detail ?? "" })); setOpen(true); setMinimized(false); }; window.addEventListener(OPEN, handler); return () => window.removeEventListener(OPEN, handler); }, []);
   useEffect(() => { setAvailable(Boolean(access?.allowed)); }, [access?.allowed]);
@@ -652,11 +734,11 @@ export function StorefrontAssistant() {
   }
   if (!access?.allowed) return null;
   return <>
-    <Conversation key={access.version} access={access} surface="visitor" open={open} onClose={() => { setOpen(false); setMinimized(false); }} request={request} addToBag={addToBag}
-      docked={docked} minimized={minimized} onMinimize={() => setMinimized(true)} onRestore={() => setMinimized(false)} onAdd={addFromCard} bag={() => cartNow.current} context={context} />
+    <Conversation key={access.version} access={access} surface="visitor" open={open} onClose={() => { setOpen(false); setMinimized(false); }} request={request} addToBag={shop ? addToBag : undefined}
+      docked={docked} minimized={minimized} onMinimize={() => setMinimized(true)} onRestore={() => setMinimized(false)} onAdd={shop ? addFromCard : undefined} bag={() => cartNow.current} context={context} />
     {/* On desktop the desk always has its place in the corner: this mark while it is closed, the desk
         itself rising from the same spot when opened, the same mark again when it steps aside. */}
-    {docked && !open && <CornerMark title={titles.visitor} label="Ask TrueMark a question" onOpen={() => openAssistant()} />}
+    {!open && <CornerMark title={nudge ?? titles.visitor} label={nudge ? `Ask TrueMark: ${nudge}` : "Ask TrueMark a question"} onOpen={() => openAssistant()} />}
   </>;
 }
 export function HomeAssistantEntry() {
