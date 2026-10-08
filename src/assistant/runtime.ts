@@ -156,11 +156,17 @@ export function createToolRuntime(deps: RuntimeDependencies) {
     };
     switch (tool.name) {
       case "search_catalog": case "catalog": case "products_and_stock": {
-        const list = (await s.assistant.products()).filter((p) => (persona === "owner" || p.active) && matching(a.query, p.name, p.size, p.category));
+        const shown = (await s.assistant.products()).filter((p) => persona === "owner" || p.active);
+        let list = shown.filter((p) => matching(a.query, p.name, p.size, p.category, p.tag));
+        // A search in the model's own words ("compounds tagged best seller") can match nothing; then it
+        // gets the whole catalog, marks included, rather than an empty answer.
+        const widened = !list.length && Boolean(a.query);
+        if (widened) list = shown;
         const lots = tool.name === "products_and_stock" ? await s.lots.list() : [];
-        const result = page(list.map((p) => ({ ...productSummary(p), ...(tool.name === "products_and_stock" ? recordedStock(p, lots) : {}) })), a);
+        const result = { ...page(list.map((p) => ({ ...productSummary(p), ...(tool.name === "products_and_stock" ? recordedStock(p, lots) : {}) })), widened ? { ...a, limit: 10 } : a),
+          ...(widened ? { note: "Nothing matched that search, so this is the whole catalog." } : {}) };
         if (persona !== "visitor") return output(result);
-        // The shelf: one vial per compound, in the catalog's order.
+        // The shelf: one vial per compound, in the catalog's order (the whole shelf when the search widened).
         const tiles: CatalogTile[] = [];
         for (const p of list) {
           const same = tiles.find((t) => t.name === p.name);
@@ -168,7 +174,7 @@ export function createToolRuntime(deps: RuntimeDependencies) {
           tiles.push({ id: p.id, name: p.name, size: p.size, sizes: 1, image: deps.describeProduct?.(p).image ?? "", category: p.category, tag: p.tag ?? null });
         }
         // A narrow search names one or two compounds, which their own cards show better than a shelf.
-        const shelf = tiles.length >= 3 || (!text("query") && tiles.length > 0);
+        const shelf = tiles.length >= 3 || ((widened || !text("query")) && tiles.length > 0);
         return output(result, shelf ? { kind: "catalog", tiles, query: text("query") } : undefined, { label: "Catalog", href: "/products" });
       }
       case "get_product": {
