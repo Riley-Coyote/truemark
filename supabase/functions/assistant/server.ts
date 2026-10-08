@@ -49,6 +49,23 @@ function userMessages(body: Record<string, unknown>, history: Message[], round: 
   });
   return { messages, round: round + 1 };
 }
+/**
+ * Tidy a model's call before it is checked, rather than failing a whole answer over a slip: an empty
+ * optional field means "none" (an empty search is the whole catalog), a number past its range takes the
+ * nearest allowed value, and a field the tool doesn't have is dropped. Required fields, wrong types and
+ * values outside an enum still fail.
+ */
+export function tidyCall(name: string, args: Record<string, unknown>, tools: ReturnType<typeof toolsFor>) {
+  const schema = tools.find((t) => t.name === name)?.parameters;
+  if (!schema) return;
+  for (const [key, value] of Object.entries(args)) {
+    const rule = schema.properties[key], required = schema.required.includes(key);
+    if (!rule) { delete args[key]; continue; }
+    if (!required && (value === null || (typeof value === "string" && !value.trim()))) { delete args[key]; continue; }
+    if (typeof value === "number" && Number.isFinite(value) && (rule.type === "integer" || rule.type === "number"))
+      args[key] = Math.min(rule.maximum ?? Infinity, Math.max(rule.minimum ?? -Infinity, rule.type === "integer" ? Math.round(value) : value));
+  }
+}
 function validateCall(name: string, args: Record<string, unknown>, tools: ReturnType<typeof toolsFor>) {
   const schema = tools.find((t) => t.name === name)?.parameters;
   if (!schema || schema.required.some((key) => !(key in args))) throw new Error("Unsupported tool");
@@ -180,7 +197,7 @@ export function createHandler(deps: Dependencies) {
             if (JSON.stringify(message).length + JSON.stringify(calls).length > 60000) throw new Error("Response too large");
           }
           if (!accounting || (!message.content && !calls.length)) throw new Error("Incomplete response");
-          for (const call of calls) validateCall(call.name, call.arguments, tools);
+          for (const call of calls) { tidyCall(call.name, call.arguments, tools); validateCall(call.name, call.arguments, tools); }
           if (calls.length) message.tool_calls = calls.map((c) => ({ id: c.id, type: "function", function: { name: c.name, arguments: JSON.stringify(c.arguments) } }));
           if (signal.aborted || !await deps.repository.finish(id, reserved, message, accounting)) throw new Error("Conversation changed");
           // Complete arguments, server validation and persistence precede every tool event.
