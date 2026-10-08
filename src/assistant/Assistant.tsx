@@ -413,6 +413,8 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
   // Where the reader was when the conversation began: its opening stays as it was said.
   const [opening, setOpening] = useState<Opening | null>(null);
   const turnSources = useRef<Source[]>([]), turnKinds = useRef<Artifact["kind"][]>([]), turnLot = useRef<string | undefined>(undefined);
+  // The records this answer has already shown.
+  const turnShown = useRef<Set<string>>(new Set());
   // The lot whose certificate the conversation showed last, for "how do I read this certificate?".
   const lastLot = useRef<string | undefined>(undefined);
   const cartItems = useRef(cart); cartItems.current = cart;
@@ -467,7 +469,7 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
     running.current = true; const controller = new AbortController(); current.current = controller;
     lastQuestion.current = { text, daily };
     const turn = crypto.randomUUID(); setError(""); setInput(""); setAnnouncement(""); setStatus("loading"); setActivity(""); stickToBottom.current = true;
-    turnSources.current = []; turnKinds.current = []; turnLot.current = undefined;
+    turnSources.current = []; turnKinds.current = []; turnLot.current = undefined; turnShown.current = new Set();
     if (!daily) {
       if (surface === "visitor") {
         // How the conversation began: the page, and what the desk knew of the reader then.
@@ -522,7 +524,12 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
           const id = `${turn}:${round}`;
           setEntries((items) => items.some((item) => item.id === id) ? items.map((item) => item.id === id ? { ...item, text: value } : item) : [...items, { id, who: "assistant", text: value, at: Date.now() }]);
         },
-        artifact: (raw) => { const artifact = withContact(raw); if (!controller.signal.aborted) { turnKinds.current.push(artifact.kind); if (artifact.kind === "product") { turnLot.current = artifact.product.lot; rememberProduct(artifact.product.id); }
+        artifact: (raw) => { const artifact = withContact(raw);
+          // One answer shows each record once: a second search for the shelf, or the same profile again, adds nothing.
+          const key = artifact.kind === "catalog" ? "catalog" : artifact.kind === "profile" ? `profile:${artifact.profile.name}` : artifact.kind === "certificate" ? `lot:${artifact.record.lot}` : artifact.kind === "product" ? `product:${artifact.product.id}` : null;
+          if (key && turnShown.current.has(key)) return;
+          if (key) turnShown.current.add(key);
+          if (!controller.signal.aborted) { turnKinds.current.push(artifact.kind); if (artifact.kind === "product") { turnLot.current = artifact.product.lot; rememberProduct(artifact.product.id); }
           if (artifact.kind === "profile" && artifact.product) { turnLot.current = artifact.product.lot; rememberProduct(artifact.product.id); } if (artifact.kind === "certificate") lastLot.current = artifact.record.lot; setEntries((items) => [...items, { id: crypto.randomUUID(), who: "assistant", artifact, at: Date.now() }]); setActivity("Writing"); } },
         activity: (label) => { if (!controller.signal.aborted) setActivity(label); },
         source: (source) => { turnSources.current.push(source); },
