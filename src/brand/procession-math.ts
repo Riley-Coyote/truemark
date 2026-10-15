@@ -30,11 +30,13 @@ export function pose(d: number, spacing: number, height: number) {
   return { x: d * spacing, y: -height * .025 * (1 - emphasis), scale };
 }
 
-/** Quintic Bezier in document space. The final two control points coincide so the
- * arrival inherits the document's scrolling velocity without an abrupt stop. */
-export function passageFoot(t: number, source: number, target: number, end: number, trough: number) {
-  const u = 1 - t;
-  return u ** 5 * source + 5 * u ** 4 * t * (source + end * .5)
-    + 10 * u ** 3 * t ** 2 * trough + 10 * u ** 2 * t ** 3 * trough
-    + 5 * u * t ** 4 * target + t ** 5 * target;
+export const HANDOFF = .40, RISE = .62;
+
+/** One rigid camera for the room and everything seated in it. Points are in the
+ * resting viewport's coordinates; x/y + point * zoom is their filmed position.
+ * The push leads the fall slightly. Copies never take over while glass is visible. */
+export function scene(p: number, px: number, py: number, depth: number, fall: number) {
+  const t = clamp01(p / HANDOFF), zoom = 1 + (depth - 1) * smooth(t);
+  const drop = smooth((t - .12) / .88);
+  return { zoom, x: px * (1 - zoom), y: py * (1 - zoom) + fall * drop, drop };
 }

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { advance, advanceDrift, distance, passageFoot, pose } from '../src/brand/procession-math';
+import { advance, advanceDrift, distance, HANDOFF, pose, scene } from '../src/brand/procession-math';
 
 test('continuous drift starts gently and travels identically at 30, 60 and 120 fps', () => {
   const first = advanceDrift(2, 0, 1 / 60);
@@ -21,17 +21,23 @@ test('continuous drift starts gently and travels identically at 30, 60 and 120 f
   assert.ok(Math.max(...positions) - Math.min(...positions) < .0000001);
 });
 
-test('the passage reaches both original objects exactly and joins native scrolling smoothly', () => {
-  const from = 650, to = 1600, scroll = 900, trough = 2400;
-  assert.equal(passageFoot(0, from, to, scroll, trough), from);
-  assert.equal(passageFoot(1, from, to, scroll, trough), to);
-  // The document-space endpoint is stationary: the viewport inherits -scroll velocity.
-  const epsilon = .00001;
-  const velocity = (passageFoot(1, from, to, scroll, trough) - passageFoot(1 - epsilon, from, to, scroll, trough)) / epsilon;
-  assert.ok(Math.abs(velocity) < 1);
-  for (const t of [.28, .35, .42, .48]) {
-    const cap = passageFoot(t, from, to, scroll, trough) - scroll * t - 300;
-    assert.ok(cap > 844, `The original order must reset below the frame at ${t}`);
+test('the entire seated room clears the frame before copies can take over', () => {
+  for (const [height, pivotY, capTop, depth] of [[900, 580, 450, 2.1], [844, 570, 420, 2.1], [568, 370, 280, 1.6]]) {
+    const fall = height + 32 - (pivotY + (capTop - pivotY) * depth);
+    const start = scene(0, 720, pivotY, depth, fall);
+    assert.equal(start.zoom, 1); assert.equal(start.x, 0); assert.equal(start.y, 0);
+    const end = scene(HANDOFF, 720, pivotY, depth, fall);
+    assert.ok(Math.abs(end.y + capTop * end.zoom - height - 32) < .000001);
+    for (const progress of [.05, .1, .2, .3, HANDOFF]) {
+      const camera = scene(progress, 720, pivotY, depth, fall);
+      const foot = capTop + 200, heroOffset = 80, localFoot = foot - heroOffset;
+      const localCameraY = camera.y + heroOffset * (camera.zoom - 1);
+      // A camera-local seat and its photographic copy share one matrix under any header.
+      assert.ok(Math.abs(heroOffset + localCameraY + localFoot * camera.zoom - (camera.y + foot * camera.zoom)) < .000001);
+      const vialCap = camera.y + capTop * camera.zoom;
+      const vialFoot = camera.y + foot * camera.zoom;
+      assert.ok(Math.abs(vialFoot - vialCap - 200 * camera.zoom) < .000001);
+    }
   }
 });
 
@@ -59,7 +65,7 @@ test('center scale has no cusp, and the loop wraps outside the visible stage', (
   assert.equal(pose(-.01, 300, 330).scale, pose(.01, 300, 330).scale);
   assert.ok(pose(0, 300, 330).scale - pose(.001, 300, 330).scale < .000001);
   for (const width of [320, 390, 768, 1280, 1920]) {
-    const spacing = width <= 700 ? width * .37 : Math.min(350, width * .235);
+    const spacing = Math.max(width <= 700 ? width * .56 : Math.min(350, width * .235), 330 * 1.12);
     assert.ok(Math.abs(pose(distance(4, 0, 8), spacing, 330).x) - 100 > width / 2);
   }
 });

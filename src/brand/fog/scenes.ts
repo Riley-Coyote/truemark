@@ -122,6 +122,19 @@ function silhouette(scene: FogScene, index: number) {
   };
 }
 
+/** The measured photographic outline, shared with Procession's close pedestal
+ * crops. This keeps the original room pixels and contact plane unchanged. */
+export function pedestalCrop(scene: FogScene, index: number) {
+  const shape = silhouette(scene, index);
+  return {
+    x: shape.x, half: shape.half,
+    backTop: shape.top.cy - shape.top.ry,
+    frontTop: shape.top.cy + shape.top.ry,
+    rimRadius: shape.top.ry,
+    base: scene.pedestals[index].base,
+  };
+}
+
 /** The distance (room px) from a point to the silhouette's outline: negative inside. */
 function outside(s: ReturnType<typeof silhouette>, X: number, Y: number) {
   const dx = X - s.x;

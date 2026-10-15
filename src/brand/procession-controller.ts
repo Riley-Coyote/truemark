@@ -1,7 +1,8 @@
-import { advance, advanceDrift, clamp01, distance, mix, modulo, passageFoot, pose, smooth } from "./procession-math";
+import { advance, advanceDrift, clamp01, distance, HANDOFF, mix, modulo, pose, RISE, scene, smooth } from "./procession-math";
+import { FOG_SCENES, pedestalCrop } from "./fog/scenes";
 
 export type ProcessionStatus = { active: number; paused: boolean; reduced: boolean; arrived: boolean; progress: number };
-type Options = { size: number; tempo: number; hold: number; dip: number; depth: number; drift: string; still: boolean };
+type Options = { size: number; tempo: number; hold: number; depth: number; drift: string; still: boolean };
 type Point = { x: number; foot: number; height: number; light: number };
 
 /** One frame loop owns the glass, camera and class cycle. Geometry is measured on
@@ -17,31 +18,40 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   const actors = [...stage.querySelectorAll<HTMLElement>(".tm-procession-actor")];
   const images = actors.map(actor => actor.querySelector<HTMLImageElement>("img")!);
   const shadows = actors.map(actor => actor.querySelector<HTMLElement>(".tm-procession-shadow")!);
-  const captions = [...section.querySelectorAll<HTMLElement>(".tm-procession-caption")];
   const details = section.querySelector<HTMLElement>(".tm-procession-details")!;
   const heading = section.querySelector<HTMLElement>(".tm-procession-heading")!;
   const navigation = section.querySelector<HTMLElement>(".tm-procession-navigation")!;
-  const index = section.querySelector<HTMLElement>(".tm-procession-index")!;
   const count = actors.length;
   const layer = document.createElement("div");
   layer.className = "tm-procession-passage"; layer.setAttribute("aria-hidden", "true");
   const travelers = actors.map(actor => {
-    const image = actor.querySelector("img")!.cloneNode() as HTMLImageElement;
-    image.className = "tm-procession-glass"; image.dataset.productId = actor.dataset.productId; layer.append(image); return image;
+    const group = actor.cloneNode(true) as HTMLElement;
+    group.className = "tm-procession-glass"; layer.append(group); return group;
   });
   const world = document.createElement("div"); world.className = "tm-procession-world"; world.setAttribute("aria-hidden", "true");
   const fill = document.createElement("img"), room = document.createElement("img");
   fill.className = "tm-procession-world-fill"; room.className = "tm-procession-world-room";
   fill.alt = room.alt = ""; world.append(fill, room); home.append(world); document.body.append(layer);
 
-  let options: Options = { size: 100, tempo: 1, hold: 5.5, dip: 6, depth: 2.1, drift: "continuous", still: false };
+  let options: Options = { size: 100, tempo: 1, hold: 5.5, depth: 2.1, drift: "continuous", still: false };
   let moving = true, paused = false, frozen = false, visible = false, disposed = false, dirty = true, story = false;
   let frame = 0, last = 0, elapsed = 0, phase = order.indexOf(initial), target = phase, velocity = 0, passage = 0;
   let active = initial, lastStatus = "", lastDevStatus = "", priorArrival = false, dragging = false;
   let scrubStart: number | undefined;
   let driftVelocity = 0;
-  let width = 1, height = 1, stageTop = 0, end = 1, spacing = 1, vialHeight = 1, vialWidth = 1, baseFoot = 1;
+  let resumeTimer = 0;
+  function cancelResume() { window.clearTimeout(resumeTimer); resumeTimer = 0; }
+  function resumeAfterSwipe() {
+    cancelResume();
+    resumeTimer = window.setTimeout(() => {
+      resumeTimer = 0; if (disposed || still()) return;
+      paused = frozen = false; elapsed = 0; last = 0; schedule();
+    }, 3500);
+  }
+  let directScroll = false;
+  let width = 1, height = 1, stageTop = 0, end = 1, spacing = 1, vialHeight = 1, baseFoot = 1;
   let plateX = 0, plateY = 0, plateW = 1, plateH = 1, sectionEnd = 1;
+  let heroX = 0, heroY = 0, pivotX = 0, pivotY = 0, fall = 0, lift = 0;
   let sources = new Map<string, Point>();
   const still = () => !moving || options.still;
   function measure() {
@@ -54,18 +64,22 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     lead = opening.querySelector<HTMLElement>(".tm-mist-foot");
     const y = window.scrollY, heroRect = hero.getBoundingClientRect(), r = stage.getBoundingClientRect();
     width = window.innerWidth; height = window.innerHeight;
+    directScroll = matchMedia("(pointer: coarse)").matches;
     stageTop = r.top + y;
     const headerEl = document.querySelector<HTMLElement>(".tm-header");
     const header = headerEl ? headerEl.offsetHeight + (parseFloat(getComputedStyle(headerEl).top) || 0) : 80;
     // scrollTo rounds to device pixels. Use a reachable endpoint so a section
     // jump cannot stop at 99.94% and leave the collection inert.
     end = Math.max(1, Math.ceil(section.getBoundingClientRect().top + y - header - 24));
+    section.dataset.scrollEnd = String(end);
     sectionEnd = section.getBoundingClientRect().bottom + y;
     const actorStyle = getComputedStyle(actors[0]), plateStyle = getComputedStyle(plate);
     // offsetHeight/offsetLeft round fractional CSS pixels. The carried image
     // must meet the actual rendered box, including phone heights like 219.32px.
-    vialHeight = parseFloat(actorStyle.height) * options.size / 100; vialWidth = vialHeight * 578 / 1112;
-    spacing = width <= 700 ? width * .37 : Math.min(350, width * .235);
+    vialHeight = parseFloat(actorStyle.height) * options.size / 100;
+    // The photographed rim is wider than the glass. Keep neighbouring supports
+    // clear on phones/tablets as well as at the largest lab vial scale.
+    spacing = Math.max(width <= 700 ? width * .56 : Math.min(350, width * .235), vialHeight * 1.12);
     baseFoot = stageTop + r.height - parseFloat(actorStyle.bottom);
     const pw = parseFloat(plateStyle.width), ph = parseFloat(plateStyle.height);
     plateW = pw * 1.015; plateH = ph * 1.015;
@@ -77,8 +91,44 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       height: plateH * Number(vial.style.getPropertyValue("--vial-h")),
       light: Number(vial.style.getPropertyValue("--tm-lit")) || 1,
     }]));
+    const featured = sources.get(actors[initial].dataset.productId!) ?? [...sources.values()][0];
+    heroX = heroRect.left; heroY = heroRect.top + y;
+    pivotX = featured?.x ?? width / 2;
+    pivotY = featured ? featured.foot - featured.height / 2 : height / 2;
+    const capTop = Math.min(...[...sources.values()].map(source => source.foot - source.height));
+    fall = height + 32 - (pivotY + (capTop - pivotY) * options.depth);
+    lift = Math.max(0, height + 24 + vialHeight - (baseFoot - RISE * end));
     const poster = plate.querySelector<HTMLImageElement>(".tm-room-still")?.currentSrc;
     if (poster && room.src !== poster) room.src = fill.src = poster;
+    // A photographic pedestal travels with each vial, never underneath it on a
+    // separate track. Use the centre plinth's measured rim in the same room.
+    const tall = opening.dataset.shape === "tall";
+    const fogScene = tall ? FOG_SCENES.collectionTall : FOG_SCENES.collection;
+    const crop = pedestalCrop(fogScene, tall ? 1 : 2);
+    const seat = featured ? (featured.foot - plateY) / plateH * fogScene.room.h : crop.frontTop;
+    const sourceHeight = featured ? featured.height / plateH * fogScene.room.h : 256;
+    const cut = crop.frontTop + .45 * (crop.base - crop.frontTop);
+    const cropWidth = crop.half * 2, cropHeight = cut - crop.backTop;
+    for (const actor of [...actors, ...travelers]) {
+      const plinth = actor.querySelector<HTMLElement>(".tm-procession-plinth")!;
+      const percentWidth = cropWidth / (sourceHeight * 578 / 1112) * 100;
+      plinth.style.width = `${percentWidth}%`;
+      plinth.style.height = `${cropHeight / sourceHeight * 100}%`;
+      plinth.style.left = `${(100 - percentWidth) / 2}%`;
+      plinth.style.top = `${(1 - (seat - crop.backTop) / sourceHeight) * 100}%`;
+      plinth.style.backgroundImage = poster ? `url("${poster}")` : "none";
+      plinth.style.backgroundSize = `${fogScene.room.w / cropWidth * 100}% ${fogScene.room.h / cropHeight * 100}%`;
+      plinth.style.backgroundPosition = `${(crop.x - crop.half) / (fogScene.room.w - cropWidth) * 100}% ${crop.backTop / (fogScene.room.h - cropHeight) * 100}%`;
+      const radius = crop.rimRadius / cropHeight * 100;
+      plinth.style.clipPath = `inset(0 round 50% 50% 0 0 / ${radius}% ${radius}% 0 0)`;
+      // Fade each physical support before the stage boundary. The same mask is
+      // carried by the return copy, so it cannot spill over the caption or cut
+      // abruptly when the fixed passage hands back to the document.
+      const fadeDepth = sourceHeight * parseFloat(actorStyle.bottom) / vialHeight * .9;
+      const fadeStart = (seat + fadeDepth * .15 - crop.backTop) / cropHeight * 100;
+      const fadeEnd = (seat + fadeDepth - crop.backTop) / cropHeight * 100;
+      plinth.style.maskImage = `linear-gradient(black ${fadeStart}%,transparent ${fadeEnd}%)`;
+    }
     room.style.width = `${plateW}px`; room.style.height = `${plateH}px`;
     actors.forEach(actor => { actor.style.transformOrigin = "50% 100%"; });
     home.dataset.procession = "";
@@ -103,13 +153,13 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     const y = Math.max(0, window.scrollY), requested = clamp01(y / end);
     // Short input damping smooths wheel steps. Never trap the document scroll or
     // replay a missed scene after a fast flick, tab switch or deep link.
-    if (still() || story || Math.abs(requested - passage) > .6) passage = requested;
+    if (still() || story || directScroll || Math.abs(requested - passage) > .6) passage = requested;
     else passage += (requested - passage) * (1 - Math.exp(-dt / .055));
     if (Math.abs(requested - passage) < .00015) passage = requested;
-    const arrived = still() || passage === 1;
+    const arrived = still() || passage >= .94;
     if (arrived && !priorArrival) elapsed = 0;
     priorArrival = arrived;
-    if ((passage === 0 || passage > .28 && passage < .48) && !still() && !story) {
+    if ((passage === 0 || passage >= HANDOFF && passage < RISE) && !still() && !story) {
       // Restore spatial order only when the cap of every carried vial is offscreen.
       phase = target = order.indexOf(initial); velocity = 0; elapsed = 0;
     }
@@ -130,57 +180,65 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       }
     }
     active = order[modulo(Math.round(phase), count)];
-    const inFlight = !still() && !story && passage > 0 && passage < 1;
+    const inFlight = !still() && !story && passage >= HANDOFF && passage < 1;
     home.toggleAttribute("data-procession-flight", inFlight);
     home.toggleAttribute("data-procession-still", still());
     layer.hidden = !inFlight;
     const arrivalDetail = still() ? 1 : smooth((passage - .80) / .20);
-    const arrivalCopy = still() ? 1 : smooth((passage - .88) / .12);
-    opacity(details, arrivalCopy); opacity(navigation, arrivalCopy); opacity(index, arrivalCopy);
-    navigation.inert = index.inert = details.inert = !arrived;
+    const arrivalCopy = still() ? 1 : smooth((passage - .76) / .18);
+    opacity(details, arrivalCopy); opacity(navigation, arrivalCopy);
+    navigation.inert = details.inert = !arrived;
     opacity(heading, still() ? 1 : smooth((passage - .45) / .22));
     const extraScroll = Math.max(0, y - end);
+    const filmed = scene(still() ? 0 : passage, pivotX, pivotY, options.depth, fall);
+    const departure = scene(HANDOFF, pivotX, pivotY, options.depth, fall);
+    const rearrange = smooth((passage - HANDOFF) / (RISE - HANDOFF));
+    const rise = smooth((passage - RISE) / (1 - RISE));
     const middleSource = sources.get(actors[initial].dataset.productId!) ?? [...sources.values()][0];
     actors.forEach((actor, i) => {
       const d = distance(order.indexOf(i), phase, count), p = pose(d, spacing, vialHeight);
       const scale = p.scale * options.size / 100;
       actor.style.transform = `translate3d(${p.x}px,${p.y}px,0) scale(${scale})`;
-      const onscreen = Math.abs(p.x) - vialWidth * p.scale / 2 < width / 2 + 8;
+      const onscreen = Math.abs(p.x) - vialHeight * 1.15 * p.scale / 2 < width / 2 + 8;
       actor.style.visibility = onscreen ? "visible" : "hidden";
-      actor.style.opacity = "1";
-      images[i].style.opacity = arrived || story ? "1" : "0";
+      actor.style.opacity = still() || passage === 1 || story ? "1" : "0";
+      images[i].style.opacity = "1";
       shadows[i].style.opacity = String(arrivalDetail);
       if (!inFlight || !middleSource) return;
       const source = sources.get(actor.dataset.productId!), origin = source ?? middleSource;
-      const glass = travelers[i], q = smooth(passage);
-      // Keep the hero's own lighting on departure. The new room light takes
-      // over only below the frame, so the side vials never flash brighter.
-      glass.style.filter = passage < .5 ? `brightness(${origin.light})` : "none";
-      const toHeight = vialHeight * p.scale, toFoot = baseFoot + p.y;
-      const glassHeight = mix(origin.height, toHeight, q);
-      const x = mix(origin.x, width / 2 + p.x, q);
-      const trough = Math.max(origin.foot, toFoot, height + end * .5 + glassHeight) + height * (.8 + options.dip / 100);
-      const foot = passageFoot(passage, origin.foot, toFoot, end, trough) - passage * end - extraScroll;
+      const glass = travelers[i];
+      glass.style.filter = passage < RISE ? `brightness(${origin.light})` : "none";
+      const toHeight = vialHeight * p.scale, toX = width / 2 + p.x;
+      const laidFoot = baseFoot + p.y - passage * end - extraScroll + lift;
+      const from = source ? {
+        x: departure.x + source.x * departure.zoom,
+        foot: departure.y + source.foot * departure.zoom,
+        height: source.height * departure.zoom,
+      } : { x: toX, foot: laidFoot, height: toHeight };
+      const glassHeight = mix(from.height, toHeight, rearrange);
+      const x = mix(from.x, toX, rearrange);
+      const foot = mix(from.foot, laidFoot, rearrange) - lift * rise;
       glass.style.transform = `translate3d(${x - glassHeight * 578 / 1112 / 2}px,${foot - glassHeight}px,0) scale(${glassHeight / 1112})`;
-      glass.style.visibility = (passage < .5 ? !!source : onscreen) ? "visible" : "hidden";
+      glass.style.visibility = (passage < RISE ? !!source : onscreen) ? "visible" : "hidden";
     });
-    // The caption has a fixed shared footprint, including the longest name. Its
-    // destination cannot change underneath a focused link.
-    // Keep the name readable for most of the slow pass. Change it only in the
-    // quiet gap between center positions, never with a visible text pop.
-    const captionStrength = still() || frozen ? 1 : 1 - smooth((Math.abs(phase - Math.round(phase)) - .38) / .12);
-    captions.forEach((caption, i) => { caption.style.opacity = i === active ? String(captionStrength) : "0"; });
-    const cameraProgress = still() ? 1 : smooth(passage / .60), zoom = 1 + (options.depth - 1) * cameraProgress;
-    const cx = width * .5 * (1 - zoom), cy = height * .24 * (1 - zoom) + height * .94 * cameraProgress;
     const worldOpacity = story ? 0 : 1 - smooth((y - sectionEnd + height * .4) / (height * .9));
     opacity(world, worldOpacity);
-    room.style.transform = `translate3d(${plateX * zoom + cx}px,${plateY * zoom + cy}px,0) scale(${zoom})`;
+    room.style.transform = `translate3d(${plateX * filmed.zoom + filmed.x}px,${plateY * filmed.zoom + filmed.y}px,0) scale(${filmed.zoom})`;
+    // Once the entire collection is below the frame, soften the now-empty wall
+    // into the same photograph's defocused continuation. No visible object fades.
+    opacity(room, 1 - smooth((passage - HANDOFF) / .10));
+    fill.style.translate = `0 ${Math.min(height * .1, .22 * (passage < HANDOFF ? fall * filmed.drop : mix(fall, lift, rearrange) * (1 - rise)))}px`;
     if (!story) {
       // CSS scroll animations relinquish this camera while Procession owns it.
-      camera.style.transform = still() ? "none" : `translate3d(${cx}px,${y + cy}px,0) scale(${zoom})`;
-      opacity(camera, still() ? 1 : 1 - smooth(passage / .5));
+      // Correct for the hero's resting offset, so its plate and the fixed world
+      // use the exact same viewport matrix even under a header or review dock.
+      camera.style.transform = still() ? "none" : `translate3d(${filmed.x + heroX * (filmed.zoom - 1)}px,${filmed.y + heroY * (filmed.zoom - 1) + y}px,0) scale(${filmed.zoom})`;
+      opacity(camera, still() || passage < HANDOFF ? 1 : 0);
       const words = still() ? 1 : 1 - smooth(passage / .24);
-      opacity(word, words); opacity(copy, words); opacity(cue, words);
+      opacity(word, words);
+      const copyOpacity = still() ? 1 : 1 - smooth(passage / .14);
+      opacity(copy, copyOpacity); opacity(cue, still() ? 1 : 1 - smooth(passage / .10));
+      if (copy) copy.style.visibility = copyOpacity > .001 ? "" : "hidden";
       opacity(lead, still() ? 1 : smooth((passage - .18) / .2));
       camera.style.pointerEvents = passage > .06 && !still() ? "none" : "";
     }
@@ -192,6 +250,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   function schedule() { if (!frame && !disposed && !document.hidden) frame = requestAnimationFrame(draw); }
   function resize() { dirty = true; schedule(); }
   function setTarget(value: number) {
+    cancelResume();
     if (driftVelocity) velocity = driftVelocity;
     driftVelocity = 0;
     paused = true; frozen = false; elapsed = 0; target = value;
@@ -200,8 +259,9 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   }
   function step(direction: number) { setTarget(Math.round(target) + direction); }
   function select(i: number) { setTarget(phase + distance(order.indexOf(i), phase, count)); }
-  function toggle() { paused = !paused; frozen = paused; driftVelocity = 0; last = 0; schedule(); }
+  function toggle() { cancelResume(); paused = !paused; frozen = paused; driftVelocity = 0; last = 0; schedule(); }
   function pauseAutoplay() {
+    cancelResume();
     // Focus can arrive after the click that starts a manual glide. It stops
     // autoplay, but must not cancel that explicitly requested destination.
     if (!paused) frozen = true;
@@ -219,19 +279,24 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       // also trigger this observer; clearing styles again would erase the film's
       // fade after its writer has cached it, leaving the headline over the story.
       for (const el of [camera, word, copy, cue, lead]) { el?.style.removeProperty("opacity"); el?.style.removeProperty("transform"); }
+      copy?.style.removeProperty("visibility");
     }
     last = 0; dirty = true; schedule();
   }
-  let pointer: { id: number; x: number; y: number; phase: number; time: number; lastX: number } | undefined;
+  let pointer: { id: number; x: number; y: number; phase: number; time: number; lastX: number; frozen: boolean; resume: boolean } | undefined;
   function down(e: PointerEvent) {
-    if (e.button !== 0 || !priorArrival) return;
-    pointer = { id: e.pointerId, x: e.clientX, y: e.clientY, phase, time: e.timeStamp, lastX: e.clientX };
+    if (!e.isPrimary || pointer || e.button !== 0 || !priorArrival) return;
+    pointer = { id: e.pointerId, x: e.clientX, y: e.clientY, phase, time: e.timeStamp, lastX: e.clientX, frozen, resume: !paused || !!resumeTimer };
+    cancelResume();
+    // Hold the presentation on contact; intent is resolved without fighting the
+    // page's vertical pan. Horizontal motion then tracks the finger directly.
+    frozen = true; driftVelocity = 0;
   }
   function move(e: PointerEvent) {
     if (!pointer || pointer.id !== e.pointerId) return;
     const dx = e.clientX - pointer.x, dy = e.clientY - pointer.y;
     if (!dragging) {
-      if (Math.abs(dy) > Math.abs(dx) + 6) { pointer = undefined; return; }
+      if (Math.abs(dy) > Math.abs(dx) + 6) { frozen = pointer.frozen; if (pointer.resume && paused) resumeAfterSwipe(); pointer = undefined; schedule(); return; }
       if (Math.abs(dx) < 8) return;
       stage.setPointerCapture(e.pointerId); dragging = true; paused = true; frozen = false;
       stage.dataset.dragging = "";
@@ -249,7 +314,8 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       target = Math.round(phase + velocity * .16);
       if (still()) { phase = target = Math.round(target); velocity = driftVelocity = 0; }
       if (stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId);
-    }
+    } else frozen = pointer.frozen;
+    if (pointer.resume && paused && !still()) resumeAfterSwipe();
     dragging = false; pointer = undefined; delete stage.dataset.dragging; schedule();
   }
   const resized = new ResizeObserver(resize);
@@ -260,7 +326,8 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   window.addEventListener("scroll", schedule, { passive: true }); window.addEventListener("resize", resize);
   document.addEventListener("visibilitychange", stateChange);
   stage.addEventListener("pointerdown", down); stage.addEventListener("pointermove", move);
-  stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+  // A press can leave the stage before horizontal intent captures the pointer.
+  window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
   section.addEventListener("focusin", focus);
   void document.fonts.ready.then(() => { if (!disposed) resize(); });
   stateChange();
@@ -288,16 +355,17 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   if (import.meta.env.DEV) section.addEventListener("tm-procession-control", labControl);
   return {
     step, select, toggle, pauseAutoplay,
-    setMotion(value: boolean) { moving = value; if (still()) { phase = target = Math.round(target); velocity = driftVelocity = 0; } schedule(); },
+    setMotion(value: boolean) { moving = value; if (!value) cancelResume(); if (still()) { phase = target = Math.round(target); velocity = driftVelocity = 0; } schedule(); },
     destroy() {
-      disposed = true; cancelAnimationFrame(frame); resized.disconnect(); observer.disconnect(); seen.disconnect();
+      disposed = true; cancelResume(); cancelAnimationFrame(frame); resized.disconnect(); observer.disconnect(); seen.disconnect();
       window.removeEventListener("scroll", schedule); window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", stateChange);
       stage.removeEventListener("pointerdown", down); stage.removeEventListener("pointermove", move);
-      stage.removeEventListener("pointerup", up); stage.removeEventListener("pointercancel", up);
+      window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
       section.removeEventListener("focusin", focus); section.removeEventListener("tm-procession-control", labControl);
       layer.remove(); world.remove();
       for (const el of [camera, word, copy, cue, lead]) { el?.style.removeProperty("opacity"); el?.style.removeProperty("transform"); }
+      copy?.style.removeProperty("visibility");
       camera.style.removeProperty("pointer-events");
       for (const key of ["procession", "processionFlight", "processionStill", "processionStory"]) delete home.dataset[key];
     },
