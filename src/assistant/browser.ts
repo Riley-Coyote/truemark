@@ -17,6 +17,9 @@ import { createToolRuntime, type Scope } from "./runtime";
 import { createTransport } from "./client";
 import { OFFLINE, type Persona } from "./protocol";
 
+// Preview visitors use only the local sample-data desk. Hosted AI access stays gated.
+export const localDesk = (persona: Persona) => !LIVE && persona === "visitor";
+
 const endpoint = import.meta.env.VITE_REVIEW_SUPABASE_URL ? `${import.meta.env.VITE_REVIEW_SUPABASE_URL}/functions/v1/assistant` : "";
 export function reviewKey() {
   const hash = window.location.hash.split("?")[1] ?? "";
@@ -29,7 +32,7 @@ async function headers() {
   return { "Content-Type": "application/json", apikey: key, ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 }
 export async function previewGate(persona: Persona, signal?: AbortSignal) {
-  if (LIVE) return true;
+  if (LIVE || localDesk(persona)) return true;
   const key = reviewKey(); if (!key || !endpoint) return false;
   try {
     const response = await fetch(endpoint, { method: "POST", headers: await headers(), body: JSON.stringify({ action: "gate", mode: "preview", persona, reviewKey: key }), signal });
@@ -48,10 +51,10 @@ export async function currentScope(previewPersona: Persona): Promise<Scope> {
 }
 export function browserAssistant(persona: Persona, authorizedKey: string | null, addToBag?: (id: string, quantity: number) => void, bag?: () => { id: string; quantity: number }[]) {
   return {
-    transport: createTransport({ endpoint, headers, context: () => ({ mode: LIVE ? "live" : "preview", ...(!LIVE ? { persona, reviewKey: reviewKey() } : persona === "visitor" ? { surface: "visitor" } : {}),
+    transport: createTransport({ endpoint: localDesk(persona) ? "" : endpoint, headers, context: () => ({ mode: LIVE ? "live" : "preview", ...(!LIVE ? { persona, reviewKey: reviewKey() } : persona === "visitor" ? { surface: "visitor" } : {}),
       ...(persona === "visitor" && chatContext() ? { context: chatContext() } : {}) }) }),
     prepare: createToolRuntime({ store, now: worldNow, scope: async () => {
-      if (!LIVE && (!authorizedKey || reviewKey() !== authorizedKey)) throw new Error("Open a valid review link to continue.");
+      if (!LIVE && !localDesk(persona) && (!authorizedKey || reviewKey() !== authorizedKey)) throw new Error("Open a valid review link to continue.");
       return currentScope(persona);
     }, addToBag, verify: (lot) => lot ? recordFromLot(lot) : null, siteAnswers, shippingCopy,
     program: { disclosure, link: partnerLink, rules: { do: doRules, dont: dontRules, disclosurePlacement } },

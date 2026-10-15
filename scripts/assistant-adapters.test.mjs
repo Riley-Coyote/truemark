@@ -14,7 +14,7 @@ globalThis.BroadcastChannel = class extends EventTarget { postMessage() {} close
 
 async function bundle(mode) {
   const dir = await mkdtemp('/private/tmp/wp17-adapters-'), file = join(dir, 'adapter.cjs');
-  await build({ stdin: { contents: `export { store } from './src/assistant/store'; export { content } from './src/platform/content'; export { recordFromLot } from './src/shop/records'; export { createToolRuntime } from './src/assistant/runtime'; export { worldNow } from './src/platform/storage'; import React from 'react'; import { renderToStaticMarkup } from 'react-dom/server'; import { AssistantSettings } from './src/assistant/Settings'; export const settingsMarkup = () => renderToStaticMarkup(React.createElement(AssistantSettings));`, resolveDir: root, loader: 'ts' },
+  await build({ stdin: { contents: `export { store } from './src/assistant/store'; export { browserAssistant, previewGate, localDesk } from './src/assistant/browser'; export { content } from './src/platform/content'; export { recordFromLot } from './src/shop/records'; export { createToolRuntime } from './src/assistant/runtime'; export { worldNow } from './src/platform/storage'; import React from 'react'; import { renderToStaticMarkup } from 'react-dom/server'; import { AssistantSettings } from './src/assistant/Settings'; export const settingsMarkup = () => renderToStaticMarkup(React.createElement(AssistantSettings));`, resolveDir: root, loader: 'ts' },
     outfile: file, bundle: true, format: 'cjs', platform: 'node', loader: { '.css': 'empty' }, logLevel: 'silent',
     define: { 'import.meta.env': JSON.stringify({ VITE_PLATFORM: mode, BASE_URL: '/', PROD: false }), 'process.env.NODE_ENV': '"production"' },
     plugins: mode === 'live' ? [{ name: 'fixture-client', setup(plugin) { plugin.onLoad({ filter: /platform\/live\/client\.ts$/ }, () => ({ contents: 'export const getClient = () => globalThis.assistantFixture;', loader: 'js' })); } }] : [] });
@@ -87,4 +87,19 @@ test('live assistant reads use the injected user client; catalog detection is re
   await store.actions.createDiscount({ code: 'FIXTURE', percent: 10, active: false });
   assert(calls.some(([, name]) => name === 'create_discount_code'));
   assert(!calls.some(([type]) => ['insert', 'update', 'delete'].includes(type)));
+});
+
+// The public desk must work without a review key and without contacting any backend.
+test('preview visitor desk opens and reads sample products without a key; hosted AI remains disconnected', async () => {
+  const { browserAssistant, previewGate, localDesk } = await bundle('preview');
+  assert.equal(localDesk('visitor'), true);
+  assert.equal(localDesk('owner'), false);
+  assert.equal(await previewGate('visitor'), true);
+  const desk = browserAssistant('visitor', null);
+  const schema = { name: 'search_catalog', description: '', parameters: { type: 'object', properties: { query: { type: 'string', maxLength: 200 } }, required: [], additionalProperties: false } };
+  const result = await desk.prepare({ type: 'tool_call', id: 'local-catalog', name: 'search_catalog', arguments: {} }, [schema], 'visitor');
+  assert.ok(result.artifact, JSON.stringify(result));
+  assert.equal(result.artifact.kind, 'catalog');
+  assert.ok(result.artifact.tiles.length > 0);
+  await assert.rejects(desk.transport({ text: 'An open-ended question' }, () => {}, new AbortController().signal));
 });

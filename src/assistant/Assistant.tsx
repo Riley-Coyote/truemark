@@ -10,7 +10,7 @@ import { STORE_CHANGE, worldNow } from "../platform/storage";
 import { ShopContext } from "../shop/context";
 import { SheetSkirt, useScrollLock, useSheetDrag, useSheetFocus, useSheetPresence, useVisibleViewport, viewportBox } from "../shop/sheet";
 import { usePrefersReducedMotion } from "../shop/motion";
-import { browserAssistant, currentScope, previewGate, reviewKey } from "./browser";
+import { browserAssistant, currentScope, localDesk, previewGate, reviewKey } from "./browser";
 import { runTurn } from "./engine";
 import { AssistantError, OFFLINE, type Persona } from "./protocol";
 import { activityFor, type Artifact, type PendingAction, type Scope, type Source, type ToolOutput } from "./runtime";
@@ -388,7 +388,7 @@ function DeskComposer({ field, busy, placeholder, more, onSend, onStop, onLatest
         ? <button type="button" className="tm-chat-send is-stop" onClick={onStop} aria-label="Stop the answer"><Square size={14} strokeWidth={2.4} aria-hidden="true" /></button>
         : <button type="submit" className="tm-chat-send" disabled={!input.trim()} aria-label="Send"><ArrowUp size={18} strokeWidth={2} aria-hidden="true" /></button>}
     </div>
-    <p className="tm-chat-fine">{!LIVE && "Preview · sample data · "}Chats are saved to improve answers. <button type="button" className="tm-desk-human" onClick={onPerson}>Talk to a person</button></p>
+    <p className="tm-chat-fine">{LIVE ? "Chats are saved to improve answers." : "Sample data · Built-in answers · No AI connection."} <button type="button" className="tm-desk-human" onClick={onPerson}>Talk to a person</button></p>
   </form>;
 }
 
@@ -517,6 +517,16 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
         // The model can still answer it.
       }
     }
+    // Public demos stay self-contained: never send their conversations to a hosted model.
+    // Keep an unsupported question useful with the desk's real, working service cards.
+    if (localDesk(surface)) {
+      const lead = "This preview uses built-in answers, not a connected AI model. I can help you explore compounds, read a certificate, check shipping, or work with your sample cart. Choose a topic below.";
+      setEntries((items) => [...items, { id: `${turn}:local`, who: "assistant", text: lead, artifact: { kind: "panel", panel: "menu" }, arrive: true, at: Date.now() }]);
+      setAnnouncement(lead); setActivity(""); setStatus("idle");
+      if (away.current) setUnread(true);
+      running.current = false; current.current = null;
+      return;
+    }
     try {
       const final = await runTurn(text, bridge.transport, bridge.prepare, {
         status: setStatus,
@@ -643,7 +653,7 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
         placeholder={context?.product ? `Ask about ${context.product.name} ${context.product.size}` : "Ask a question"}
         onSend={(text) => { if (running.current || !text.trim()) return false; void send(text); return true; }} />
     </div>;
-    const subtitle = "Answers from our records";
+    const subtitle = localDesk(surface) ? "Built-in answers · sample records" : "Answers from our records";
     return docked
       ? <ChatDock title={titles[persona]} subtitle={subtitle} working={working} unread={unread} minimized={minimized} onMinimize={() => onMinimize?.()} onRestore={() => onRestore?.()} onClose={onClose}>{chat}</ChatDock>
       : <ChatSheet title={titles[persona]} subtitle={subtitle} working={working} onClose={onClose}>{chat}</ChatSheet>;
