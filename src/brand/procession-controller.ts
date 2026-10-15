@@ -55,6 +55,11 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   let heroX = 0, heroY = 0, pivotX = 0, pivotY = 0, fall = 0, lift = 0;
   let sources = new Map<string, Point>();
   const still = () => !moving || options.still;
+  // On a touch screen the page scrolls natively and the script that would carry the flight runs a frame behind it, so
+  // the carried vials and the zoomed room lag the page and pile onto its words. There the flight is grounded: the
+  // opening and the collection stand in the page and scroll with it, as with motion off, and the collection still
+  // drifts and answers a swipe.
+  const grounded = () => still() || directScroll;
   function measure() {
     dirty = false;
     // The hero inserts its word after measuring, and replaces floor copy across
@@ -153,13 +158,13 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     const y = Math.max(0, window.scrollY), requested = clamp01(y / end);
     // Short input damping smooths wheel steps. Never trap the document scroll or
     // replay a missed scene after a fast flick, tab switch or deep link.
-    if (still() || story || directScroll || Math.abs(requested - passage) > .6) passage = requested;
+    if (grounded() || story || Math.abs(requested - passage) > .6) passage = requested;
     else passage += (requested - passage) * (1 - Math.exp(-dt / .055));
     if (Math.abs(requested - passage) < .00015) passage = requested;
-    const arrived = still() || passage >= .94;
+    const arrived = grounded() || passage >= .94;
     if (arrived && !priorArrival) elapsed = 0;
     priorArrival = arrived;
-    if ((passage === 0 || passage >= HANDOFF && passage < RISE) && !still() && !story) {
+    if ((passage === 0 || passage >= HANDOFF && passage < RISE) && !grounded() && !story) {
       // Restore spatial order only when the cap of every carried vial is offscreen.
       phase = target = order.indexOf(initial); velocity = 0; elapsed = 0;
     }
@@ -180,17 +185,17 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       }
     }
     active = order[modulo(Math.round(phase), count)];
-    const inFlight = !still() && !story && passage >= HANDOFF && passage < 1;
+    const inFlight = !grounded() && !story && passage >= HANDOFF && passage < 1;
     home.toggleAttribute("data-procession-flight", inFlight);
-    home.toggleAttribute("data-procession-still", still());
+    home.toggleAttribute("data-procession-still", grounded());
     layer.hidden = !inFlight;
-    const arrivalDetail = still() ? 1 : smooth((passage - .80) / .20);
-    const arrivalCopy = still() ? 1 : smooth((passage - .76) / .18);
+    const arrivalDetail = grounded() ? 1 : smooth((passage - .80) / .20);
+    const arrivalCopy = grounded() ? 1 : smooth((passage - .76) / .18);
     opacity(details, arrivalCopy); opacity(navigation, arrivalCopy);
     navigation.inert = details.inert = !arrived;
-    opacity(heading, still() ? 1 : smooth((passage - .45) / .22));
+    opacity(heading, grounded() ? 1 : smooth((passage - .45) / .22));
     const extraScroll = Math.max(0, y - end);
-    const filmed = scene(still() ? 0 : passage, pivotX, pivotY, options.depth, fall);
+    const filmed = scene(grounded() ? 0 : passage, pivotX, pivotY, options.depth, fall);
     const departure = scene(HANDOFF, pivotX, pivotY, options.depth, fall);
     const rearrange = smooth((passage - HANDOFF) / (RISE - HANDOFF));
     const rise = smooth((passage - RISE) / (1 - RISE));
@@ -201,7 +206,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       actor.style.transform = `translate3d(${p.x}px,${p.y}px,0) scale(${scale})`;
       const onscreen = Math.abs(p.x) - vialHeight * 1.15 * p.scale / 2 < width / 2 + 8;
       actor.style.visibility = onscreen ? "visible" : "hidden";
-      actor.style.opacity = still() || passage === 1 || story ? "1" : "0";
+      actor.style.opacity = grounded() || passage === 1 || story ? "1" : "0";
       images[i].style.opacity = "1";
       shadows[i].style.opacity = String(arrivalDetail);
       if (!inFlight || !middleSource) return;
@@ -226,24 +231,24 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     room.style.transform = `translate3d(${plateX * filmed.zoom + filmed.x}px,${plateY * filmed.zoom + filmed.y}px,0) scale(${filmed.zoom})`;
     // Once the entire collection is below the frame, soften the now-empty wall
     // into the same photograph's defocused continuation. No visible object fades.
-    opacity(room, 1 - smooth((passage - HANDOFF) / .10));
-    fill.style.translate = `0 ${Math.min(height * .1, .22 * (passage < HANDOFF ? fall * filmed.drop : mix(fall, lift, rearrange) * (1 - rise)))}px`;
+    opacity(room, grounded() ? 0 : 1 - smooth((passage - HANDOFF) / .10));
+    fill.style.translate = grounded() ? "0 0" : `0 ${Math.min(height * .1, .22 * (passage < HANDOFF ? fall * filmed.drop : mix(fall, lift, rearrange) * (1 - rise)))}px`;
     if (!story) {
       // CSS scroll animations relinquish this camera while Procession owns it.
       // Correct for the hero's resting offset, so its plate and the fixed world
       // use the exact same viewport matrix even under a header or review dock.
       // Once the camera has handed the room over it is out of sight, and it rests: carried on down the page with the
       // scroll, its zoomed room would stretch the page's own length past the footer.
-      const handed = !still() && passage >= HANDOFF;
-      camera.style.transform = still() || handed ? "none" : `translate3d(${filmed.x + heroX * (filmed.zoom - 1)}px,${filmed.y + heroY * (filmed.zoom - 1) + y}px,0) scale(${filmed.zoom})`;
+      const handed = !grounded() && passage >= HANDOFF;
+      camera.style.transform = grounded() || handed ? "none" : `translate3d(${filmed.x + heroX * (filmed.zoom - 1)}px,${filmed.y + heroY * (filmed.zoom - 1) + y}px,0) scale(${filmed.zoom})`;
       opacity(camera, handed ? 0 : 1);
-      const words = still() ? 1 : 1 - smooth(passage / .24);
+      const words = grounded() ? 1 : 1 - smooth(passage / .24);
       opacity(word, words);
-      const copyOpacity = still() ? 1 : 1 - smooth(passage / .14);
-      opacity(copy, copyOpacity); opacity(cue, still() ? 1 : 1 - smooth(passage / .10));
+      const copyOpacity = grounded() ? 1 : 1 - smooth(passage / .14);
+      opacity(copy, copyOpacity); opacity(cue, grounded() ? 1 : 1 - smooth(passage / .10));
       if (copy) copy.style.visibility = copyOpacity > .001 ? "" : "hidden";
-      opacity(lead, still() ? 1 : smooth((passage - .18) / .2));
-      camera.style.pointerEvents = passage > .06 && !still() ? "none" : "";
+      opacity(lead, grounded() ? 1 : smooth((passage - .18) / .2));
+      camera.style.pointerEvents = passage > .06 && !grounded() ? "none" : "";
     }
     emit(arrived);
     const progressing = Math.abs(requested - passage) > .00015;
