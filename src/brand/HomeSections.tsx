@@ -9,6 +9,7 @@ import { productById, productCutout, sampleRecord, specFor } from "../shop/catal
 import { store, useResource } from "../platform/store";
 import type { Lot } from "../platform/types";
 import { SequenceChain } from "./SequenceChain";
+import { TrailCarrier } from "./TrailCarrier";
 import "./home.css";
 import "./paper-trail.css";
 
@@ -183,6 +184,7 @@ function LotRecord({ record, loading }: { record?: Lot | null; loading: boolean 
           ))}
         </ol>
         {reached > 0 && <span className="tm-trail-progress" aria-hidden="true" />}
+        {reached > 0 && product && <TrailCarrier src={productCutout(product, "sm")} reached={reached} />}
         {trail.length === 0 && (loading
           ? <span className="sr-only" role="status">Loading the lot record</span>
           : <p className="tm-section-note" role="status">Lot record unavailable.</p>)}

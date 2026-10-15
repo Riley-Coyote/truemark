@@ -48,7 +48,7 @@ float caustic(vec2 p, float time) {
   }
   c /= 4.0;
   c = 1.17 - pow(c, 1.4);
-  return pow(abs(c), 8.0);
+  return pow(abs(c), 6.0);
 }
 
 // One window's light on the wall: its panes, brightest nearest the window and fading along their fall, and a broad
@@ -94,16 +94,17 @@ void main() {
   float cloud = 0.8 + 0.2 * sin(t * 0.11 + sin(t * 0.037) * 2.0);
 
   // The ripple of the glass in the light, its edges just split into colour.
-  vec2 cp = wall / unit * 2.2 + vec2(t * 0.01, -t * 0.006);
+  vec2 cp = wall / unit * 1.7 + vec2(t * 0.01, -t * 0.006);
   cp = mod(cp * 6.28318, 6.28318) - 250.0;
   float time = t * 0.3 + 23.0;
   float spread = 0.05;
   vec3 ripple = vec3(caustic(cp + vec2(spread, 0.0), time), caustic(cp, time), caustic(cp - vec2(spread, 0.0), time));
 
-  // The panes' light first, the ripples within it second: the window reads, and the glass moves in it.
+  // The panes' light first, the ripples within it carrying most of it: the window reads, and the water moving in it
+  // is seen, as light on a pool's floor is.
   float lit = light * cloud * onWall * strength;
   vec3 colour = mix(vec3(0.97, 0.955, 1.0), vec3(1.0), clamp(ripple, 0.0, 1.0));
-  float a = clamp(lit * (0.62 + 0.38 * clamp(ripple.g, 0.0, 1.0)), 0.0, 0.9);
+  float a = clamp(lit * (0.44 + 1.0 * clamp(ripple.g, 0.0, 1.3)), 0.0, 0.93);
   gl_FragColor = vec4(colour * a, a);
 }`;
 

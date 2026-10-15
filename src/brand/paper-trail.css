@@ -259,3 +259,122 @@
     padding-left: 0;
   }
 }
+
+/* ---------- The lot itself, carried along its record (TrailCarrier.tsx, trail-light.ts) ----------
+
+   The record's own vial, small, threaded on the line at its middle: the lot's dot gives way to it. The line it has
+   travelled is lit on a canvas under the record's words (the lit filament and the grains that stream off it), so the
+   words and the stations' dots stay crisp above it; the plain line at rest stays as it was. Nothing here is blurred.
+   A station lights only once the vial is set down on it: a bead in the light's own colour there (green where the lot
+   is released), a fine ring about it and a point of light where it catches the light, and one ring spreads from it
+   as it lands. The station the lot is at now is marked once the vial arrives. */
+.tm-trail-record {
+  --tm-carrier-h: 2.5rem;
+}
+.tm-trail-glow {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+}
+.tm-trail-carrier {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: calc(var(--tm-carrier-h) * 578 / 1112);
+  height: var(--tm-carrier-h);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+.tm-trail-carrier-glass {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+}
+.tm-trail-carrier-glass img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+.tm-trail-record[data-carrier] .tm-trail-progress {
+  display: none;
+}
+.tm-trail-record[data-carrier].is-visible li.is-done :is(.tm-trail-node, .tm-trail-step) {
+  animation: none;
+}
+.tm-trail-record[data-carrier] .tm-trail-node {
+  position: relative;
+  transition:
+    background-color var(--tm-dur-slow) var(--tm-ease-enter),
+    border-color var(--tm-dur-slow) var(--tm-ease-enter),
+    box-shadow var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.tm-trail-record[data-carrier] li[data-lit] .tm-trail-node {
+  background-color: var(--tm-station-light, var(--tm-glow));
+  border-color: var(--tm-station-light, var(--tm-glow));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tm-station-light, var(--tm-glow)) 16%, transparent);
+}
+/* Where the bead catches the light. (On a phone this point stands in for the lot's dot, which the vial replaces.) */
+.tm-trail-record[data-carrier] .tm-trail-track li .tm-trail-node::after {
+  content: "";
+  position: absolute;
+  inset: auto;
+  top: 2px;
+  left: 2px;
+  width: 3px;
+  height: 3px;
+  border-radius: var(--tm-radius-pill);
+  background: #ffffff;
+  box-shadow: none;
+  opacity: 0;
+  transform: none;
+  animation: none;
+  transition: opacity var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.tm-trail-record[data-carrier] .tm-trail-track li[data-lit] .tm-trail-node::after {
+  opacity: 0.85;
+}
+.tm-trail-record[data-carrier] li.is-done[data-lit] .tm-trail-step {
+  color: var(--tm-glow);
+}
+.tm-trail-record[data-carrier] .tm-trail-track li.is-current:not([data-lit]) .tm-trail-node {
+  border-color: var(--tm-glow-3);
+  box-shadow: none;
+}
+.tm-trail-record[data-carrier] .tm-trail-track li.is-current:not([data-lit]) .tm-trail-step {
+  color: var(--tm-glow-3);
+}
+/* The ring a landing sends out from the station's dot, in the station's light. */
+.tm-trail-record[data-carrier] .tm-trail-node::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--tm-station-light, var(--tm-glow));
+  border-radius: var(--tm-radius-pill);
+  opacity: 0;
+  pointer-events: none;
+}
+.tm-trail-record[data-carrier] li[data-ripple] .tm-trail-node::before {
+  animation: tm-trail-ripple 900ms cubic-bezier(0.2, 0.7, 0.1, 1) forwards;
+}
+@keyframes tm-trail-ripple {
+  from {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(3.6);
+  }
+}
+@media (max-width: 960px) {
+  .tm-trail-record {
+    --tm-carrier-h: 1.875rem;
+  }
+  /* Down the ledger the light draws each leg, so the legs' own lit line gives way to it. */
+  .tm-trail-record[data-carrier] .tm-trail-track li:not(:last-child)::after {
+    display: none;
+  }
+}
