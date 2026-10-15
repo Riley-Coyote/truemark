@@ -71,6 +71,8 @@ jobs:
           npm ci
           npm run build
           mv dist "$GITHUB_WORKSPACE/dist/first-design"
+      - name: Install the verified TrueMark studio
+        run: node scripts/install-studio.mjs
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:

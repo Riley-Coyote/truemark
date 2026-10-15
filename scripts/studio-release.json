@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/Riley-Coyote/truemark/releases/download/studio-2026-10-14-v1/truemark-studio-2026-10-14.tar.gz",
+  "sha256": "0f4cd76133d90b33883c21ebb01578b98e886d4a895ada329abd412aa014e470",
+  "bytes": 565086430,
+  "base": "/truemark/studio/",
+  "fixtureOnly": true
+}

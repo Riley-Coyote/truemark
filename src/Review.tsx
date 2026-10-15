@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { assetUrl } from "./assetUrl";
 import { BrandLogo } from "./BrandLogo";
+import { studioHref } from "./studio-link";
 import { BrandDot } from "./brand/BrandDot";
 import { Trace } from "./brand/Trace";
 import { ReviewLive } from "./brand/ReviewLive";
@@ -60,6 +61,10 @@ export default function Review() {
             shop, lot verification, research accounts, a partner program, and the
             command center you run it all from.
           </p>
+          <a className="rv-earlier" href={studioHref}>
+            Open the complete TrueMark studio
+            <ArrowUpRight size={15} strokeWidth={1.6} aria-hidden="true" />
+          </a>
           <a className="rv-earlier" href={FIRST_DESIGN}>
             See the first design, from 22 September
             <ArrowUpRight size={15} strokeWidth={1.6} aria-hidden="true" />

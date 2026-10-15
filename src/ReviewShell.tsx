@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { LAUNCH } from "./platform/mode";
+import { studioHref } from "./studio-link";
 import type * as ReviewModule from "./review/index";
 
 let loadedReview: typeof ReviewModule | undefined;
@@ -48,6 +49,7 @@ function Frame({ children, reviewModule }: { children: ReactNode; reviewModule: 
             TrueMark <span>Design review</span>
           </Link>
           <div className="review-nav-links">
+            <a href={studioHref}>Studio</a>
             {links.map((link) => (
               <Link key={link.id} to={link.to} aria-current={section === link.id ? "page" : undefined}>
                 {link.label}
