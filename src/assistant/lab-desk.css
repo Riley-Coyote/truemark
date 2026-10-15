@@ -23,7 +23,8 @@
   flex-direction: column;
   width: min(27rem, calc(100vw - var(--tm-space-8)));
   min-width: 0;
-  overflow: hidden;
+  /* Only the message log scrolls. Focus must not scroll the entire dock. */
+  overflow: clip;
   border: 1px solid var(--tm-line);
   border-radius: var(--tm-radius-xl);
   background: var(--tm-paper);
