@@ -1,4 +1,5 @@
 /** Provider credentials exist only inside the selected server transport's closure. */
+import { siteRoot } from '../_shared/site.ts';
 export type Message = { role: "system" | "user" | "assistant" | "tool"; content: string | null;
   tool_calls?: { id: string; type: "function"; function: { name: string; arguments: string } }[]; tool_call_id?: string };
 export type Usage = { prompt_tokens: number; completion_tokens: number; total_tokens: number };
@@ -157,11 +158,15 @@ export function resolveProvider(secret: (name: string) => string | undefined, fe
   } };
   return null;
   function compatible(name: "OpenRouter" | "OpenAI-compatible", endpoint: string, credential: string): Provider {
+    // Attribution is optional. Never advertise the review site from a production function,
+    // and never forward a malformed URL (which could contain credentials) upstream.
+    let referer: string | undefined;
+    try { referer = siteRoot(secret("SITE_URL") ?? ''); } catch { /* Omit unset attribution. */ }
     return { name, async *stream(body, signal) {
       const { tools, tool_choice, ...request } = body;
       yield* openAIStream(await fetcher(endpoint, { method: "POST", signal,
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${credential}`,
-          ...(name === "OpenRouter" ? { "HTTP-Referer": "https://riley-coyote.github.io/truemark/", "X-Title": "TrueMark" } : {}) },
+          ...(name === "OpenRouter" ? { ...(referer ? { "HTTP-Referer": referer } : {}), "X-Title": "TrueMark" } : {}) },
         body: JSON.stringify({ ...request, ...(tools.length ? { tools, tool_choice } : {}), stream: true, ...(name === "OpenRouter" ? { usage: { include: true } } : { stream_options: { include_usage: true } }) }) }));
     } };
   }

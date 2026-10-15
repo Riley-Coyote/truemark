@@ -1,4 +1,5 @@
 /** Provider-independent, escaped email and text templates. No runtime or network. */
+import { siteRoot } from '../_shared/site.ts';
 export type Row = Record<string, any>;
 export type TemplateData = {
  site: string; data: Row; order?: Row; buyer?: Row; partner?: Row; referral?: Row; payout?: Row;
@@ -42,7 +43,7 @@ export function renderTemplate(template: string,c: TemplateData): Rendered {
  const refundedByOrder=Number(o.refunded??0)>0?Number(o.refunded):['refunded','partially_refunded'].includes(o.payment)?Number(o.total):null;
  const d=c.data.amount==null&&(template==='buyer.order_refunded'||template==='buyer.order_cancelled')&&refundedByOrder!=null?{...c.data,amount:refundedByOrder}:c.data;
  if (d.amount == null && template === 'buyer.order_refunded') throw new Error('Message data missing');
- const site=c.site, number=(template.startsWith('partner.')?r.order_number:o.number)??o.number??r.order_number??'', id=o.id??d.order_id??'';
+ const site=siteRoot(c.site), number=(template.startsWith('partner.')?r.order_number:o.number)??o.number??r.order_number??'', id=o.id??d.order_id??'';
  const link=(route: string)=>site+'#'+route;
  const institution=c.buyer?.institution??o.address?.institution??'';
  const vials=(c.lines??[]).reduce((n,l)=>n+Number(l.quantity),0);

@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { Plus } from "lucide-react";
 import { LIVE } from "../../../platform/mode";
 import { live } from "../../../platform/live/runtime";
+import { savePreviewAddress } from "../../../platform/preview/store";
 import type { Address } from "../../../platform/types";
 import { Field, PageHead, SampleTag, useAccount, useTitle } from "./parts";
 
@@ -116,21 +117,19 @@ export default function Addresses() {
   const [addresses, setAddresses] = useState<Address[]>(buyer.addresses);
   const [editing, setEditing] = useState<string | null>(null);
   const [note, setNote] = useState("");
-  const count = useRef(0);
 
   function returnFocus(id: string) {
     window.requestAnimationFrame(() => document.getElementById(`tm-acct-edit-${id}`)?.focus());
   }
   async function save(id: string | null, draft: Draft) {
     const next: Address = {
-      id: id ?? `preview-${++count.current}`,
+      id: id ?? `preview-${crypto.randomUUID()}`,
       ...draft,
       line2: draft.line2.trim() || undefined,
       phone: draft.phone.trim() || undefined,
       country: "United States",
     };
-    // Live keeps the address on the research account; the preview keeps it on this page.
-    const saved = LIVE ? await live().saveAddress(buyer.id, next) : next;
+    const saved = LIVE ? await live().saveAddress(buyer.id, next) : await savePreviewAddress(buyer.id, next);
     setAddresses((list) => (id ? list.map((a) => (a.id === id ? saved : a)) : [...list, saved]));
     setEditing(null);
     setNote(id ? `${saved.label} address updated.` : `${saved.label} address added.`);

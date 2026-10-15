@@ -1,0 +1,245 @@
+/*
+ * The living rooms (Rooms.tsx): a cover-fitted plate, the room's loop on it, the real vials standing
+ * where its pedestals' tops are, and mist near the camera.
+ */
+
+:root {
+  /* The night room's wall and floor, sampled from its first frame. */
+  --tm-night-wall: #161122;
+  --tm-night-floor: #0f091f;
+  /* The night room comes up out of the dusk over a long feather at its top, so it emerges from the light rather than
+     rising as an edge (home.css). */
+  --tm-dusk-feather: 50svh;
+  /* The supplied label, as a share of a cutout's height: every cutout prints it in the same place, its top edge
+     at about 41.5% and the powder below it to about 91% (measured on public/images/cutouts). The room's light on
+     the glass never lies there, and fades out over a feather before it. */
+  --tm-label-top: 40%;
+  --tm-label-foot: 93%;
+  --tm-label-feather: 4%;
+  /* At night the beam lights the cap and shoulders, fading through the neck to nothing above the label. */
+  --tm-beam-fade: 14%;
+}
+
+.tm-room-plate {
+  position: absolute;
+  z-index: 0;
+  transform: translate3d(calc(var(--mx, 0) * -7px), calc(var(--my, 0) * -5px), 0) scale(1.015);
+  transition: transform 1600ms var(--tm-ease-enter);
+}
+.tm-room {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+/* Mist drifting low over the floor: added as light, behind the vials so it never lies over a label, and
+   drifting further than the room for depth. */
+.tm-front-mist {
+  position: absolute;
+  z-index: 0;
+  left: -6%;
+  bottom: -2%;
+  width: 112%;
+  height: 40%;
+  object-fit: cover;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.85) 30%, transparent 92%);
+  mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.85) 30%, transparent 92%);
+  transform: translate3d(calc(var(--mx, 0) * -23px), 0, 0);
+  transition: transform 1600ms var(--tm-ease-enter);
+}
+
+/* The simulated floor mist (fog/FloorMist.tsx): the room's full width, from the highest row any mist can reach down to
+   the room's foot. It lies in the room's own space, so it moves only as the plate moves (no parallax of its own), over
+   the room and under the vials, so it never lies over a label. It takes no pointer events: the window hears the pointer. */
+.tm-floor-mist {
+  position: absolute;
+  z-index: 0;
+  inset: calc(var(--tm-floor-mist-top) * 100%) 0 0;
+  pointer-events: none;
+}
+.tm-floor-mist-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The lens's focus (Rooms.tsx RoomFocus): over the room and its mist, under the vials. At rest on the opening it does
+   nothing; on a product page, and as the camera arrives there (flight.ts), it blurs the room behind it everywhere but
+   the one pedestal its mask leaves sharp, the mask drawn in the room's own frame so it moves with the plate. */
+.tm-room-focus {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+}
+.tm-room-focus[data-focus] {
+  -webkit-backdrop-filter: blur(var(--tm-focus-blur, 0px));
+  backdrop-filter: blur(var(--tm-focus-blur, 0px));
+  -webkit-mask-image: var(--tm-focus-mask);
+  mask-image: var(--tm-focus-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* ---------- A vial, seated by its foot ---------- */
+.tm-room-vial {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  margin: 0;
+  left: calc(var(--seat-x) * 100%);
+  top: calc(var(--seat-y) * 100%);
+  height: calc(var(--vial-h) * 100%);
+  aspect-ratio: 578 / 1112;
+  transform: translate(-50%, -100%);
+  animation: tm-vial-stand 1600ms var(--tm-ease-enter) calc(240ms + var(--tm-i, 0) * 90ms) both;
+}
+@keyframes tm-vial-stand {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% + 18px));
+  }
+}
+.tm-room-vial-glass,
+.tm-room-vial-reflect {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+/* The labels read true: no grade on the cutout, and no light of the room's over the label. The room shows on the
+   glass only where the glass is bare: where its light may lie, intersected with the vial's own outline. (In that
+   order: the outline below, so the box's fractional edge takes the outline's own clear border, not a hairline.) */
+.tm-room-vial-air,
+.tm-room-vial-beam {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask-image: var(--tm-light-where), var(--tm-glass-mask);
+  mask-image: var(--tm-light-where), var(--tm-glass-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  mix-blend-mode: screen;
+}
+/* By day, a thin edge of window light on the cap, the shoulders and the foot, around the label. */
+.tm-room-vial-air {
+  --tm-light-where: linear-gradient(to bottom, var(--tm-ink) calc(var(--tm-label-top) - var(--tm-label-feather)), transparent var(--tm-label-top), transparent var(--tm-label-foot), var(--tm-ink) calc(var(--tm-label-foot) + var(--tm-label-feather)));
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.06) 7%, transparent 11%);
+}
+/* Contact: a tight dark seat under the foot, and a long soft cast away from the window at the upper left. */
+.tm-room-vial-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 92%;
+  height: 6.5%;
+  transform: translate(-50%, 46%);
+  background: radial-gradient(closest-side, rgba(40, 24, 78, 0.5), rgba(40, 24, 78, 0.2) 55%, transparent 100%);
+  filter: blur(1.5px);
+  mix-blend-mode: multiply;
+}
+.tm-room-vial-cast {
+  position: absolute;
+  left: 46%;
+  bottom: 0;
+  width: 150%;
+  height: 9%;
+  transform-origin: 0 100%;
+  transform: translate(0, 38%) skewX(-52deg);
+  background: radial-gradient(closest-side, rgba(70, 48, 120, 0.2), transparent);
+  filter: blur(9px);
+  mix-blend-mode: multiply;
+}
+
+/* A vial that is a link: it lifts a little under the pointer, and keyboard focus rings it. */
+a.tm-room-vial {
+  cursor: pointer;
+  border-radius: var(--tm-radius-sm);
+  outline: none;
+}
+a.tm-room-vial .tm-room-vial-glass {
+  transition: transform var(--tm-dur-slow) var(--tm-ease-enter);
+}
+a.tm-room-vial:hover .tm-room-vial-glass {
+  transform: translateY(-2%);
+}
+a.tm-room-vial:focus-visible {
+  box-shadow: 0 0 0 2px var(--tm-paper), 0 0 0 4px var(--tm-ink);
+}
+a.tm-room-vial:active .tm-room-vial-glass {
+  transform: translateY(-1%);
+}
+
+/* ---------- At night: one beam from above ---------- */
+/* Night is lighting, not a regrade: the label stays near its own colours, a little dimmer, and the beam and
+   the dark around it carry the mood. */
+.tm-room-vial[data-night] .tm-room-vial-glass {
+  filter: brightness(0.82);
+}
+.tm-room-vial[data-night] .tm-room-vial-shadow {
+  height: 5%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0.34) 60%, transparent);
+  filter: blur(1px);
+  mix-blend-mode: normal;
+}
+/* The beam on the home page's night comes up with the room's own light (home.css, --tm-stage), and the vial with it:
+   the glass emerges from dark as the beam rises, only ever darker than its rest, and rests at exactly the night's
+   0.82 (no hue, no other filter); the cap's light, the reflection and the shadow come up with it too. */
+.tm-proof .tm-room-vial[data-night] {
+  --tm-stage-light: var(--tm-stage);
+}
+/* Only while it rises: once the room's light is up (Atmosphere.tsx, data-stage) the glass takes the night's own rule
+   above, written as it always was, so at rest it is drawn exactly as before. */
+.tm-proof[data-stage="rising"] .tm-room-vial[data-night] .tm-room-vial-glass {
+  filter: brightness(calc(0.82 * var(--tm-stage-light)));
+  /* It comes up with its room, out of the same dusk, never a dark shape cut out against it. Composited while it rises,
+     so its light changing draws nothing again. */
+  opacity: var(--tm-stage-light);
+  will-change: opacity, filter;
+}
+.tm-room-vial[data-night] :is(.tm-room-vial-beam, .tm-room-vial-shadow) {
+  opacity: var(--tm-stage-light, 1);
+}
+/* The cap and shoulders catch the beam, their edges keeping a thin rim; it fades through the neck and is gone
+   above the label, which keeps its own colours, only dimmed. The drama is the beam on the cap and the plinth. */
+.tm-room-vial-beam {
+  --tm-light-where: linear-gradient(to bottom, var(--tm-ink) calc(var(--tm-label-top) - var(--tm-beam-fade)), transparent var(--tm-label-top));
+  background:
+    linear-gradient(180deg, rgba(240, 232, 255, 0.7) 0%, rgba(220, 206, 250, 0.36) 16%, rgba(196, 178, 240, 0.12) 42%, transparent 66%),
+    linear-gradient(90deg, rgba(236, 228, 255, 0.22) 0%, transparent 13%, transparent 85%, rgba(236, 228, 255, 0.16) 100%);
+}
+/* The glossy top gives back a short, dim reflection of the foot. */
+.tm-room-vial-reflect {
+  transform: scaleY(-1);
+  transform-origin: 50% 100%;
+  opacity: calc(0.3 * var(--tm-stage-light, 1));
+  filter: brightness(0.6) blur(0.6px);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 7%);
+  mask-image: linear-gradient(to top, #000 0%, transparent 7%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-room-plate,
+  .tm-front-mist {
+    transform: none;
+    transition: none;
+  }
+  .tm-room-vial {
+    animation: none;
+  }
+}

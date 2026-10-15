@@ -109,14 +109,22 @@
   cursor: default;
 }
 
-/* A product name that opens its page: the underline appears on hover, darkens on focus. */
+/* A product name that opens its page: the underline appears on hover, darkens on focus. Its target reaches a finger's
+   size, though the name looks no larger (set as a box, so the reach is measured from its box on every line it takes). */
 .tm .tm-line-name {
+  position: relative;
+  display: inline-block;
   color: var(--tm-ink);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-decoration-color: transparent;
   text-underline-offset: 0.22em;
   transition: text-decoration-color var(--tm-dur-base) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm .tm-line-name::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc(50% - var(--tm-reach) / 2));
 }
 .tm .tm-line-name:hover {
   text-decoration-color: var(--tm-ink-3);
@@ -283,6 +291,7 @@
   outline: none;
 }
 .tm .tm-code-field button {
+  position: relative;
   flex-shrink: 0;
   height: var(--tm-control-sm);
   padding: 0 var(--tm-space-4);
@@ -296,6 +305,12 @@
     border-color var(--tm-dur-base) var(--tm-ease-enter),
     color var(--tm-dur-base) var(--tm-ease-enter),
     transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+/* Apply's target is the field's height and more, though it looks no larger. */
+.tm .tm-code-field button::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc(50% - var(--tm-reach) / 2));
 }
 .tm .tm-code-field button:hover:not(:disabled) {
   background: var(--tm-wash);
@@ -395,6 +410,36 @@
   stroke-width: 1.6;
 }
 
+/* The cart's small controls reach a finger's width (a whole control) around them, though they look no larger: Close,
+   Remove, a suggestion's add and "View cart". */
+.modal-panel:has(> .tm-bag) .modal-heading .icon-button,
+.tm .tm-remove,
+.tm .tm-pair-add,
+.tm-bag-foot .tm-textlink {
+  position: relative;
+}
+/* On a phone the sheet's grab bar lies across the top: Close stands over it (a drag never starts on a button). */
+.modal-panel:has(> .tm-bag) .modal-heading .icon-button {
+  z-index: 2;
+}
+/* Measured from inside each control's border, so the reach clears 44px with room to spare. */
+.modal-panel:has(> .tm-bag) .modal-heading .icon-button::after,
+.tm .tm-pair-add::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--tm-space-2) * -1);
+}
+.tm .tm-remove::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--tm-space-4) * -1) calc(var(--tm-space-2) * -1);
+}
+.tm-bag-foot .tm-textlink::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--tm-space-3) * -1) calc(var(--tm-space-2) * -1);
+}
+
 .tm.tm-bag {
   display: contents;
 }
@@ -435,6 +480,22 @@
 }
 .tm-bag-line .tm-thumb {
   grid-area: thumb;
+}
+/* A removed line, in the bag or on the cart page (Bag.tsx), fades where it is, then the lines below rise into its place. */
+.tm-bag-line[data-state="leaving"],
+.tm-cart-line[data-state="leaving"] {
+  pointer-events: none;
+  animation: tm-line-fold var(--tm-dur-slow) var(--tm-ease-enter) forwards;
+}
+@keyframes tm-line-fold {
+  35% {
+    opacity: 0;
+    margin-block-end: 0;
+  }
+  to {
+    opacity: 0;
+    margin-block-end: calc(var(--tm-line-height) * -1);
+  }
 }
 .tm-bag-info {
   grid-area: info;
@@ -746,6 +807,15 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--tm-space-5);
+}
+/* A link beside the step's button reaches the button's height, though it looks no larger. */
+.tm-step-actions .tm-textlink {
+  position: relative;
+}
+.tm-step-actions .tm-textlink::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc(50% - var(--tm-reach) / 2));
 }
 .tm-step-state {
   display: flex;
@@ -1739,7 +1809,9 @@
   .tm-verified i,
   .tm-verified i::after,
   .tm-next-step.is-current .tm-next-mark i,
-  .tm .tm-skeleton {
+  .tm .tm-skeleton,
+  .tm-bag-line[data-state="leaving"],
+  .tm-cart-line[data-state="leaving"] {
     animation: none;
   }
   .tm .tm-choice,

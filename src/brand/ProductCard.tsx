@@ -7,9 +7,9 @@ import { productCutout } from "../shop/catalog";
 import type { Compound } from "../shop/catalog";
 import { useShop } from "../shop/context";
 import { announceMobileAdd } from "../shop/MobileAdd";
+import { usePresence } from "../shop/motion";
 import { rememberVial } from "../Navigation";
 import { ProductName, pictureLoading, tone } from "../shop/ui";
-import { sheenMask } from "./light";
 import "./cards.css";
 import { PURITY_SPEC } from "../platform/certificate-records";
 
@@ -27,6 +27,8 @@ export function ProductCard({ compound, listItem = false, compact = false }: { c
   const { lead, variants, fromPrice, name } = compound;
   const { add, change, cart } = useShop();
   const [picking, setPicking] = useState(false);
+  // The sizes leave the way they dropped, back up into the + that opened them, before they are gone (cards.css).
+  const sizesMenu = usePresence<HTMLDivElement>(picking);
   const menuId = useId();
   const root = useRef<HTMLElement>(null);
   const multi = variants.length > 1;
@@ -145,7 +147,7 @@ export function ProductCard({ compound, listItem = false, compact = false }: { c
       <div className="tm-card-stage">
         {(tag || outOfStock) && !compact && <span className="tm-card-tag">{outOfStock ? "Out of stock" : tag}</span>}
         <span className="tm-card-shadow" aria-hidden="true" />
-        <span className="tm-card-vial" data-sheen>
+        <span className="tm-card-vial">
           <img
             src={productCutout(lead, "sm")}
             srcSet={`${productCutout(lead, "sm")} 289w, ${productCutout(lead, "lg")} 578w`}
@@ -155,7 +157,6 @@ export function ProductCard({ compound, listItem = false, compact = false }: { c
             draggable={false}
             data-vial={lead.id}
           />
-          <span className="tm-sheen" aria-hidden="true" style={sheenMask(productCutout(lead, "sm"))} />
         </span>
       </div>
       <div className="tm-card-body">
@@ -184,13 +185,21 @@ export function ProductCard({ compound, listItem = false, compact = false }: { c
 
       {buyable.length > 0 && (
         <div className={`tm-card-add${total > 0 ? " is-in" : ""}`} onBlur={closeOnLeave} onKeyDown={closeOnEscape}>
-          {picking && (
-            <div className="tm-card-sizes" id={menuId} role="group" aria-label={`Choose a size of ${name}`}>
+          {sizesMenu.shown && (
+            <div
+              ref={sizesMenu.exit}
+              className="tm-card-sizes"
+              id={menuId}
+              role="group"
+              aria-label={`Choose a size of ${name}`}
+              data-state={sizesMenu.closing ? "closing" : undefined}
+              inert={sizesMenu.closing}
+            >
               {buyable.map((v) => {
                 const count = inBag(v.id);
                 const soldOut = v.stock === 0;
                 return count > 0 ? (
-                  <div key={v.id} className="tm-card-size-row" data-size={v.id} role="group" aria-label={`${name} ${v.size} in your bag`}>
+                  <div key={v.id} className="tm-card-size-row" data-size={v.id} role="group" aria-label={`${name} ${v.size} in your cart`}>
                     <span className="tm-card-size">
                       {v.size}
                       <em>{money(v.price!)}</em>
@@ -200,7 +209,7 @@ export function ProductCard({ compound, listItem = false, compact = false }: { c
                         <Minus size={14} strokeWidth={1.8} aria-hidden="true" />
                       </button>
                       <span className="tm-card-count" aria-live="polite" aria-atomic="true">
-                        <span className="sr-only">In your bag: </span>{count}
+                        <span className="sr-only">In your cart: </span>{count}
                       </span>
                       <button type="button" aria-label={`Add one more ${name} ${v.size}`} disabled={atLimit(v.id)} onClick={() => addOne(v.id, false)}>
                         <Plus size={14} strokeWidth={1.8} aria-hidden="true" />
@@ -220,7 +229,7 @@ export function ProductCard({ compound, listItem = false, compact = false }: { c
             </div>
           )}
           {total > 0 ? (
-            <div className="tm-card-stepper" role="group" aria-label={multi ? `${name} in your bag` : `${name} ${lead.size} in your bag`}>
+            <div className="tm-card-stepper" role="group" aria-label={multi ? `${name} in your cart` : `${name} ${lead.size} in your cart`}>
               <button
                 type="button"
                 className="tm-card-step is-less"
@@ -231,12 +240,12 @@ export function ProductCard({ compound, listItem = false, compact = false }: { c
                 <Minus size={16} strokeWidth={1.6} aria-hidden="true" />
               </button>
               <span className="tm-card-count" aria-live="polite" aria-atomic="true">
-                <span className="sr-only">In your bag: </span>{total}
+                <span className="sr-only">In your cart: </span>{total}
               </span>
               <button
                 type="button"
                 className="tm-card-step is-more"
-                aria-label={multi ? `Add ${name} to bag, choose a size` : `Add one more ${name} ${lead.size}`}
+                aria-label={multi ? `Add ${name} to cart, choose a size` : `Add one more ${name} ${lead.size}`}
                 aria-expanded={multi ? picking : undefined}
                 aria-controls={multi && picking ? menuId : undefined}
                 disabled={full}
@@ -250,7 +259,7 @@ export function ProductCard({ compound, listItem = false, compact = false }: { c
               type="button"
               className="tm-card-plus"
               disabled={outOfStock || full}
-              aria-label={multi ? `Add ${name} to bag, choose a size` : `Add ${name} ${lead.size} to bag`}
+              aria-label={multi ? `Add ${name} to cart, choose a size` : `Add ${name} ${lead.size} to cart`}
               aria-expanded={multi ? picking : undefined}
               aria-controls={multi && picking ? menuId : undefined}
               onClick={more}

@@ -91,7 +91,9 @@
   background: var(--tm-wash);
   color: var(--tm-ink);
 }
+/* The count between the buttons: its field is as tall as the stepper, so a tap anywhere between them lands in it. */
 .tm .tm-quantity input {
+  align-self: stretch;
   width: var(--tm-space-7);
   border: 0;
   background: transparent;
@@ -196,6 +198,7 @@
 }
 /* The first-order offer: a quiet line, marked with the logo's dot. */
 .tm .tm-shop-offer {
+  position: relative;
   justify-self: start;
   display: inline-flex;
   align-items: center;
@@ -205,6 +208,12 @@
   font: var(--tm-weight-regular) var(--tm-type-ui) / 1.3 var(--tm-font-sans);
   color: var(--tm-ink-2);
   transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+/* Its target reaches a finger's height, though the line looks no larger. */
+.tm .tm-shop-offer::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc(50% - var(--tm-reach) / 2)) 0;
 }
 .tm-shop-offer .tm-brand-dot {
   width: var(--tm-space-2);
@@ -248,6 +257,23 @@
 .tm .tm-shop-chips .tm-chip {
   flex: none;
   padding: 0 var(--tm-space-3);
+}
+/* While the classes are a row (until they become a column, at 961px), each chip's target is a finger's height, though
+   it looks no larger: the row keeps room above and below the chips for it (a row that scrolls cuts off what overflows
+   it) and gives that room back to the page. */
+@media (max-width: 960px) {
+  .tm-shop-chips {
+    padding-block: var(--tm-space-2);
+    margin-block: calc(var(--tm-space-2) * -1);
+  }
+  .tm .tm-shop-chips .tm-chip {
+    position: relative;
+  }
+  .tm .tm-shop-chips .tm-chip::after {
+    content: "";
+    position: absolute;
+    inset: min(0px, calc(50% - var(--tm-reach) / 2)) 0;
+  }
 }
 
 .tm-shop-tools {
@@ -297,11 +323,24 @@
     color var(--tm-dur-base) var(--tm-ease-enter),
     transform var(--tm-dur-quick) var(--tm-ease-micro);
 }
-/* A fingertip's worth of target above and below the small buttons. */
+/* A finger's height of target above and below the small buttons. */
 .tm-density button::after {
   content: "";
   position: absolute;
-  inset: calc(var(--tm-space-2) * -1) 0;
+  inset: min(0px, calc(50% - var(--tm-reach) / 2)) 0;
+}
+/* Under a finger the two are wider, and each one's outer side reaches past the group's edge (toward the menu beside it,
+   and toward the page's margin), so each is a finger's width. */
+@media (pointer: coarse) {
+  .tm-density button {
+    width: var(--tm-control-sm);
+  }
+  .tm-density button:first-child::after {
+    left: calc(var(--tm-space-3) * -1);
+  }
+  .tm-density button:last-child::after {
+    right: calc(var(--tm-space-4) * -1);
+  }
 }
 .tm-density button:hover {
   color: var(--tm-ink);
@@ -438,6 +477,12 @@
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
+/* Under a finger, each class in the column is a finger's height. */
+@media (min-width: 961px) and (pointer: coarse) {
+  .tm .tm-shop-chips .tm-chip {
+    min-height: var(--tm-control-touch);
+  }
+}
 @media (min-width: 1201px) {
   .tm-shop-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -481,6 +526,7 @@
 .tm .tm-search,
 .tm .tm-select {
   position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   gap: var(--tm-space-2);
@@ -491,6 +537,16 @@
   background: var(--tm-paper);
   color: var(--tm-ink-3);
   transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+/* Each pill's target reaches a finger's height, though the pill looks no larger. The reach lies beneath what the pill
+   holds, so its field, menu or clear button still takes its own taps; a tap on the rest is the pill's, and a pill's tap
+   is its field's (a phone opens the menu for it). */
+.tm .tm-search::before,
+.tm .tm-select::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: min(0px, calc(50% - var(--tm-reach) / 2)) 0;
 }
 .tm .tm-search:hover,
 .tm .tm-select:hover {
@@ -518,6 +574,7 @@
   color: var(--tm-ink-3);
 }
 .tm .tm-search button {
+  position: relative;
   display: grid;
   place-items: center;
   width: var(--tm-space-5);
@@ -529,10 +586,22 @@
   background: var(--tm-wash);
   color: var(--tm-ink);
 }
+/* Clearing the search takes a finger's size, though its mark looks no larger: it reaches over the end of the field. */
+.tm .tm-search button::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc(50% - var(--tm-reach) / 2));
+}
+/* The menu fills its pill, so a tap or a click anywhere on the pill opens it (a label's click only focuses a menu on a
+   computer). */
+.tm .tm-select {
+  padding: 0;
+}
 .tm .tm-select select {
+  align-self: stretch;
   appearance: none;
   -webkit-appearance: none;
-  padding-right: var(--tm-space-5);
+  padding: 0 calc(var(--tm-space-4) + var(--tm-space-5)) 0 var(--tm-space-4);
   cursor: pointer;
 }
 .tm .tm-select::after {
@@ -564,12 +633,6 @@
 
 /* ---------- Product ---------- */
 
-.tm-product-top {
-  --tm-bg: var(--tm-studio);
-  /* The buying block ends on its fine print; the next section's own space follows. */
-  padding-block: var(--tm-space-5) var(--tm-space-7);
-  align-items: start;
-}
 .tm-crumbs {
   grid-column: 1 / -1;
   display: flex;
@@ -595,76 +658,6 @@
 }
 .tm-crumbs [aria-current="page"] {
   color: var(--tm-ink);
-}
-/* The stage spans the name and the buying column beside it; any extra height falls to the last
-   row, so the name and the rest of the column stay together. */
-.tm-product-top {
-  grid-template-rows: auto auto 1fr;
-}
-.tm-product-stage {
-  grid-column: 1 / span 7;
-  grid-row: 2 / span 2;
-  display: grid;
-  grid-template-columns: min(100%, 72svh);
-}
-.tm-product-vials {
-  cursor: zoom-in;
-}
-.tm-product-vials img {
-  transform-origin: 50% 57%;
-  transition: transform 900ms var(--tm-ease-enter);
-}
-.tm-product-vials img.is-active {
-  transition:
-    opacity var(--tm-dur-scene) var(--tm-ease-breathe),
-    transform 900ms var(--tm-ease-enter);
-}
-.tm-product-vials.is-zoomed {
-  cursor: zoom-out;
-}
-.tm-product-vials.is-zoomed img {
-  transform: scale(1.9);
-}
-.tm-stage-tools {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--tm-space-4);
-  padding-top: var(--tm-space-4);
-  border-top: 1px solid var(--tm-line);
-}
-.tm-stage-lot {
-  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
-  color: var(--tm-ink-3);
-}
-.tm-buy-head {
-  grid-column: 8 / -1;
-  grid-row: 2;
-  padding-top: var(--tm-space-7);
-}
-.tm-buy {
-  grid-column: 8 / -1;
-  grid-row: 3;
-}
-.tm-product-sub-price {
-  display: none;
-}
-.tm .tm-product-name {
-  overflow-wrap: anywhere;
-}
-.tm .tm-product-sub {
-  margin: var(--tm-space-4) 0 0;
-  font: var(--tm-weight-book) var(--tm-type-lead) / var(--tm-leading-heading) var(--tm-font-sans);
-  color: var(--tm-ink-3);
-}
-.tm .tm-product-sub span {
-  color: var(--tm-ink-4);
-}
-.tm .tm-product-desc {
-  margin: var(--tm-space-6) 0 0;
-  max-width: 44ch;
-  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
-  color: var(--tm-ink-2);
 }
 .tm-sizes {
   margin: var(--tm-space-7) 0 0;
@@ -722,22 +715,6 @@
   outline: none;
   border-color: var(--tm-ink);
 }
-.tm .tm-price-row {
-  display: flex;
-  align-items: baseline;
-  gap: var(--tm-space-3);
-  margin: var(--tm-space-7) 0 0;
-}
-.tm-price {
-  font: var(--tm-weight-light) var(--tm-type-h2) / 1 var(--tm-font-sans);
-  letter-spacing: var(--tm-track-heading);
-  color: var(--tm-ink);
-  font-variant-numeric: tabular-nums;
-}
-.tm-price-note {
-  font-size: var(--tm-type-ui);
-  color: var(--tm-ink-3);
-}
 .tm-buy-row {
   display: flex;
   gap: var(--tm-space-3);
@@ -767,13 +744,6 @@
   height: var(--tm-space-1);
   border-radius: var(--tm-radius-pill);
   background: var(--tm-tone);
-}
-/* The client's research-use notice, under the notes and above the lot. */
-.tm .tm-buy-notice {
-  margin: var(--tm-space-4) 0 0;
-  max-width: var(--tm-measure-base);
-  font: var(--tm-weight-regular) var(--tm-type-micro) / var(--tm-leading-body) var(--tm-font-sans);
-  color: var(--tm-ink-3);
 }
 /* "Testing and traceability": the client's four notes, a quiet row under the figures. */
 .tm-traceability {
@@ -912,7 +882,6 @@
   margin-top: var(--tm-space-5);
 }
 .tm-spec-table {
-  grid-column: 6 / -1;
   margin: 0;
   border-bottom: 1px solid var(--tm-line);
 }
@@ -1128,11 +1097,7 @@
 @media (max-width: 960px) {
   .tm-band-copy,
   .tm-band-action,
-  .tm-product-stage,
-  .tm-buy-head,
-  .tm-buy,
   .tm-spec-head,
-  .tm-spec-table,
   .tm-verify-copy,
   .tm-lot-hint,
   .tm-result-vial,
@@ -1152,31 +1117,6 @@
   }
   .tm-band-action {
     margin-top: var(--tm-space-6);
-  }
-  /* One column: the name and its price first, then the photograph, then the rest. */
-  .tm-product-top {
-    grid-template-rows: none;
-  }
-  .tm-product-stage {
-    grid-row: auto;
-    grid-template-columns: 100%;
-    margin-top: var(--tm-space-5);
-  }
-  .tm-buy-head {
-    grid-row: auto;
-    padding-top: 0;
-  }
-  .tm-buy {
-    grid-row: auto;
-  }
-  .tm-product-sub-price {
-    display: inline;
-  }
-  .tm .tm-product-sub .tm-product-sub-price {
-    color: var(--tm-ink);
-  }
-  .tm-spec-table {
-    margin-top: var(--tm-space-7);
   }
   .tm-lot-hint {
     margin-top: var(--tm-space-8);

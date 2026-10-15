@@ -31,10 +31,11 @@ export function read<T>(key: string, fallback: T): T {
   }
 }
 
-export function write(key: string, value: unknown) {
+export function write(key: string, value: unknown, requirePersistence = false) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-  } catch {
+  } catch (error) {
+    if (requirePersistence) throw error;
     /* The preview keeps working without storage; changes simply won't persist. */
   }
   window.dispatchEvent(new CustomEvent(STORE_CHANGE, { detail: key }));

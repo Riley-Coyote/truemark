@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 import { Link, Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
@@ -63,9 +63,33 @@ function Frame({ children }: { children: ReactNode }) {
 }
 
 function Desk({ buyer, signOut }: { buyer: Buyer; signOut: () => Promise<void> }) {
+  const { pathname } = useLocation();
+  const navigation = useRef<HTMLElement>(null);
   const orders = useResource(attempt(() => store.orders.listForBuyer(buyer.id)), [buyer.id]);
   const lots = useResource(attempt(() => store.lots.list()));
   const received = useMemo(() => (orders.data ? receivedLots(orders.data).length : undefined), [orders.data]);
+  useLayoutEffect(() => {
+    const nav = navigation.current;
+    if (!nav) return;
+    let mounted = true;
+    const revealCurrent = () => {
+      if (!mounted || nav.scrollWidth <= nav.clientWidth) return;
+      const selected = nav.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!selected) return;
+      const bounds = nav.getBoundingClientRect(), current = selected.getBoundingClientRect();
+      const style = getComputedStyle(nav);
+      const left = bounds.left + parseFloat(style.paddingLeft), right = bounds.right - parseFloat(style.paddingRight);
+      const delta = current.left < left ? current.left - left : current.right > right ? current.right - right : 0;
+      // Reveal only within the horizontal tab strip. scrollIntoView would also
+      // move the page when returning to a scrolled account screen.
+      if (delta) nav.scrollBy({ left: delta, behavior: "instant" });
+    };
+    revealCurrent();
+    const resized = new ResizeObserver(revealCurrent);
+    resized.observe(nav);
+    void document.fonts.ready.then(revealCurrent);
+    return () => { mounted = false; resized.disconnect(); };
+  }, [pathname, orders.data?.length, received]);
   const nav: [string, string, number | undefined, boolean][] = [
     ["Overview", "/account", undefined, true],
     ["Orders", "/account/orders", orders.data?.length, false],
@@ -81,7 +105,7 @@ function Desk({ buyer, signOut }: { buyer: Buyer; signOut: () => Promise<void> }
             <p className="tm-acct-who-name">{buyer.name}</p>
             <p className="tm-acct-who-meta">{buyer.institution}</p>
           </div>
-          <nav className="tm-acct-nav" aria-label="Account">
+          <nav ref={navigation} className="tm-acct-nav" aria-label="Account">
             {nav.map(([label, to, count, end]) => (
               <NavLink key={to} to={to} end={end}>
                 {label}

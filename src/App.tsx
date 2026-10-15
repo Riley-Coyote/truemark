@@ -5,7 +5,7 @@ import { store, useResource } from "./platform/store";
 import { setCategories } from "./data";
 import { refreshCatalog } from "./shop/catalog";
 import { stockProblem } from "./platform/commerce";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { products } from "./data";
 import { SectionLink } from "./SectionLink";
@@ -16,24 +16,11 @@ import type { CartItem } from "./shop/context";
 import Home from "./shop/Home";
 import { Modal } from "./shop/Modal";
 import { BagContents, CartPage } from "./shop/pages/checkout/Bag";
-import Checkout from "./shop/pages/checkout/Checkout";
-import Pay from "./shop/pages/checkout/Pay";
-import Confirmation from "./shop/pages/checkout/Confirmation";
-import Apply from "./shop/pages/account/Apply";
-import Account from "./shop/pages/account/Account";
-import Catalog from "./shop/pages/Catalog";
-import ProductPage from "./shop/pages/Product";
-import Verify from "./shop/pages/Verify";
-import Track from "./shop/pages/Track";
-import About from "./shop/pages/content/About";
-import Article from "./shop/pages/content/Article";
-import Contact from "./shop/pages/content/Contact";
-import Handling from "./shop/pages/content/Handling";
-import Journal from "./shop/pages/content/Journal";
-import NotFound from "./shop/pages/content/NotFound";
-import Policy from "./shop/pages/content/Policy";
+// Every page but the opening arrives with its route (pages.tsx).
+import { About, Account, Apply, Article, Catalog, Checkout, Confirmation, Contact, Handling, Journal, NotFound, Pay, Policy, ProductPage, Quality, Track, Verify } from "./pages";
 import { policies, policyByPath } from "./brand/policies";
-import Quality from "./shop/pages/content/Quality";
+import { FlightViews } from "./brand/FlightViews";
+import { PageBoundary } from "./PageBoundary";
 
 function RouteEffects() {
   const location = useLocation();
@@ -53,7 +40,7 @@ function RouteEffects() {
           "/about": "About",
           "/research-blog": "Research Blog",
           "/contact": "Contact",
-          "/cart": "Your bag",
+          "/cart": "Your cart",
           "/checkout": "Checkout",
           "/track": "Track an order",
           "/account": "Research account",
@@ -75,6 +62,12 @@ export default function App() {
   const [cart, setCart] = useState<CartItem[]>(loadCart);
   const [cartOpen, setCartOpen] = useState(false);
   const location = useLocation();
+  // A change of page puts the bag away in the same step, so it is never drawn open on the page arriving (Modal.tsx).
+  const [cartPage, setCartPage] = useState(location.pathname);
+  if (cartPage !== location.pathname) {
+    setCartPage(location.pathname);
+    setCartOpen(false);
+  }
   const session = useResource(() => LIVE ? live().auth.hasSession() : Promise.resolve(true), []);
   useEffect(() => {
     if (!LIVE) return;
@@ -101,9 +94,6 @@ export default function App() {
       /* Selection remains usable if browser storage is unavailable. */
     }
   }, [cart]);
-  useEffect(() => {
-    setCartOpen(false);
-  }, [location.pathname]);
   function add(id: string, quantity: number) {
     const product = products.find((item) => item.id === id);
     if (!product || stockProblem(product, quantity + (cart.find((item) => item.id === id)?.quantity ?? 0))) return;
@@ -158,39 +148,52 @@ export default function App() {
         </SectionLink>
         <Header />
         <main id="main">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/products" element={<Catalog />} />
-            <Route path="/product/:id" element={<ProductPage />} />
-            <Route path="/verify" element={<Verify />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/checkout/confirmation/:orderId" element={<Confirmation />} />
-            {LIVE && <Route path="/checkout/pay/:orderId" element={<Pay />} />}
-            <Route path="/track/:number?" element={<Track />} />
-            <Route path="/access/apply" element={<Apply />} />
-            <Route path="/my-account" element={<Navigate to="/account" replace />} />
-            {/* The client's Terms lived at this address; old links keep working. */}
-            <Route path="/terms-and-conditions" element={<Navigate to="/terms" replace />} />
-            <Route path="/account/*" element={<Account />} />
-            <Route path="/quality" element={<Quality />} />
-            <Route path="/handling" element={<Handling />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/research-blog" element={<Journal />} />
-            <Route path="/research-blog/:id" element={<Article />} />
-            <Route path="/contact" element={<Contact />} />
-            {policies.map((policy) => (
-              <Route key={policy.path} path={policy.path} element={<Policy path={policy.path} />} />
-            ))}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          {/* The page is drawn into view slots, so the opening's camera move can draw both pages while it
+              runs (src/brand/FlightViews.tsx). A live visitor who isn't signed in is sent to sign in by a
+              product page, so their vials simply navigate. */}
+          <FlightViews allowed={!LIVE || Boolean(session.data)}>
+            {(at) => (
+              // Each view slot waits for its own page's code, and a page that fails keeps the shop around it.
+              <PageBoundary at={at.pathname}>
+              <Suspense fallback={null}>
+              <Routes location={at}>
+                <Route path="/" element={<Home />} />
+                <Route path="/products" element={<Catalog />} />
+                {/* The seam for live, signed-out ordering: product pages redirect to sign in today (shopAccess). If
+                    Riley opens them to signed-out visitors, pass signInToOrder={LIVE && !session.data} here, and
+                    "Sign in to order" replaces the quantity and Add to cart. */}
+                <Route path="/product/:id" element={<ProductPage />} />
+                <Route path="/verify" element={<Verify />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/checkout/confirmation/:orderId" element={<Confirmation />} />
+                {LIVE && <Route path="/checkout/pay/:orderId" element={<Pay />} />}
+                <Route path="/track/:number?" element={<Track />} />
+                <Route path="/access/apply" element={<Apply />} />
+                <Route path="/my-account" element={<Navigate to="/account" replace />} />
+                {/* The client's Terms lived at this address; old links keep working. */}
+                <Route path="/terms-and-conditions" element={<Navigate to="/terms" replace />} />
+                <Route path="/account/*" element={<Account />} />
+                <Route path="/quality" element={<Quality />} />
+                <Route path="/handling" element={<Handling />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/research-blog" element={<Journal />} />
+                <Route path="/research-blog/:id" element={<Article />} />
+                <Route path="/contact" element={<Contact />} />
+                {policies.map((policy) => (
+                  <Route key={policy.path} path={policy.path} element={<Policy path={policy.path} />} />
+                ))}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              </Suspense>
+              </PageBoundary>
+            )}
+          </FlightViews>
         </main>
         <Footer />
-        {cartOpen && (
-          <Modal title="Your bag" onClose={() => setCartOpen(false)} side field="never">
-            <BagContents />
-          </Modal>
-        )}
+        <Modal open={cartOpen} title="Your cart" onClose={() => setCartOpen(false)} side field="never">
+          <BagContents />
+        </Modal>
       </div>
     </ShopContext.Provider>
   );

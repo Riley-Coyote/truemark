@@ -1,65 +1,72 @@
-# TrueMark BioLabs design prototype
+# TrueMark BioLabs
 
-Public GitHub repository: [Riley-Coyote/truemark](https://github.com/Riley-Coyote/truemark).
+React/TypeScript storefront, research accounts, lot certificates, partner portal, owner command
+center and contextual chat. The approved landing is integrated with the platform. Production
+activation still requires host/service configuration and acceptance; real payment processing
+is a separate integration.
 
-GitHub Pages presentation (September 22 version): [riley-coyote.github.io/truemark](https://riley-coyote.github.io/truemark/). In production, the bare site URL opens the client review; `#/` opens the website directly.
+## Local development
 
-A working frontend concept developed from the client's WordPress mockup, with Oath Research as the primary design reference and Fitish as a secondary reference.
-
-The canonical repository is `~/Documents/Repositories/TrueMark`. Both `~/Repositories/TrueMark` and the original `~/Documents/ChatGPT/TrueMark` workspace point to this same folder.
-
-## Preview
-
-The current development server runs at **http://127.0.0.1:5174/review**. This unified client package provides shared navigation to the Website, Landing visuals, and Typography review surfaces. The Website route opens the working prototype; the visual and typography studies remain interactive explorations for comparing directions and contexts.
-
-The homepage is at **http://127.0.0.1:5174/** and the catalog is at **http://127.0.0.1:5174/products**. The individual review routes also remain available at **http://127.0.0.1:5174/visual-study** and **http://127.0.0.1:5174/type-study**.
-
-**September 24 refinement:** the current local website combines the client’s supplied SVG logo and color-coded powder vial imagery with the original Quiet modern typography, warm neutrals, and charcoal controls. Two new environmental photographs add morning light and subtle natural color; the landing study now includes six directions. [Latest design rationale, assets, and prompts](docs/QUIET-RENEWAL.md). [Original source decisions](docs/BRAND-REFINEMENT.md). This revision has not been deployed to GitHub Pages. The exploration at **http://127.0.0.1:5174/type-study** preserves Sculptural (Instrument Serif / Manrope), Precise (Bodoni Moda / Manrope), Quiet modern, and the original font pairing for reference. It includes collection, product, documentation, and side-by-side specimens.
-
-**Homepage imagery studies** are at **http://127.0.0.1:5174/visual-study**: Open horizon, Living patterns, Light through glass, and The research object. Each has a full homepage-opening preview; “Compare all” puts them together. These are isolated explorations with original generated assets, not an applied homepage redesign. [Creative intent, asset paths, and prompts](docs/VISUAL-STUDIES.md).
+Use Node 22 and the lockfile:
 
 ```sh
-npm install
+npm ci
 npm run dev -- --port 5174
-npm run build
 ```
 
-React, TypeScript, Vite, and React Router. Fonts and generated concept photographs are stored locally. The preview does not depend on the original WordPress site.
+The default mode is a review preview with sample records kept in the browser. Open `/` for the
+storefront and `/review` for the presentation. Production review builds use hash routes.
 
-## Included
+## Build modes
 
-- Homepage, 20-item catalog, eight compound classes, search, sorting, and empty states.
-- Product details with real size variants from the source catalog, keyboard-accessible information tabs, and inquiry links.
-- Lot lookup with the original mockup's illustrative BP10-2611A record and an unknown-lot state.
-- Quality, handling, About, research journal, three editorial drafts, inquiry, and account preview pages.
-- Persistent sample bag, quantity editing, removal, and selection review.
-- Responsive navigation, focus-managed dialogs, reduced-motion support, and semantic forms.
+Copy `.env.example` to `.env.local` and set the public Supabase URL/publishable key for connected
+builds. Never put server or payment/model-provider secrets in a `VITE_` variable.
 
-This is a frontend prototype. Forms do not send messages or authenticate accounts. The bag does not place orders or collect payment. Only BPC-157 10 mg has a sourced price ($100); the other products use an inquiry flow. The displayed certificate is explicitly illustrative.
+```sh
+npm run build          # review preview, dist/
+npm run build:live     # connected review, dist/live/, hash routes
+npm run build:launch   # customer build, dist/launch/, ordinary paths, no review tools
+```
 
-## Working notes
+Launch hosting must serve `index.html` for paths that are not static files, including `/verify`.
+For subdirectory hosting, pass `-- --base /prefix/` to the build command. Set `VITE_SITE_ORIGIN`
+to the confirmed HTTPS production origin. Keep `VITE_INDEX=0` until launch is approved. Configure
+Supabase Auth's Site URL and allowed redirect roots to match, retaining the trailing slash.
 
-- [Design direction and content map](docs/DESIGN-NOTES.md)
-- [Verification record](docs/VERIFICATION.md)
-- [Generated image provenance and prompts](docs/IMAGE-PROVENANCE.md)
-- [Deployment notes](docs/DEPLOYMENT.md)
-- [Authenticated Oath reference study](reference-study/OATH-PRIMARY-REFERENCE.md)
-- [Initial reference analysis](reference-study/REFERENCE-ANALYSIS.md)
+The launch site keeps the existing account gate. Public information and certificate verification
+remain available while signed out; shopping and checkout require the appropriate account access.
 
-The account-protected source product, Handling, and About pages still need inspection once access is available. Those local pages contain proposed structure and copy; they are not reproductions of inaccessible source content. All commercial claims, laboratory records, specifications, prices, legal copy, and final branding require client validation before production.
+## Checks
 
-## Code map
+```sh
+npm run verify:release # all three builds, tests, local SQL proofs, function bundles and artifact audit
+npm test               # launch fixture build and all application tests
+npm audit
+```
 
-- `src/App.tsx`: page templates, navigation, search, lot lookup, demo forms, and bag state.
-- `src/data.ts`: source catalog, compound classes, proposed process copy, FAQs, and editorial drafts.
-- `src/styles.css`: original design tokens and components. `src/brand-refinement.css` and `src/BrandLogo.tsx`: the scoped client-brand integration.
-- `src/TypeStudy.tsx` and `src/type-study.css`: typography directions and their isolated comparison surface, loaded only on `/type-study`.
-- `src/VisualStudy.tsx` and `src/visual-study.css`: homepage image compositions and their responsive comparison surface, loaded only on `/visual-study`.
-- `public/images/products/`: the client’s individual labeled vial renders, copied unchanged.
-- `public/images/brand/`: original SVG marks and a generated homepage group composition. Earlier concept imagery remains available for the studies.
+Release checks use inert fixtures and PGlite; they do not change hosted services. Historical
+comparison tests require the original local repository history. The public Pages workflow runs
+the portable Auth/routing/configuration checks and artifact audit without those private commits.
+Hosted Auth, provider delivery, uploads, webhooks and customer workflows need separate acceptance.
 
-Production builds use hash-based routes so the static `dist/` directory works
-from the GitHub Pages project path without server-side rewrites. See the
-[deployment notes](docs/DEPLOYMENT.md) for the manual publishing workflow and
-local production preview. Production service integrations remain outside this
-preview.
+`npm run preview:messages` renders the existing 20 email templates and eight texts into
+`dist/message-preview/` using synthetic records. Serve that directory locally to review HTML
+and plain text; it reads no credentials and sends nothing. Browser previews do not certify
+delivery or email-client compatibility.
+
+## Source map
+
+- `src/brand/`, `src/shop/`: landing, storefront and customer flows.
+- `src/admin/`, `src/partners/`: operator and partner applications.
+- `src/platform/`: contracts, preview state and live adapters.
+- `src/assistant/`: contextual chat, local record cards and tool execution.
+- `supabase/migrations/`, `supabase/functions/`, `supabase/templates/`: server contracts and Auth emails.
+- `public/`: browser assets, original branding and supplied product imagery.
+- `scripts/`: verification and local build/publication preparation.
+
+## Publication
+
+The working repository contains private client materials. Never push the development branch or
+its history. `npm run prepare:publish` exports only committed site paths to a local archive and
+manifest. It performs no deployment. Inspect the manifest and use the dedicated publication
+checkout to make a site-only publish commit after approval. Pages remains a manual workflow.

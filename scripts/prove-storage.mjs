@@ -1,0 +1,52 @@
+import assert from 'node:assert/strict';
+import { build } from 'esbuild';
+import { mkdtemp } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
+import { join, resolve } from 'node:path';
+
+const root = resolve(import.meta.dirname, '..');
+const temp = await mkdtemp('/private/tmp/truemark-storage-proof-');
+const file = join(temp, 'live.mjs');
+await build({ stdin: { contents: `export * from './src/platform/storage.ts'; export * from './src/platform/mode.ts'; export * from './src/platform/events.ts'; export * from './src/platform/store.ts'; export * from './src/shop/context.tsx'; export { clearBagCode } from './src/shop/pages/checkout/Bag.tsx'; export { readPrefs, savePrefs } from './src/partners/prefs.ts'; export { isSignedOut } from './src/partners/session.ts';`, resolveDir: root }, bundle: true, loader: { '.css': 'empty' }, platform: 'node', format: 'esm', outfile: file, define: { 'import.meta.env.VITE_PLATFORM': '"live"', 'process.env.NODE_ENV': '"production"' }, logLevel: 'silent', plugins: [{ name: 'fixture-runtime', setup(plugin) { plugin.onLoad({ filter: /platform\/live\/runtime\.ts$/ }, () => ({ contents: 'export const live = () => globalThis.fixtureLive; export async function initialize() {}', loader: 'ts' })); } }] });
+const access = [];
+const data = new Map([['tm-preview-orders', 'DO NOT TOUCH'], ['tm-review-key', 'SHARED REVIEW']]);
+function check(key) { assert(key.startsWith('tm-live-'), `Live touched non-live key ${key}`); access.push(key); }
+globalThis.localStorage = { getItem: (key) => { check(key); return data.get(key) ?? null; }, setItem: (key, value) => { check(key); data.set(key, value); } };
+globalThis.sessionStorage = { ...globalThis.localStorage, removeItem: (key) => { check(key); data.delete(key); } };
+globalThis.window = new EventTarget();
+let visits = 0;
+globalThis.fixtureLive = { recordVisit: async () => { visits++; } };
+globalThis.BroadcastChannel = class { constructor(name) { assert.notEqual(name, 'truemark-platform', 'Live opened preview BroadcastChannel'); throw new Error(`Unexpected platform BroadcastChannel ${name}`); } };
+const api = await import(pathToFileURL(file));
+assert.equal(api.LIVE, true);
+assert.deepEqual(access, [], 'Importing live must not touch preview persistence');
+api.write('tm-preview-partner-prefs-fixture', { sound: true });
+assert.deepEqual(api.read('tm-preview-partner-prefs-fixture', null), { sound: true });
+assert.equal(api.storageKey('tm-live-partner-prefs-fixture'), 'tm-live-partner-prefs-fixture');
+assert.equal(api.storageKey('truemark-preview-cart'), 'tm-live-cart');
+assert.equal(api.storageKey('tm-command-chime'), 'tm-live-command-chime');
+assert.equal(data.get('tm-preview-orders'), 'DO NOT TOUCH');
+assert.equal(data.get('tm-review-key'), 'SHARED REVIEW');
+assert.equal(api.CART_STORAGE_KEY, 'tm-live-cart');
+assert.equal(api.REFERRAL_KEY, 'tm-live-ref');
+assert.deepEqual(api.loadCart(), []);
+api.clearBagCode();
+api.savePrefs('fixture', { goal: 300 });
+assert.equal(api.readPrefs('fixture').goal, 300);
+assert.equal(api.isSignedOut(), false);
+api.rememberReferral(' fixture_code ');
+api.rememberReferral(' fixture_code ');
+await new Promise((resolve) => setImmediate(resolve));
+assert.equal(api.readReferral(), 'FIXTURE_CODE');
+assert.equal(visits, 1);
+assert(access.includes('tm-live-bag-code'));
+assert(access.includes('tm-live-partner-prefs-fixture'));
+assert(access.includes('tm-live-visit-FIXTURE_CODE'));
+for (const key of ['tm-preview-partner-celebrations-fixture', 'tm-command-chime', 'tm-command-alerts', 'tm-command-sidebar', 'tm-partner-sidebar', 'tm-preview-partner-signed-out']) {
+  assert(api.storageKey(key).startsWith('tm-live-'));
+}
+const events = [];
+const off = api.onPlatformEvent((event, fromHere) => events.push({ event, fromHere }));
+api.emit({ type: 'referral.created', referralId: 'r', partnerId: 'p', orderNumber: 'TM-10500', orderSubtotal: 90, commission: 10.8, via: 'link', at: '2026-10-01T12:00:00Z' });
+off(); assert.equal(events.length, 1); assert.equal(events[0].fromHere, false);
+console.log('PASS storage isolation: cart, referral, bag code, preferences, sessions, milestone/UI key mapping and realtime stay in the live namespace; visit recording deduplicates.');

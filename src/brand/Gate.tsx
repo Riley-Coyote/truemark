@@ -10,7 +10,7 @@ import { productById } from "../shop/catalog";
 import { Lens } from "./Lens";
 import { SCENE } from "./lens-scene";
 import type { LotPhase } from "./lens-scene";
-import { BrandDot } from "./HeroShelf";
+import { BrandDot } from "./BrandDot";
 import { Trace } from "./Trace";
 import { StorefrontAssistant } from "../assistant/Assistant";
 import "./gate.css";

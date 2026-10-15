@@ -104,7 +104,7 @@ export function AppShell({
   const location = useLocation();
   const sidebarId = useId();
   const menuId = useId();
-  const content = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
   const mbar = useRef<HTMLDivElement>(null);
 
@@ -212,9 +212,9 @@ export function AppShell({
             {tools && <div className="kit-topbar-tools">{tools}</div>}
           </header>
 
-          <div ref={content} className="kit-content" tabIndex={-1}>
+          <main ref={content} className="kit-content" tabIndex={-1}>
             {children}
-          </div>
+          </main>
         </div>
       </div>
     </div>

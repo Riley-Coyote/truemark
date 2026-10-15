@@ -225,14 +225,16 @@ function ChatSheet({ title, subtitle, working = false, onClose, children }: { ti
   const panel = useRef<HTMLElement>(null), heading = useId();
   const seen = useVisibleViewport();
   const { state, requestClose } = useSheetPresence(onClose);
+  // Leaving, it takes no taps or keys, and focus goes back as it begins to go.
+  const leaving = state === "leaving";
   useScrollLock();
   // On a touch screen the sheet itself takes focus, so the keyboard does not rise over the
   // suggestions before the reader asks for it.
-  useSheetFocus(panel, requestClose, "fine");
+  useSheetFocus(panel, requestClose, "fine", leaving);
   const drag = useSheetDrag(panel, requestClose);
   useChatFit(panel);
 
-  return <><div className="tm-chat" data-state={state} style={viewportBox(seen, "tm-chat")}>
+  return <><div className="tm-chat" data-state={state} inert={leaving} style={viewportBox(seen, "tm-chat")}>
     <div className="tm-chat-scrim" aria-hidden="true" onClick={requestClose} />
     <section ref={panel} className="tm-chat-panel" role="dialog" aria-modal="true" aria-labelledby={heading} tabIndex={-1}>
       <header className="tm-chat-head" {...drag}>
@@ -699,8 +701,8 @@ export function StorefrontAssistant() {
   const cartNow = useRef(cart); cartNow.current = cart;
   const add = shop?.add, closeCart = shop?.closeCart;
   const addToBag = useCallback((id: string, quantity: number) => {
-    if (!add || !closeCart) throw new Error("Sign in to add to your bag.");
-    if ((cart.find((item) => item.id === id)?.quantity ?? 0) + quantity > 99) throw new Error("The bag allows up to 99 of an item. Please choose a smaller quantity.");
+    if (!add || !closeCart) throw new Error("Sign in to add to your cart.");
+    if ((cart.find((item) => item.id === id)?.quantity ?? 0) + quantity > 99) throw new Error("The cart allows up to 99 of an item. Please choose a smaller quantity.");
     add(id, quantity); closeCart();
   }, [add, closeCart, cart]);
   // A card's own Add button is the reader's click, like the product page's.

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { assetUrl } from "../../../assetUrl";
-import { BrandDot } from "../../../brand/HeroShelf";
+import { BrandDot } from "../../../brand/BrandDot";
 import "../../../brand/notfound.css";
 
 /** An address with nothing at it: the empty plinth, and the way back. */

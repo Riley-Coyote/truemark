@@ -100,8 +100,8 @@ export function quickTurn(text: string, context: ChatContext | null, recent?: st
   const panel = (kind: Panel, lead: string, topic?: string): QuickTurn => ({ answer: () => ({ lead, artifact: { kind: "panel", panel: kind, ...(topic ? { topic } : {}) } }) });
   if (same(q, "what can you do", "what can you help with", "what else can you do", "see everything i can help with", "help", "menu")) return panel("menu", "Here's everything I can help with. Tap any of it.");
   if (same(q, "track an order", "track my order") || (!signedIn && same(q, "where is my order"))) return panel("track", "Enter the order number and the email it was placed with, and I'll show where it is. No account needed.");
-  if (same(q, "what's in my bag", "whats in my bag", "show my bag", "review my bag", "my bag", "check out", "checkout", "go to checkout")) return panel("bag", signedIn ? "Here's your bag, ready to change or check out." : "Here's where your bag stands.");
-  if (same(q, "apply a discount code", "apply a code", "i have a discount code", "i have a code", "discount code", "promo code")) return panel("code", "Enter it here. It applies to your bag and comes off at checkout.");
+  if (same(q, "what's in my cart", "whats in my cart", "show my cart", "review my cart", "my cart", "what's in my bag", "whats in my bag", "show my bag", "review my bag", "my bag", "check out", "checkout", "go to checkout")) return panel("bag", signedIn ? "Here's your cart, ready to change or check out." : "Here's where your cart stands.");
+  if (same(q, "apply a discount code", "apply a code", "i have a discount code", "i have a code", "discount code", "promo code")) return panel("code", "Enter it here. It applies to your cart and comes off at checkout.");
   const policy = same(q, "what's your return policy", "whats your return policy", "return policy", "returns", "can i return an order") ? "returns"
     : same(q, "refund policy", "refunds") ? "refunds" : same(q, "shipping policy") ? "shipping"
     : same(q, "terms", "terms and conditions", "terms of sale") ? "terms" : same(q, "privacy policy", "privacy") ? "privacy" : null;

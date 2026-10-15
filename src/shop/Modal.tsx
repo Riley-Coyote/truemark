@@ -1,10 +1,20 @@
 import { useId, useRef } from "react";
 import type { ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 import { X } from "lucide-react";
-import { SheetSkirt, useScrollLock, useSheetDrag, useSheetFocus, useSheetPresence, useVisibleViewport, viewportBox } from "./sheet";
+import { usePresence } from "./motion";
+import { SheetSkirt, useScrollLock, useSheetDrag, useSheetFocus, useSheetLeaving, useVisibleViewport, viewportBox } from "./sheet";
 
 /** The dialogs' layer (styles.css, .modal-backdrop); their strip of paper lies one beneath. */
 const MODAL_LAYER = 100;
+
+type ModalProps = {
+  children: ReactNode;
+  title: string;
+  onClose: () => void;
+  side?: boolean;
+  field?: "always" | "fine" | "never";
+};
 
 /**
  * An accessible dialog with a focus trap: a centred dialog on wider screens, or with `side` a
@@ -13,35 +23,45 @@ const MODAL_LAYER = 100;
  * the first field: "always" for search, where typing is the point; "fine" only with a mouse and
  * keyboard, so a phone's keyboard never rises unasked; "never" for the bag, whose fields are
  * quantities to adjust, not to start typing in. Otherwise the dialog itself takes focus.
+ *
+ * Its owner opens and closes it with `open`; `onClose` asks the owner to close it. However it is
+ * closed (its own Close, Escape, the page around it, a link in it followed), it leaves the way it
+ * came before it is gone. When the page glides away beneath it (a step forward on a phone), it goes
+ * with that page; after any other change of page it finishes leaving over the new one.
  */
-export function Modal({
+export function Modal({ open = true, ...props }: ModalProps & { open?: boolean }) {
+  const { pathname } = useLocation();
+  const presence = usePresence(open, pathname);
+  // Held open while a step forward waits to take the page with it (usePresence).
+  return presence.shown ? <ModalSheet {...props} open={!presence.closing} onGone={presence.gone} /> : null;
+}
+
+function ModalSheet({
   children,
   title,
   onClose,
   side = false,
   field = "fine",
-}: {
-  children: ReactNode;
-  title: string;
-  onClose: () => void;
-  side?: boolean;
-  field?: "always" | "fine" | "never";
-}) {
+  open,
+  onGone,
+}: ModalProps & { open: boolean; onGone: () => void }) {
   const panel = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const seen = useVisibleViewport();
-  const { state, requestClose } = useSheetPresence(onClose);
+  const state = useSheetLeaving(open, onGone);
+  const leaving = state === "leaving";
   useScrollLock();
-  useSheetFocus(panel, requestClose, field);
-  const drag = useSheetDrag(panel, requestClose, (target) => Boolean(target.closest(".modal-grab, .modal-heading h2")));
+  useSheetFocus(panel, onClose, field, leaving);
+  const drag = useSheetDrag(panel, onClose, (target) => Boolean(target.closest(".modal-grab, .modal-heading h2")));
   return (
     <>
       <div
         className={`modal-backdrop ${side ? "side-modal" : ""}`}
         data-state={state}
+        inert={leaving}
         style={viewportBox(seen, "tm-sheet")}
         onMouseDown={(event) => {
-          if (event.target === event.currentTarget) requestClose();
+          if (event.target === event.currentTarget) onClose();
         }}
       >
         <div
@@ -56,7 +76,7 @@ export function Modal({
           <span className="modal-grab" aria-hidden="true" />
           <div className="modal-heading">
             <h2 id={titleId}>{title}</h2>
-            <button className="icon-button" aria-label="Close dialog" onClick={requestClose}>
+            <button className="icon-button" aria-label="Close dialog" onClick={onClose}>
               <X size={22} />
             </button>
           </div>

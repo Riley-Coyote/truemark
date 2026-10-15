@@ -156,16 +156,16 @@ function Summary({ chosen, plan, onNavigate, onAdd }: { chosen: Compound[]; plan
       {ship && ship.remaining != null && ship.remaining > 0 && ship.method.id === shipping.data?.settings.freeShippingMethod && <p className="tm-desk-note">{money(ship.remaining)} more ships it free.</p>}
       {plan.freezer === "later" && <p className="tm-plan-heads-up">{shippingCopy[2]}</p>}
       {offer.data?.percent ? <p className="tm-desk-offer"><span className="tm-desk-presence" aria-hidden="true" /><span>{offer.data.percent}% off your first order with <span className="tm-mono">FIRSTLOT</span></span></p> : null}
-      {tooMany && <p className="tm-desk-note">The bag takes up to 99 of a vial; lower an amount to add this plan.</p>}
+      {tooMany && <p className="tm-desk-note">The cart takes up to 99 of a vial; lower an amount to add this plan.</p>}
       <div className="tm-desk-actions">
         {!priced ? <>
           <Link className="tm-desk-add" to="/access/apply" onClick={onNavigate}>Apply for an account</Link>
           <Link className="tm-desk-link" to="/access" onClick={onNavigate}>Sign in for pricing <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" /></Link>
         </> : plan.added ? <>
-          <p className="tm-desk-add" data-added=""><Check size={14} strokeWidth={2.2} aria-hidden="true" /> In your bag</p>
-          <Link className="tm-desk-link" to="/cart" onClick={onNavigate}>Review your bag <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" /></Link>
+          <p className="tm-desk-add" data-added=""><Check size={14} strokeWidth={2.2} aria-hidden="true" /> In your cart</p>
+          <Link className="tm-desk-link" to="/cart" onClick={onNavigate}>Review your cart <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" /></Link>
         </> : onAdd ? (
-          <button type="button" className="tm-desk-add" disabled={tooMany} onClick={() => { for (const l of lines) onAdd(l.size.id, l.quantity); updatePlan(() => ({ added: true })); }}>Add all to bag</button>
+          <button type="button" className="tm-desk-add" disabled={tooMany} onClick={() => { for (const l of lines) onAdd(l.size.id, l.quantity); updatePlan(() => ({ added: true })); }}>Add all to cart</button>
         ) : <Link className="tm-desk-link" to="/products" onClick={onNavigate}>Go to the shop <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" /></Link>}
       </div>
       {!priced && <p className="tm-desk-note">Your plan stays on this device, ready for when you sign in.</p>}

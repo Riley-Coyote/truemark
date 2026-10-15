@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { BrandDot } from "../../brand/HeroShelf";
+import { BrandDot } from "../../brand/BrandDot";
 import { signIn, signOut } from "../session";
 import { VialTrio } from "../VialTrio";
 import { Field } from "./fields";

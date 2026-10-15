@@ -17,6 +17,8 @@ concurrency:
 
 jobs:
   build:
+    # The working design branch contains private client material and is never a publish source.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,9 +45,7 @@ jobs:
           VITE_PLATFORM: live
           VITE_REVIEW_SUPABASE_URL: ${{ vars.REVIEW_SUPABASE_URL }}
           VITE_REVIEW_SUPABASE_ANON_KEY: ${{ vars.REVIEW_SUPABASE_ANON_KEY }}
-        run: |
-          npx tsc -b
-          npx vite build --outDir dist/live --emptyOutDir --base /truemark/live/
+        run: npm run build:live -- --emptyOutDir
       - name: Build the launch site
         env:
           VITE_PLATFORM: live
@@ -53,7 +53,15 @@ jobs:
           VITE_ROUTER: path
           VITE_REVIEW_SUPABASE_URL: ${{ vars.REVIEW_SUPABASE_URL }}
           VITE_REVIEW_SUPABASE_ANON_KEY: ${{ vars.REVIEW_SUPABASE_ANON_KEY }}
-        run: npx vite build --outDir dist/launch --emptyOutDir --base /truemark/launch/
+        run: npm run build:launch -- --emptyOutDir --base /truemark/launch/
+      - name: Verify launch integration and browser isolation
+        env:
+          WP27_LAUNCH_DIR: dist/launch
+        # These checks run from site files only. Historical comparison suites stay
+        # local: their private reference commits must never be pushed to run CI.
+        run: |
+          node --test scripts/auth-navigation.test.mjs scripts/release-config.test.mjs scripts/browser-secrets.test.mjs scripts/shop-gate.test.mjs
+          node scripts/assistant-bundle-audit.mjs dist
       - name: Write Pages fallback
         run: node scripts/pages-404.mjs
       - name: Build the first design

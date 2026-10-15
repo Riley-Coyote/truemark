@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { BrandDot } from "../../brand/HeroShelf";
+import { BrandDot } from "../../brand/BrandDot";
 import { submitApplication } from "../applications";
 import type { PartnerApplication } from "../applications";
 import { SAMPLE_TERMS, commitments, ordinal, percent } from "../program";

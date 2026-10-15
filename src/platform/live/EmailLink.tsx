@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getClient } from './client';
 import { live } from './runtime';
+import { clearEmailToken } from './auth-navigation';
 import '../../brand/gate.css';
 
 export async function verifyEmailLink(client: Pick<ReturnType<typeof getClient>, 'auth'>, token_hash: string | null, type: string | null) {
@@ -20,12 +21,11 @@ export default function EmailLink(){
   void (async()=>{
    try{
     const session = await verifyEmailLink(getClient(),token_hash,type);
-    const url=new URL(window.location.href);const route=new URLSearchParams(location.search);route.delete('token_hash');route.delete('type');
-    url.hash=location.pathname+(route.size?'?'+route.toString():'');history.replaceState(history.state,'',url.pathname+url.search+url.hash);
+    clearEmailToken(location.pathname, location.search);
     if(type==='recovery')await live().auth.recoverVerifiedSession(session);
     else {await live().auth.signOut();setState('confirmed');}
    }catch{
-    const url=new URL(window.location.href);url.hash=location.pathname;history.replaceState(history.state,'',url.pathname+url.search+url.hash);setState('failed');
+    clearEmailToken(location.pathname, location.search);setState('failed');
    }
   })();
  },[location.pathname,location.search]);

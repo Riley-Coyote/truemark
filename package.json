@@ -6,6 +6,12 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
+    "build:live": "node scripts/build-site.mjs live",
+    "build:launch": "node scripts/build-site.mjs launch",
+    "test": "node scripts/verify-release.mjs --tests-only",
+    "verify:release": "node scripts/verify-release.mjs",
+    "prepare:publish": "node scripts/prepare-publish.mjs",
+    "preview:messages": "tsx scripts/preview-messages.ts",
     "preview": "vite preview --host 127.0.0.1",
     "preview:pages": "vite preview --host 127.0.0.1 --base /TrueMark/"
   },

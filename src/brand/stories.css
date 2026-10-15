@@ -1,0 +1,840 @@
+/*
+ * The opening as a story the reader starts (MistOpening.tsx, Sequence.tsx): the room at rest, lit from above, its floor
+ * mist (fog/FloorMist.tsx) shown lit against its shade; the story played over it once the reader asks for it, with a bar to each chapter and the way
+ * to pause it and to leave it; and, as the page scrolls on past the room instead, the camera pushing in toward the
+ * featured vial as the room falls behind into its mist and the words beneath it rise out of that mist.
+ */
+
+:root {
+  /* The fog the camera flies into: white, lit by the room. */
+  --tm-fog-thin: rgba(255, 255, 255, 0.44);
+  --tm-fog-none: rgba(255, 255, 255, 0);
+  /* The story's bars: the track, and what has played. */
+  --tm-story-track: color-mix(in srgb, var(--tm-ink) 14%, transparent);
+  --tm-story-played: color-mix(in srgb, var(--tm-ink) 80%, transparent);
+  /* The story's buttons: the room's paper, nearly opaque. */
+  --tm-story-face: color-mix(in srgb, var(--tm-paper) 80%, transparent);
+  --tm-story-edge: color-mix(in srgb, var(--tm-ink) 11%, transparent);
+  --tm-story-lift: 0 1px 2px rgba(36, 26, 74, 0.08), 0 6px 16px -10px rgba(36, 26, 74, 0.35);
+  /* How long the room's mist takes to come in over the story as it closes (Sequence.tsx VEIL_IN), and to clear. */
+  --tm-story-veil-in: 340ms;
+  --tm-story-veil-out: 900ms;
+  /* Finished, the story's own words leave the room, and then the opening's come back to it (Sequence.tsx END_OUT,
+     BACK_IN). */
+  --tm-story-end: 420ms;
+  --tm-story-back: 760ms;
+  /* How long the story's controls wait, as it opens, for the room's words to go. */
+  --tm-story-chrome-wait: 520ms;
+  /* Each of the story's controls, a disc this wide (its target reaches further: .tm-story-button::after). */
+  --tm-story-control: 2.5rem;
+}
+
+/* ---------- The way in: on the featured pedestal's face, just under its foot ---------- */
+
+.tm-story-cue {
+  /* How far under the foot it stands, in the vial's own height (MistOpening.tsx gives the seat), so it keeps its place
+     on the face at every size. */
+  --tm-cue-drop: 0.11;
+  position: absolute;
+  z-index: 2;
+  left: calc(var(--seat-x) * 100%);
+  top: calc((var(--seat-y) + var(--vial-h) * var(--tm-cue-drop)) * 100%);
+  translate: -50% 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  min-height: 2.25rem;
+  padding: 0 var(--tm-space-4) 0 var(--tm-space-3);
+  border: 1px solid var(--tm-story-edge);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-story-face);
+  box-shadow: var(--tm-story-lift);
+  color: var(--tm-ink);
+  font-family: var(--tm-font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  outline: none;
+  transition: opacity var(--tm-dur-slow) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-micro), border-color var(--tm-dur-base) var(--tm-ease-micro);
+}
+/* Its target reaches a finger's height past the pill (the room's scale included), though the pill looks no larger. */
+.tm-story-cue::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--tm-space-2) * -1);
+}
+.tm-story-cue:hover {
+  background: var(--tm-paper);
+}
+.tm-story-cue:focus-visible {
+  border-color: var(--tm-ink);
+}
+.tm-story-cue:active {
+  background: var(--tm-paper);
+  scale: 0.97;
+}
+/* Until the story's pictures are ready, and while it plays. */
+.tm-story-cue:disabled,
+.tm.tm-mist[data-seq-away] .tm-story-cue {
+  opacity: 0;
+  pointer-events: none;
+}
+.tm-story-cue-dot {
+  position: relative;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--tm-purple);
+}
+/* A slow ring of light from the dot: the way in, breathing. */
+.tm-story-cue-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--tm-purple);
+  opacity: 0;
+  animation: tm-cue-breathe 2600ms var(--tm-ease-enter) infinite;
+}
+@keyframes tm-cue-breathe {
+  0% {
+    opacity: 0.45;
+    scale: 1;
+  }
+  70%,
+  100% {
+    opacity: 0;
+    scale: 3;
+  }
+}
+.tm.tm-mist:not([data-seq]) .tm-story-cue-dot::after {
+  animation: none;
+}
+
+/* ---------- The story: one view, played over the room ---------- */
+
+/* The track is one view: the story plays in place over it, and the page scrolls on past it. The view is the window
+   from where it starts at the page's top (the film measures it) to the window's foot. */
+.tm-seq-track[data-mode="story"] {
+  --tm-seq-view: calc(100vh - var(--tm-story-from, var(--tm-seq-top, 0px)));
+  height: auto;
+  /* The story's controls at the view's top, which the chapters' words stand below. */
+  --tm-story-chrome: calc(var(--tm-space-3) + var(--tm-story-control));
+}
+.tm-seq-track[data-mode="story"] > .tm-seq-view {
+  position: relative;
+  top: auto;
+}
+@supports (height: 100lvh) and (height: 100dvh) {
+  .tm-seq-track[data-mode="story"] {
+    --tm-seq-view: calc(100lvh - var(--tm-story-from, var(--tm-seq-top, 0px)));
+  }
+}
+/* The scrolled story's journey is no part of this one: it keeps its place, unseen, where the film measures its foot. */
+.tm-seq-track[data-mode="story"] .tm-seq-controls {
+  visibility: hidden;
+}
+/* While it plays, the picture takes every touch: a tap, a hold, a swipe. */
+.tm.tm-mist[data-story="open"] .tm-seq-view {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* On a wide screen the chapters' words stand below the story's controls. */
+.tm-seq-track[data-mode="story"][data-shape="wide"] .tm-seq-chapter[data-chapter="1"],
+.tm-seq-track[data-mode="story"][data-shape="wide"] .tm-seq-finale-words {
+  top: calc(clamp(1.5rem, 7vh, 4.5rem) + var(--tm-story-chrome) * 0.5);
+}
+/* The story's own way to stop it is its pause: the scrolled film's Motion switch is no part of it. */
+.tm-seq-track[data-mode="story"] .tm-seq-switch-film {
+  display: none;
+}
+
+/* The story's controls: a bar to each chapter, filling as it plays; back and on (for a key, and a wide screen's
+   pointer); pause; close. */
+.tm-story-chrome {
+  position: absolute;
+  z-index: 9;
+  top: var(--tm-space-3);
+  left: var(--tm-pad);
+  right: var(--tm-pad);
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--tm-dur-slow) var(--tm-ease-enter), visibility 0s linear var(--tm-dur-slow);
+}
+.tm.tm-mist[data-story="open"] .tm-story-chrome {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--tm-dur-slow) var(--tm-ease-enter);
+  /* Only once the room's own words have gone, so the two never lie over each other (once, as the story opens: back
+     from a hold the controls return at once). */
+  animation: tm-story-chrome-in var(--tm-dur-slow) var(--tm-ease-enter) var(--tm-story-chrome-wait) backwards;
+}
+@keyframes tm-story-chrome-in {
+  from {
+    opacity: 0;
+  }
+}
+/* Held by a finger: the picture alone, as a phone's stories show it (not for a tap's moment). */
+.tm.tm-mist[data-story="open"][data-story-held] .tm-story-chrome {
+  opacity: 0;
+  transition: opacity var(--tm-dur-base) var(--tm-ease-enter) 260ms;
+}
+.tm-story-bars {
+  flex: 1;
+  display: flex;
+  gap: var(--tm-space-1);
+  margin: 0 var(--tm-space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-story-bar {
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--tm-story-track);
+}
+.tm-story-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--tm-story-played);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  will-change: transform;
+}
+.tm-story-button {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--tm-story-control);
+  height: var(--tm-story-control);
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--tm-ink);
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-micro), border-color var(--tm-dur-base) var(--tm-ease-micro);
+}
+/* Its target is a finger's size, though its disc looks no larger: as wide as the disc and the gap beside it (so it
+   meets its neighbour's halfway across the gap), and taller. */
+.tm-story-button::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--tm-story-control) + var(--tm-space-2));
+  height: calc(var(--tm-story-control) + var(--tm-space-4));
+  translate: -50% -50%;
+}
+.tm-story-button:hover {
+  background: var(--tm-story-face);
+}
+.tm-story-button:focus-visible {
+  border-color: var(--tm-ink);
+}
+.tm-story-button:active {
+  background: var(--tm-story-face);
+  scale: 0.95;
+}
+.tm-story-play-icon,
+.tm.tm-mist[data-story-paused] .tm-story-pause-icon {
+  display: none;
+}
+.tm.tm-mist[data-story-paused] .tm-story-play-icon {
+  display: block;
+}
+/* A phone goes back and on by tapping and swiping the picture: its buttons are there for a key, shown when one
+   reaches them. */
+@media (max-width: 760px), (pointer: coarse) {
+  .tm-story-step:not(:focus-visible) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    border: 0;
+    box-shadow: none;
+  }
+}
+
+/* ---------- A phone: the vial is the picture, each chapter's words its caption ---------- */
+
+/* The picture's room runs from under the story's controls to above the captions (the film measures it there): the vial
+   holds one size in it through the approach, the label and the connection, steps aside for the record's figures, and
+   the certificate's page fills it. Each caption stands at the view's foot, the same place every time: its number and
+   name, its line, and the one detail being read. */
+.tm-seq-track[data-mode="story"][data-shape="tall"] {
+  --tm-story-top: calc(var(--tm-space-3) + var(--tm-story-control) + var(--tm-space-3));
+  --tm-story-foot: calc(var(--tm-space-5) + var(--tm-seq-toolbar) + env(safe-area-inset-bottom, 0px));
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-chapter[data-chapter] {
+  top: var(--tm-story-top);
+  bottom: var(--tm-story-foot);
+  left: var(--tm-pad);
+  right: var(--tm-pad);
+  justify-content: flex-end;
+  gap: var(--tm-space-3);
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-words {
+  gap: var(--tm-space-1);
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-title {
+  font-size: clamp(1.375rem, 6.2vw, 1.75rem);
+  line-height: 1.14;
+  letter-spacing: -0.03em;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-text {
+  max-width: 21rem;
+  margin-top: var(--tm-space-1);
+  font-size: var(--tm-type-ui);
+  line-height: 1.5;
+}
+/* The view's foot under the captions: the room's floor rising a little, so a caption always has quiet ground. Behind
+   the vial, which never stands that low. */
+.tm-story-floor {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42%;
+  background: linear-gradient(to bottom, var(--tm-fog-none), color-mix(in srgb, var(--tm-mist-floor) 62%, transparent) 46%, color-mix(in srgb, var(--tm-mist-floor) 88%, transparent));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--tm-dur-scene) var(--tm-ease-enter);
+}
+.tm.tm-mist[data-story] .tm-seq-track[data-shape="tall"] .tm-story-floor {
+  opacity: 1;
+}
+.tm-seq-track[data-shape="wide"] .tm-story-floor {
+  display: none;
+}
+/* The story is the whole picture. An iPhone's Safari draws the page on under its toolbar, past the foot of the window it
+   measures, so while a story plays the room's words beneath it give way to the floor there. */
+.tm.tm-mist .tm-mist-foot {
+  transition: filter var(--tm-dur-scene) var(--tm-ease-enter), visibility 0s;
+}
+.tm.tm-mist[data-story] .tm-mist-foot {
+  filter: opacity(0);
+  visibility: hidden;
+  transition: filter var(--tm-dur-scene) var(--tm-ease-enter), visibility 0s linear var(--tm-dur-scene);
+}
+/* Read aloud, not shown: what the caption leaves to the picture. */
+.tm-seq-track[data-mode="story"][data-shape="tall"] :is(.tm-seq-description, .tm-seq-verify-head, .tm-seq-verify-ask, .tm-seq-record-over, .tm-seq-reading p, .tm-seq-reading-source) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The label: the detail being read, on one line under the words (its number, its name, what it reads), the three
+   crossing as the markers on the vial do. */
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-details {
+  display: grid;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-details::after,
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-details > .tm-seq-detail::before,
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-detail-name small,
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-detail-head > svg {
+  display: none;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-details > .tm-seq-detail {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--tm-space-1) var(--tm-space-3);
+  border: 0;
+  background: none;
+  opacity: 0;
+  transition: opacity var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"][data-detail="0"] .tm-seq-details > [data-i="0"],
+.tm-seq-track[data-mode="story"][data-shape="tall"][data-detail="1"] .tm-seq-details > [data-i="1"],
+.tm-seq-track[data-mode="story"][data-shape="tall"][data-detail="2"] .tm-seq-details > [data-i="2"] {
+  opacity: 1;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-detail-head {
+  flex: none;
+  width: auto;
+  min-height: 2rem;
+  padding: 0 var(--tm-space-1);
+  gap: var(--tm-space-2);
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-detail-name {
+  flex: none;
+  white-space: nowrap;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-index {
+  flex-basis: 1.375rem;
+  height: 1.375rem;
+  font-size: 0.5625rem;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-detail-name strong {
+  font-size: var(--tm-type-ui);
+  color: var(--tm-ink-2);
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-detail-body {
+  grid-template-rows: 1fr;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-detail-clip {
+  padding: 0;
+  opacity: 1;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-value {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* The connection: the lookup itself, the printed lot typed into it once the code is read. */
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-verify {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-verify::after {
+  display: none;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-field {
+  width: min(100%, 20rem);
+  min-height: 2.875rem;
+  margin: 0 auto;
+  border-color: var(--tm-story-edge);
+  border-radius: var(--tm-radius-pill);
+  box-shadow: var(--tm-story-lift);
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-field-text {
+  padding: 0 var(--tm-space-5);
+  font-size: 0.9375rem;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-field-go {
+  width: 2.375rem;
+  margin: 0.25rem;
+  border-radius: 50%;
+}
+
+/* The record: its figures beside the vial, large, as Verify finds them; the vial steps aside for them. */
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-chapter[data-chapter="4"] > .tm-seq-record {
+  order: -1;
+  flex: 1 1 0;
+  min-height: 0;
+  align-self: flex-end;
+  width: 46%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--tm-space-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record::after,
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record .tm-seq-card-caption > span + span,
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record-product > :not(small),
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record-go {
+  display: none;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record .tm-seq-card-caption {
+  margin: 0;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record-lot {
+  margin: 0;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record-lot a {
+  font-size: 0.875rem;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record-results {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--tm-space-4);
+  margin: var(--tm-space-5) 0 0;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record-results dd {
+  font-size: clamp(1.875rem, 9vw, 2.375rem);
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record-product {
+  margin: var(--tm-space-4) 0 0;
+  padding: 0;
+  border: 0;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record-ref {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--tm-space-2);
+  margin: var(--tm-space-1) 0 0;
+  padding: var(--tm-space-2) 0;
+  background: none;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record-ref > svg:last-of-type {
+  display: none;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-record-ref .tm-seq-mono {
+  font-size: 0.625rem;
+}
+
+/* The certificate: its page as large as the picture's room lets it stand, the caption over its foot where the room's
+   floor rises over it, the finding being read named under the words, and the ways to the whole page and to the lab at
+   the very foot. The page is the picture here, so a tap on it goes on like any other: its links are those below it. */
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-chapter[data-chapter="5"] {
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: var(--tm-space-3);
+  padding-bottom: calc(var(--tm-type-micro) * 1.4 + var(--tm-space-3));
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-chapter[data-chapter="5"] > :is(.tm-seq-words, .tm-seq-findings) {
+  position: relative;
+  z-index: 1;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-chapter[data-chapter="5"] > .tm-seq-paper {
+  position: absolute;
+  inset: 0;
+  place-self: stretch;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-chapter[data-chapter="5"] > .tm-seq-findings {
+  order: 1;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-page {
+  flex: none;
+  width: min(100%, calc((var(--tm-seq-view) - var(--tm-story-top) - var(--tm-story-foot)) * 1700 / 2200));
+  height: auto;
+  max-height: none;
+  pointer-events: none;
+}
+/* Down past the picture's foot, over the shadow the page casts there too. */
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-paper::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--tm-story-foot) * -1);
+  height: calc(50% + var(--tm-story-foot));
+  background: linear-gradient(to bottom, var(--tm-fog-none), color-mix(in srgb, var(--tm-mist-floor) 84%, transparent) 27%, var(--tm-mist-floor) 46%);
+  pointer-events: none;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-paper figcaption {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  justify-content: center;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-findings-card {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-findings-card::after {
+  display: none;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-measures {
+  border-bottom: 0;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-measures > .tm-seq-measure {
+  justify-items: center;
+  gap: 0;
+  padding: var(--tm-space-1) var(--tm-space-2) var(--tm-space-2);
+  background: none;
+  box-shadow: none;
+  text-align: center;
+  opacity: 0.42;
+  transition: opacity var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"][data-finding="0"] .tm-seq-measures > [data-i="0"],
+.tm-seq-track[data-mode="story"][data-shape="tall"][data-finding="1"] .tm-seq-measures > [data-i="1"],
+.tm-seq-track[data-mode="story"][data-shape="tall"][data-finding="2"] .tm-seq-measures > [data-i="2"] {
+  opacity: 1;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-measure-index {
+  display: none;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-measure::after {
+  left: 30%;
+  right: 30%;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-readings {
+  padding: var(--tm-space-1) 0 0;
+  justify-items: center;
+  text-align: center;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-reading strong {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+
+/* The finale: its lines at the top, the room whole again beneath them, the four principles and the way on at its
+   foot. */
+/* Its words stand over the whole of it, so the way on can stand at its foot. */
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-finale-words {
+  top: 0;
+  bottom: 0;
+  align-content: start;
+  gap: var(--tm-space-2);
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-finale-title {
+  font-size: clamp(1.625rem, 7.4vw, 2.125rem);
+  line-height: 1.08;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-finale-aside p {
+  max-width: 20rem;
+  margin: 0;
+  font-size: var(--tm-type-micro);
+  line-height: 1.5;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-finale-aside .tm-seq-explore {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-finale .tm-seq-principles {
+  bottom: calc(2.75rem + var(--tm-space-4));
+  gap: var(--tm-space-3) var(--tm-space-4);
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-principle {
+  gap: 2px;
+  padding-top: var(--tm-space-2);
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-principle b {
+  font-size: 0.8125rem;
+}
+.tm-seq-track[data-mode="story"][data-shape="tall"] .tm-seq-principle span {
+  font-size: 0.6875rem;
+  line-height: 1.4;
+}
+
+/* Closing: the room's mist comes in over the story, the camera is back in the room behind it, and the mist clears. It
+   clears as mist does, slowly at first and slowly at the last, so the room comes up through it rather than appearing. */
+.tm-story-veil {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 60%, var(--tm-paper), var(--tm-mist-floor));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--tm-story-veil-out) var(--tm-ease-breathe), visibility 0s linear var(--tm-story-veil-out);
+}
+.tm.tm-mist[data-story="closing"] .tm-story-veil {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--tm-story-veil-in) var(--tm-ease-enter);
+}
+
+/* Finished: the finale's picture is the room whole again, so the room is handed back as it is, with no mist. The finale's
+   words and principles and the haze beneath them fade from it (the controls too, as they always leave)... */
+.tm.tm-mist[data-story="ending"] :is(.tm-seq-finale, .tm-seq-haze) {
+  animation: tm-story-end var(--tm-story-end) var(--tm-ease-breathe) forwards;
+}
+@keyframes tm-story-end {
+  to {
+    opacity: 0;
+  }
+}
+/* ...then the opening's own words come back over the same room, as they first arrived, and the page scrolls on. */
+.tm.tm-mist[data-story-back] :is(.tm-mist-copy, .tm-seq-switch-rest, .tm-story-cue) {
+  animation: tm-story-back var(--tm-story-back) var(--tm-ease-enter) both;
+}
+@keyframes tm-story-back {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+/* ---------- Flying on: the page scrolled past the room ---------- */
+
+/* As the page scrolls on past the room, the camera pushes in toward the featured vial and the room falls behind: it moves
+   at only part of the page's speed, so the mist along its foot, which moves with the page, rolls up over it. On a phone
+   the room's words beneath it ride up on that mist, drawn up into the room's foot, so the room is going into the mist as
+   the words come out of it and the screen is never empty. Everything that reads at rest (the headline, the way in, the
+   cue, the Motion switch) goes first, so nothing small is ever carried up large. */
+.tm.tm-mist {
+  /* The share of the scroll the room holds back, so it falls behind the page. */
+  --tm-fly-lag: 0.5;
+  /* How tall the mist along the room's foot stands, as a share of the stage. */
+  --tm-fly-fog: 46%;
+  /* How far the words beneath the room (a phone's) are drawn up into its foot, onto the mist. */
+  --tm-fly-rise: 7.5rem;
+}
+.tm.tm-mist[data-shape="wide"] {
+  --tm-fly-lag: 0.3;
+  --tm-fly-fog: 30%;
+}
+/* Unseen at rest, where the room's own floor meets the page; it comes up as the page moves. Clear at its top, the floor's
+   own colour from three quarters down, so whatever lies on it reads on the floor. */
+.tm-fly-fog {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--tm-fly-fog);
+  background: linear-gradient(to bottom, var(--tm-fog-none), var(--tm-fog-thin) 30%, color-mix(in srgb, var(--tm-paper) 45%, var(--tm-mist-floor)) 56%, var(--tm-mist-floor) 76%);
+  opacity: 0;
+  pointer-events: none;
+}
+/* The floor runs on under the mist, so the room the camera carries past the stage's foot never shows below it (the
+   view's own edge keeps it off the page beneath). */
+.tm-fly-fog::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  background: var(--tm-mist-floor);
+}
+
+/* Tied to the scroll by the browser itself, so all of it moves with the finger exactly. Only while the story is closed:
+   while it plays the page is at its top, and the film moves the camera. */
+@supports (animation-timeline: scroll()) {
+  .tm.tm-mist[data-seq]:not([data-story]) .tm-seq-camera {
+    animation: tm-fly-camera linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 100vh;
+  }
+  .tm.tm-mist[data-seq]:not([data-story]) :is(.tm-mist-copy, .tm-seq-switch-rest) {
+    animation: tm-fly-words linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 14vh;
+  }
+  .tm.tm-mist[data-seq]:not([data-story]) .tm-story-cue {
+    animation: tm-fly-away linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 10vh;
+  }
+  .tm.tm-mist[data-seq]:not([data-story]) .tm-fly-fog {
+    animation: tm-fly-fog linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 12vh;
+  }
+  /* Coming back after the story, the words keep their tie to the scroll beneath their return. */
+  .tm.tm-mist[data-seq][data-story-back]:not([data-story]) :is(.tm-mist-copy, .tm-seq-switch-rest) {
+    animation: tm-fly-words linear both, tm-story-back var(--tm-story-back) var(--tm-ease-enter) both;
+    animation-timeline: scroll(root block), auto;
+    animation-range: 0 14vh, normal;
+  }
+  .tm.tm-mist[data-seq][data-story-back]:not([data-story]) .tm-story-cue {
+    animation: tm-fly-away linear both, tm-story-back var(--tm-story-back) var(--tm-ease-enter) both;
+    animation-timeline: scroll(root block), auto;
+    animation-range: 0 10vh, normal;
+  }
+  /* A phone's words beneath the room: drawn up into its foot, over the mist, unseen at rest (where they lie over the
+     floor and the way in, and every touch goes through them to it), and rising into view as the room goes, when they take
+     the touches on them themselves, so none reaches the room behind. Held unseen while a story plays too, so nothing
+     changes under it as it opens or closes; and brought back by the camera, where the words' entrance is taken away
+     (mist.css), the same. */
+  .tm.tm-mist[data-seq][data-shape] .tm-mist-foot {
+    position: relative;
+    z-index: 1;
+    margin-top: calc(var(--tm-fly-rise) * -1);
+    animation: tm-fly-lead linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 13vh 30vh;
+  }
+}
+/* The room goes into the mist whole as it falls behind, rather than being cut across by the mist's edge. */
+@keyframes tm-fly-camera {
+  26% {
+    opacity: 1;
+  }
+  62% {
+    opacity: 0;
+  }
+  to {
+    opacity: 0;
+    translate: calc(var(--tm-fly-x, 50vw) * (1 - var(--tm-fly-zoom, 1))) calc(var(--tm-fly-y, 50vh) * (1 - var(--tm-fly-zoom, 1)) + var(--tm-fly-lag) * 100vh);
+    scale: var(--tm-fly-zoom, 1);
+  }
+}
+@keyframes tm-fly-words {
+  to {
+    opacity: 0;
+    translate: 0 -4vh;
+    visibility: hidden;
+  }
+}
+@keyframes tm-fly-away {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@keyframes tm-fly-fog {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes tm-fly-lead {
+  from {
+    opacity: 0;
+    translate: 0 var(--tm-space-6);
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-story-cue-dot::after {
+    animation: none;
+  }
+}
+
+/* On the review site, its bar and the question above it step aside while a story plays: the story is the whole view. */
+html:has(.tm.tm-mist[data-story]) .rl-root :is(.rl-dock, .rl-dock-pill, .rl-ask, .rl-hint) {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--tm-dur-slow) var(--tm-ease-enter);
+}
+/* On a phone held upright the opening's way in stands at the screen's foot, where the review site's bar and its question
+   stand too. While the opening rests they wait below the foot, and they rise with the page as it moves, as the words
+   above give way: the two trade places. While the reader is commenting they stay. With reduced motion they only fade
+   (the review layer takes every other animation away, layer.css). */
+@supports (animation-timeline: scroll()) {
+  html:has(.tm.tm-mist[data-shape="tall"]:not([data-story])) .rl-root:not([data-commenting]) :is(.rl-dock, .rl-dock-pill, .rl-ask) {
+    animation: tm-review-rise linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 4vh 18vh;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html:has(.tm.tm-mist[data-shape="tall"]:not([data-story])) .rl-root:not([data-commenting]) :is(.rl-dock, .rl-dock-pill, .rl-ask) {
+      animation: tm-review-appear linear both !important;
+      animation-timeline: scroll(root block) !important;
+      animation-range: 4vh 18vh !important;
+    }
+  }
+}
+@keyframes tm-review-rise {
+  from {
+    opacity: 0;
+    translate: 0 calc(100% + var(--tm-space-6));
+    visibility: hidden;
+  }
+}
+@keyframes tm-review-appear {
+  from {
+    opacity: 0;
+    visibility: hidden;
+  }
+}

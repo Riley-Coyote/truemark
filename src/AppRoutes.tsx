@@ -1,14 +1,13 @@
 import { lazy, Suspense } from "react";
-import type { ComponentType } from "react";
 import { LIVE, LAUNCH } from "./platform/mode";
 import { Route, Routes } from "react-router-dom";
 import App from "./App";
 import ReviewShell, { prepareReview } from "./ReviewShell";
 import Gate from "./brand/Gate";
-// Launch removes these imports and their routes from the customer bundle.
-let Review: ComponentType | null = null;
-const overviewReady = LAUNCH ? null : import("./Review").then((module) => { Review = module.default; });
-export async function prepareAppRoutes() { await Promise.all([overviewReady, prepareReview()]); }
+import { ReviewOverview } from "./pages";
+// Launch removes these imports and their routes from the customer bundle. The overview arrives with its route
+// (pages.tsx; main.tsx readies it when a visit starts there).
+export async function prepareAppRoutes() { await prepareReview(); }
 
 const TypeStudy = LAUNCH ? null : lazy(() => import("./TypeStudy"));
 const VisualStudy = LAUNCH ? null : lazy(() => import("./VisualStudy"));
@@ -22,7 +21,7 @@ export default function AppRoutes() {
   return (
     <ReviewShell>
       <Routes>
-        {Review && <Route path="/review" element={<Review />} />}
+        {ReviewOverview && <Route path="/review" element={<Suspense fallback={null}><ReviewOverview /></Suspense>} />}
         {LiveOrder && <Route
           path="/review/live"
           element={

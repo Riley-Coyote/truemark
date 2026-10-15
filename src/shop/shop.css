@@ -4,6 +4,11 @@
   background: var(--tm-paper);
   color: var(--tm-ink);
   font-family: var(--tm-font-sans);
+}
+/* Nothing on the home page reaches past the window's sides: each section clips its own. The opening clips its room
+   itself (its stage, and the film's view) and takes no clip around it: on iPhone Safari, a clip around the film's
+   pinned view shook it by a pixel or two, back and forth, for as long as the page scrolled. */
+.tm-home > :not(.tm-mist) {
   overflow-x: clip;
 }
 
@@ -323,23 +328,6 @@
   opacity: 1;
   z-index: 2;
   transition: opacity var(--tm-dur-scene) var(--tm-ease-breathe);
-}
-/* Substrate detail: light passes over the glass when you look closely. */
-.tm-stage-vials::after,
-.tm-tile-image::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  background: var(--tm-sheen);
-  transform: translateX(-110%);
-  pointer-events: none;
-  mix-blend-mode: soft-light;
-}
-.tm-stage-vials:hover::after,
-.tm-tile:hover .tm-tile-image::after {
-  transform: translateX(110%);
-  transition: transform 1100ms var(--tm-ease-breathe);
 }
 .tm-stage-vials:focus-visible {
   outline: none;
@@ -1040,18 +1028,7 @@
 
 /* ---------- Questions ---------- */
 
-.tm-questions {
-  padding-top: 0;
-}
-.tm-questions-head {
-  grid-column: 1 / span 5;
-  align-self: start;
-}
-.tm-questions-head .tm-textlink {
-  margin-top: var(--tm-space-7);
-}
 .tm-faq {
-  grid-column: 7 / -1;
   border-bottom: 1px solid var(--tm-line);
 }
 .tm-faq details {
@@ -1109,9 +1086,9 @@
   opacity: 1;
   transform: none;
 }
-/* A value on its way: a quiet bar holding the value's place, with light passing over it like the
-   sheen on the vials (asymmetric: a long tail behind, a crisp edge ahead). On a dark band it is
-   drawn in glow instead of ink. */
+/* A value on its way: a quiet bar holding the value's place, with light passing over it
+   (asymmetric: a long tail behind, a crisp edge ahead). On a dark band it is drawn in glow
+   instead of ink. */
 .tm-skel {
   --tm-skel-base: rgba(36, 26, 74, 0.07);
   --tm-skel-light: rgba(36, 26, 74, 0.02);
@@ -1253,9 +1230,7 @@
   .tm-record-copy,
   .tm-record-visual,
   .tm-accounts-copy,
-  .tm-account-preview,
-  .tm-questions-head,
-  .tm-faq {
+  .tm-account-preview {
     grid-column: 1 / -1;
   }
   .tm-hero-copy {
@@ -1314,9 +1289,6 @@
   .tm .tm-note {
     grid-column: 1 / -1;
     margin-bottom: var(--tm-space-6);
-  }
-  .tm-questions-head {
-    margin-bottom: var(--tm-space-7);
   }
 }
 @media (max-width: 560px) {

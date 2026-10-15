@@ -44,19 +44,109 @@
   --tm-night-deep: #1a1239;
   --tm-night-line: rgba(255, 255, 255, 0.12);
 
-  /* Ink cascade: the brand's ink, ink soft and a darkened muted (AA on surface grey). */
-  --tm-ink: #241a4a;
-  --tm-ink-2: #4a3f6b;
-  --tm-ink-3: #6f6786;
+  /* Ink cascade: the brand's ink, ink soft and a darkened muted (AA on surface grey). Each is set from its
+     value at rest, so a section whose light changes can let its ink follow the light (atmosphere.css). */
+  --tm-ink-rest: #241a4a;
+  --tm-ink-2-rest: #4a3f6b;
+  --tm-ink-3-rest: #6f6786;
+  /* The muted ink on the room's lilac wall (home.css): a step toward ink soft keeps AA there. */
+  --tm-ink-3-lilac: color-mix(in oklab, var(--tm-ink-2-rest) 45%, var(--tm-ink-3-rest));
+  --tm-ink: var(--tm-ink-rest);
+  --tm-ink-2: var(--tm-ink-2-rest);
+  --tm-ink-3: var(--tm-ink-3-rest);
   --tm-ink-4: rgba(36, 26, 74, 0.32);
-  --tm-line: rgba(36, 26, 74, 0.11);
-  --tm-line-strong: rgba(36, 26, 74, 0.22);
-  --tm-wash: rgba(36, 26, 74, 0.045);
+  --tm-line-rest: rgba(36, 26, 74, 0.11);
+  --tm-line-strong-rest: rgba(36, 26, 74, 0.22);
+  --tm-wash-rest: rgba(36, 26, 74, 0.045);
+  --tm-line: var(--tm-line-rest);
+  --tm-line-strong: var(--tm-line-strong-rest);
+  --tm-wash: var(--tm-wash-rest);
 
-  --tm-glow: rgba(255, 255, 255, 0.96);
-  --tm-glow-2: rgba(255, 255, 255, 0.76);
-  --tm-glow-3: rgba(255, 255, 255, 0.58);
+  --tm-glow-rest: rgba(255, 255, 255, 0.96);
+  --tm-glow-2-rest: rgba(255, 255, 255, 0.76);
+  --tm-glow-3-rest: rgba(255, 255, 255, 0.58);
+  --tm-glow: var(--tm-glow-rest);
+  --tm-glow-2: var(--tm-glow-2-rest);
+  --tm-glow-3: var(--tm-glow-3-rest);
   --tm-glow-4: rgba(255, 255, 255, 0.3);
+
+  /* The light on the home page (atmosphere.css, dusk.ts). The sky overhead: paper, through lilac and a violet that
+     gathers colour as it darkens, to indigo and the night room's floor. Seven stops at the same perceived lightness
+     as before (the header's glass and its turn are measured against them), each in OKLCH. */
+  --tm-sky-0: oklch(0.994 0.0015 300);
+  --tm-sky-1: oklch(0.905 0.032 306);
+  --tm-sky-2: oklch(0.775 0.07 304);
+  --tm-sky-3: oklch(0.615 0.1 298);
+  --tm-sky-4: oklch(0.455 0.1 287);
+  --tm-sky-5: oklch(0.31 0.078 283);
+  --tm-sky-6: oklch(0.168 0.046 293);
+  /* The dusk, as the sky stands at each of its moments (dusk.ts, DUSK): the light overhead (top) and low at the
+     screen's foot (foot). The sky darkens from overhead first; low down a rose afterglow, the hue of the plinth's
+     rim light, gathers as the light goes and is the last of it. Moments 6 and 7 stand either side of the turn, where
+     the sky steps once across the narrow band in which neither ink keeps AA (tools/landing/r9/layout/sky.py). */
+  --tm-dusk-1-top: oklch(0.93 0.026 306);
+  --tm-dusk-1-foot: oklch(0.976 0.014 326);
+  --tm-dusk-2-top: oklch(0.835 0.052 305);
+  --tm-dusk-2-foot: oklch(0.93 0.036 330);
+  --tm-dusk-3-top: oklch(0.735 0.076 302);
+  --tm-dusk-3-foot: oklch(0.85 0.064 334);
+  --tm-dusk-4-top: oklch(0.665 0.092 299);
+  --tm-dusk-4-foot: oklch(0.735 0.098 337);
+  --tm-dusk-5-top: oklch(0.628 0.1 296);
+  --tm-dusk-5-foot: oklch(0.66 0.112 339);
+  --tm-dusk-6-top: oklch(0.5896 0.1 294);
+  --tm-dusk-6-foot: oklch(0.6 0.114 340);
+  --tm-dusk-7-top: oklch(0.5652 0.104 290);
+  --tm-dusk-7-foot: oklch(0.5736 0.118 340);
+  --tm-dusk-8-top: oklch(0.49 0.1 287);
+  --tm-dusk-8-foot: oklch(0.53 0.118 340);
+  --tm-dusk-9-top: oklch(0.4 0.09 284);
+  --tm-dusk-9-foot: oklch(0.465 0.11 338);
+  --tm-dusk-10-top: oklch(0.31 0.074 284);
+  --tm-dusk-10-foot: oklch(0.38 0.094 334);
+  --tm-dusk-11-top: oklch(0.235 0.058 287);
+  --tm-dusk-11-foot: oklch(0.285 0.072 322);
+  --tm-dusk-12-top: oklch(0.19 0.05 290);
+  --tm-dusk-12-foot: oklch(0.21 0.056 308);
+  /* The dawn, its own event: cooler and clearer, the light coming back low first, a clear periwinkle under a sky still
+     dark overhead, never through grey (dusk.ts, DAWN). From moment 4 the light rises behind the gap between the
+     record and the closing: dark enough for white above it, light enough for deep ink below it, at every size. */
+  --tm-dawn-1-top: oklch(0.168 0.05 289);
+  --tm-dawn-1-foot: oklch(0.29 0.07 272);
+  --tm-dawn-2-top: oklch(0.18 0.054 286);
+  --tm-dawn-2-foot: oklch(0.45 0.085 266);
+  --tm-dawn-3-top: oklch(0.19 0.056 284);
+  --tm-dawn-3-foot: oklch(0.535 0.09 263);
+  --tm-dawn-4-top: oklch(0.2504 0.06 280);
+  --tm-dawn-4-foot: oklch(0.5873 0.09 262);
+  --tm-dawn-5-top: oklch(0.2504 0.06 280);
+  --tm-dawn-5-foot: oklch(0.6193 0.09 262);
+  --tm-dawn-6-top: oklch(0.2504 0.06 280);
+  --tm-dawn-6-foot: oklch(0.6584 0.09 262);
+  --tm-dawn-7-top: oklch(0.2504 0.06 280);
+  --tm-dawn-7-foot: oklch(0.7173 0.0818 262);
+  --tm-dawn-8-top: oklch(0.2504 0.06 280);
+  --tm-dawn-8-foot: oklch(0.8086 0.0544 262);
+  --tm-dawn-9-top: oklch(0.2504 0.06 280);
+  --tm-dawn-9-foot: oklch(0.9422 0.0143 262);
+  --tm-dawn-10-top: oklch(0.3454 0.06 280);
+  --tm-dawn-10-foot: oklch(0.985 0.0027 262);
+  --tm-dawn-11-top: oklch(0.4175 0.06 280);
+  --tm-dawn-11-foot: oklch(0.985 0.0027 262);
+  --tm-dawn-12-top: oklch(0.4728 0.06 280);
+  --tm-dawn-12-foot: oklch(0.985 0.0027 262);
+  --tm-dawn-13-top: oklch(0.5167 0.06 280);
+  --tm-dawn-13-foot: oklch(0.985 0.0027 262);
+  --tm-dawn-14-top: oklch(0.5534 0.06 280);
+  --tm-dawn-14-foot: oklch(0.985 0.0027 262);
+  --tm-dawn-15-top: oklch(0.74 0.04 272);
+  --tm-dawn-15-foot: oklch(0.985 0.0027 262);
+  /* Window light (atmosphere.css): the opening's soft panes of daylight from the upper left, carried down the page,
+     pale by day and blushing rose as the sun goes. */
+  --tm-window-day: oklch(0.99 0.012 310 / 0.34);
+  --tm-window-dusk: oklch(0.86 0.1 350 / 0.32);
+  --tm-ink-deep: #0f091f;
+  --tm-glow-full: #fdfdfe;
 
   /* Signal: released / verified (the client site's green). */
   --tm-signal: #0e8a5f;
@@ -152,9 +242,16 @@
   --tm-ease-micro: cubic-bezier(0.34, 1.3, 0.64, 1);
   --tm-ease-breathe: cubic-bezier(0.45, 0, 0.55, 1);
   --tm-dur-quick: 140ms;
+  /* A press goes in faster than anything else moves, so a quick tap still shows; it comes back on the micro curve. */
+  --tm-dur-press: 90ms;
   --tm-dur-base: 240ms;
+  /* Leaving: what arrives in --tm-dur-base goes the way it came in two thirds of the time, on the same curve, so it is
+     gone before anything else is wanted. (A sheet leaves as it rose, with the page's glide: sheet.tsx.) */
+  --tm-dur-leave: 160ms;
   --tm-dur-slow: 420ms;
   --tm-dur-scene: 900ms;
+  /* An ink crossing over to the other side of the light (home.css): quick, but not a snap. */
+  --tm-dur-turn: 180ms;
   --tm-dur-shimmer: 1400ms;
   --tm-stagger: 120ms;
   --tm-cycle-5: 5s;
@@ -164,6 +261,12 @@
   /* Controls. */
   --tm-control: 3rem;
   --tm-control-sm: 2.25rem;
+  /* The least a finger is given to press, whatever the control draws (never under 44px, at any root size). */
+  --tm-control-touch: max(2.75rem, 44px);
+  /* A small control's reach: the transparent layer that takes a finger's tap for it, centred on it, is at least this
+     across (a point 22px from its centre, any way, lands on it), though the control looks no larger. Its inset, in each
+     direction the control falls short: min(0px, calc(50% - var(--tm-reach) / 2)). */
+  --tm-reach: calc(var(--tm-control) + 1px);
   --tm-swatch: 1.375rem;
   --tm-logo-width: 9.5rem;
   --tm-type-nano: 0.625rem;
@@ -173,7 +276,6 @@
   --tm-glow-hover: #fbfcfd;
   --tm-scrim: rgba(24, 16, 52, 0.46);
   --tm-image-scrim: linear-gradient(to top, rgba(24, 16, 52, 0.62), rgba(24, 16, 52, 0.18) 38%, rgba(24, 16, 52, 0) 62%);
-  --tm-sheen: linear-gradient(105deg, rgba(255, 255, 255, 0) 36%, rgba(255, 255, 255, 0.34) 47%, rgba(255, 255, 255, 0.08) 53%, rgba(255, 255, 255, 0) 60%);
   --tm-shadow-night: 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 40px 90px -30px rgba(10, 6, 30, 0.7);
 
   /* The lilac studio: TrueMark's colour world, tints of the brand purple #7A39B1.
@@ -188,13 +290,6 @@
   --tm-lilac-floor: #e1d6ee;
   --tm-bench: #d2d2e5;
   --tm-lilac-studio: linear-gradient(to bottom, var(--tm-lilac-50) 0%, var(--tm-lilac-100) 58%, var(--tm-lilac-200) 100%);
-  /* The hero's studio, lit by one soft key from the upper left: the light it throws on the
-     seamless and the floor, where the set falls away from it, and what the vials cast. */
-  --tm-studio-key: rgba(255, 255, 255, 0.78);
-  --tm-studio-bounce: rgba(255, 255, 255, 0.5);
-  --tm-studio-falloff: rgba(184, 160, 222, 0.32);
-  --tm-studio-core: rgba(46, 24, 86, 0.36);
-  --tm-studio-cast: rgba(58, 30, 104, 0.85);
   /* The same studio at night, for the record's dark bands: one soft key from above, behind the
      document it presents, the room falling into deeper ink, and the lab line's peak lighting
      the floor in the brand's own colours. */

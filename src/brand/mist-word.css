@@ -1,0 +1,242 @@
+/*
+ * The opening as one lit scene. The light is the photograph's own (public/media/open-crisp.jpg, relit Oct 13: one
+ * overhead light on the centre pedestal, the room easing into dusky lilac around it), so the page paints none. It adds
+ * only "Verified.", standing off the back wall in that light: lit along its tops, each letter casting a soft shadow
+ * down the wall. Layers inside the plate (MistOpening.tsx), back to front: the room, the word, the floor mist, the
+ * vials.
+ */
+.tm.tm-mist {
+  /* The word's faces, the client's ink, a little lighter along their tops where the light from above catches them. */
+  --tm-word-face-top: color-mix(in oklab, var(--tm-ink-rest) 72%, rgb(176 160 232));
+  --tm-word-face: color-mix(in oklab, var(--tm-ink-rest) 86%, rgb(10 5 30));
+  /* Its shadow on the wall below it, in the wall's own shade. */
+  --tm-word-cast: rgba(52, 38, 92, 0.34);
+  /* The light from above on a vial's cap and shoulders. */
+  --tm-vial-top-light: rgba(255, 255, 255, 0.42);
+  --tm-vial-top-fade: rgba(255, 255, 255, 0.1);
+}
+
+.tm-mist-light {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.tm-mist-light > * {
+  pointer-events: none;
+}
+
+/* ---------- The word on the back wall, in the room's light ---------- */
+.tm-mist-word {
+  position: absolute;
+  left: var(--tm-word-x);
+  top: var(--tm-word-y);
+  display: inline-flex;
+  align-items: baseline;
+  translate: -50% -100%;
+  font: var(--tm-weight-regular) var(--tm-word-size) / 0.74 var(--tm-font-display);
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  user-select: none;
+  /* The back wall stays behind what stands before it: the pointer's depth moves it less than the room. */
+  transform: translate3d(calc(var(--mx, 0) * 3px), calc(var(--my, 0) * 2px), 0);
+  transition: transform 1600ms var(--tm-ease-enter), opacity var(--tm-dur-scene) var(--tm-ease-enter);
+  animation: tm-word-in 2400ms var(--tm-ease-enter) 280ms backwards;
+}
+/* The faces. The box reaches above the line so the tallest strokes (the V, the f, the d, the dots of the i) are painted
+   whole. */
+.tm-mist-word-ink {
+  position: relative;
+  padding: 0.3em 0 0.06em;
+  margin-top: -0.3em;
+  color: transparent;
+  background: linear-gradient(to bottom, var(--tm-word-face-top) 22%, var(--tm-word-face) 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+/* The letters stand a little off the wall: the light from above throws each one's soft shadow just below it. */
+.tm-mist-word-ink::before {
+  content: attr(data-text);
+  position: absolute;
+  z-index: -1;
+  top: calc(0.3em + 0.045em);
+  left: 0.006em;
+  color: var(--tm-word-cast);
+  -webkit-text-fill-color: var(--tm-word-cast);
+  filter: blur(max(4px, 0.05em));
+}
+.tm-mist-word .tm-brand-dot {
+  width: 0.1em;
+  height: 0.1em;
+  margin-left: 0.035em;
+}
+@keyframes tm-word-in {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+  }
+}
+
+/* ---------- The vials in the room's light ---------- */
+/* Lighting, not a regrade (as the night's vial, rooms.css): each vial a little dimmer the further it stands from the
+   light, by the room's own falloff (MistOpening.tsx VIAL_LIGHT); and the light from above, not the window's from the
+   side, on the bare glass of its cap and shoulders. */
+.tm.tm-mist .tm-room-vial :is(.tm-room-vial-glass, .tm-room-vial-soft) {
+  filter: brightness(var(--tm-lit, 1));
+}
+.tm.tm-mist .tm-room-vial-air {
+  background: linear-gradient(to bottom, var(--tm-vial-top-light) 0%, var(--tm-vial-top-fade) 9%, transparent 16%);
+  opacity: var(--tm-lit, 1);
+}
+
+/* ---------- On a phone: the room down to the screen's foot ---------- */
+/* A phone's toolbar is glass over the foot of the screen, and the room is drawn on under it, as far as its picture
+   reaches: the page's floor (sequence.css .tm-seq-floor) starts only where the picture ends (MistOpening.tsx
+   --tm-room-foot), not at the stage's foot. Below the page, the browser fills the last of the screen with the page's own
+   background colour, so at rest that is the room's floor in its mist, the page's paper again once the page has
+   scrolled on, and the footer's grey at the page's end. */
+:root {
+  /* The relit room's floor under its mist at the screen's foot, in the room's own light (fog.ts ROOM_LIGHT), sampled
+     on an iPhone. */
+  --tm-mist-foot: #c6bbd7;
+}
+.tm.tm-mist[data-shape="tall"] .tm-seq-floor {
+  top: calc(var(--tm-room-foot, 100%) - var(--tm-mist-height, 40rem) * 0.06);
+}
+@supports (animation-timeline: scroll()) {
+  html:has(.tm.tm-mist[data-shape="tall"][data-seq]) {
+    background-color: var(--tm-mist-foot);
+    animation: tm-under-room linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 100vh;
+  }
+  /* At the page's end, the footer's grey, as on every other page (chrome.css). Safari never takes the colour up along
+     the animation above, only as the page's state changes, so it is set from the footer's coming into view
+     (MistOpening.tsx). */
+  html[data-tm-at-foot]:has(.tm.tm-mist[data-shape="tall"][data-seq]) {
+    background-color: var(--tm-studio);
+    animation: none;
+  }
+  /* While a sheet holds the page still (sheet.tsx useScrollLock), the browser fills everything below it with that
+     colour, over the sheet's own paper beneath it: so the paper, as the sheet. Set with the lock itself, which is when
+     Safari takes the colour up. */
+  html[data-scroll-locked]:has(.tm.tm-mist[data-shape="tall"][data-seq]) {
+    background-color: var(--tm-paper);
+    animation: none;
+  }
+}
+/* With the scroll: the mist the room goes into, then the page. */
+@keyframes tm-under-room {
+  12% {
+    background-color: var(--tm-mist-floor);
+  }
+  to {
+    background-color: var(--paper);
+  }
+}
+
+/* As the closer look begins, the word steps back with the room's words. */
+.tm.tm-mist[data-seq-away] .tm-mist-word {
+  opacity: 0;
+}
+
+/* ---------- What stands in the shade keeps a little light of its own ---------- */
+/* The second way in and the Motion switch stand on the floor where the room falls into shade: each is backed with the
+   room's own lilac light, frosted, so its words stay as clear as the primary's. */
+.brand-refinement .tm.tm-mist .tm-button-outline {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(250, 248, 255, 0.74);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+}
+.brand-refinement .tm.tm-mist .tm-button-outline:hover {
+  border-color: var(--tm-ink);
+  background: rgba(255, 255, 255, 0.92);
+}
+.tm.tm-mist .tm-seq-switch.tm-seq-switch-rest {
+  border-radius: var(--tm-radius-pill);
+  background: rgba(250, 248, 255, 0.66);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+/* ---------- The film's grain over the whole frame ---------- */
+.tm.tm-mist .tm-mist-stage::after {
+  content: "";
+  position: absolute;
+  z-index: 7;
+  inset: 0;
+  pointer-events: none;
+  background: url("./blue-noise.png") repeat;
+  background-size: 128px;
+  mix-blend-mode: overlay;
+  opacity: 0.08;
+}
+
+/* ---------- The words on the wall, now a title over the word ---------- */
+/* "Verified." is drawn in the room; the headline keeps it for every reader that reads rather than looks. */
+.tm.tm-mist .tm-bhero-title[data-word] .tm-bhero-line:nth-child(3) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.tm.tm-mist .tm-bhero-title[data-word] {
+  font-size: clamp(1.75rem, min(3.1vw, 5svh), 3.25rem);
+  letter-spacing: -0.028em;
+  line-height: 1.08;
+}
+.tm.tm-mist .tm-bhero-title[data-word] .tm-bhero-line {
+  display: inline-block;
+}
+.tm.tm-mist .tm-bhero-title[data-word] .tm-bhero-line:first-child {
+  margin-right: 0.26em;
+}
+/* The eyebrow, in the client's words and in sentence case, between two short hairlines. */
+.tm.tm-mist .tm-pill-eyebrow {
+  gap: var(--tm-space-4);
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: var(--tm-type-small, 0.875rem);
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.tm.tm-mist .tm-pill-eyebrow .tm-brand-dot {
+  display: none;
+}
+.tm.tm-mist .tm-pill-eyebrow::before,
+.tm.tm-mist .tm-pill-eyebrow::after {
+  content: "";
+  width: var(--tm-space-6);
+  height: 1px;
+  background: linear-gradient(to var(--tm-hair-to, right), transparent, var(--tm-ink-3));
+}
+.tm.tm-mist .tm-pill-eyebrow::after {
+  --tm-hair-to: left;
+}
+/* On a phone the wall around the words is the room's shade, so the eyebrow takes the headline's full ink to stay as
+   clear as small text must. */
+.tm.tm-mist[data-shape="tall"] .tm-pill-eyebrow {
+  color: var(--tm-ink);
+}
+/* On a phone the two lines stack, each its own line at every width. */
+@media (max-width: 560px) {
+  .tm.tm-mist .tm-bhero-title[data-word] {
+    font-size: clamp(1.5rem, 7.4vw, 2rem);
+  }
+  .tm.tm-mist .tm-bhero-title[data-word] .tm-bhero-line {
+    display: block;
+  }
+  .tm.tm-mist .tm-bhero-title[data-word] .tm-bhero-line:first-child {
+    margin-right: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-mist-word {
+    animation: none;
+    transform: none;
+  }
+}

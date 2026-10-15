@@ -247,9 +247,9 @@ export function createToolRuntime(deps: RuntimeDependencies) {
         const p = await product(); if (!p.active || p.price == null || !deps.addToBag) throw new Error("This item cannot be added here.");
         const quantity = Number(a.quantity);
         if (p.stock !== null && p.stock < quantity) throw new Error("That quantity is not currently in stock.");
-        return pending(`Add ${quantity} × ${p.name} ${p.size} to your bag`, { productId: `${p.name} ${p.size}`, unitPrice: p.price, quantity }, async () => {
+        return pending(`Add ${quantity} × ${p.name} ${p.size} to your cart`, { productId: `${p.name} ${p.size}`, unitPrice: p.price, quantity }, async () => {
           await unchanged(product, p); deps.addToBag!(p.id, quantity); return { added: true, id: p.id, quantity };
-        }, undefined, { kind: "done", text: `Added ${quantity} × ${p.name} ${p.size} to your bag`, href: "/cart", link: "View your bag" });
+        }, undefined, { kind: "done", text: `Added ${quantity} × ${p.name} ${p.size} to your cart`, href: "/cart", link: "View your cart" });
       }
       case "orders": { const result = page((await s.orders.list()).filter((o) => matching(a.filter, o.number, o.status)), a); return output({ ...result, items: result.items.map(orderSummary) }, orderRows(result.items)); }
       case "order": {

@@ -3,15 +3,16 @@ import type { CSSProperties } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Check, X } from "lucide-react";
 import { assetUrl } from "../assetUrl";
-import { BrandDot } from "../brand/HeroShelf";
+import { BrandDot } from "../brand/BrandDot";
 import { LIVE } from "../platform/mode";
 import { store, useResource } from "../platform/store";
 import type { Discount } from "../platform/types";
 import { firstOrderOffer } from "./catalog";
 import { useReviewDockRoom } from "./dock";
 import { ADD_EVENT } from "./MobileAdd";
+import { usePresence } from "./motion";
 import { useBagCode } from "./pages/checkout/Bag";
-import { SheetSkirt, useScrollLock, useSheetDrag, useSheetFocus, useSheetPresence, useVisibleViewport, viewportBox } from "./sheet";
+import { SheetSkirt, useScrollLock, useSheetDrag, useSheetFocus, useSheetLeaving, useVisibleViewport, viewportBox } from "./sheet";
 import type { SheetState } from "./sheet";
 import "./offer.css";
 
@@ -57,10 +58,11 @@ function write(key: string, value: string) {
   }
 }
 
-/** Another dialog, the bag, search, the chat or the menu has the reader's attention. */
-// Never over another dialog, nor over the chat while someone is using it (beside the page on desktop).
+/** Another dialog, the bag, search, the chat or the menu has the reader's attention, the chat is open beside the page
+ *  (desktop), or the reader is partway through the opening's closer look (brand/Sequence.tsx). */
 const busy = () =>
-  document.documentElement.hasAttribute("data-scroll-locked") || Boolean(document.querySelector('.tm-mmenu, [aria-modal="true"], .tm-desk-dock:not([hidden])'));
+  document.documentElement.hasAttribute("data-scroll-locked") ||
+  Boolean(document.querySelector('.tm-mmenu, [aria-modal="true"], .tm-desk-dock:not([hidden]), .tm-mist[data-seq-playing]'));
 
 function useVariant(search: string): { variant: Variant; forced: boolean } {
   const asked = new URLSearchParams(search).get("offer");
@@ -113,10 +115,11 @@ export function FirstOrderOffer({ locked }: { locked: boolean }) {
     };
   }, [eligible, open, forced]);
 
-  // Arriving at checkout, an account page or a lookup puts the offer away; it isn't dismissed.
-  useEffect(() => {
-    if (quiet) setOpen(false);
-  }, [quiet]);
+  // Arriving at checkout, an account page or a lookup puts the offer away in the same step; it isn't dismissed.
+  if (open && quiet) setOpen(false);
+  // The popup leaves the way it rose, however it is closed; on a phone, a change of page takes it with the page it was
+  // on (Modal.tsx).
+  const sheet = usePresence(open && variant !== "card", location.pathname);
 
   const dismiss = useCallback(() => {
     if (!applied) write(STATE_KEY, "dismissed");
@@ -133,7 +136,7 @@ export function FirstOrderOffer({ locked }: { locked: boolean }) {
     return ok;
   }, [code]);
 
-  if (!open || !offer.data) return null;
+  if (!offer.data || !(variant === "card" ? open : sheet.shown)) return null;
   const props: OfferProps = {
     percent: offer.data.percent,
     locked,
@@ -144,7 +147,7 @@ export function FirstOrderOffer({ locked }: { locked: boolean }) {
     onClose: dismiss,
     from: location.pathname,
   };
-  return variant === "card" ? <OfferCard {...props} /> : <OfferDialog {...props} />;
+  return variant === "card" ? <OfferCard {...props} /> : <OfferDialog {...props} open={!sheet.closing} onGone={sheet.gone} />;
 }
 
 type OfferProps = {
@@ -211,29 +214,35 @@ function Primary({ locked, applied, checking, onApply, onClose, from }: OfferPro
   }
   return (
     <button type="button" className="tm-button tm-button-primary" onClick={() => void onApply()} disabled={checking} aria-busy={checking || undefined}>
-      Apply to my bag
+      Apply to my cart
     </button>
   );
 }
 
-/** The popup: a dialog beside the page on a wide screen, a sheet risen from the bottom on a phone. */
-function OfferDialog(props: OfferProps) {
-  const { percent, locked, applied, error, onClose } = props;
+/**
+ * The popup: a dialog beside the page on a wide screen, a sheet risen from the bottom on a phone. Every way out (Not
+ * now, Close, Escape, the page around it, a drag down, a link in it followed) closes the offer, and the sheet leaves
+ * the way it rose before it is gone (`onGone`), taking no taps meanwhile.
+ */
+function OfferDialog(props: OfferProps & { open: boolean; onGone: () => void }) {
+  const { percent, locked, applied, error, onClose, open, onGone } = props;
   const panel = useRef<HTMLElement>(null);
   const titleId = useId();
   const seen = useVisibleViewport();
-  const { state, requestClose } = useSheetPresence(onClose);
+  const state = useSheetLeaving(open, onGone);
+  const leaving = state === "leaving";
   useScrollLock();
-  useSheetFocus(panel, requestClose, "fine");
-  const drag = useSheetDrag(panel, requestClose, (target) => Boolean(target.closest(".tm-offer-photo, .tm-offer-grab")));
+  useSheetFocus(panel, onClose, "fine", leaving);
+  const drag = useSheetDrag(panel, onClose, (target) => Boolean(target.closest(".tm-offer-photo, .tm-offer-grab")));
   return (
     <>
       <div
         className="tm-offer"
         data-state={state}
+        inert={leaving}
         style={viewportBox(seen, "tm-sheet")}
         onMouseDown={(event) => {
-          if (event.target === event.currentTarget) requestClose();
+          if (event.target === event.currentTarget) onClose();
         }}
       >
         <section ref={panel} className="tm tm-offer-panel" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} data-review="offer-popup" {...drag}>
@@ -250,7 +259,7 @@ function OfferDialog(props: OfferProps) {
             <p className="tm-offer-text">
               {locked
                 ? "Research accounts are opened to verified laboratories. Use the code on your first order."
-                : "Use the code at checkout, or apply it to your bag now."}
+                : "Use the code at checkout, or apply it to your cart now."}
             </p>
             <CodeLine />
             {applied && <Applied percent={percent} />}
@@ -261,13 +270,13 @@ function OfferDialog(props: OfferProps) {
             )}
             <div className="tm-offer-actions">
               <Primary {...props} />
-              <button type="button" className="tm-offer-later" onClick={requestClose}>
+              <button type="button" className="tm-offer-later" onClick={onClose}>
                 {applied ? "Close" : "Not now"}
               </button>
             </div>
             <p className="tm-offer-fine">For laboratory research use only.</p>
           </div>
-          <button type="button" className="tm-offer-close" aria-label="Close" onClick={requestClose}>
+          <button type="button" className="tm-offer-close" aria-label="Close" onClick={onClose}>
             <X size={18} strokeWidth={1.8} aria-hidden="true" />
           </button>
         </section>
@@ -347,7 +356,7 @@ function OfferCard(props: OfferProps) {
     >
       <img className="tm-offer-card-photo" src={photo.src} srcSet={photo.srcSet} sizes="6rem" alt="" draggable={false} />
       <div className="tm-offer-card-text">
-        <p className="tm-offer-card-title">{applied ? "Applied to your bag" : `${percent}% off your first order`}</p>
+        <p className="tm-offer-card-title">{applied ? "Applied to your cart" : `${percent}% off your first order`}</p>
         <CodeLine size="sm" />
       </div>
       {locked ? (

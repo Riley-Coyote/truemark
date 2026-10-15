@@ -4,7 +4,6 @@ import { useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowRight, Grid2x2, Grid3x3, Search, X } from "lucide-react";
 import { categories } from "../../data";
-import { useLight } from "../../brand/light";
 import { ProductCard } from "../../brand/ProductCard";
 import { compoundsForBrowsing, firstOrderOffer } from "../catalog";
 import type { Compound } from "../catalog";
@@ -47,8 +46,6 @@ export default function Catalog() {
   const firstOffer = LIVE ? offer.data : firstOrderOffer;
   const root = useRef<HTMLDivElement>(null);
   useReveal(root);
-  const shelf = useRef<HTMLElement>(null);
-  useLight(shelf, { firstPass: 700, pass: 2950, repeat: false });
   const [params, setParams] = useSearchParams();
   const requestedClass = params.get("class");
   const active = categories.some((c) => c.id === requestedClass) ? requestedClass! : "all";
@@ -96,7 +93,7 @@ export default function Catalog() {
 
   return (
     <div className="tm-page tm-page-task" ref={root}>
-      <section className="tm tm-shop" aria-labelledby="tm-catalog-title" ref={shelf}>
+      <section className="tm tm-shop" aria-labelledby="tm-catalog-title">
         <div className="tm-shop-heading">
           <div className="tm-shop-titleline">
             <h1 id="tm-catalog-title" className="tm-shop-title">

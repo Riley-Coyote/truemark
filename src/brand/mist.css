@@ -1,0 +1,432 @@
+/*
+ * The opening (MistOpening.tsx): the collection in its misty room, the headline on the wall above
+ * the pedestals, the lead and the way in along the floor.
+ */
+
+:root {
+  /* The misty room's own wall and floor, sampled from its first frame, so whatever meets it can continue it. */
+  --tm-mist-wall: #dbd5f5;
+  --tm-mist-floor: #e2d9f5;
+}
+
+/* `.tm.tm-mist`: the opening is itself the storefront section, so its rules name both classes. */
+.tm.tm-mist {
+  display: block;
+  padding: 0;
+  isolation: isolate;
+  background: var(--tm-mist-floor);
+}
+/* The stage: the room and the words on it. Until it is measured, the first screen; then as tall as the room covers of
+   that first screen, or, beside words that need it on a phone on its side, taller (Rooms.tsx frameOpening). */
+.tm-mist-stage {
+  --tm-mist-screen: min(80rem, calc(100svh - var(--tm-header-height) - var(--tm-notice-height) - var(--review-bar-height, 0px)));
+  position: relative;
+  height: var(--tm-mist-height, max(34rem, var(--tm-mist-screen)));
+  /* Clipped, never scrollable: a vial at the stage's edge reached by keyboard (or a script's scroll into view) would
+     otherwise scroll the room within it, and the camera's move measures the room where it is laid out. */
+  overflow: hidden;
+  overflow: clip;
+  isolation: isolate;
+}
+/* The first screen under the header (and the research-use strip, and the review bar on the review site), measured by
+   the opening to frame its room. */
+.tm-mist-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: var(--tm-mist-screen);
+  visibility: hidden;
+  pointer-events: none;
+}
+/* Where the room falls short of the stage (a short, wide window, its vials kept whole on the first screen): the same
+   room's first frame, far softer, fills the stage around it, and the room's own edges feather into it, so it reads as
+   more of the misty room. Never over a vial: it lies under the plate, and the feather is the room's alone. */
+.tm-mist-fill {
+  position: absolute;
+  z-index: -1;
+  inset: calc(var(--tm-space-8) * -1);
+  width: calc(100% + var(--tm-space-8) * 2);
+  height: calc(100% + var(--tm-space-8) * 2);
+  object-fit: cover;
+  filter: blur(var(--tm-mist-fill-blur));
+  user-select: none;
+  pointer-events: none;
+}
+.tm-mist-stage {
+  --tm-mist-fill-blur: 2.5rem;
+  --tm-mist-feather: 9%;
+}
+.tm-mist-stage[data-fill] .tm-room-plate > :is(.tm-room, .tm-room-loop) {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--tm-mist-feather), #000 calc(100% - var(--tm-mist-feather)), transparent), linear-gradient(to bottom, transparent, #000 var(--tm-mist-feather), #000 calc(100% - var(--tm-mist-feather)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--tm-mist-feather), #000 calc(100% - var(--tm-mist-feather)), transparent), linear-gradient(to bottom, transparent, #000 var(--tm-mist-feather), #000 calc(100% - var(--tm-mist-feather)), transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+.tm-mist-stage[data-fill] .tm-room-plate > .tm-floor-mist {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--tm-mist-feather), #000 calc(100% - var(--tm-mist-feather)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--tm-mist-feather), #000 calc(100% - var(--tm-mist-feather)), transparent);
+}
+
+/* The room ends on its own floor colour, the colour the next section begins with. */
+.tm-mist-stage::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 4;
+  height: 6%;
+  background: linear-gradient(to bottom, transparent, var(--tm-mist-floor));
+  pointer-events: none;
+}
+/* Its mist thins out before the edge, so the floor meets the next section without a line. */
+.tm.tm-mist .tm-front-mist {
+  -webkit-mask-image: linear-gradient(to top, transparent 0%, #000 18%, rgba(0, 0, 0, 0.85) 40%, transparent 92%);
+  mask-image: linear-gradient(to top, transparent 0%, #000 18%, rgba(0, 0, 0, 0.85) 40%, transparent 92%);
+}
+
+/* A landscape screen: the headline on the wall at the left, the lead and the way in opposite it on the
+   right, and the floor left to the collection. */
+.tm-mist-copy {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 27rem);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "head aside"
+    ". .";
+  align-items: start;
+  column-gap: var(--tm-space-7);
+  padding: clamp(1.75rem, 6vh, 4.5rem) var(--tm-pad) clamp(1.5rem, 4.5vh, 2.75rem);
+  /* The room's vials stay reachable through the copy's empty parts. */
+  pointer-events: none;
+}
+.tm-mist-copy > * {
+  pointer-events: auto;
+}
+.tm-mist-head {
+  grid-area: head;
+  align-self: start;
+}
+/* On a landscape screen the headline's block is as wide as its words, so the room is seated under the words themselves
+   (Rooms.tsx frameOpening), not under the empty wall beside them. */
+.tm.tm-mist[data-shape="wide"] .tm-mist-head {
+  justify-self: start;
+}
+/* Its three lines stay whole beside the lead, however narrow the window (a tablet held upright has the least room for
+   both): the lead's column gives way instead. */
+.tm.tm-mist[data-shape="wide"] .tm-mist-copy {
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, 27rem);
+}
+.tm.tm-mist[data-shape="wide"] .tm-bhero-line > span {
+  white-space: nowrap;
+}
+/* Set level with the headline's first line, below the pill. */
+.tm-mist-aside {
+  grid-area: aside;
+  display: grid;
+  justify-items: start;
+  gap: var(--tm-space-5);
+  padding-top: calc(var(--tm-type-nano) + var(--tm-space-2) * 2 + var(--tm-space-5) + 0.5rem);
+}
+/* Inside it the lead and the way in simply stack; their named places belong to the portrait layouts. */
+.tm.tm-mist[data-shape="wide"] .tm-mist-aside > * {
+  grid-area: auto;
+}
+.tm.tm-mist .tm-pill-eyebrow {
+  margin-bottom: var(--tm-space-5);
+}
+/* Sized by the window's height as well as its width, so a short laptop window keeps the wall clear. */
+.tm.tm-mist .tm-bhero-title {
+  font-size: clamp(2.5rem, min(5vw, 7.6svh), 4.75rem);
+}
+/* The lead keeps the client's lead size, easing down on a short window so the block opposite the headline stays short. */
+.tm.tm-mist .tm-mist-lead {
+  grid-area: lead;
+  margin: 0;
+  font: var(--tm-weight-regular) clamp(1.0667rem, min(1.3vw, 2.6svh), 1.25rem) / 1.55 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+.tm.tm-mist .tm-mist-way {
+  grid-area: actions;
+}
+.tm.tm-mist .tm-mist-actions {
+  margin: 0;
+  flex-wrap: nowrap;
+}
+/* The shelf's caption, now the collection's: one quiet line under the way in, led by a hairline. */
+.tm.tm-mist .tm-mist-proof {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+  margin: var(--tm-space-5) 0 0;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink-2);
+}
+/* While the lots' records load, the caption holds its place unseen, so nothing moves when it is confirmed. */
+.tm.tm-mist .tm-mist-proof:is([data-pending], [data-absent]) {
+  visibility: hidden;
+}
+/* Unsaid (a lot shown isn't released at ≥99%), the caption's line keeps its exact place, width and height, so nothing on
+   the page moves: an unseen ghost drawn by the stylesheet alone, never in the page's text or its accessibility tree. */
+.tm.tm-mist .tm-mist-proof[data-absent]::after {
+  content: "Every lot shown tested ≥99% by HPLC";
+}
+.tm.tm-mist .tm-mist-proof::before {
+  content: "";
+  flex: none;
+  width: var(--tm-space-5);
+  height: 1px;
+  background: var(--tm-ink-4);
+}
+
+/* The entrance: the headline's lines rise one after another (hero.css) as the vials stand; a beat after its last
+   line the lead comes up gently, then the way in, then (on a phone) the lead and caption beneath the room. Their
+   fade and lift are their own (a filter and a translate), so the camera move, which fades and drifts these same
+   words, is never overridden (flight.ts), and they hold nothing once in. Brought back by the camera, or with
+   motion turned off, they are simply there. */
+.tm.tm-mist .tm-mist-aside > .tm-mist-lead,
+.tm.tm-mist .tm-mist-way,
+.tm.tm-mist .tm-mist-foot {
+  animation: tm-mist-word-in var(--tm-dur-scene) var(--tm-ease-enter) backwards;
+  animation-delay: calc(var(--tm-stagger) * 5);
+}
+.tm.tm-mist .tm-mist-aside > .tm-mist-lead {
+  animation-delay: calc(var(--tm-stagger) * 4);
+}
+@keyframes tm-mist-word-in {
+  from {
+    filter: opacity(0);
+    translate: 0 var(--tm-space-2);
+  }
+}
+.tm.tm-mist[data-arrived] :is(.tm-mist-aside > .tm-mist-lead, .tm-mist-way, .tm-mist-foot) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tm.tm-mist :is(.tm-mist-aside > .tm-mist-lead, .tm-mist-way, .tm-mist-foot) {
+    animation: none;
+  }
+}
+
+/* A short landscape window: the words on the wall tighten (the headline and lead smaller, the gaps closer), so the room
+   under them can stand larger while every vial stays whole on the first screen (Rooms.tsx frameOpening). */
+@media (min-aspect-ratio: 11/10) and (max-height: 760px) {
+  .tm.tm-mist[data-shape="wide"] .tm-mist-copy {
+    padding-top: clamp(1.25rem, 4.5vh, 2.5rem);
+  }
+  .tm.tm-mist[data-shape="wide"] .tm-pill-eyebrow {
+    margin-bottom: var(--tm-space-4);
+  }
+  .tm.tm-mist[data-shape="wide"] .tm-bhero-title {
+    font-size: clamp(2rem, min(5vw, 6.6svh), 4.75rem);
+  }
+  .tm.tm-mist[data-shape="wide"] .tm-mist-aside {
+    gap: var(--tm-space-4);
+    padding-top: calc(var(--tm-type-nano) + var(--tm-space-2) * 2 + var(--tm-space-4) + 0.25rem);
+  }
+  .tm.tm-mist[data-shape="wide"] .tm-mist-lead {
+    font-size: clamp(0.9375rem, min(1.2vw, 2.3svh), 1.25rem);
+    line-height: 1.5;
+  }
+  .tm.tm-mist[data-shape="wide"] .tm-mist-proof {
+    margin-top: var(--tm-space-4);
+  }
+}
+
+/* ---------- Portrait screens: the middle three pedestals, headline above, the way in on the floor ---------- */
+.tm.tm-mist[data-shape="tall"] .tm-mist-copy {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "head head"
+    ". ."
+    "lead actions";
+  align-items: end;
+}
+.tm.tm-mist[data-shape="tall"] .tm-mist-aside {
+  display: contents;
+}
+.tm.tm-mist[data-shape="tall"] .tm-mist-lead {
+  max-width: 46ch;
+}
+.tm.tm-mist[data-shape="tall"] .tm-bhero-title {
+  font-size: clamp(2.375rem, min(9vw, 7svh), 4.25rem);
+}
+
+/* A phone: the lead joins the headline on the wall, and the two actions stand full width on the floor. */
+@media (max-width: 560px) {
+  .tm.tm-mist[data-shape] .tm-mist-copy {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "."
+      "actions";
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    padding: var(--tm-space-6) var(--tm-pad) var(--tm-space-5);
+  }
+  .tm.tm-mist .tm-pill-eyebrow {
+    margin-bottom: var(--tm-space-4);
+  }
+
+  .tm.tm-mist .tm-mist-lead {
+    font-size: 1.0667rem;
+  }
+  /* Side by side, so the way in and the caption under it fit the first screen beside a three-line headline. */
+  .tm.tm-mist .tm-mist-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--tm-space-2);
+  }
+  .tm.tm-mist .tm-mist-actions .tm-button {
+    justify-content: center;
+    padding-inline: var(--tm-space-4);
+  }
+}
+
+/* Beneath the room, on its floor (a phone, upright or on its side): the lead, and the caption under it. */
+.tm-mist-foot {
+  padding: var(--tm-space-2) var(--tm-pad) var(--tm-space-7);
+}
+.tm-mist-foot .tm-mist-lead {
+  max-width: 46ch;
+}
+
+/* A landscape phone: too narrow for the headline and the lead side by side, so they stack. */
+@media (max-width: 760px) {
+  .tm.tm-mist[data-shape="wide"] .tm-mist-copy {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "aside"
+      ".";
+    grid-template-rows: auto auto minmax(0, 1fr);
+    row-gap: var(--tm-space-4);
+  }
+  .tm.tm-mist[data-shape="wide"] .tm-mist-aside {
+    padding-top: 0;
+  }
+}
+
+/* ---------- The words, centred over the room ---------- */
+/* Every shape: the pill, the headline, the lead and the way in stand on the room's centre line, over the middle
+   pedestal, rather than on the wall to one side. */
+.tm.tm-mist .tm-mist-copy {
+  justify-items: center;
+  text-align: center;
+}
+.tm.tm-mist .tm-mist-head {
+  justify-self: center;
+}
+.tm.tm-mist .tm-mist-actions,
+.tm.tm-mist .tm-mist-proof {
+  justify-content: center;
+}
+/* Centred, the caption's leading hairline would pull it off the centre line. */
+.tm.tm-mist .tm-mist-proof::before {
+  content: none;
+}
+.tm.tm-mist .tm-bhero-title {
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+}
+
+/* A landscape screen: one centred column. The headline reads as two lines, its claim and then its proof:
+   "True research. True precision." and, alone beneath, "Verified." */
+.tm.tm-mist[data-shape="wide"] .tm-mist-copy {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "head"
+    "aside"
+    ".";
+  grid-template-rows: auto auto minmax(0, 1fr);
+  row-gap: var(--tm-space-5);
+}
+.tm.tm-mist[data-shape="wide"] .tm-bhero-line:nth-child(-n + 2) {
+  display: inline-block;
+}
+.tm.tm-mist[data-shape="wide"] .tm-bhero-line:first-child {
+  margin-right: 0.24em;
+}
+.tm.tm-mist[data-shape="wide"] .tm-bhero-title {
+  font-size: clamp(2.5rem, min(5.4vw, 8.4svh), 5.75rem);
+}
+.tm.tm-mist[data-shape="wide"] .tm-mist-aside {
+  justify-items: center;
+  max-width: 40rem;
+  padding-top: 0;
+  gap: var(--tm-space-5);
+}
+.tm.tm-mist[data-shape="wide"] .tm-mist-proof {
+  margin-top: var(--tm-space-4);
+}
+@media (min-aspect-ratio: 11/10) and (max-height: 760px) {
+  .tm.tm-mist[data-shape="wide"] .tm-bhero-title {
+    font-size: clamp(2rem, min(5vw, 7.4svh), 5.75rem);
+  }
+  .tm.tm-mist[data-shape="wide"] .tm-mist-aside {
+    padding-top: 0;
+  }
+}
+
+/* A portrait screen: the headline's three lines centred; on a tablet the lead and the way in share the floor's row. */
+.tm.tm-mist[data-shape="tall"] .tm-mist-copy {
+  justify-items: stretch;
+}
+.tm.tm-mist[data-shape="tall"] .tm-mist-head {
+  justify-self: center;
+}
+@media (max-width: 560px) {
+  .tm.tm-mist[data-shape] .tm-mist-copy {
+    justify-items: stretch;
+  }
+}
+/* Beneath the room on a phone: the lead and its caption, centred. */
+.tm-mist-foot {
+  text-align: center;
+}
+.tm-mist-foot .tm-mist-lead {
+  margin-inline: auto;
+}
+/* Beneath the room on a landscape screen: the lead set a little larger, as the page's first paragraph. */
+.tm.tm-mist[data-shape="wide"] + .tm-mist-foot,
+.tm.tm-mist[data-shape="wide"] .tm-mist-foot {
+  padding-top: var(--tm-space-5);
+}
+.tm.tm-mist[data-shape="wide"] .tm-mist-foot .tm-mist-lead {
+  max-width: 40rem;
+  font-size: clamp(1.125rem, 1.35vw, 1.3125rem);
+}
+/* On a phone the centred pill takes the top of the wall, so the Motion switch stands on the floor, above the way in. */
+@media (max-width: 560px) {
+  .tm.tm-mist[data-shape="tall"] .tm-seq-switch-rest {
+    top: auto;
+    bottom: calc(var(--tm-space-5) + var(--tm-control) + var(--tm-space-4));
+  }
+}
+.tm.tm-mist .tm-mist-foot {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+}
+.tm.tm-mist[data-shape="wide"] .tm-mist-head {
+  justify-self: center;
+}
+.tm.tm-mist .tm-mist-foot .tm-mist-lead {
+  margin-inline: auto;
+}
+/* A shorter landscape window (most laptops): the whole headline on one line, so the room under it keeps its height. */
+@media (min-aspect-ratio: 11/10) and (max-height: 880px) {
+  .tm.tm-mist[data-shape="wide"] .tm-bhero-line:nth-child(2) {
+    margin-right: 0.24em;
+  }
+  .tm.tm-mist[data-shape="wide"] .tm-bhero-line {
+    display: inline-block;
+  }
+  .tm.tm-mist[data-shape="wide"] .tm-bhero-title {
+    font-size: clamp(2rem, min(3.8vw, 7.2svh), 4rem);
+  }
+}

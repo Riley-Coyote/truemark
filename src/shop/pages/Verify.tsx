@@ -4,7 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { CertificateView } from "../../brand/CertificateView";
 import { CertificateLibrary } from "../../brand/CertificateLibrary";
-import { ProductStage } from "../../brand/ProductStage";
+import { ProductPlinth } from "../../brand/ProductStage";
 import { productById, productCutout, sampleRecord } from "../catalog";
 import { useReveal } from "../motion";
 import { assetUrl } from "../../assetUrl";
@@ -156,7 +156,7 @@ export default function Verify() {
         ) : record ? (
           <div className="tm-vresult-found">
             <div className="tm-vresult-vial" data-reveal>
-              <ProductStage items={[record.product]} index={0} prev={-1} zoomed={false} />
+              <ProductPlinth product={record.product} />
               <Link className="tm-textlink" to={`/product/${record.product.id}`}>
                 {record.product.name} {record.product.size} <ArrowRight size={16} strokeWidth={1.6} />
               </Link>

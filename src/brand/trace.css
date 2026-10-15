@@ -1,4 +1,4 @@
-/* The HPLC trace motif (Trace.tsx): one ink line that draws in, stronger up its peak; colour comes only as light. */
+/* The HPLC trace motif (Trace.tsx): one ink line that draws in, stronger up its peak. */
 .tm-trace {
   position: relative;
   width: auto;
@@ -24,19 +24,6 @@
   --tm-trace-peak-ink: var(--tm-glow);
 }
 
-/* The lit trace's colours (Trace.tsx `lit`): the same line in the brand gradient, shown only
-   where the scene's light has just crossed it. The component draws the mask during a pass;
-   between passes nothing shows. */
-.tm-trace-lit {
-  position: absolute;
-  inset-inline: 0;
-  pointer-events: none;
-  -webkit-mask-image: linear-gradient(transparent, transparent);
-  mask-image: linear-gradient(transparent, transparent);
-}
-.tm-trace-line.is-lit {
-  stroke-width: 1.6;
-}
 .tm-trace-caption {
   position: absolute;
   font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
@@ -72,8 +59,5 @@
   .tm-trace-caption {
     animation: none;
     opacity: 1;
-  }
-  .tm-trace-lit {
-    display: none;
   }
 }

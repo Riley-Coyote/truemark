@@ -3,6 +3,7 @@ import { createLiveAdapter } from "./adapter";
 import { changed } from "./storage";
 import { emit } from "./events";
 import { recoveryPath } from "../accounts";
+import { authRedirectUrl, replaceAuthRoute } from "./auth-navigation";
 
 export function clearAuthCode() {
   const url = new URL(location.href);
@@ -18,11 +19,11 @@ let ready: Promise<void> | undefined;
 export function live() {
   if (!adapter) {
     const client = getClient();
-    adapter = createLiveAdapter(client, { changed, emit, redirectTo: () => location.origin + location.pathname,
+    adapter = createLiveAdapter(client, { changed, emit, redirectTo: authRedirectUrl,
       recoveryStorage: {
         getItem: (key) => localStorage.getItem(key), setItem: (key, value) => localStorage.setItem(key, value), removeItem: (key) => localStorage.removeItem(key),
       },
-      onRecovery: (gate) => { location.hash = recoveryPath(gate); },
+      onRecovery: (gate) => { replaceAuthRoute(recoveryPath(gate)); },
       onPasswordSaved: clearAuthCode,
     });
     client.auth.onAuthStateChange((event, session) => {

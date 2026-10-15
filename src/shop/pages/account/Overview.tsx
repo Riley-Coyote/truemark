@@ -117,8 +117,8 @@ function OrderAgain({ order }: { order: Order }) {
               const result = reorder(order);
               setNote(
                 result.missing
-                  ? `Added ${result.added} of ${order.lines.length} items to your bag. The rest are no longer in the collection.`
-                  : `Added ${vials} ${vials === 1 ? "vial" : "vials"} to your bag.`,
+                  ? `Added ${result.added} of ${order.lines.length} items to your cart. The rest are no longer in the collection.`
+                  : `Added ${vials} ${vials === 1 ? "vial" : "vials"} to your cart.`,
               );
             }}
           >

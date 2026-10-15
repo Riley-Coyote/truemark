@@ -6,7 +6,7 @@ import { products } from "../../data";
 import type { Product } from "../../data";
 import { productCutout, productImage } from "../../shop/catalog";
 import { tone } from "../../shop/ui";
-import { BrandDot } from "../../brand/HeroShelf";
+import { BrandDot } from "../../brand/BrandDot";
 import { VialTrio } from "../VialTrio";
 import { disclosure, disclosurePlacement, doRules, dontRules, releaseChecks } from "../program";
 import type { Rule } from "../program";

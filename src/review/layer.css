@@ -358,11 +358,25 @@
 
 /* ============================== The dock ============================== */
 
+/* What the window's foot lies below its height in whole pixels, added to everything set from the foot: once its
+   toolbar has gone, iPhone Safari's window flickers between whole and a hundredth of a pixel short as the page
+   scrolls, and whatever stands on its foot would be laid out and drawn again with every flicker. Measured this way,
+   the dock and the line above it stand at whole pixels and hold still. (100% is the window's height where it is
+   used, in `bottom`.) */
+.rl-root {
+  --rl-foot: 0px;
+}
+@supports (bottom: round(100dvh, 1px)) {
+  .rl-root {
+    --rl-foot: calc(100% - round(100dvh, 1px));
+  }
+}
+
 .rl-root .rl-dock,
 .rl-root .rl-dock-pill {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--rl-space-4) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--rl-foot) + var(--rl-space-4) + env(safe-area-inset-bottom, 0px));
   z-index: var(--rl-z-dock);
   transform: translateX(-50%);
   border: 1px solid var(--rl-border);
@@ -526,7 +540,7 @@
 .rl-root :is(.rl-hint, .rl-ask, .rl-toast) {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--rl-dock-room) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--rl-foot) + var(--rl-dock-room) + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
@@ -610,7 +624,7 @@
 }
 /* Above the hint or the page's question when one is showing. */
 .rl-root:is([data-commenting], [data-asking]) .rl-toast {
-  bottom: calc(var(--rl-dock-room) + var(--rl-control) + var(--rl-space-2));
+  bottom: calc(var(--rl-foot) + var(--rl-dock-room) + var(--rl-control) + var(--rl-space-2));
 }
 
 /* ============================== Comment mode ============================== */
@@ -1661,7 +1675,7 @@
     padding: 0 var(--rl-space-1);
   }
   .rl-root :is(.rl-hint, .rl-ask) {
-    bottom: calc(var(--rl-dock-room) + var(--rl-space-2) + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--rl-foot) + var(--rl-dock-room) + var(--rl-space-2) + env(safe-area-inset-bottom, 0px));
   }
   /* Confirmations drop in under the bar, clear of the sheets below. */
   .rl-root .rl-toast,

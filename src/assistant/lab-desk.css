@@ -101,8 +101,11 @@
   outline: none;
   border-color: var(--tm-ink);
 }
-/* A page's primary action passing beneath it: it stands aside until the way is clear. */
-.tm-desk-launcher[data-yield] {
+/* A page's primary action passing beneath it: it stands aside until the way is clear. So too while the home page's
+   closer look plays, scrolled through or opened as a film (brand/Sequence.tsx): the story has the screen, and the mark
+   is back as it ends. */
+.tm-desk-launcher[data-yield],
+html:has(.tm-mist:is([data-seq-playing], [data-story])) .tm-desk-launcher {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;

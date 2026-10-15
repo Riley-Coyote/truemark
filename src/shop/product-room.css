@@ -1,0 +1,750 @@
+/*
+ * A product page as the collection's room, the camera close on the product's pedestal (pages/Product.tsx). The first
+ * screen is the room: on a wide screen the vial stands on its pedestal on one side and the details stand on the wall on
+ * the other (on the right, but for the rightmost pedestal, whose room lies to its left); on a phone the vial stands
+ * above them. Below it, the page: the specification, the lot's certificate, the standard and the collection. `.tm` and
+ * a section's modifier share one element, so their rules name both: `.tm.tm-proom`.
+ */
+
+.tm-page.tm-room-page {
+  /* The first screen under the chrome (and the review bar on the review site), as the opening's. */
+  --tm-proom-screen: calc(100svh - var(--tm-header-height) - var(--tm-notice-height) - var(--review-bar-height, 0px));
+  /* A field on the room's wall: the paper, half there. */
+  --tm-proom-field: color-mix(in srgb, var(--tm-paper) 55%, transparent);
+  position: relative;
+  /* The room and the ground below it are the page. Nothing else paints, so the opening shows through while
+     the camera brings this page in (src/brand/flight.ts). */
+  background: transparent;
+}
+/* The page the room ends on: from the room's foot down (its top is set from the measured room). */
+.tm-room-page-ground {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--tm-paper);
+}
+
+/* ---------- The first screen: the room, and the details on its wall ---------- */
+.tm.tm-proom {
+  --tm-bg: transparent;
+  z-index: 1;
+  align-items: center;
+  min-height: max(34rem, var(--tm-proom-screen));
+  /* Above, room for the way back (its height below its own offset) to stand a step clear of the details' pane, which
+     reaches past the column's padding. */
+  padding-block: calc(var(--tm-control) + var(--tm-space-4) + var(--tm-proom-pane-reach)) var(--tm-space-7);
+}
+/* The room is the first screen, whatever the details beside it hold: every product stands in the same room, seen by
+   the same camera. Details taller than the screen run on onto the page below it. It is as tall as the opening's stage
+   (mist.css), so the camera that pushes into the opening ends on exactly this frame. */
+.tm-proom-scene {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 0;
+  height: max(34rem, var(--tm-proom-screen));
+  max-height: 80rem;
+  /* Clipped, never scrollable (as the opening's stage, mist.css). */
+  overflow: hidden;
+  overflow: clip;
+}
+/* The room thins into the page at the foot of its stage: a plain fade over it (no mask on the video layer). */
+.tm-proom-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22%;
+  background: linear-gradient(to bottom, transparent, var(--tm-paper));
+  pointer-events: none;
+}
+
+/* Back to the collection: the opening, by the camera, if that is where you came from; otherwise the catalog. */
+.tm.tm-proom .tm-proom-back {
+  position: absolute;
+  z-index: 2;
+  top: var(--tm-space-5);
+  left: var(--tm-pad);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  min-height: var(--tm-control);
+  margin-left: calc(var(--tm-space-3) * -1);
+  padding: 0 var(--tm-space-4) 0 var(--tm-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  transition:
+    color var(--tm-dur-base) var(--tm-ease-enter),
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+@media (hover: hover) {
+  .tm.tm-proom .tm-proom-back:hover {
+    color: var(--tm-ink);
+    background: var(--tm-proom-field);
+  }
+}
+.tm.tm-proom .tm-proom-back:active {
+  transform: scale(0.97);
+}
+.brand-refinement .tm.tm-proom .tm-proom-back:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink-3);
+  color: var(--tm-ink);
+}
+
+/* The details: one column on the room's wall beside the pedestal (columns 8 to 12, or 1 to 5 for the rightmost
+   pedestal), on a pane of frosted glass standing against the wall. The room behind it is softened and drawn toward the
+   paper; the window light catches its top edge and falls across it; a soft shadow lies where it stands off the wall.
+   It reaches past the text by the same measure all round, never to the screen's edge, so the text keeps its place in
+   the column, and it rises with the details as the camera settles (src/brand/flight.ts), never standing over the
+   collection while the camera moves. Small type on it is set in the second ink, which keeps AA wherever the room behind
+   is darkest (a neighbouring pedestal's shaded side). */
+.tm-proom-panel {
+  position: relative;
+  z-index: 1;
+  grid-column: 8 / -1;
+  display: grid;
+  justify-items: start;
+  padding-block: var(--tm-space-5);
+}
+.tm.tm-proom[data-side="left"] .tm-proom-panel {
+  grid-column: 1 / 6;
+}
+/* The rightmost pedestal's details stand on the room's left, where the window light is brightest and the neighbouring
+   pedestal's shaded side falls behind the name: the size line takes a deeper ink there, so it keeps 3:1 through the
+   loop. */
+.tm.tm-proom[data-side="left"] {
+  --tm-proom-size-ink: color-mix(in oklab, var(--tm-ink-2) 55%, var(--tm-ink-3));
+}
+/* The pane the details stand on (above): the paper over the softened room, lighter where the window light falls, and
+   brighter at its edge. */
+.tm.tm-proom {
+  --tm-proom-pane: color-mix(in srgb, var(--tm-paper) 52%, transparent);
+  --tm-proom-pane-light: color-mix(in srgb, var(--tm-paper) 40%, transparent);
+  --tm-proom-pane-edge: color-mix(in srgb, var(--tm-paper) 72%, transparent);
+  --tm-proom-pane-blur: 28px;
+  --tm-proom-pane-reach: min(var(--tm-space-7), calc(var(--tm-pad) - var(--tm-space-4)));
+}
+.tm.tm-proom .tm-proom-pane {
+  position: absolute;
+  z-index: -1;
+  inset: calc((var(--tm-proom-pane-reach) - var(--tm-space-5)) * -1) calc(var(--tm-proom-pane-reach) * -1);
+  border: 1px solid var(--tm-proom-pane-edge);
+  border-radius: var(--tm-radius-xl);
+  background: linear-gradient(165deg, var(--tm-proom-pane-light), transparent 42%), var(--tm-proom-pane);
+  box-shadow: inset 0 1px 0 var(--tm-proom-pane-edge), var(--tm-shadow-lift);
+  -webkit-backdrop-filter: saturate(1.4) blur(var(--tm-proom-pane-blur));
+  backdrop-filter: saturate(1.4) blur(var(--tm-proom-pane-blur));
+  pointer-events: none;
+}
+.tm.tm-proom .tm-proom-class {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-3);
+  margin: 0;
+  color: var(--tm-ink-2);
+}
+/* The class's own label colour, as the dot the catalog marks it with. */
+.tm.tm-proom .tm-proom-class::before {
+  content: "";
+  width: var(--tm-space-2);
+  height: var(--tm-space-2);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-tone);
+}
+.tm.tm-proom .tm-proom-class a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tm-control-sm);
+  border-bottom: 1px solid transparent;
+  color: inherit;
+  transition: color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+@media (hover: hover) {
+  .tm.tm-proom .tm-proom-class a:hover {
+    color: var(--tm-ink);
+  }
+}
+.tm.tm-proom .tm-proom-class a:active {
+  color: var(--tm-ink-3);
+}
+.brand-refinement .tm.tm-proom .tm-proom-class a:focus-visible {
+  outline: none;
+  color: var(--tm-ink);
+  border-bottom-color: var(--tm-ink-3);
+}
+/* Reach: the room page's small controls take a finger's height, though they look no larger. Each reaches past its own
+   box with a transparent layer, centred on it and at least --tm-reach across (a point 22px from its centre, any way,
+   lands on it), so its underline, border and focus stay where they are drawn. The class link stands over the name just
+   below it, whose top its reach overlaps; text links set in a wrapping row are a gap apart, so their reaches only meet. */
+.tm.tm-proom .tm-proom-class a,
+:is(.tm.tm-proom, .tm.tm-proom-lot, .tm.tm-product-proof, .tm.tm-product-more) .tm-textlink {
+  position: relative;
+}
+.tm.tm-proom .tm-proom-class {
+  position: relative;
+  z-index: 1;
+}
+:is(.tm.tm-proom .tm-proom-class a, :is(.tm.tm-proom, .tm.tm-proom-lot, .tm.tm-product-proof, .tm.tm-product-more) .tm-textlink)::after {
+  content: "";
+  position: absolute;
+  /* (Measured from inside the underline, which takes the box's last pixel: half a pixel each way centres it on the box.) */
+  top: min(0px, calc(50% + 0.5px - var(--tm-reach) / 2));
+  bottom: min(-1px, calc(50% - 0.5px - var(--tm-reach) / 2));
+  left: min(calc(var(--tm-space-2) * -1), calc(50% - var(--tm-reach) / 2));
+  right: min(calc(var(--tm-space-2) * -1), calc(50% - var(--tm-reach) / 2));
+}
+.tm.tm-proom .tm-proom-class a::after {
+  left: 0;
+  right: 0;
+}
+/* What rises with the camera is drawn in its own layer as it rises, and stays in it: it is never drawn again as the
+   move settles, so nothing in it changes there. */
+.tm.tm-proom [data-rise] {
+  will-change: opacity;
+}
+.tm.tm-proom .tm-proom-name {
+  margin: var(--tm-space-3) 0 0;
+  font: var(--tm-weight-light) clamp(2.75rem, min(4.7vw, 8.2svh), 4.5rem) / 1 var(--tm-font-display);
+  letter-spacing: var(--tm-track-display);
+  color: var(--tm-ink);
+  overflow-wrap: anywhere;
+}
+.tm.tm-proom .tm-proom-name > span {
+  display: block;
+  padding-bottom: 0.08em;
+}
+.tm.tm-proom .tm-proom-name .tm-proom-size {
+  color: var(--tm-proom-size-ink, var(--tm-ink-3));
+}
+/* The client's subtitle for the compound, under its name. */
+.tm.tm-proom .tm-proom-descriptor {
+  margin: var(--tm-space-3) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+
+/* The label, up close (LabelDetail): a quiet pill on the pedestal's face under the vial, set as the way back is. The
+   wrapper is placed at the vial's foot; the pill inside it rises with the details. */
+.tm.tm-proom .tm-proom-zoom {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, var(--tm-space-6));
+}
+.tm.tm-proom .tm-proom-zoom-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  min-height: var(--tm-control);
+  padding: 0 var(--tm-space-4) 0 var(--tm-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: transparent;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  white-space: nowrap;
+  cursor: zoom-in;
+  transition:
+    color var(--tm-dur-base) var(--tm-ease-enter),
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+@media (hover: hover) {
+  .tm.tm-proom .tm-proom-zoom-button:hover {
+    color: var(--tm-ink);
+    background: var(--tm-proom-field);
+  }
+}
+.tm.tm-proom .tm-proom-zoom-button:active {
+  transform: scale(0.97);
+}
+.brand-refinement .tm.tm-proom .tm-proom-zoom-button:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink-3);
+  color: var(--tm-ink);
+}
+.tm.tm-proom .tm-proom-zoom-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* The lot and its purity, read as one record line, and the way to its certificate. */
+.tm-proom-proof {
+  width: 100%;
+  margin-top: var(--tm-space-6);
+}
+.tm-proom-proof:not(:empty) {
+  padding-top: var(--tm-space-4);
+  border-top: 1px solid var(--tm-line-strong);
+}
+.tm-proom-proof[data-waiting] {
+  border-top-color: transparent;
+}
+.tm-proom-proof[data-waiting] > * {
+  visibility: hidden;
+}
+.tm-proom-record {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  column-gap: var(--tm-space-7);
+  margin: 0;
+}
+.tm-proom-record div {
+  display: grid;
+  gap: var(--tm-space-2);
+}
+.tm-proom-record dt,
+.tm-proom-spec dt {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-2);
+}
+.tm.tm-proom .tm-proom-record dd {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-lead) / var(--tm-leading-heading) var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm-proom-record dd small {
+  margin-left: var(--tm-space-2);
+  font-size: var(--tm-type-micro);
+  color: var(--tm-ink-2);
+}
+.tm.tm-proom .tm-proom-proof .tm-textlink {
+  margin-top: var(--tm-space-4);
+}
+
+.tm.tm-proom .tm-proom-sizes {
+  width: 100%;
+  max-width: 30rem;
+  margin-top: var(--tm-space-6);
+}
+.tm.tm-proom .tm-proom-sizes legend {
+  color: var(--tm-ink-2);
+}
+.tm.tm-proom .tm-proom-sizes button {
+  background: var(--tm-proom-field);
+}
+.tm.tm-proom .tm-proom-sizes button span {
+  color: var(--tm-ink-2);
+}
+
+/* The price, and the way to buy it. */
+.tm-proom-buy {
+  display: grid;
+  gap: var(--tm-space-4);
+  width: 100%;
+  max-width: 30rem;
+  margin-top: var(--tm-space-6);
+}
+.tm.tm-proom .tm-proom-price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--tm-space-3);
+  margin: 0;
+}
+.tm.tm-proom .tm-proom-price strong {
+  font: var(--tm-weight-regular) var(--tm-type-h3) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+  font-variant-numeric: tabular-nums;
+}
+.tm.tm-proom .tm-proom-price span,
+.tm.tm-proom .tm-proom-stock {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm.tm-proom .tm-buy-row {
+  margin: 0;
+}
+/* The steppers' buttons fill the field inside its border: the field takes its border outside the control's height, so
+   each button is a whole control tall (and the Add to cart beside it stretches to match). */
+.tm.tm-proom .tm-quantity {
+  box-sizing: content-box;
+  background: var(--tm-proom-field);
+}
+.tm.tm-proom .tm-fineprint {
+  margin: 0;
+  color: var(--tm-ink-2);
+}
+.tm.tm-proom .tm-proom-notice {
+  max-width: 30rem;
+  margin: var(--tm-space-4) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.55 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+
+/* A few facts in the panel: identifiers where the data has them, otherwise this lot's own results. */
+.tm-proom-spec {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--tm-space-4) var(--tm-space-5);
+  width: 100%;
+  max-width: 30rem;
+  margin: var(--tm-space-6) 0 0;
+  padding-top: var(--tm-space-4);
+  border-top: 1px solid var(--tm-line);
+}
+.tm-proom-spec:empty {
+  display: none;
+}
+.tm-proom-spec div {
+  display: grid;
+  align-content: start;
+  gap: var(--tm-space-2);
+  min-width: 0;
+}
+.tm.tm-proom .tm-proom-spec dd {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.35 var(--tm-font-sans);
+  color: var(--tm-ink);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Phones and portrait screens: the room above, the details below on the page ---------- */
+@media (max-width: 760px), (max-aspect-ratio: 11/10) {
+  .tm.tm-proom {
+    display: block;
+    min-height: 0;
+    padding: 0;
+  }
+  /* Cut short enough for the name, the price and Add to cart to share the first screen on the smallest phones. */
+  .tm-proom-scene {
+    position: relative;
+    height: min(24.35rem, 46svh);
+  }
+  .tm-proom-fade {
+    height: 34%;
+  }
+  .tm.tm-proom .tm-proom-back {
+    top: var(--tm-space-3);
+  }
+  /* On a phone the label's control stands from the vial's foot down its pedestal's face, clear of the class's reach
+     below it. */
+  .tm.tm-proom .tm-proom-zoom {
+    transform: translateX(-50%);
+  }
+  /* Below the room, on the page's paper: no glass needed. */
+  .tm.tm-proom .tm-proom-pane {
+    display: none;
+  }
+  .tm-proom-panel {
+    margin-top: calc(var(--tm-space-6) * -1);
+    padding: 0 var(--tm-pad) var(--tm-space-7);
+  }
+  /* A name and its size hold one line on a phone where they can ("Retatrutide 20 mg"). */
+  .tm.tm-proom .tm-proom-name {
+    font-size: clamp(2.25rem, 9.5vw, 3.5rem);
+  }
+  /* Sizes in one row of pills: the price is the line just below them. */
+  .tm.tm-proom .tm-proom-sizes > div {
+    grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
+  }
+  .tm.tm-proom .tm-proom-sizes button {
+    align-items: center;
+    justify-content: center;
+    min-height: var(--tm-control);
+    padding-block: 0;
+    border-radius: var(--tm-radius-pill);
+  }
+  .tm.tm-proom .tm-proom-sizes button span {
+    display: none;
+  }
+  .tm.tm-proom .tm-proom-name > span {
+    display: inline;
+  }
+  .tm-proom-proof,
+  .tm-proom-buy,
+  .tm.tm-proom .tm-proom-sizes {
+    margin-top: var(--tm-space-5);
+  }
+  /* The price is the chosen size's: it follows its pills closely. */
+  .tm.tm-proom .tm-proom-sizes + .tm-proom-buy {
+    margin-top: var(--tm-space-4);
+  }
+  .tm-proom-buy,
+  .tm.tm-proom .tm-proom-sizes,
+  .tm-proom-spec,
+  .tm.tm-proom .tm-proom-notice {
+    max-width: none;
+  }
+}
+
+/* ---------- The label, up close (LabelDetail) ----------
+   Over the dimmed page as the certificate opens (certificate-dialog.css); a sheet on a phone. The label is the vial's own
+   cut-out, untouched, cropped to its printed label (rows 490 to 935 of its 1112) and never shown larger than the art. */
+.tm-labeldlg {
+  --tm-labeldlg-ease: var(--tm-ease-glide, cubic-bezier(0.32, 0.72, 0, 1));
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--tm-space-6);
+  background: var(--tm-scrim);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition:
+    background-color var(--tm-dur-slow) var(--tm-labeldlg-ease),
+    backdrop-filter var(--tm-dur-slow) var(--tm-labeldlg-ease),
+    -webkit-backdrop-filter var(--tm-dur-slow) var(--tm-labeldlg-ease);
+}
+.tm-labeldlg:not([data-state="open"]) {
+  background: transparent;
+  backdrop-filter: blur(0);
+  -webkit-backdrop-filter: blur(0);
+}
+.tm.tm-labeldlg-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--tm-space-5);
+  width: min(44rem, 100%);
+  max-height: 100%;
+  padding: var(--tm-space-7);
+  overflow: auto;
+  border-radius: var(--tm-radius-xl);
+  background: var(--tm-paper);
+  color: var(--tm-ink);
+  box-shadow: var(--tm-shadow-float);
+  outline: none;
+  transition: transform var(--tm-dur-slow) var(--tm-labeldlg-ease), opacity var(--tm-dur-slow) var(--tm-labeldlg-ease);
+}
+.tm-labeldlg:not([data-state="open"]) .tm-labeldlg-panel {
+  opacity: 0;
+  transform: translateY(var(--tm-space-4)) scale(0.98);
+}
+.tm-labeldlg-grab {
+  display: none;
+}
+.tm.tm-labeldlg-panel .tm-labeldlg-head {
+  display: grid;
+  gap: var(--tm-space-2);
+  padding-right: var(--tm-space-7);
+}
+.tm.tm-labeldlg-panel .tm-eyebrow {
+  margin: 0;
+  color: var(--tm-ink-2);
+}
+.tm.tm-labeldlg-panel .tm-labeldlg-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-h3) / var(--tm-leading-heading) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+}
+.tm.tm-labeldlg-panel .tm-labeldlg-title span {
+  color: var(--tm-ink-3);
+}
+/* The label at up to its own width, on the room's lilac: the glass at its sides stays see-through. */
+.tm-labeldlg-label {
+  /* The cut-out's own width: the label is never drawn larger than the art, so it stays crisp. */
+  --tm-label-art: 578px;
+  position: relative;
+  justify-self: center;
+  width: 100%;
+  max-width: var(--tm-label-art);
+  aspect-ratio: 578 / 445;
+  overflow: hidden;
+  border-radius: var(--tm-radius-lg);
+  background: var(--tm-lilac-100);
+}
+.tm-labeldlg-label img {
+  position: absolute;
+  left: 0;
+  top: calc(-490 / 445 * 100%);
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+.tm.tm-labeldlg-panel .tm-labeldlg-lot {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-label) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm .tm-labeldlg-close {
+  position: absolute;
+  top: var(--tm-space-5);
+  right: var(--tm-space-5);
+  display: grid;
+  place-items: center;
+  width: var(--tm-control);
+  height: var(--tm-control);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: transparent;
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    color var(--tm-dur-base) var(--tm-ease-enter),
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+@media (hover: hover) {
+  .tm .tm-labeldlg-close:hover {
+    background: var(--tm-wash);
+    color: var(--tm-ink);
+  }
+}
+.tm .tm-labeldlg-close:active {
+  transform: scale(0.94);
+}
+.brand-refinement .tm .tm-labeldlg-close:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink-3);
+  color: var(--tm-ink);
+}
+@media (max-width: 760px) {
+  .tm-labeldlg {
+    top: var(--tm-sheet-top, 0px);
+    bottom: auto;
+    height: var(--tm-sheet-height, 100dvh);
+    place-items: end stretch;
+    padding: 0;
+  }
+  .tm.tm-labeldlg-panel {
+    width: 100%;
+    padding: var(--tm-space-7) var(--tm-margin) calc(var(--tm-space-6) + env(safe-area-inset-bottom, 0px));
+    border-radius: var(--tm-radius-xl) var(--tm-radius-xl) 0 0;
+    box-shadow: none;
+  }
+  .tm-labeldlg:not([data-state="open"]) .tm-labeldlg-panel {
+    opacity: 1;
+    transform: translateY(100%);
+  }
+  .tm-labeldlg-grab {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: block;
+    height: var(--tm-space-6);
+    touch-action: none;
+  }
+  .tm-labeldlg-grab::before {
+    content: "";
+    position: absolute;
+    top: var(--tm-space-2);
+    left: 50%;
+    width: var(--tm-space-7);
+    height: var(--tm-space-1);
+    border-radius: var(--tm-radius-pill);
+    background: var(--tm-line-strong);
+    transform: translateX(-50%);
+  }
+  .tm.tm-labeldlg-panel .tm-labeldlg-head {
+    touch-action: none;
+  }
+  .tm .tm-labeldlg-close {
+    top: var(--tm-space-4);
+    right: var(--tm-space-4);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tm-labeldlg,
+  .tm.tm-labeldlg-panel {
+    transition: none;
+  }
+}
+
+/* ---------- Below the first screen ---------- */
+/* The room thins into paper, so the page under it continues on paper. */
+.tm.tm-product-spec {
+  --tm-bg: var(--tm-paper);
+}
+.tm-proom-spec-body,
+.tm-proom-lot-body {
+  grid-column: 6 / -1;
+  min-width: 0;
+}
+.tm-proom-spec-body .tm-product-desc {
+  margin: 0 0 var(--tm-space-5);
+  max-width: var(--tm-measure-base);
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.55 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-proom-spec-body .tm-buy-notes {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--tm-space-2) var(--tm-space-5);
+  margin: 0 0 var(--tm-space-7);
+}
+
+.tm.tm-proom-lot {
+  --tm-bg: var(--tm-paper);
+  border-top: 1px solid var(--tm-line);
+}
+.tm-proom-figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--tm-space-5);
+  margin: 0 0 var(--tm-space-6);
+}
+.tm-proom-figures div {
+  display: grid;
+  align-content: start;
+  gap: var(--tm-space-2);
+  padding-top: var(--tm-space-4);
+  border-top: 1px solid var(--tm-line-strong);
+}
+.tm-proom-figures dt {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-proom-figures dd {
+  display: grid;
+  gap: var(--tm-space-2);
+  margin: 0;
+}
+.tm.tm-proom-lot .tm-figure {
+  font: var(--tm-weight-light) var(--tm-type-h2) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+  overflow-wrap: anywhere;
+}
+.tm.tm-proom-lot .tm-figure small {
+  margin-left: var(--tm-space-1);
+  font-size: 0.5em;
+  color: var(--tm-ink-3);
+}
+/* A word or a date among the figures, set a step down so it holds its column. */
+.tm.tm-proom-lot .tm-proom-word {
+  font-size: var(--tm-type-h3);
+}
+/* The lot number is the heading: a step down from a section's, so an identifier holds one line in its column. */
+.tm.tm-proom-lot .tm-proom-lot-number {
+  font-size: var(--tm-type-h2);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.tm.tm-proom-lot .tm-figure-text {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-proom-lot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tm-space-5);
+}
+
+@media (max-width: 960px) {
+  .tm-proom-spec-body,
+  .tm-proom-lot-body {
+    grid-column: 1 / -1;
+    margin-top: var(--tm-space-6);
+  }
+  .tm-proom-figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

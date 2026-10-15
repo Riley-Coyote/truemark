@@ -17,14 +17,17 @@ export function CertificateDialog({ record, onClose }: { record: LotRecord; onCl
   const titleId = useId();
   const seen = useVisibleViewport();
   const { state, requestClose } = useSheetPresence(onClose);
+  // Leaving, it takes no taps or keys, and focus goes back as it begins to go.
+  const leaving = state === "leaving";
   useScrollLock();
-  useSheetFocus(panel, requestClose, "never");
+  useSheetFocus(panel, requestClose, "never", leaving);
   const drag = useSheetDrag(panel, requestClose, (target) => Boolean(target.closest(".tm-certdlg-grab, .tm-cert-head")));
   return (
     <>
       <div
         className="tm-certdlg"
         data-state={state}
+        inert={leaving}
         style={viewportBox(seen, "tm-sheet")}
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) requestClose();
@@ -33,7 +36,8 @@ export function CertificateDialog({ record, onClose }: { record: LotRecord; onCl
         <section ref={panel} className="tm tm-certdlg-panel" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} {...drag}>
           <span className="tm-certdlg-grab" aria-hidden="true" />
           <div className="tm-certdlg-scroll">
-            <CertificateView record={record} pageLink onLeave={onClose} titleId={titleId} />
+            {/* Following the lot's page, it leaves as the page changes: on a phone, with the page it was on. */}
+            <CertificateView record={record} pageLink onLeave={requestClose} titleId={titleId} />
           </div>
           <button type="button" className="tm-certdlg-close" aria-label="Close" onClick={requestClose}>
             <X size={18} strokeWidth={1.8} aria-hidden="true" />

@@ -2,7 +2,7 @@ import { LIVE } from "../platform/mode";
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { BrandDot } from "../brand/HeroShelf";
+import { BrandDot } from "../brand/BrandDot";
 import { money } from "../data";
 import { upsTracking } from "../platform/seed";
 import { store } from "../platform/store";

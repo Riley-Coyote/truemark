@@ -1,5 +1,12 @@
 /* Global chrome for the TrueMark platform: notice, header, footer, dialogs. */
 
+/* The notice and the footer each stand in their own stacking, over anything a page lays behind itself: the home page's
+   light is a fixed layer in the page's own stacking (atmosphere.css), and without this it would be drawn over both. */
+.tm-notice,
+.tm-footer {
+  position: relative;
+  z-index: 1;
+}
 .tm-notice {
   background: var(--tm-night);
   color: var(--tm-glow-2);
@@ -152,11 +159,119 @@
 .tm-menu-trigger {
   display: none;
 }
+/* Reach: the header's small controls (and the footer's logo) take a finger's height, though they look no
+   larger. Each reaches past its own box with a transparent layer, so its focus underline or ring stays where
+   it was drawn. */
+.tm-logo,
+.tm-textool,
+.tm-menu-trigger {
+  position: relative;
+}
+.tm-logo::after,
+.tm-textool::after,
+.tm-menu-trigger::after {
+  content: "";
+  position: absolute;
+}
+.tm-logo::after {
+  inset: calc(var(--tm-space-2) * -1) 0;
+}
+.tm-textool::after {
+  inset: calc(var(--tm-space-3) * -1) 0;
+}
+.tm-menu-trigger::after {
+  inset: calc(var(--tm-space-2) * -1);
+}
+
+/* ---------- The header follows the light (the home page only; src/brand/dusk.ts, HEADER_FOLLOWS_LIGHT) ---------- */
+/* While the light falls into the night chapter the header's glass turns from white to dark, and back as it rises
+   into the closing. At rest each glass is tinted by the light it is in, held to where its ink keeps AA. The turn
+   (Atmosphere.tsx says when) takes 190ms and never passes through a grey neither ink can read on: the white glass
+   darkens toward twilight while its ink deepens to the night floor's, then in one frame, across a step too small
+   to see, the glass is the dark one and the ink and the logo are the light ones, and the dark glass settles.
+   Every frame of it keeps the ink at AA. */
+@property --tm-header-turn {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+html[data-tm-header-light] .brand-refinement .tm-header {
+  /* How dark the light overhead is, 0 to 1 along the sky's stops (Atmosphere.tsx writes it). */
+  --tm-dark: var(--tm-light-top, 0);
+  /* The turn's two halves (0 to 1 each) and the frame it changes sides (0, then 1). */
+  --tm-turn-day: clamp(0, calc(var(--tm-header-turn) * 2), 1);
+  --tm-turn-night: clamp(0, calc(var(--tm-header-turn) * 2 - 1), 1);
+  --tm-header-night: clamp(0, calc((var(--tm-header-turn) - 0.5) * 100000), 1);
+  background: transparent;
+  border-bottom-color: color-mix(in oklab, var(--tm-night-line) calc(var(--tm-header-night) * 100%), var(--tm-line));
+  transition: --tm-header-turn 190ms linear;
+}
+html[data-tm-header-sky="night"] .brand-refinement .tm-header {
+  --tm-header-turn: 1;
+}
+/* One glass. By day it is the light it is in, no darker than the light a third of the way down, darkening through
+   the turn's first half to the twilight its ink can still be read on; by night it begins where the light ink first
+   can, and settles to the light it is in, no lighter than the night's own. */
+html[data-tm-header-light] .brand-refinement .tm-header::before {
+  --tm-glass-day: calc(min(var(--tm-dark), 0.4) + (0.5 - min(var(--tm-dark), 0.4)) * var(--tm-turn-day));
+  --tm-glass-night: calc(0.58 + (max(var(--tm-dark), 0.62) - 0.58) * var(--tm-turn-night));
+  --tm-s: calc((var(--tm-glass-day) + (var(--tm-glass-night) - var(--tm-glass-day)) * var(--tm-header-night)) * 6);
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in oklab, var(--tm-sky) 92%, transparent);
+  pointer-events: none;
+}
+/* The bar's ink turns with its glass: by day it deepens to the night floor's through the turn, by night it begins
+   at the paper's white and settles to its glow. The phone menu dropped beneath it stays on paper, in its own ink. */
+html[data-tm-header-light] .tm-header-inner {
+  /* By day the ink deepens as the glass follows the light down; by night it stays lit to the paper's white while the
+     glass is lighter than the night's own. */
+  --tm-ink-day: calc(max(var(--tm-turn-day), clamp(0, (var(--tm-dark) - 0.08) / 0.12, 1)) * 100%);
+  --tm-ink-night: calc(max(1 - var(--tm-turn-night), clamp(0, (0.8 - var(--tm-dark)) / 0.16, 1)) * 100%);
+  --tm-ink: color-mix(in oklab, color-mix(in oklab, var(--tm-glow-full) var(--tm-ink-night), var(--tm-glow-rest)) calc(var(--tm-header-night) * 100%), color-mix(in oklab, var(--tm-ink-deep) var(--tm-ink-day), var(--tm-ink-rest)));
+  --tm-ink-2: color-mix(in oklab, color-mix(in oklab, var(--tm-glow-full) var(--tm-ink-night), var(--tm-glow-rest)) calc(var(--tm-header-night) * 100%), color-mix(in oklab, var(--tm-ink-deep) var(--tm-ink-day), var(--tm-ink-2-rest)));
+  --tm-ink-3: color-mix(in oklab, color-mix(in oklab, var(--tm-glow-full) var(--tm-ink-night), var(--tm-glow-3-rest)) calc(var(--tm-header-night) * 100%), color-mix(in oklab, var(--tm-ink-deep) var(--tm-ink-day), var(--tm-ink-3-rest)));
+}
+/* The client's own lockups in the header, black by day and white by night, changing in the same frame as the ink. The
+   footer's stays the black one. */
+.tm-logo-night {
+  display: none;
+}
+html[data-tm-header-light] .tm-header .tm-logo-night {
+  position: absolute;
+  inset: 0;
+  display: block;
+  opacity: var(--tm-header-night);
+  pointer-events: none;
+}
+html[data-tm-header-light] .tm-header .tm-logo > .brand-logo {
+  opacity: calc(1 - var(--tm-header-night));
+}
+/* While the light drives the bar's ink, nothing eases it behind: a hover's colour change there is immediate. */
+html[data-tm-header-light] .tm-header-inner :is(.tm-nav a, .tm-textool, .tm-icon, .tm-ask) {
+  transition-property: background-color, border-color, transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-tm-header-light] .brand-refinement .tm-header {
+    transition: none;
+  }
+}
 
 /* Dialogs shared by search, navigation and the bag. */
 .brand-refinement .search-input-wrap input::-webkit-search-cancel-button {
   -webkit-appearance: none;
   appearance: none;
+}
+/* A dialog's Close takes a finger's size, though it looks no larger (the bag's reaches further: checkout.css). */
+.brand-refinement .modal-heading .icon-button {
+  position: relative;
+}
+.brand-refinement .modal-heading .icon-button::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc(50% - var(--tm-reach) / 2));
 }
 /* They come and go as pages do (navigation.css): the same glide, the same time. On a wider
    screen search is a dialog that settles in and the bag a panel from the right edge; on a phone
@@ -293,7 +408,10 @@
   background: var(--tm-paper);
   box-shadow: var(--tm-shadow-float);
   overscroll-behavior: contain;
-  animation: tm-menu-drop var(--tm-dur-base) var(--tm-ease-enter);
+  /* It comes and goes by transition, so asked back on its way in or out, it turns from wherever it had reached. */
+  transition:
+    opacity var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-base) var(--tm-ease-enter);
 }
 /* The page stays in view beneath the open menu, dimmed: a tap on it closes the menu and goes
    no further, and a drag on it does not scroll the page away underneath. */
@@ -303,18 +421,28 @@
   z-index: 39;
   background: color-mix(in srgb, var(--tm-scrim) 55%, transparent);
   touch-action: none;
-  animation: tm-scrim-in var(--tm-dur-base) var(--tm-ease-enter);
+  transition: opacity var(--tm-dur-base) var(--tm-ease-enter);
 }
-@keyframes tm-scrim-in {
-  from {
-    opacity: 0;
-  }
-}
-@keyframes tm-menu-drop {
-  from {
+/* Arriving, the panel drops from just under the header's edge as the page beneath dims. */
+@starting-style {
+  .tm-mmenu {
     opacity: 0;
     transform: translateY(calc(var(--tm-space-2) * -1));
   }
+  .tm-mmenu-scrim {
+    opacity: 0;
+  }
+}
+/* Leaving (Chrome.tsx), the drop reversed: the panel lifts back into the header as it fades and the page beneath
+   brightens, in two thirds of the time they took to arrive. Neither takes a tap meanwhile. */
+.tm-mmenu[data-state="closing"] {
+  opacity: 0;
+  transform: translateY(calc(var(--tm-space-2) * -1));
+  transition-duration: var(--tm-dur-leave);
+}
+.tm-mmenu-scrim[data-state="closing"] {
+  opacity: 0;
+  transition-duration: var(--tm-dur-leave);
 }
 .tm-mobile-nav {
   display: flex;
@@ -353,6 +481,26 @@
   color: var(--tm-ink);
   background: var(--tm-wash);
 }
+/* The one tapped holds its press as the menu leaves, its arrow leaning toward the page it opens, and the current page's
+   mark gives way to it. Both change in the frame of the tap: on a phone a page that is ready glides in at once, over
+   the menu as that frame shows it. */
+.tm-mobile-nav a[data-chosen] {
+  color: var(--tm-ink);
+  background: color-mix(in srgb, var(--tm-ink) 7%, transparent);
+}
+.tm-mobile-nav a[data-chosen] svg {
+  color: var(--tm-ink-2);
+  transform: translateX(2px);
+}
+.tm-mobile-nav:has(a[data-chosen]) a[aria-current="page"]:not([data-chosen]) {
+  color: var(--tm-ink-2);
+  background: transparent;
+}
+.tm-mobile-nav:has(a[data-chosen]) a,
+.tm-mobile-nav a[data-chosen] svg,
+.tm-mmenu-tool[data-chosen] {
+  transition: none;
+}
 .brand-refinement .tm-mobile-nav a:focus-visible {
   outline: none;
   border-color: var(--tm-ink-2);
@@ -382,7 +530,8 @@
 .tm-mmenu-tool:hover {
   background: var(--tm-wash);
 }
-.tm-mmenu-tool:active {
+.tm-mmenu-tool:active,
+.tm-mmenu-tool[data-chosen] {
   background: color-mix(in srgb, var(--tm-ink) 7%, transparent);
 }
 .brand-refinement .tm-mmenu-tool:focus-visible {
@@ -401,18 +550,33 @@
 @media (prefers-reduced-motion: reduce) {
   .tm-mmenu,
   .tm-mmenu-scrim {
-    animation: none;
+    transition: none;
   }
   .tm-mobile-nav a svg {
     transition: none;
   }
-  .tm-mobile-nav a:hover svg {
+  .tm-mobile-nav a:hover svg,
+  .tm-mobile-nav a[data-chosen] svg {
     transform: none;
   }
 }
 
 /* Footer */
+/* Past the page's end, iPhone Safari fills the screen's foot under its toolbar with the page's own colour: the footer's,
+   so a page ends in one colour. Under an open sheet it is the sheet's paper, set as the page locks, which is when Safari
+   takes it up (sheet.tsx useScrollLock). */
+html:has(.tm-footer) {
+  background-color: var(--tm-studio);
+}
+html[data-scroll-locked]:has(.tm-footer) {
+  background-color: var(--tm-paper);
+}
+/* Three bands on the page's column grid: the brand and its four columns; the research-use notice and the client's
+   address; the copyright and the policy pages. The address and the policies hang from the third column's line, where
+   the notice and the copyright end, so the footer reads as two halves at every width a laptop or tablet has. */
 .tm-footer {
+  /* A footer link under a finger: its row, across its column, is the link. */
+  --tm-footer-row: 2.25rem;
   background: var(--tm-studio);
   border-top: 1px solid var(--tm-line);
   color: var(--tm-ink);
@@ -420,22 +584,25 @@
 .tm-footer-inner {
   max-width: var(--tm-content);
   margin-inline: auto;
-  padding: var(--tm-space-9) var(--tm-margin) var(--tm-space-6);
+  padding: var(--tm-space-8) var(--tm-margin) var(--tm-space-5);
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--tm-gutter);
-  row-gap: var(--tm-space-8);
+  row-gap: var(--tm-space-6);
 }
 .tm-footer-lead {
   grid-column: 1 / span 4;
   display: flex;
   flex-direction: column;
-  gap: var(--tm-space-6);
+  align-items: flex-start;
+  gap: var(--tm-space-5);
 }
 .brand-refinement .tm-footer-line {
-  font: var(--tm-weight-light) clamp(1.5rem, 2.1vw, 1.875rem) / var(--tm-leading-heading) var(--tm-font-sans);
+  max-width: var(--tm-measure-tight);
+  font: var(--tm-weight-light) var(--tm-type-lead) / var(--tm-leading-heading) var(--tm-font-sans);
   letter-spacing: var(--tm-track-heading);
   color: var(--tm-ink);
+  text-wrap: balance;
 }
 .tm-footer-line span {
   color: var(--tm-ink-3);
@@ -457,15 +624,34 @@
   text-transform: uppercase;
   color: var(--tm-ink-3);
 }
+/* Each link fills its row, across the column and halfway into the gap either side, so a finger finds it however
+   short its words; its words stay where they were. */
 .tm-footer-column a {
+  align-self: stretch;
+  padding-block: calc(var(--tm-space-3) / 2);
+  margin-block: calc(var(--tm-space-3) / -2);
   font-size: var(--tm-type-ui);
   color: var(--tm-ink-2);
   transition: color var(--tm-dur-base) var(--tm-ease-enter);
 }
-.tm-footer-column a:hover {
+/* Under a finger each link is a row of its own, the rows touching, so there is no gap between them to miss. */
+@media (pointer: coarse) {
+  .tm-footer-column {
+    gap: 0;
+  }
+  .tm-footer-column a {
+    display: flex;
+    align-items: center;
+    min-height: var(--tm-footer-row);
+    padding-block: 0;
+    margin-block: 0;
+  }
+}
+.tm-footer-column a:hover,
+.tm-footer-policies a:hover {
   color: var(--tm-ink);
 }
-.brand-refinement .tm-footer-column a:focus-visible {
+.brand-refinement :is(.tm-footer-column, .tm-footer-policies) a:focus-visible {
   outline: none;
   color: var(--tm-ink);
   text-decoration: underline;
@@ -474,51 +660,82 @@
 }
 .tm-footer-legal {
   grid-column: 1 / -1;
+  margin-top: var(--tm-space-4);
   padding-top: var(--tm-space-6);
   border-top: 1px solid var(--tm-line);
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--tm-gutter);
-  row-gap: var(--tm-space-5);
+  row-gap: var(--tm-space-4);
+  align-items: start;
 }
 .brand-refinement .tm-footer-legal p {
-  grid-column: 1 / span 7;
+  grid-column: 1 / span 6;
   font-size: var(--tm-type-micro);
   line-height: var(--tm-leading-body);
   color: var(--tm-ink-3);
   max-width: var(--tm-measure-base);
+  text-wrap: pretty;
 }
 .brand-refinement .tm-footer-legal p strong {
   font-weight: var(--tm-weight-medium);
   color: var(--tm-ink-2);
 }
-.tm-footer-meta {
-  grid-column: 8 / -1;
-  align-self: end;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--tm-space-2) var(--tm-space-4);
-  font-size: var(--tm-type-micro);
-  color: var(--tm-ink-3);
-}
-/* The client's legal name and mailing address, a full row above the copyright line. */
+/* The client's legal name and mailing address. */
 .tm-footer-address {
-  flex-basis: 100%;
+  grid-column: 7 / -1;
   display: flex;
   flex-direction: column;
   gap: var(--tm-space-1);
   font-style: normal;
+  font-size: var(--tm-type-micro);
+  line-height: var(--tm-leading-body);
+  color: var(--tm-ink-3);
 }
 .tm-footer-address span:first-child {
   color: var(--tm-ink-2);
 }
+.tm-footer-base {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--tm-gutter);
+  row-gap: var(--tm-space-2);
+  align-items: baseline;
+  font-size: var(--tm-type-micro);
+  color: var(--tm-ink-3);
+}
+/* The copyright, and the line the client keeps with it, each on a line of its own at every width. */
+.tm-footer-copy {
+  grid-column: 1 / span 6;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tm-space-1);
+}
+.tm-footer-policies {
+  grid-column: 7 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--tm-space-5);
+}
+.tm-footer-policies a {
+  color: var(--tm-ink-2);
+  transition: color var(--tm-dur-base) var(--tm-ease-enter);
+}
+@media (pointer: coarse) {
+  .tm-footer-policies a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tm-footer-row);
+  }
+}
 .tm-preview-tag {
+  grid-column: 1 / -1;
   font-family: var(--tm-font-mono);
   font-size: var(--tm-type-micro);
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
   .tm-nav,
   .tm-hide-small {
     display: none;
@@ -539,10 +756,6 @@
   .tm-footer-lead + .tm-footer-column {
     grid-column: span 3;
   }
-  .brand-refinement .tm-footer-legal p,
-  .tm-footer-meta {
-    grid-column: 1 / -1;
-  }
 }
 @media (max-width: 560px) {
   .tm-notice-inner {
@@ -551,14 +764,25 @@
   .tm-notice a {
     display: none;
   }
+  /* A phone: two columns of links, then each band down the screen. */
+  .tm-footer-inner {
+    padding-top: var(--tm-space-7);
+  }
+  .tm-footer-lead {
+    gap: var(--tm-space-4);
+  }
   .tm-footer-column,
   .tm-footer-lead + .tm-footer-column {
     grid-column: span 6;
   }
-  .tm-footer-meta {
-    flex-direction: column;
+  .tm-footer-legal {
+    margin-top: 0;
+    padding-top: var(--tm-space-5);
   }
-  .tm-footer-inner {
-    padding-top: var(--tm-space-7);
+  .brand-refinement .tm-footer-legal p,
+  .tm-footer-address,
+  .tm-footer-copy,
+  .tm-footer-policies {
+    grid-column: 1 / -1;
   }
 }

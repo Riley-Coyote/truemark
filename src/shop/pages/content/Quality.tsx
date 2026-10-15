@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { assetUrl } from "../../../assetUrl";
-import { BrandDot } from "../../../brand/HeroShelf";
+import { BrandDot } from "../../../brand/BrandDot";
 import { Trace } from "../../../brand/Trace";
 import { Track } from "../../../brand/Track";
 import { process, specification } from "../../../brand/quality-copy";

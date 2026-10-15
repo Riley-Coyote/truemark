@@ -1,0 +1,2268 @@
+/*
+ * The opening's closer look (Sequence.tsx, sequence-film.ts), after Motion 04: a track as long as the story, its view
+ * held below the header while the reader scrolls through it; the opening's stage at the view's top, its plate carried
+ * by the camera; the vial in the air over it; each chapter's words and cards over them; the journey at the view's foot.
+ * Everything that moves is written by the film, frame by frame: opacity and transforms only, on layers the browser
+ * composites, and nothing blurred live. What changes with a chapter (the detail open, the finding read) changes on the
+ * track's data-detail and data-finding, and eases by its own transition.
+ */
+
+:root {
+  /* The printed lot number's ink on the client's label, sampled from the label's print layer: wherever the story sets
+     the number as text, it is the same number in the same ink. */
+  --tm-seq-print-ink: #002931;
+  /* The one colour the story adds to the room: the detail being read. The client's own purple. */
+  --tm-seq-accent: var(--tm-purple);
+  --tm-seq-accent-wash: color-mix(in srgb, var(--tm-seq-accent) 7%, var(--tm-paper));
+  --tm-seq-accent-line: color-mix(in srgb, var(--tm-seq-accent) 30%, transparent);
+  /* The cards: the room's paper, nearly opaque, with a lit edge. */
+  --tm-seq-card: color-mix(in srgb, var(--tm-paper) 94%, transparent);
+  /* The room's light, from the upper left (where the vial's shadow falls from, and the certificate's): what stands in
+     the room is lit on the side toward it, falls into the room's shade away from it, and casts its shadow from it. */
+  --tm-seq-lit: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 46%);
+  --tm-seq-shade: linear-gradient(135deg, rgba(36, 26, 74, 0) 40%, rgba(36, 26, 74, 0.07));
+  /* A card's edge: bright where it faces the light (top, left), dimmer where it turns from it. */
+  --tm-seq-lit-edge: color-mix(in srgb, var(--tm-paper) 90%, transparent) color-mix(in srgb, var(--tm-paper) 50%, transparent) color-mix(in srgb, var(--tm-paper) 42%, transparent) color-mix(in srgb, var(--tm-paper) 82%, transparent);
+  --tm-seq-cast-float: 0 1px 2px rgba(36, 26, 74, 0.06), 4px 9px 18px -8px rgba(36, 26, 74, 0.12), 16px 34px 64px -26px rgba(36, 26, 74, 0.3);
+  --tm-seq-cast-lift: 0 1px 2px rgba(36, 26, 74, 0.06), 5px 12px 28px -12px rgba(36, 26, 74, 0.22);
+  /* The room's light itself, as the certificate dissolves into it: white with the room's lilac in it. */
+  --tm-seq-room-light: color-mix(in srgb, var(--tm-paper) 80%, var(--tm-mist-floor));
+  /* The marker's halo while its detail is read. */
+  --tm-seq-halo: 0 0 0 5px color-mix(in srgb, var(--tm-paper) 60%, transparent), var(--tm-seq-cast-lift);
+  /* The last line of the finale, quieter: the room's ink toward the client's purple. */
+  --tm-seq-quiet: color-mix(in oklab, var(--tm-purple) 45%, var(--tm-ink-3));
+  /* How quickly a detail opens and a finding changes. */
+  --tm-seq-change: var(--tm-dur-slow);
+}
+
+/* ---------- The track and its view ---------- */
+
+.tm-seq-track {
+  /* The view: the window below the header (and the review bar, on the review site), measured by the film. */
+  --tm-seq-view: calc(100vh - var(--tm-seq-top, 0px));
+  /* What a phone's toolbars cover of the view's foot while they show: the words and controls there stand above it. */
+  --tm-seq-toolbar: 0px;
+  /* How many views of scroll the story runs while the view holds: a phone a little longer, its views shorter. */
+  --tm-seq-run: 7.6;
+  /* The room the journey takes at the view's foot. */
+  --tm-seq-foot: calc(var(--tm-space-5) + 3.375rem + var(--tm-space-4) + var(--tm-seq-toolbar) + env(safe-area-inset-bottom, 0px));
+  position: relative;
+  height: calc(var(--tm-seq-view) * (1 + var(--tm-seq-run)));
+}
+@supports (height: 100lvh) and (height: 100dvh) {
+  .tm-seq-track {
+    /* The largest view, toolbars gone: a phone's toolbars come and go as it scrolls, and the view never resizes. */
+    --tm-seq-view: calc(100lvh - var(--tm-seq-top, 0px));
+    /* In whole pixels: once its toolbar has gone, iPhone Safari's dynamic height flickers by hundredths of a pixel as
+       it scrolls, and each flicker would lay the film out again mid-scroll. */
+    --tm-seq-toolbar: round(calc(100lvh - 100dvh), 1px);
+  }
+}
+.tm-seq-track[data-shape="tall"] {
+  --tm-seq-run: 8.2;
+  --tm-seq-foot: calc(var(--tm-space-4) + 3.375rem + var(--tm-space-3) + 2rem + var(--tm-space-4) + var(--tm-seq-toolbar) + env(safe-area-inset-bottom, 0px));
+}
+/* Motion off: only the stage's frame, laid out as if it weren't there. */
+.tm-seq-track[data-off] {
+  height: auto;
+}
+.tm-seq-track[data-off] > .tm-seq-view {
+  position: relative;
+  top: auto;
+  height: auto;
+  overflow: visible;
+  isolation: auto;
+  background: none;
+}
+.tm-seq-view {
+  position: sticky;
+  top: var(--tm-seq-top, 0px);
+  height: var(--tm-seq-view);
+  overflow: hidden;
+  overflow: clip;
+  isolation: isolate;
+  background: var(--tm-mist-floor);
+}
+
+/* The stage stays the opening's own (mist.css): the first screen, framed as before. In the film it no longer clips
+   the room: the camera fills the whole view, which runs a little past the stage's foot (the research-use strip's
+   height, and a phone's toolbars). The room's floor fade is the film's to show (.tm-seq-floor). */
+.tm.tm-mist[data-seq] .tm-mist-stage {
+  overflow: visible;
+}
+.tm.tm-mist[data-seq] .tm-mist-stage::after {
+  display: none;
+}
+/* The room meets its floor at the stage's foot, and the floor runs on below it, past the view's foot: the camera
+   carries it with the room. */
+.tm-seq-floor {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  top: 94%;
+  bottom: -100vh;
+  background: linear-gradient(to bottom, transparent, var(--tm-mist-floor) calc(var(--tm-mist-height, 40rem) * 0.06), var(--tm-mist-floor));
+  pointer-events: none;
+}
+
+/* ---------- The camera and what it carries ---------- */
+
+/* Always the stage's own box, so the plate lies in it as it lies in the stage; moved only while the film runs. Its own
+   layer, moved and scaled as a picture: without it, the browser draws the whole room again at every step of a lean. */
+.tm-seq-camera {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+/* Away from the room's rest the room holds still: no pointer depth (it eases home), no hover, no entrance. */
+.tm.tm-mist[data-seq-away] .tm-room-plate {
+  --mx: 0;
+  --my: 0;
+}
+.tm.tm-mist[data-seq-away] .tm-seq-camera {
+  pointer-events: none;
+}
+/* Once the story has begun, the collection's entrance is over for good: coming back to the room, the vials are simply
+   there (the entrance taken away and given back would play again from its start, every vial gone a moment). */
+.tm.tm-mist[data-seq-begun] .tm-room-vial {
+  animation: none;
+}
+
+/* The room softened, and deeper still, over the room and under the vials, everywhere but the featured vial's pedestal
+   (Sequence.tsx SequenceRoom). The film fades each picture's frame, never the masked picture itself: a masked picture
+   whose own opacity changes is drawn again, whole, at every step. */
+.tm-seq-room {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  will-change: opacity;
+}
+.tm-seq-room > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  -webkit-mask-image: var(--tm-seq-focus, none);
+  mask-image: var(--tm-seq-focus, none);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* The opening's words, once the film has taken them away, take no taps (the film writes the switch); mist.css gives
+   each of them its taps back from the copy's own none. */
+.tm.tm-mist[data-seq] .tm-mist-copy > * {
+  pointer-events: var(--tm-seq-words-events, auto);
+}
+
+/* A vial out of focus: its small cutout blurred ahead of time, with a margin all round for the blur (72 of the cutout's
+   pixels each side; public/images/sequence/soft). */
+.tm-room-vial-soft {
+  position: absolute;
+  left: -12.457%;
+  top: -6.475%;
+  width: 124.913%;
+  height: 112.95%;
+  max-width: none;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* A vial's two shadows (rooms.css: the seat under its foot and the long cast away from the window), drawn ahead of time
+   as one picture exactly as the browser draws the pair, and multiplied into the room as they are
+   (tools/landing/r12-sequence/assets/shadow.py). It is its own layer: Safari draws a blurred element again at every
+   change of the camera's scale, and an image layer it only scales. Its box, in the vial's own percentages, as the
+   picture's drawing reports it for each cut of the room. */
+.tm-room-vial-shade {
+  position: absolute;
+  left: 3.312%;
+  top: 84.843%;
+  width: 214.304%;
+  height: 28.153%;
+  max-width: none;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+}
+.tm-mist[data-shape="tall"] .tm-room-vial-shade {
+  left: 2.792%;
+  top: 77.587%;
+  width: 225.213%;
+  height: 42.667%;
+}
+
+/* ---------- The vial in the air ---------- */
+
+/* Laid out at the largest it floats (the film measures it) and only ever drawn smaller, about its top left. */
+.tm-seq-hero {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  top: 0;
+  height: var(--tm-seq-hero-h, 24rem);
+  aspect-ratio: 578 / 1112;
+  transform-origin: 0 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.tm-seq-hero > img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  user-select: none;
+}
+.tm-seq-hero-glass {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* Its light (the film writes how much): the room's light gathered behind it, wider than the vial and a little toward the
+   window at the upper left; that light caught at the edges of its glass (a picture of the rim, drawn from its outline);
+   and a broad, soft highlight across its crimp and shoulders, which the film carries across it (not on the cap: its white
+   takes no highlight). Like the window's edge of light, the edge light and the highlight lie only on bare glass, never on
+   the label. */
+.tm-seq-hero-glow {
+  left: -66%;
+  top: -18%;
+  width: 224%;
+  height: 128%;
+  opacity: 0;
+}
+.tm-seq-hero-rim {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+.tm-seq-hero-sheen {
+  --tm-light-where: linear-gradient(to bottom, transparent 9%, var(--tm-ink) 12%, var(--tm-ink) calc(var(--tm-label-top) - var(--tm-label-feather)), transparent var(--tm-label-top), transparent var(--tm-label-foot), var(--tm-ink) calc(var(--tm-label-foot) + var(--tm-label-feather)));
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: var(--tm-light-where), var(--tm-glass-mask);
+  mask-image: var(--tm-light-where), var(--tm-glass-mask);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  mix-blend-mode: screen;
+}
+.tm-seq-hero-sheen > i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05) 22%, rgba(255, 255, 255, 0.2) 40%, rgba(255, 255, 255, 0.28) 50%, rgba(255, 255, 255, 0.2) 60%, rgba(255, 255, 255, 0.05) 78%, transparent);
+  will-change: transform;
+}
+
+/* The haze near the camera (the film writes how dense, and drifts it): a low bank of the room's mist across the view's
+   foot, wider than the view so its drift never shows an end. In front of the room and the far vials, behind the
+   floating vial. */
+.tm-seq-haze {
+  position: absolute;
+  z-index: 4;
+  left: -16%;
+  bottom: 0;
+  width: 132%;
+  height: 48%;
+  max-width: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: 50% 100%;
+  will-change: transform, opacity;
+}
+
+/* The floating vial's shadow on its own pedestal's top (the film places it and writes how dense): laid out at the vial's
+   width at rest, a soft ellipse as flat as the pedestal's top is seen (about 0.11 as deep as it is wide), in the room's
+   shadow violet, multiplied into the pedestal. Over the room, under the vial. */
+.tm-seq-pedestal-shadow {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  top: 0;
+  width: calc(var(--tm-seq-seat-w, 8rem) * 1.5);
+  height: calc(var(--tm-seq-seat-w, 8rem) * 1.5 * 0.11);
+  max-width: none;
+  opacity: 0;
+  visibility: hidden;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform, opacity;
+}
+
+/* The decoder's lines, from each detail on the label to its marker, each with a dot on its detail; and the thread the
+   lot draws as it travels. The film only moves them (Sequence.tsx): each line is laid out 100px long, its middle on
+   its start, and turned and stretched to its marker; each dot is laid out about its middle. */
+.tm-seq-leads {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  pointer-events: none;
+}
+.tm-seq-lead {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  color: var(--tm-ink-3);
+  transition: color var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-lead-line {
+  position: absolute;
+  left: 0;
+  top: -0.55px;
+  width: 100px;
+  height: 1.1px;
+  background: currentColor;
+  opacity: 0.55;
+  transform-origin: 0 50%;
+  will-change: transform;
+  transition: opacity var(--tm-seq-change) var(--tm-ease-enter), height var(--tm-seq-change) var(--tm-ease-enter), top var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-lead-dot {
+  position: absolute;
+  left: -5.25px;
+  top: -5.25px;
+  width: 10.5px;
+  height: 10.5px;
+  box-sizing: border-box;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  background: var(--tm-paper);
+  will-change: transform;
+  transition: background-color var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-threads {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  visibility: hidden;
+}
+.tm-seq-thread {
+  fill: none;
+  stroke: var(--tm-seq-accent);
+  stroke-width: 1.2;
+  stroke-dasharray: 1.5 4.5;
+  stroke-linecap: round;
+  opacity: 0;
+}
+:is(.tm-seq-track[data-detail="0"] .tm-seq-lead[data-i="0"], .tm-seq-track[data-detail="1"] .tm-seq-lead[data-i="1"], .tm-seq-track[data-detail="2"] .tm-seq-lead[data-i="2"]) {
+  color: var(--tm-seq-accent);
+}
+:is(.tm-seq-track[data-detail="0"] .tm-seq-lead[data-i="0"], .tm-seq-track[data-detail="1"] .tm-seq-lead[data-i="1"], .tm-seq-track[data-detail="2"] .tm-seq-lead[data-i="2"]) .tm-seq-lead-line {
+  top: -0.75px;
+  height: 1.5px;
+  opacity: 1;
+}
+:is(.tm-seq-track[data-detail="0"] .tm-seq-lead[data-i="0"], .tm-seq-track[data-detail="1"] .tm-seq-lead[data-i="1"], .tm-seq-track[data-detail="2"] .tm-seq-lead[data-i="2"]) .tm-seq-lead-dot {
+  background: currentColor;
+}
+
+/* The markers: a numbered disc beside the vial at the end of each line, which brings its detail into view. */
+.tm-seq-marks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.tm-seq-mark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: -1.375rem 0 0 -1.375rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  opacity: 0;
+  visibility: hidden;
+  cursor: pointer;
+  outline: none;
+}
+.tm-seq-mark > span[aria-hidden] {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--tm-line-strong);
+  border-radius: 50%;
+  background: var(--tm-paper);
+  box-shadow: var(--tm-seq-cast-lift);
+  font: var(--tm-weight-medium) 0.6875rem / 1 var(--tm-font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-2);
+  transition: background-color var(--tm-seq-change) var(--tm-ease-enter), color var(--tm-seq-change) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter), box-shadow var(--tm-seq-change) var(--tm-ease-enter), scale var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-mark:hover > span[aria-hidden] {
+  border-color: var(--tm-ink-4);
+  scale: 1.06;
+}
+.tm-seq-mark:focus-visible > span[aria-hidden] {
+  border-color: var(--tm-ink);
+}
+.tm-seq-mark:active > span[aria-hidden] {
+  scale: 0.97;
+}
+.tm-seq-mark[aria-pressed="true"] > span[aria-hidden] {
+  border-color: var(--tm-seq-accent);
+  background: var(--tm-seq-accent);
+  color: var(--tm-paper);
+  box-shadow: var(--tm-seq-halo);
+}
+.tm-seq-mark[aria-pressed="true"]:focus-visible > span[aria-hidden] {
+  border-color: var(--tm-ink);
+}
+
+/* The scan closing in on the label's code (the film places it, laid out at the code's size on the vial at its largest,
+   and writes how far it has closed in): four corners in the story's colour, and once, a line of light passing down
+   the code as a phone's camera reads it. */
+.tm-seq-scan {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  top: 0;
+  width: var(--tm-seq-scan-w, 6rem);
+  height: var(--tm-seq-scan-h, 8rem);
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.tm-seq-scan > i {
+  position: absolute;
+  width: 20%;
+  aspect-ratio: 1;
+  border: 0 solid var(--tm-seq-accent);
+}
+.tm-seq-scan > i:nth-child(1) {
+  left: 0;
+  top: 0;
+  border-width: 2px 0 0 2px;
+  border-top-left-radius: 6px;
+}
+.tm-seq-scan > i:nth-child(2) {
+  right: 0;
+  top: 0;
+  border-width: 2px 2px 0 0;
+  border-top-right-radius: 6px;
+}
+.tm-seq-scan > i:nth-child(3) {
+  right: 0;
+  bottom: 0;
+  border-width: 0 2px 2px 0;
+  border-bottom-right-radius: 6px;
+}
+.tm-seq-scan > i:nth-child(4) {
+  left: 0;
+  bottom: 0;
+  border-width: 0 0 2px 2px;
+  border-bottom-left-radius: 6px;
+}
+/* The line is its band's foot, the band trailing above it: laid out a frame's height above the frame, and carried down
+   through it. */
+.tm-seq-scan-line {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  top: -100%;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent 72%, color-mix(in srgb, var(--tm-seq-accent) 14%, transparent) 96%, color-mix(in srgb, var(--tm-seq-accent) 70%, transparent) calc(100% - 1.5px), color-mix(in srgb, var(--tm-seq-accent) 70%, transparent));
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Focus shows in place, on each control's own edge (each rule below): not the site's outline around it as well
+   (.brand-refinement :is(button, a, summary):focus-visible). */
+.tm :is(.tm-seq-beats, .tm-seq-controls) :is(a, button):focus-visible,
+.tm.tm-seq-stills :is(a, button):focus-visible,
+.tm .tm-seq-switch:focus-visible {
+  outline: none;
+}
+
+/* ---------- The words and cards of each chapter ---------- */
+
+.tm-seq-beats {
+  position: absolute;
+  z-index: 7;
+  inset: 0;
+  pointer-events: none;
+}
+/* Its links take taps where their part lets them: the film writes the switch on each card while it shows. */
+.tm-seq-beats :is(a, button) {
+  pointer-events: var(--tm-seq-taps, auto);
+}
+
+/* A chapter: its words and its card in one column right of the vial on a wide screen. The approach's words stand over
+   the room; the certificate's beside its page; the finale's where the headline stood. */
+.tm-seq-chapter {
+  position: absolute;
+  top: 0;
+  bottom: var(--tm-seq-foot);
+  right: var(--tm-pad);
+  width: min(30rem, 37vw);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(1.25rem, 3.4vh, 2.25rem);
+  --tm-seq-taps: none;
+}
+.tm-seq-chapter[data-chapter="1"] {
+  top: clamp(1.5rem, 7vh, 4.5rem);
+  bottom: auto;
+  left: var(--tm-pad);
+  width: auto;
+  align-items: center;
+  text-align: center;
+}
+/* Each chapter's words, the finale's and each principle fade and rise as layers of their own, so nothing else on the
+   view is drawn again as they do. */
+.tm-seq-words {
+  display: grid;
+  gap: var(--tm-space-3);
+  opacity: 0;
+  will-change: opacity, transform;
+}
+/* Paragraphs are set as .tm .tm-seq-…: the site's .brand-refinement p sets its own grey, and outranks one class. */
+.tm .tm-seq-eyebrow {
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-seq-eyebrow > span {
+  margin-right: 0.6em;
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-seq-accent);
+}
+/* Light, as Motion 04 set its chapters (the site's headings are heavier: .brand-refinement h2). */
+.tm .tm-seq-title {
+  margin: 0;
+  font: var(--tm-weight-light) clamp(2.25rem, min(3.6vw, 6.4vh), 3.5rem) / 1.06 var(--tm-font-display);
+  letter-spacing: -0.035em;
+  color: var(--tm-ink);
+  text-wrap: balance;
+}
+.tm-seq-title > span {
+  display: block;
+}
+.tm-seq-chapter[data-chapter="1"] .tm-seq-title > span {
+  display: inline;
+}
+.tm .tm-seq-text {
+  margin: 0;
+  max-width: 25rem;
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1.55 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+.tm-seq-chapter[data-chapter="1"] .tm-seq-text {
+  max-width: 32rem;
+}
+
+/* The cards: the room's paper, with a lit edge and a soft shadow, so they read over any part of the picture. */
+.tm-seq-card {
+  position: relative;
+  opacity: 0;
+}
+.tm .tm-seq-card-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  margin: 0 0 var(--tm-space-3);
+  padding: 0 var(--tm-space-1);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+}
+.tm-seq-count i {
+  font-style: normal;
+  color: var(--tm-ink-4);
+}
+.tm-seq-details,
+.tm-seq-verify,
+.tm-seq-record,
+.tm-seq-findings-card {
+  border: 1px solid;
+  border-color: var(--tm-seq-lit-edge);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-seq-lit), var(--tm-seq-card);
+  box-shadow: var(--tm-seq-cast-float);
+}
+.tm-seq-details,
+.tm-seq-findings-card {
+  position: relative;
+}
+/* The shade lies over the card's print as well as its paper, as the room's light would. */
+:is(.tm-seq-details, .tm-seq-verify, .tm-seq-record, .tm-seq-findings-card, .tm-seq-lead-copy, .tm-seq-journey)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--tm-seq-shade);
+  pointer-events: none;
+}
+.tm-seq-chip {
+  padding: 0.2em 0.55em;
+  border-radius: var(--tm-radius-xs);
+  background: var(--tm-seq-accent-wash);
+  font: var(--tm-weight-medium) 0.75rem / 1.2 var(--tm-font-sans);
+  letter-spacing: 0;
+  color: var(--tm-seq-accent);
+}
+.tm-seq-print,
+.tm-seq-mono {
+  font-family: var(--tm-font-mono);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* The label, decoded: three details, the one being read open, marked with the story's one colour. */
+.tm-seq-details {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+.tm-seq-detail {
+  position: relative;
+  transition: background-color var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-detail + .tm-seq-detail {
+  border-top: 1px solid var(--tm-line);
+}
+.tm-seq-detail::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: var(--tm-space-4);
+  bottom: var(--tm-space-4);
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--tm-seq-accent);
+  opacity: 0;
+  transition: opacity var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-detail-head {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-4);
+  width: 100%;
+  min-height: 4.25rem;
+  margin: 0;
+  padding: var(--tm-space-3) var(--tm-space-5);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-md);
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  outline: none;
+}
+button.tm-seq-detail-head {
+  cursor: pointer;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+button.tm-seq-detail-head:hover {
+  background: color-mix(in srgb, var(--tm-paper) 60%, transparent);
+}
+button.tm-seq-detail-head:focus-visible {
+  border-color: var(--tm-ink);
+}
+button.tm-seq-detail-head:active {
+  background: var(--tm-seq-accent-wash);
+}
+.tm-seq-index {
+  flex: 0 0 2.125rem;
+  display: grid;
+  place-items: center;
+  height: 2.125rem;
+  border: 1px solid var(--tm-seq-accent-line);
+  border-radius: 50%;
+  background: var(--tm-seq-accent-wash);
+  font: var(--tm-weight-medium) 0.6875rem / 1 var(--tm-font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-seq-accent);
+  transition: background-color var(--tm-seq-change) var(--tm-ease-enter), color var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-detail-name {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+}
+.tm-seq-detail-name small {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.3 var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+  transition: color var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-detail-name strong {
+  font: var(--tm-weight-regular) 0.9375rem / 1.3 var(--tm-font-display);
+  letter-spacing: -0.01em;
+  color: var(--tm-ink);
+}
+.tm-seq-detail-head > svg {
+  flex: none;
+  color: var(--tm-ink-3);
+  transition: transform var(--tm-seq-change) var(--tm-ease-enter), color var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-detail-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-detail-clip {
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 var(--tm-space-5) 0 calc(var(--tm-space-5) + 2.125rem + var(--tm-space-4));
+  opacity: 0;
+  transition: opacity var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm .tm-seq-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 0 var(--tm-space-2);
+  font: var(--tm-weight-regular) clamp(1.125rem, 1.6vw, 1.5rem) / 1.2 var(--tm-font-display);
+  letter-spacing: -0.02em;
+  color: var(--tm-seq-accent);
+}
+.tm-seq-value .tm-seq-print {
+  font-size: 0.9em;
+}
+.tm-seq-value-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-bottom: 1px solid transparent;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), gap var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-value-link:hover {
+  gap: 0.6rem;
+  border-bottom-color: var(--tm-seq-accent-line);
+}
+.tm-seq-value-link:focus-visible {
+  border-bottom-color: var(--tm-seq-accent);
+}
+.tm .tm-seq-description {
+  max-width: 23rem;
+  margin: 0 0 var(--tm-space-5);
+  font: var(--tm-weight-regular) 0.8125rem / 1.6 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+/* The detail being read, open: in the film the one in view; in the still form every one. */
+:is(.tm-seq-track[data-detail="0"] .tm-seq-detail[data-i="0"], .tm-seq-track[data-detail="1"] .tm-seq-detail[data-i="1"], .tm-seq-track[data-detail="2"] .tm-seq-detail[data-i="2"], .tm-seq-decoder[data-still] .tm-seq-detail) {
+  background: color-mix(in srgb, var(--tm-paper) 70%, transparent);
+}
+:is(.tm-seq-track[data-detail="0"] .tm-seq-detail[data-i="0"], .tm-seq-track[data-detail="1"] .tm-seq-detail[data-i="1"], .tm-seq-track[data-detail="2"] .tm-seq-detail[data-i="2"]) :is(.tm-seq-index) {
+  background: var(--tm-seq-accent);
+  color: var(--tm-paper);
+}
+:is(.tm-seq-track[data-detail="0"] .tm-seq-detail[data-i="0"], .tm-seq-track[data-detail="1"] .tm-seq-detail[data-i="1"], .tm-seq-track[data-detail="2"] .tm-seq-detail[data-i="2"])::before {
+  opacity: 1;
+}
+:is(.tm-seq-track[data-detail="0"] .tm-seq-detail[data-i="0"], .tm-seq-track[data-detail="1"] .tm-seq-detail[data-i="1"], .tm-seq-track[data-detail="2"] .tm-seq-detail[data-i="2"]) .tm-seq-detail-name small {
+  color: var(--tm-seq-accent);
+}
+:is(.tm-seq-track[data-detail="0"] .tm-seq-detail[data-i="0"], .tm-seq-track[data-detail="1"] .tm-seq-detail[data-i="1"], .tm-seq-track[data-detail="2"] .tm-seq-detail[data-i="2"]) .tm-seq-detail-head > svg {
+  transform: rotate(180deg);
+  color: var(--tm-seq-accent);
+}
+:is(.tm-seq-track[data-detail="0"] .tm-seq-detail[data-i="0"], .tm-seq-track[data-detail="1"] .tm-seq-detail[data-i="1"], .tm-seq-track[data-detail="2"] .tm-seq-detail[data-i="2"], .tm-seq-decoder[data-still] .tm-seq-detail) .tm-seq-detail-body {
+  grid-template-rows: 1fr;
+}
+:is(.tm-seq-track[data-detail="0"] .tm-seq-detail[data-i="0"], .tm-seq-track[data-detail="1"] .tm-seq-detail[data-i="1"], .tm-seq-track[data-detail="2"] .tm-seq-detail[data-i="2"], .tm-seq-decoder[data-still] .tm-seq-detail) .tm-seq-detail-clip {
+  opacity: 1;
+}
+.tm .tm-seq-card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--tm-space-3);
+  margin: var(--tm-space-2) 0 0;
+  padding: 0 var(--tm-space-1);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-seq-next-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  min-height: 2.75rem;
+  padding: 0 0 0 var(--tm-space-3);
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-ink);
+  cursor: pointer;
+  outline: none;
+  transition: color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-next-detail:hover {
+  color: var(--tm-seq-accent);
+}
+.tm-seq-next-detail:focus-visible {
+  border-bottom-color: var(--tm-ink);
+}
+.tm-seq-next-verify,
+.tm-seq-track[data-detail="2"] .tm-seq-next-label {
+  display: none;
+}
+.tm-seq-track[data-detail="2"] .tm-seq-next-verify {
+  display: inline;
+}
+
+/* Verify: the site's own lookup, the printed number typed in as the reader scrolls; the field is the lookup, a link. */
+.tm-seq-verify {
+  padding: var(--tm-space-5) var(--tm-space-6) var(--tm-space-6);
+}
+.tm .tm-seq-verify-head {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  margin: 0 0 var(--tm-space-5);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-ink);
+}
+.tm-seq-verify-head > svg {
+  color: var(--tm-seq-accent);
+}
+.tm .tm-seq-verify-ask {
+  margin: 0 0 var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-seq-field {
+  display: flex;
+  align-items: stretch;
+  min-height: 3.375rem;
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-sm);
+  background: var(--tm-paper);
+  color: var(--tm-ink);
+  text-decoration: none;
+  overflow: hidden;
+  outline: none;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), box-shadow var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-field:hover {
+  border-color: var(--tm-ink-4);
+}
+.tm-seq-field:focus-visible {
+  border-color: var(--tm-ink);
+}
+.tm-seq-field-text {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0 var(--tm-space-4);
+  font: 700 1.0625rem / 1 var(--tm-font-mono);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--tm-seq-print-ink);
+}
+.tm-seq-placeholder {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  letter-spacing: 0;
+  color: var(--tm-ink-3);
+}
+.tm-seq-field:is([data-typing], [data-typed]) .tm-seq-placeholder {
+  display: none;
+}
+.tm-seq-caret {
+  flex: none;
+  width: 1.5px;
+  height: 1.2em;
+  margin-left: 2px;
+  background: var(--tm-seq-accent);
+  animation: tm-seq-caret 1.1s steps(1) infinite;
+}
+.tm-seq-field[data-typed] .tm-seq-caret,
+.tm-seq-verify[data-still] .tm-seq-caret {
+  opacity: 0;
+  animation: none;
+}
+@keyframes tm-seq-caret {
+  50% {
+    opacity: 0;
+  }
+}
+.tm-seq-field-go {
+  display: grid;
+  place-items: center;
+  width: 3.375rem;
+  background: var(--tm-ink);
+  color: var(--tm-paper);
+  transition: background-color var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-field[data-typed] .tm-seq-field-go {
+  background: var(--tm-seq-accent);
+}
+.tm-seq-field:hover .tm-seq-field-go {
+  background: var(--tm-ink-deep);
+}
+.tm-seq-field[data-typed]:hover .tm-seq-field-go {
+  background: color-mix(in oklab, var(--tm-seq-accent) 85%, var(--tm-ink));
+}
+
+/* The lot record, as Verify finds it. */
+.tm-seq-record {
+  padding: var(--tm-space-5) var(--tm-space-6) var(--tm-space-3);
+  transform-origin: 0 50%;
+}
+.tm-seq-record .tm-seq-card-caption {
+  padding: 0;
+}
+.tm .tm-seq-record-over {
+  margin: var(--tm-space-2) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-seq-record-lot {
+  margin: var(--tm-space-2) 0 var(--tm-space-1);
+  opacity: 0;
+}
+.tm-seq-record-lot a {
+  font-size: clamp(1.375rem, 2vw, 1.75rem);
+  line-height: 1.1;
+  color: var(--tm-seq-print-ink);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  outline: none;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-record-lot a:hover {
+  border-bottom-color: color-mix(in srgb, var(--tm-seq-print-ink) 35%, transparent);
+}
+.tm-seq-record-lot a:focus-visible {
+  border-bottom-color: var(--tm-seq-print-ink);
+}
+.tm .tm-seq-record-match {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-signal);
+}
+.tm-seq-record-product {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+  margin: var(--tm-space-4) 0 0;
+  padding-top: var(--tm-space-4);
+  border-top: 1px solid var(--tm-line);
+}
+.tm-seq-record-product strong {
+  font: var(--tm-weight-regular) 1.25rem / 1.2 var(--tm-font-display);
+  letter-spacing: -0.015em;
+  color: var(--tm-ink);
+}
+.tm-seq-record-product small {
+  flex-basis: 100%;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-seq-record-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--tm-space-4);
+  margin: var(--tm-space-4) 0 0;
+}
+.tm-seq-record-results > div {
+  display: grid;
+  gap: var(--tm-space-1);
+  padding-top: var(--tm-space-2);
+  border-top: 1px solid var(--tm-line-strong);
+}
+.tm-seq-record-results dt {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-3);
+}
+.tm-seq-record-results dd {
+  margin: 0;
+  font: var(--tm-weight-light) clamp(1.75rem, 2.4vw, 2.25rem) / 1 var(--tm-font-display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink);
+}
+.tm-seq-record-results small {
+  font-size: 0.875rem;
+  letter-spacing: 0;
+  color: var(--tm-ink-2);
+}
+.tm-seq-record-ref {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--tm-space-3);
+  margin: var(--tm-space-4) 0 0;
+  padding: var(--tm-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-sm);
+  background: var(--tm-seq-accent-wash);
+  color: var(--tm-ink);
+  text-decoration: none;
+  outline: none;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-record-ref > svg {
+  color: var(--tm-seq-accent);
+}
+.tm-seq-record-ref > span {
+  display: grid;
+  gap: 2px;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.35 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-seq-record-ref .tm-seq-mono {
+  font-size: 0.75rem;
+  color: var(--tm-ink);
+}
+.tm-seq-record-ref:hover {
+  border-color: var(--tm-seq-accent-line);
+}
+.tm-seq-record-ref:focus-visible {
+  border-color: var(--tm-ink);
+}
+.tm-seq-record-go {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 3rem;
+  margin: var(--tm-space-2) 0 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--tm-line);
+  border-bottom: 1px solid transparent;
+  background: none;
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-ink);
+  cursor: pointer;
+  outline: none;
+  transition: color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-record-go:hover {
+  color: var(--tm-seq-accent);
+}
+.tm-seq-record-go:focus-visible {
+  border-bottom-color: var(--tm-ink);
+}
+
+/* The lot, travelling from the number printed on the label to its place in the record. */
+.tm-seq-traveler {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  top: 0;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--tm-seq-accent-line);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  box-shadow: var(--tm-seq-cast-lift);
+  opacity: 0;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.tm-seq-traveler .tm-seq-print {
+  font-size: 0.9375rem;
+  line-height: 1;
+  color: var(--tm-seq-print-ink);
+}
+
+/* The certificate: its words and findings at the left, its page at the right on a wide screen. */
+.tm-seq-chapter[data-chapter="5"] {
+  left: var(--tm-pad);
+  width: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 27rem) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  align-items: start;
+  column-gap: clamp(2rem, 6vw, 7rem);
+  row-gap: var(--tm-space-6);
+}
+.tm-seq-chapter[data-chapter="5"] > .tm-seq-words {
+  grid-column: 1;
+  grid-row: 1;
+}
+.tm-seq-findings {
+  opacity: 0;
+}
+.tm-seq-chapter[data-chapter="5"] > .tm-seq-findings {
+  grid-column: 1;
+  grid-row: 2;
+}
+/* The findings: the three as tabs across the card's head, the one being read explained below them. */
+.tm-seq-findings-card {
+  overflow: hidden;
+}
+.tm-seq-measures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-bottom: 1px solid var(--tm-line);
+}
+.tm-seq-measure {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--tm-space-1);
+  margin: 0;
+  padding: var(--tm-space-3) var(--tm-space-4) var(--tm-space-4);
+  border: 1px solid transparent;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--tm-ink);
+  outline: none;
+  transition: background-color var(--tm-seq-change) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+button.tm-seq-measure {
+  cursor: pointer;
+}
+.tm-seq-measure + .tm-seq-measure {
+  box-shadow: -1px 0 0 var(--tm-line);
+}
+.tm-seq-measure::after {
+  content: "";
+  position: absolute;
+  left: var(--tm-space-4);
+  right: var(--tm-space-4);
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--tm-seq-accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform var(--tm-seq-change) var(--tm-ease-enter);
+}
+button.tm-seq-measure:hover {
+  background: color-mix(in srgb, var(--tm-paper) 60%, transparent);
+}
+button.tm-seq-measure:focus-visible {
+  border-color: var(--tm-ink);
+}
+.tm-seq-measure-index {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.3 var(--tm-font-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-4);
+  transition: color var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-measure-name {
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.3 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm-seq-measure strong {
+  font: var(--tm-weight-light) clamp(1.125rem, 1.35vw, 1.375rem) / 1.1 var(--tm-font-display);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tm-seq-measure small {
+  font-size: 0.75rem;
+  letter-spacing: 0;
+  color: var(--tm-ink-2);
+}
+:is(.tm-seq-track[data-finding="0"] .tm-seq-measure[data-i="0"], .tm-seq-track[data-finding="1"] .tm-seq-measure[data-i="1"], .tm-seq-track[data-finding="2"] .tm-seq-measure[data-i="2"]) {
+  background: var(--tm-paper);
+}
+:is(.tm-seq-track[data-finding="0"] .tm-seq-measure[data-i="0"], .tm-seq-track[data-finding="1"] .tm-seq-measure[data-i="1"], .tm-seq-track[data-finding="2"] .tm-seq-measure[data-i="2"])::after {
+  transform: scaleX(1);
+}
+:is(.tm-seq-track[data-finding="0"] .tm-seq-measure[data-i="0"], .tm-seq-track[data-finding="1"] .tm-seq-measure[data-i="1"], .tm-seq-track[data-finding="2"] .tm-seq-measure[data-i="2"]) .tm-seq-measure-index {
+  color: var(--tm-seq-accent);
+}
+.tm-seq-readings {
+  display: grid;
+  padding: var(--tm-space-5) var(--tm-space-5) 0;
+}
+.tm-seq-reading {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity var(--tm-seq-change) var(--tm-ease-enter);
+}
+:is(.tm-seq-track[data-finding="0"] .tm-seq-reading[data-i="0"], .tm-seq-track[data-finding="1"] .tm-seq-reading[data-i="1"], .tm-seq-track[data-finding="2"] .tm-seq-reading[data-i="2"]) {
+  opacity: 1;
+}
+.tm-seq-reading-source {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  margin-bottom: var(--tm-space-2);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-seq-accent);
+}
+.tm-seq-reading-source::before {
+  content: "";
+  width: var(--tm-space-4);
+  height: 1px;
+  background: currentColor;
+}
+.tm-seq-reading strong {
+  display: block;
+  margin-bottom: var(--tm-space-1);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1.4 var(--tm-font-display);
+  color: var(--tm-ink);
+}
+.tm .tm-seq-reading p {
+  max-width: 26rem;
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.6 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+.tm .tm-seq-scope {
+  margin: 0;
+  padding: var(--tm-space-4) var(--tm-space-5) var(--tm-space-5);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+/* The page, whole and unmarked but for the finding being read: a link to its PDF. */
+.tm-seq-paper {
+  display: grid;
+  gap: var(--tm-space-3);
+  margin: 0;
+  opacity: 0;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
+.tm-seq-chapter[data-chapter="5"] > .tm-seq-paper {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: center;
+}
+/* The page in the room's light: its shadow cast away from the window at the upper left, into the room behind it, and
+   the window's light lying across it, a little brighter toward the window and a breath darker away from it. */
+.tm-seq-page {
+  position: relative;
+  display: block;
+  height: min(calc(var(--tm-seq-view) - var(--tm-seq-foot) - 6.5rem), 46rem);
+  aspect-ratio: 1700 / 2200;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(36, 26, 74, 0.08), 6px 12px 26px -12px rgba(36, 26, 74, 0.2), 22px 40px 80px -28px rgba(36, 26, 74, 0.34);
+  outline: none;
+}
+.tm-seq-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(128deg, rgba(255, 255, 255, 0.2), transparent 38%, transparent 62%, rgba(36, 26, 74, 0.06));
+  pointer-events: none;
+}
+.tm-seq-page img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  user-select: none;
+}
+.tm-seq-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-page:hover::after {
+  border-color: var(--tm-ink-4);
+}
+.tm-seq-page:focus-visible::after {
+  border-color: var(--tm-ink);
+}
+/* Where the finding being read is printed: a wash of the story's colour and four corners, as a reader marks a page. */
+.tm-seq-focus {
+  position: absolute;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--tm-seq-accent) 7%, transparent);
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity var(--tm-seq-change) var(--tm-ease-enter), transform var(--tm-seq-change) var(--tm-ease-enter);
+}
+.tm-seq-focus > i {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border: 0 solid var(--tm-seq-accent);
+}
+.tm-seq-focus > i:nth-child(1) {
+  left: -3px;
+  top: -3px;
+  border-width: 1.5px 0 0 1.5px;
+}
+.tm-seq-focus > i:nth-child(2) {
+  right: -3px;
+  top: -3px;
+  border-width: 1.5px 1.5px 0 0;
+}
+.tm-seq-focus > i:nth-child(3) {
+  right: -3px;
+  bottom: -3px;
+  border-width: 0 1.5px 1.5px 0;
+}
+.tm-seq-focus > i:nth-child(4) {
+  left: -3px;
+  bottom: -3px;
+  border-width: 0 0 1.5px 1.5px;
+}
+:is(.tm-seq-track[data-finding="0"] .tm-seq-focus[data-i="0"], .tm-seq-track[data-finding="1"] .tm-seq-focus[data-i="1"], .tm-seq-track[data-finding="2"] .tm-seq-focus[data-i="2"]) {
+  opacity: 1;
+  transform: none;
+}
+/* The marks stand on the page only once it has come forward (the film sets data-paper), the first fading in as it
+   lands: on a page still turning toward the reader, Safari rebuilds the page's layers for them, a stall of several
+   frames. */
+.tm-seq-track:not([data-paper="set"]) .tm-seq-focus {
+  display: none;
+}
+
+/* The window's light sweeping across the page as it turns toward the reader (the film carries the band across, and
+   writes how bright). */
+.tm-seq-glint {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+}
+.tm-seq-glint > i {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  width: 42%;
+  height: 140%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12) 28%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0.12) 72%, transparent);
+  will-change: transform;
+}
+/* Once the page has come forward, the same band is the window's shade: while the findings are read, a soft shadow
+   passes over the page once (the film carries it across, and writes how deep). On a white page, light shows only by
+   its shade. */
+.tm-seq-track[data-paper="set"] .tm-seq-glint > i {
+  background: linear-gradient(90deg, transparent, rgba(36, 26, 74, 0.08) 28%, rgba(36, 26, 74, 0.25) 50%, rgba(36, 26, 74, 0.08) 72%, transparent);
+}
+/* The light the page dissolves into as the story ends: the room's light over the whole page and past its edges, soft,
+   lying over its shadow too, so for a moment the page is only light (the film writes how bright, and the page's own
+   fade takes it away). Set down once the page has come forward, as the marks are. */
+.tm-seq-bloom {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  /* How far past the page's edges the light reaches: as far as its shadow does. */
+  --tm-seq-bloom-reach: 3rem;
+  background: var(--tm-seq-room-light);
+  box-shadow: 0 0 var(--tm-seq-bloom-reach) var(--tm-seq-bloom-reach) var(--tm-seq-room-light), calc(var(--tm-seq-bloom-reach) * 0.5) calc(var(--tm-seq-bloom-reach) * 0.84) calc(var(--tm-seq-bloom-reach) * 2) var(--tm-seq-bloom-reach) color-mix(in srgb, var(--tm-seq-room-light) 70%, transparent);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  will-change: opacity;
+}
+.tm-seq-track:not([data-paper="set"]) .tm-seq-bloom {
+  display: none;
+}
+/* Once the page has come forward, a reading glass on the finding being read: a disc of the page's own print, larger
+   (the film places it and the print under it, and sets its size and power), with a thin lit rim, its shadow cast away
+   from the window, and the window caught in its glass. Set down as the page lands, as the marks are; lifted a little
+   as it moves to the next finding (--tm-seq-loupe-lift, 0 at rest), so its shadow falls further and softer. */
+.tm-seq-loupe {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: calc(var(--tm-seq-loupe-share, 0.38) * 100%);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--tm-paper);
+  --tm-seq-loupe-lift: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.95), 0 0 0 2px rgba(36, 26, 74, 0.14),
+    calc(8px + 6px * var(--tm-seq-loupe-lift)) calc(16px + 12px * var(--tm-seq-loupe-lift)) calc(30px + 18px * var(--tm-seq-loupe-lift)) -10px rgba(36, 26, 74, calc(0.4 - 0.12 * var(--tm-seq-loupe-lift)));
+  pointer-events: none;
+  will-change: transform;
+  transition: opacity var(--tm-seq-change) var(--tm-ease-enter), scale var(--tm-seq-change) var(--tm-ease-enter);
+}
+/* The print under the glass is laid out at its closest reading (--tm-seq-loupe-w) and drawn smaller from its corner for
+   the others, so it is never enlarged past the fineness it was rendered at. */
+.tm-seq-loupe > img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--tm-seq-loupe-w);
+  height: auto;
+  transform-origin: 0 0;
+  max-width: none;
+  user-select: none;
+  will-change: transform;
+}
+.tm-seq-loupe::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08) 26%, transparent 46%), radial-gradient(circle at 50% 50%, transparent 70%, rgba(36, 26, 74, 0.08) 100%);
+  pointer-events: none;
+}
+.tm-seq-track:not([data-paper="set"]) .tm-seq-loupe {
+  display: none;
+}
+@starting-style {
+  .tm-seq-loupe {
+    opacity: 0;
+    scale: 0.94;
+  }
+}
+@starting-style {
+  :is(.tm-seq-track[data-finding="0"] .tm-seq-focus[data-i="0"], .tm-seq-track[data-finding="1"] .tm-seq-focus[data-i="1"], .tm-seq-track[data-finding="2"] .tm-seq-focus[data-i="2"]) {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+}
+.tm-seq-paper figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--tm-space-2) var(--tm-space-5);
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-seq-paper figcaption b {
+  margin-right: var(--tm-space-2);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-2);
+}
+.tm-seq-paper-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--tm-space-2) var(--tm-space-5);
+}
+.tm-seq-paper-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-bottom: 1px solid transparent;
+  font: var(--tm-weight-medium) var(--tm-type-micro) / 1.4 var(--tm-font-display);
+  color: var(--tm-ink);
+  text-decoration: none;
+  outline: none;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-paper-links a:hover {
+  color: var(--tm-seq-accent);
+}
+.tm-seq-paper-links a:focus-visible {
+  border-bottom-color: var(--tm-ink);
+}
+
+/* The finale: the story's last lines on the wall where the headline stood, the way on beside them, and the four
+   principles along the foot of the view as the journey goes. */
+.tm-seq-chapter.tm-seq-finale {
+  top: 0;
+  bottom: 0;
+  left: var(--tm-pad);
+  width: auto;
+  display: block;
+}
+.tm-seq-finale-words {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: clamp(1.5rem, 7vh, 4.5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 21rem);
+  align-items: end;
+  gap: var(--tm-space-5) var(--tm-space-8);
+  opacity: 0;
+  will-change: opacity, transform;
+}
+.tm .tm-seq-finale-title {
+  margin: 0;
+  font: var(--tm-weight-light) clamp(2.5rem, min(4.4vw, 7.6vh), 4.25rem) / 1.04 var(--tm-font-display);
+  letter-spacing: -0.04em;
+  color: var(--tm-ink);
+  text-wrap: balance;
+}
+.tm-seq-finale-title > span {
+  display: block;
+}
+.tm-seq-finale-title > span + span {
+  color: var(--tm-seq-quiet);
+}
+.tm .tm-seq-finale-aside p {
+  margin: 0 0 var(--tm-space-4);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.6 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+.tm-seq-explore {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--tm-line-strong);
+  background: none;
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-ink);
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-explore:hover {
+  color: var(--tm-seq-accent);
+  border-bottom-color: var(--tm-seq-accent-line);
+}
+.tm-seq-explore:focus-visible {
+  border-bottom-color: var(--tm-ink);
+}
+.tm-seq-finale .tm-seq-principles {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--tm-space-6) + var(--tm-seq-toolbar) + env(safe-area-inset-bottom, 0px));
+}
+/* Under the principles, the room's floor rises across the view, to the colour the catalog below begins in
+   (home.css .tm-index): on a wide screen the pedestals stand to the view's foot, and the principles need ground. It
+   rises from below the lowest lot numbers, which stay clear; above it, the haze settled to the floor (.tm-seq-haze)
+   is its soft, uneven edge. */
+.tm-seq-finale-floor {
+  position: absolute;
+  left: calc(var(--tm-pad) * -1);
+  right: calc(var(--tm-pad) * -1);
+  bottom: 0;
+  height: clamp(9rem, 24vh, 13rem);
+  background: linear-gradient(to bottom, transparent 28%, color-mix(in srgb, var(--tm-mist-floor) 60%, transparent) 44%, color-mix(in srgb, var(--tm-mist-floor) 86%, transparent) 58%, var(--tm-mist-floor) 76%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* The four principles, word for word. */
+.tm-seq-principles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--tm-space-5) var(--tm-space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-seq-principle {
+  display: grid;
+  align-content: start;
+  gap: var(--tm-space-2);
+  padding-top: var(--tm-space-3);
+  border-top: 1px solid var(--tm-line-strong);
+  opacity: 0;
+  will-change: opacity, transform;
+}
+.tm-seq-principle b {
+  font: var(--tm-weight-medium) var(--tm-type-body) / 1.3 var(--tm-font-display);
+  color: var(--tm-ink);
+}
+.tm-seq-principle span {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.5 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+
+/* ---------- The journey, and always a way out ---------- */
+
+/* At the view's foot: the way out at the left, the journey in the middle, the Motion switch at the right. */
+.tm-seq-controls {
+  position: absolute;
+  z-index: 8;
+  left: var(--tm-pad);
+  right: var(--tm-pad);
+  bottom: calc(var(--tm-space-5) + var(--tm-seq-toolbar) + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--tm-space-4);
+  opacity: 0;
+  pointer-events: none;
+  --tm-seq-taps: none;
+  /* Its own layer, and each segment's fill its own (below): as the fills grow, nothing else is drawn again. */
+  will-change: transform;
+}
+.tm-seq-controls > * {
+  pointer-events: var(--tm-seq-taps, auto);
+}
+/* Reached by a key while unseen (before the story starts, or after it ends), the controls show. A key's focus only: a
+   button a pointer pressed keeps focus in some browsers, and the journey would stay over the finale's principles. */
+.tm-seq-controls:has(:focus-visible) {
+  opacity: 1 !important;
+  --tm-seq-taps: auto !important;
+}
+.tm-seq-controls > .tm-seq-skip {
+  justify-self: start;
+}
+.tm-seq-controls > .tm-seq-switch {
+  justify-self: end;
+}
+/* The journey: the chapter being read and how far through it, a step back and a step on, and each chapter's mark. */
+.tm-seq-journey {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  position: relative;
+  width: min(25rem, 100%);
+  padding: 0.375rem;
+  border: 1px solid;
+  border-color: var(--tm-seq-lit-edge);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-seq-lit), var(--tm-seq-card);
+  box-shadow: var(--tm-seq-cast-lift);
+}
+.tm-seq-step {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-step:hover {
+  background: var(--tm-seq-accent-wash);
+  color: var(--tm-ink);
+}
+.tm-seq-step:focus-visible {
+  border-color: var(--tm-ink);
+}
+.tm-seq-step:active {
+  background: color-mix(in srgb, var(--tm-seq-accent) 12%, var(--tm-paper));
+}
+.tm-seq-step[aria-disabled="true"] {
+  color: var(--tm-ink-4);
+  background: transparent;
+  cursor: default;
+}
+.tm-seq-step[data-step="1"] {
+  background: var(--tm-ink);
+  color: var(--tm-paper);
+}
+.tm-seq-step[data-step="1"]:hover {
+  background: var(--tm-ink-deep);
+}
+.tm-seq-step[data-step="1"]:focus-visible {
+  border-color: var(--tm-paper);
+  box-shadow: 0 0 0 1px var(--tm-ink);
+}
+.tm-seq-step[data-step="1"]:active {
+  background: var(--tm-ink-2);
+}
+.tm-seq-journey-middle {
+  flex: 1;
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0 var(--tm-space-2);
+}
+.tm .tm-seq-journey-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-3);
+  margin: 0;
+  font: var(--tm-weight-medium) var(--tm-type-micro) / 1.2 var(--tm-font-display);
+  color: var(--tm-ink);
+  white-space: nowrap;
+}
+.tm-seq-journey-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tm-seq-journey-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-ink-3);
+}
+.tm-seq-journey-count i {
+  margin: 0 0.3em;
+  font-style: normal;
+  color: var(--tm-ink-4);
+}
+.tm-seq-segments {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-seq-segment {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 1.5rem;
+  margin: -0.5rem 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  outline: none;
+}
+.tm-seq-segment::before,
+.tm-seq-segment-fill {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 1px);
+  height: 2px;
+  border-radius: 2px;
+}
+.tm-seq-segment::before {
+  background: var(--tm-line-strong);
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-segment-fill {
+  background: var(--tm-ink);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  will-change: transform;
+}
+.tm-seq-segment:hover::before {
+  background: var(--tm-ink-4);
+}
+.tm-seq-segment:focus-visible::before {
+  top: calc(50% - 2px);
+  height: 4px;
+  background: var(--tm-ink-3);
+}
+
+/* The way out and the Motion switch: small pills of the room's paper, so they read over any part of the picture. */
+.tm-seq-skip,
+.tm-seq-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  min-height: 2rem;
+  border: 1px solid var(--tm-line-strong);
+  border-radius: var(--tm-radius-pill);
+  background: color-mix(in srgb, var(--tm-paper) 72%, transparent);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-display);
+  letter-spacing: var(--tm-track-label);
+  text-transform: uppercase;
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), color var(--tm-dur-base) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-skip {
+  padding: 0 var(--tm-space-3);
+}
+@media (hover: hover) {
+  .tm-seq-skip:hover,
+  .tm-seq-switch:hover {
+    color: var(--tm-ink);
+    border-color: var(--tm-ink-4);
+  }
+}
+.tm-seq-skip:focus-visible,
+.tm-seq-switch:focus-visible {
+  color: var(--tm-ink);
+  border-color: var(--tm-ink);
+}
+.tm-seq-skip:active,
+.tm-seq-switch:active {
+  background: color-mix(in srgb, var(--tm-paper) 90%, transparent);
+}
+
+/* The Motion switch: on, the room lives and the story plays as the reader scrolls; off, both hold still and the story
+   is told in still frames. At rest it stands on the stage; as the story runs, beside the journey. Pressed, its thumb
+   stretches under the finger before it slides across, and settles with a little give. */
+.tm-seq-switch {
+  padding: 0 var(--tm-space-3) 0 var(--tm-space-2);
+}
+.tm-seq-switch-rest {
+  position: absolute;
+  z-index: 6;
+  right: var(--tm-margin);
+  bottom: var(--tm-space-5);
+}
+.tm-seq-switch-track {
+  position: relative;
+  width: 1.5rem;
+  height: 0.875rem;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-ink-4);
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), box-shadow var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(0.875rem - 4px);
+  height: calc(0.875rem - 4px);
+  border-radius: 50%;
+  background: var(--tm-paper);
+  transition: translate var(--tm-dur-base) var(--tm-ease-micro), scale var(--tm-dur-base) var(--tm-ease-micro), background-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+.tm-seq-switch[aria-pressed="true"] .tm-seq-switch-track {
+  background: var(--tm-ink);
+}
+.tm-seq-switch[aria-pressed="true"] .tm-seq-switch-thumb {
+  translate: 0.625rem 0;
+}
+.tm-seq-switch:active .tm-seq-switch-thumb {
+  scale: 1.35 1;
+  transition-duration: var(--tm-dur-press);
+}
+
+/* At rest on the stage it is quieter than the stage's own words: no pill, only its word and its track, drawn as a line
+   while it is off. A setting of the room rather than a second label beside the chip. A pointer brings up a breath of
+   paper behind it, focus its own edge in ink, and it keeps a finger's reach whatever it draws. */
+.tm-seq-switch.tm-seq-switch-rest {
+  padding: 0 var(--tm-space-3);
+  border-color: transparent;
+  background: transparent;
+}
+/* Drawn the chip's height, so the two stand level; a finger is given its full reach above and below. */
+.tm-seq-switch-rest::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: var(--tm-control-touch);
+  translate: 0 -50%;
+}
+.tm-seq-switch-rest:not([aria-pressed="true"]) .tm-seq-switch-track {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--tm-ink-3);
+}
+.tm-seq-switch-rest:not([aria-pressed="true"]) .tm-seq-switch-thumb {
+  background: var(--tm-ink-3);
+}
+.tm-seq-switch-rest[aria-pressed="true"] .tm-seq-switch-track {
+  background: var(--tm-ink-2);
+}
+@media (hover: hover) {
+  .tm-seq-switch.tm-seq-switch-rest:hover {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--tm-paper) 55%, transparent);
+  }
+}
+.tm-seq-switch.tm-seq-switch-rest:focus-visible {
+  border-color: var(--tm-ink);
+}
+.tm-seq-switch.tm-seq-switch-rest:active {
+  background: color-mix(in srgb, var(--tm-paper) 72%, transparent);
+}
+
+/* ---------- A phone held upright ---------- */
+
+/* Each chapter's words at the top of the view and its card at the foot, above the journey; the vial floats between. */
+.tm-seq-track[data-shape="tall"] .tm-seq-chapter {
+  top: var(--tm-space-5);
+  left: var(--tm-pad);
+  right: var(--tm-pad);
+  width: auto;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-words {
+  justify-items: center;
+  gap: var(--tm-space-2);
+  text-align: center;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-title {
+  font-size: clamp(1.75rem, 8.4vw, 2.125rem);
+  line-height: 1.08;
+}
+/* On a phone the two lines run on, and break where they balance: a short pair takes one line. */
+.tm-seq-track[data-shape="tall"] .tm-seq-title > span {
+  display: inline;
+}
+/* The words under the title are read aloud everywhere, and shown on a phone where there is room (the approach). */
+.tm-seq-track[data-shape="tall"] .tm-seq-chapter:not([data-chapter="1"]) .tm-seq-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-chapter[data-chapter="1"] {
+  top: var(--tm-space-5);
+  bottom: var(--tm-seq-foot);
+}
+/* On a phone, the opening's lead and its caption, which its first screen had no room for: the approach's card. */
+.tm-seq-lead-copy {
+  display: grid;
+  gap: var(--tm-space-3);
+  padding: var(--tm-space-4) var(--tm-space-5);
+  border: 1px solid;
+  border-color: var(--tm-seq-lit-edge);
+  border-radius: var(--tm-radius-md);
+  background: var(--tm-seq-lit), var(--tm-seq-card);
+  box-shadow: var(--tm-seq-cast-float);
+}
+.tm.tm-mist .tm-seq-lead-copy .tm-mist-lead {
+  grid-area: auto;
+  max-width: none;
+  font-size: var(--tm-type-ui);
+  line-height: 1.55;
+  color: var(--tm-ink-2);
+}
+/* The caption, centred in the card: its hairline above it, its words broken evenly. */
+.tm.tm-mist .tm-seq-lead-copy .tm-mist-proof {
+  flex-direction: column;
+  gap: var(--tm-space-2);
+  margin: 0;
+  text-align: center;
+  text-wrap: balance;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-detail-head {
+  min-height: 3.25rem;
+  padding: var(--tm-space-2) var(--tm-space-4);
+  gap: var(--tm-space-3);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-index {
+  flex-basis: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.625rem;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-detail-name small {
+  font-size: 0.5625rem;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-detail-name strong {
+  font-size: 0.875rem;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-detail-clip {
+  padding: 0 var(--tm-space-4) 0 calc(var(--tm-space-4) + 1.75rem + var(--tm-space-3));
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-value {
+  font-size: 1.0625rem;
+  margin-bottom: var(--tm-space-1);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-description {
+  margin-bottom: var(--tm-space-3);
+  font-size: var(--tm-type-micro);
+  line-height: 1.5;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-card-caption {
+  margin-bottom: var(--tm-space-2);
+}
+/* The decoder's caption would stand over the room's far vials on a phone; its numbers are on the rows already, and the
+   journey names the chapter. */
+.tm-seq-track[data-shape="tall"] .tm-seq-decoder > .tm-seq-card-caption {
+  display: none;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-card-foot {
+  display: none;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-verify {
+  padding: var(--tm-space-4) var(--tm-space-4) var(--tm-space-5);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-verify-head {
+  margin-bottom: var(--tm-space-4);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-record {
+  padding: var(--tm-space-4) var(--tm-space-4) var(--tm-space-2);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-record-product {
+  margin-top: var(--tm-space-3);
+  padding-top: var(--tm-space-3);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-record-results {
+  margin-top: var(--tm-space-3);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-record-results dd {
+  font-size: 1.625rem;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-record-ref {
+  margin-top: var(--tm-space-3);
+  padding: var(--tm-space-2) var(--tm-space-3);
+}
+/* The certificate on a phone: its words, its page, its findings, one above another. */
+.tm-seq-track[data-shape="tall"] .tm-seq-chapter[data-chapter="5"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: var(--tm-space-4);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-paper {
+  flex: 1 1 0;
+  min-height: 0;
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--tm-space-2);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-page {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+  max-height: 100%;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-paper figcaption > span:first-child {
+  display: none;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-findings {
+  order: 2;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-readings {
+  padding: var(--tm-space-3) var(--tm-space-4) var(--tm-space-4);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-reading p {
+  font-size: var(--tm-type-micro);
+  line-height: 1.5;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-scope,
+.tm-seq-track[data-shape="tall"] .tm-seq-findings .tm-seq-card-caption {
+  display: none;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-measure {
+  padding: var(--tm-space-2) var(--tm-space-3) var(--tm-space-3);
+}
+/* The finale on a phone: its lines at the top of the wall, the four principles two by two at the foot. */
+.tm-seq-track[data-shape="tall"] .tm-seq-finale-words {
+  top: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--tm-space-4);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-finale-title {
+  font-size: clamp(1.875rem, 8.6vw, 2.375rem);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-finale-floor {
+  display: none;
+}
+/* On a phone the page is small: its light reaches as far past it, for its size. */
+.tm-seq-track[data-shape="tall"] .tm-seq-bloom {
+  --tm-seq-bloom-reach: 1.25rem;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-finale .tm-seq-principles {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--tm-space-4);
+  bottom: calc(var(--tm-space-5) + var(--tm-seq-toolbar) + env(safe-area-inset-bottom, 0px));
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-principle b {
+  font-size: var(--tm-type-ui);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-principle span {
+  font-size: var(--tm-type-micro);
+}
+/* The controls on a phone: the journey across the foot, the way out and the switch on a row above it. */
+.tm-seq-track[data-shape="tall"] .tm-seq-controls {
+  bottom: calc(var(--tm-space-4) + var(--tm-seq-toolbar) + env(safe-area-inset-bottom, 0px));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "skip switch"
+    "journey journey";
+  gap: var(--tm-space-3) var(--tm-space-3);
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-skip {
+  grid-area: skip;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-switch-film {
+  grid-area: switch;
+}
+.tm-seq-track[data-shape="tall"] .tm-seq-journey {
+  grid-area: journey;
+  width: 100%;
+}
+/* On a phone the stage's switch stands at the top of the wall, clear of the way in at the stage's foot. */
+.tm.tm-mist[data-shape="tall"] .tm-seq-switch-rest {
+  top: var(--tm-space-6);
+  bottom: auto;
+}
+
+/* ---------- The still form ---------- */
+
+/* A section like the page's others (shop.css .tm: twelve columns in the page's measure), each frame across the
+   measure. */
+.tm-seq-stills {
+  --tm-bg: var(--tm-mist-floor);
+  outline: none;
+  row-gap: clamp(4rem, 9vw, 7rem);
+}
+.tm-seq-stills > * {
+  grid-column: 1 / -1;
+}
+.tm-seq-stills :is(.tm-seq-words, .tm-seq-card, .tm-seq-findings, .tm-seq-paper, .tm-seq-principle, .tm-seq-finale-words, .tm-seq-record-lot) {
+  position: static;
+  opacity: 1;
+  transform: none;
+  translate: none;
+}
+/* Each card holding its own shade. */
+.tm-seq-stills :is(.tm-seq-verify, .tm-seq-record, .tm-seq-lead-copy) {
+  position: relative;
+}
+.tm-seq-still {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+}
+.tm-seq-still-label {
+  grid-template-areas:
+    "words card"
+    "art card";
+}
+.tm-seq-still-label > .tm-seq-words {
+  grid-area: words;
+  align-self: end;
+}
+.tm-seq-still-frame {
+  grid-area: art;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border-radius: var(--tm-radius-lg);
+  background: radial-gradient(80% 70% at 50% 45%, var(--tm-lilac-50), var(--tm-mist-wall));
+}
+/* The vial as the film shows it, with its three markers beside it. */
+.tm-seq-still-vial {
+  position: relative;
+  display: block;
+  height: clamp(17rem, 36vw, 26rem);
+  aspect-ratio: 578 / 1112;
+}
+.tm-seq-still-vial > img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  user-select: none;
+}
+.tm-seq-still-vial > .tm-seq-still-glass {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.tm-seq-still-leads {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.tm-seq-still-leads line {
+  stroke: var(--tm-ink-3);
+  stroke-opacity: 0.55;
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+}
+.tm-seq-still-leads circle {
+  fill: var(--tm-seq-accent);
+}
+.tm-seq-still-mark {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--tm-seq-accent);
+  box-shadow: var(--tm-seq-halo);
+  transform: translate(-50%, -50%);
+  font: var(--tm-weight-medium) 0.625rem / 1 var(--tm-font-display);
+  color: var(--tm-paper);
+}
+.tm-seq-still-label > .tm-seq-decoder {
+  grid-area: card;
+}
+.tm-seq-still-certificate {
+  align-items: start;
+}
+.tm-seq-still-read {
+  display: grid;
+  gap: var(--tm-space-6);
+}
+.tm-seq-stills .tm-seq-findings .tm-seq-readings {
+  gap: var(--tm-space-5);
+}
+.tm-seq-stills .tm-seq-reading {
+  grid-area: auto;
+  opacity: 1;
+}
+.tm-seq-stills .tm-seq-paper {
+  justify-self: center;
+}
+.tm-seq-stills .tm-seq-page {
+  width: min(100%, 26rem);
+  height: auto;
+}
+.tm-seq-stills .tm-seq-page img {
+  height: auto;
+}
+.tm-seq-still-finale {
+  grid-template-columns: minmax(0, 1fr);
+}
+.tm-seq-stills .tm-seq-finale-words {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 21rem);
+}
+@media (max-width: 760px) {
+  .tm-seq-still,
+  .tm-seq-stills .tm-seq-finale-words {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tm-seq-still-label {
+    grid-template-areas:
+      "words"
+      "art"
+      "card";
+  }
+  .tm-seq-still-principles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -18,7 +18,7 @@ export function certificateDate(iso?: string) {
 /** An instrument method reads in the label; anything else (how a figure was derived) reads under the value. */
 const instrument = (method: string) => ["HPLC", "Mass spectrometry", "LAL"].includes(method) || /^HPLC \(.+\)$/.test(method);
 
-function resultLabel(label: string, method: string) {
+export function resultLabel(label: string, method: string) {
   if (method === "HPLC") return `${label} (HPLC)`;
   if (method === "Mass spectrometry") return `${label} (MS)`;
   if (method === "LAL") return `${label} (LAL)`;

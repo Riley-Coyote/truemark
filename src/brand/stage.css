@@ -1,21 +1,95 @@
-/* The product on its plinth. Placement comes from scripts/stage-vials.py ("product-stage"). */
+/*
+ * The product in the collection's room (ProductStage.tsx). The plate is the room laid out at the camera's close framing
+ * of one pedestal; its box is set in px by the product page. The camera move scales it about its top left (flight.ts).
+ */
 
+.tm-proom-plate {
+  position: absolute;
+  z-index: 0;
+  transform-origin: 0 0;
+  /* A layer of its own, always: drawn at its own size (the move draws it once, unseen, before carrying it in), so the
+     vial on it is never drawn again, softer or sharper, as the camera settles. */
+  will-change: transform;
+}
+.tm-proom-room {
+  position: absolute;
+  inset: 0;
+  /* The lens's blur (RoomFocus) reads the room alone, as it does on the opening's plate while the camera moves there:
+     never the page around the stage, so the stage's edges stay the room's own colour. */
+  will-change: opacity;
+}
+
+/* The vial stands on the pedestal by its foot, as on the opening's (rooms.css), in the same light. */
+.tm-proom-vial {
+  position: absolute;
+  z-index: 1;
+  margin: 0;
+  left: calc(var(--seat-x) * 100%);
+  top: calc(var(--seat-y) * 100%);
+  height: calc(var(--vial-h) * 100%);
+  aspect-ratio: 578 / 1112;
+  transform: translate(-50%, -100%);
+}
+.tm-proom-glass {
+  position: absolute;
+  inset: 0;
+}
+/* The vial's contact with its pedestal, seen up close: a wide, soft shade of the room's own colour on the pedestal's top
+   around the foot, deepest just under it. A gradient, no filter, under the vial (and under its tight seat and its cast,
+   rooms.css). It comes in with the camera as it arrives (flight.ts), so the opening's vial, which has none, never meets
+   it mid-move. */
+.tm-proom-vial {
+  --tm-proom-contact-core: rgba(40, 24, 78, 0.22);
+  --tm-proom-contact-mid: rgba(40, 24, 78, 0.08);
+}
+.tm-proom-contact {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 168%;
+  height: 15%;
+  transform: translate(-50%, 50%);
+  background: radial-gradient(closest-side, var(--tm-proom-contact-core), var(--tm-proom-contact-mid) 52%, transparent);
+  /* Laid over plainly, not multiplied: a blend would make the browser draw the vial beside it again as the camera hands
+     the room over, and the vial would shift by a pixel there. */
+  pointer-events: none;
+}
+.tm-proom-glass img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  user-select: none;
+}
+.tm-proom-glass img.is-prev {
+  opacity: 1;
+  z-index: 1;
+  animation: tm-vial-lift var(--tm-dur-slow) var(--tm-ease-enter) forwards;
+}
+.tm-proom-glass img.is-active {
+  opacity: 1;
+  z-index: 2;
+  animation: tm-vial-settle 700ms var(--tm-ease-enter) both;
+}
+/* A vial that came with the camera, or flew here from a card (src/Navigation.tsx), has already arrived. */
+.tm-proom-vial[data-arrived] img.is-active,
+.tm-proom-glass img.is-active[data-landed] {
+  animation: none;
+}
+.tm-proom-glass .tm-room-vial-air {
+  z-index: 3;
+}
+
+/* ---------- A lot's vial on its plinth photograph (ProductPlinth, on Verify) ----------
+   Placement comes from scripts/stage-vials.py ("product-stage"). */
 .tm-pstage {
   position: relative;
   aspect-ratio: 4 / 5;
   overflow: hidden;
   border-radius: var(--tm-radius-xl);
   background: var(--tm-lilac-100);
-}
-.tm-pstage-world {
-  position: absolute;
-  inset: 0;
-  transform-origin: 50% 40%;
-  transition: transform 900ms var(--tm-ease-enter);
-}
-/* Label detail: move in on the label, plinth and all. */
-.tm-pstage.is-zoomed .tm-pstage-world {
-  transform: scale(1.9);
 }
 .tm-pstage-scene {
   position: absolute;
@@ -37,23 +111,13 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0;
   user-select: none;
-}
-.tm-pstage-vial img.is-prev {
-  opacity: 1;
-  z-index: 1;
-  animation: tm-vial-lift var(--tm-dur-slow) var(--tm-ease-enter) forwards;
-}
-.tm-pstage-vial img.is-active {
-  opacity: 1;
-  z-index: 2;
   animation: tm-vial-settle 700ms var(--tm-ease-enter) both;
 }
-/* A vial that flew here from the card that was tapped has already arrived (src/Navigation.tsx). */
-.tm-pstage-vial img.is-active[data-landed] {
+.tm-pstage-vial img[data-landed] {
   animation: none;
 }
+
 /* The chosen size is set down on the plinth; the last one leaves. */
 @keyframes tm-vial-settle {
   from {
@@ -68,14 +132,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tm-pstage-world {
-    transition: none;
-  }
-  .tm-pstage-vial img.is-active,
-  .tm-pstage-vial img.is-prev {
+  .tm-proom-glass img.is-active,
+  .tm-proom-glass img.is-prev,
+  .tm-pstage-vial img {
     animation: none;
   }
-  .tm-pstage-vial img.is-prev {
+  .tm-proom-glass img.is-prev {
     opacity: 0;
   }
 }

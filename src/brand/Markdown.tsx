@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import type { ReactNode } from "react";
 import { Link, useInRouterContext } from "react-router-dom";
 import { SectionLink } from "../SectionLink";
-import { BrandDot } from "./HeroShelf";
+import { BrandDot } from "./BrandDot";
 import { Trace } from "./Trace";
 import { sectionId } from "./articles";
 

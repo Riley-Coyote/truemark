@@ -17,6 +17,7 @@ import { STORE_CHANGE, read, worldNow, write } from "./storage";
 import type { AssistantCapabilities, AssistantModels, AssistantIdentity, AssistantProduct } from "../assistant-types";
 import { previewJournal } from "./content";
 import type {
+  Address,
   Application,
   ApplicationStatus,
   Buyer,
@@ -45,6 +46,7 @@ const KEYS = {
   applications: "tm-preview-applications",
   lots: "tm-preview-lots",
   buyers: "tm-preview-buyers",
+  addresses: "tm-preview-buyer-addresses",
   referrals: "tm-preview-referrals",
   orderUpdates: "tm-preview-order-updates",
   settings: "tm-preview-storefront-settings",
@@ -81,8 +83,22 @@ const withCertificate = (lot: Lot): Lot =>
   lot.status === "released" && lot.coaPath ? { ...lot, coaUrl: assetUrl(`certificates/${lot.coaPath}`) } : lot;
 const allBuyers = (): Buyer[] => {
   const added = read<Buyer[]>(KEYS.buyers, []);
-  return [...seed.buyers, ...added];
+  const addresses = read<Record<string, Address[]>>(KEYS.addresses, {});
+  return [...seed.buyers, ...added].map((buyer) => ({ ...buyer, addresses: addresses[buyer.id] ?? buyer.addresses }));
 };
+
+/** Shared by account, checkout, and owner views; never writes to a hosted account. */
+export async function savePreviewAddress(buyerId: string, address: Address): Promise<Address> {
+  const buyer = allBuyers().find((entry) => entry.id === buyerId);
+  if (!buyer) throw new Error("The sample account could not be found.");
+  const addresses = read<Record<string, Address[]>>(KEYS.addresses, {});
+  addresses[buyerId] = buyer.addresses.some((entry) => entry.id === address.id)
+    ? buyer.addresses.map((entry) => entry.id === address.id ? address : entry)
+    : [...buyer.addresses, address];
+  // A Save action must surface blocked/full storage instead of promising a lost edit.
+  write(KEYS.addresses, addresses, true);
+  return wait(address);
+}
 
 function discountFor(code?: string): Discount | undefined {
   if (!code) return undefined;

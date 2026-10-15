@@ -454,7 +454,7 @@ function OrderSummary({
           Order summary
         </h2>
         <Link className="tm-quiet-link" aria-disabled={locked || undefined} onClick={(event) => { if (locked) event.preventDefault(); }} to="/cart">
-          Edit bag
+          Edit cart
         </Link>
       </div>
       <ul className="tm-summary-lines" aria-label="Items">
@@ -654,7 +654,7 @@ export default function Checkout() {
           <div className="tm-empty-page">
             <p className="tm-eyebrow">Checkout</p>
             <h1 id="tm-checkout-title" className="tm-page-title">
-              Your bag is empty.
+              Your cart is empty.
             </h1>
             <Link className="tm-button tm-button-primary" to="/products">
               Shop the collection
@@ -976,7 +976,7 @@ export default function Checkout() {
               try { await live().payments.cancelUnpaid(heldOrder.id); setHeldOrder(null); reloadCatalog?.(); }
               catch (error) { setPlaceError(error instanceof Error ? error.message : "The order could not be cancelled. Try again."); }
               finally { setPlacing(false); }
-            }}>Cancel order and edit bag</button></>}
+            }}>Cancel order and edit cart</button></>}
             <label className="tm-check">
               <input
                 type="checkbox"

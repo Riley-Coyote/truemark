@@ -1,33 +1,782 @@
-/* Home, below the hero: the client's sections in the client's order. */
+/* Home, below the opening: the catalog's index, the night chapter of proof, and the closing spread. */
 
-/* ---------- One lot, end to end ---------- */
+/* ---------- The room's wall, and its window's light (WallLight.tsx, wall-light.ts) ---------- */
 
-.tm-trail {
-  --tm-node: 0.6875rem;
-  --tm-leg: 720ms;
-  padding-top: var(--tm-space-9);
-  row-gap: var(--tm-space-5);
+/* Below the opening the page is the room's wall: its palest lilac, the window's light falling across it. The light is
+   drawn behind every section (each a layer of its own, shop.css .tm), so it lies on the wall and never over a word;
+   the sections below the opening let the wall show through. */
+.tm-home:has(> .tm-wall-light) {
+  --tm-wall: color-mix(in oklab, var(--tm-lilac-100) 50%, var(--tm-lilac-200));
+  background: var(--tm-wall);
 }
-.tm-trail-head {
+.tm-home:has(> .tm-wall-light) > .tm.tm-papertrail {
+  --tm-bg: transparent;
+}
+/* The wall settles into the footer's grey across the last section's closing silence, its light with it, so the page
+   meets the footer without a seam. */
+.tm-home:has(> .tm-wall-light) {
+  position: relative;
+}
+.tm-home:has(> .tm-wall-light)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--tm-space-silence);
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--tm-studio) 0%, transparent), var(--tm-studio));
+  pointer-events: none;
+}
+body:has(.tm-wall-light) .tm-footer {
+  border-top-color: transparent;
+}
+/* On the wall the third ink falls short of AA; a step toward the second keeps it, wherever the light is or isn't. The
+   catalog and the closing draw their third ink from its rest (below); the paper trail takes it from the root, so it is
+   drawn again here. */
+.tm-home:has(> .tm-wall-light) > .tm:not(.tm-mist) {
+  --tm-ink-3-rest: var(--tm-ink-3-lilac);
+}
+.tm-home:has(> .tm-wall-light) > .tm.tm-papertrail {
+  --tm-ink-3: var(--tm-ink-3-rest);
+}
+.tm-wall-light {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100lvh;
+  pointer-events: none;
+}
+/* Put away while none of the wall can be seen (WallLight.tsx). */
+.tm-wall-light[data-off] {
+  visibility: hidden;
+}
+
+/* ---------- Arrival, with the scroll ---------- */
+
+/* Below the opening what arrives comes with the reader's scroll, not on a clock behind it: each block rises out of the
+   wall as it enters the screen and is whole a short way in, so a quick flick never meets a bare wall and a slow read
+   watches it come. Along a row each card starts a step after the one before it, so the row assembles from left to
+   right under the finger. Where the browser can't tie motion to the scroll, the clock stays (shop.css, Reveal); with
+   reduced motion everything is simply there (brand-refinement.css). */
+@supports (animation-timeline: view()) {
+  .tm-home > .tm:not(.tm-mist) [data-reveal] {
+    --tm-arrive-at: calc(var(--tm-i, 0) * var(--tm-space-7));
+    opacity: 1;
+    transform: none;
+    transition: none;
+    animation: tm-arrive linear both;
+    animation-timeline: view();
+    animation-range: entry var(--tm-arrive-at) entry calc(var(--tm-arrive-at) + var(--tm-arrive));
+  }
+  /* Each case's vial is set down on its pedestal as the case comes up, and the light of its label comes up behind it. */
+  .tm-home .tm-class-vial img {
+    animation: tm-vial-land linear both;
+    animation-timeline: view();
+    animation-range: entry 10% entry 110%;
+  }
+  .tm-home .tm-class-glow {
+    animation: tm-glow-bloom linear both;
+    animation-timeline: view();
+    animation-range: entry 30% cover 45%;
+  }
+  /* Where nothing hovers, a row's cases present their vials as they pass the middle of the screen, where the eye is:
+     each vial lifts a little and its light comes up, and both settle again as the row goes on up. */
+  @media (hover: none) {
+    .tm-home .tm-class-vial {
+      animation: tm-vial-present linear both;
+      animation-timeline: view();
+      animation-range: cover 10% cover 90%;
+    }
+    .tm-home .tm-class-glow {
+      animation: tm-glow-bloom linear both, tm-glow-present linear both;
+      animation-timeline: view(), view();
+      animation-range: entry 30% cover 45%, cover 10% cover 90%;
+    }
+  }
+}
+.tm-home {
+  --tm-arrive: 15rem;
+}
+@keyframes tm-arrive {
+  from {
+    opacity: 0;
+    translate: 0 var(--tm-space-6);
+  }
+}
+@keyframes tm-vial-land {
+  from {
+    opacity: 0;
+    translate: 0 -12%;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+@keyframes tm-glow-bloom {
+  from {
+    scale: 0.4;
+  }
+}
+@keyframes tm-vial-present {
+  from,
+  to {
+    translate: 0 0;
+    animation-timing-function: var(--tm-ease-breathe);
+  }
+  50% {
+    translate: 0 -4%;
+    animation-timing-function: var(--tm-ease-breathe);
+  }
+}
+@keyframes tm-glow-present {
+  from,
+  to {
+    opacity: 0.55;
+    animation-timing-function: var(--tm-ease-breathe);
+  }
+  50% {
+    opacity: 0.9;
+    animation-timing-function: var(--tm-ease-breathe);
+  }
+}
+
+/* ---------- The light (atmosphere.css) ---------- */
+
+/* The home page is one stacking context, so the light (fixed, behind) and the still ramps (behind it) lie over the
+   page's paper and under every section's words. */
+.tm-home {
+  isolation: isolate;
+}
+/* The night room's own light at rest, and what the still form shows: up. Atmosphere.tsx brings it up as the room
+   arrives. */
+.tm.tm-proof {
+  --tm-stage: 1;
+}
+/* The ink follows the light (Atmosphere.tsx writes how far, dusk.ts says why). On paper it is the brand's ink at rest;
+   as the light falls it deepens toward the night floor's, which keeps AA through the twilight. */
+.tm.tm-closing {
+  --tm-ink: color-mix(in oklab, var(--tm-ink-deep) var(--tm-ink-follow, 0%), var(--tm-ink-rest));
+  --tm-ink-2: color-mix(in oklab, var(--tm-ink-deep) var(--tm-ink-follow, 0%), var(--tm-ink-2-rest));
+  --tm-ink-3: color-mix(in oklab, var(--tm-ink-deep) var(--tm-ink-follow, 0%), var(--tm-ink-3-rest));
+}
+/* In the night the glow does the same the other way: while the sky behind the night's words is lighter than the
+   night, every glow is lit to the paper's own white, and it settles back to its quiet steps only as the night does. */
+.tm.tm-proof {
+  --tm-glow: color-mix(in oklab, var(--tm-glow-full) var(--tm-glow-follow, 0%), var(--tm-glow-rest));
+  --tm-glow-2: color-mix(in oklab, var(--tm-glow-full) var(--tm-glow-follow, 0%), var(--tm-glow-2-rest));
+  --tm-glow-3: color-mix(in oklab, var(--tm-glow-full) var(--tm-glow-follow, 0%), var(--tm-glow-3-rest));
+}
+/* At the dusk's turn the catalog's words turn to light (dusk.ts, DUSK_TURN; Atmosphere.tsx writes data-ink): the sky
+   behind them has just stepped across the narrow band where neither ink keeps AA, and the ink crosses over in a short
+   crossfade rather than a snap. Its rules turn with it. */
+@property --tm-ink-turn {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+.tm.tm-index {
+  --tm-ink: color-mix(in oklab, var(--tm-glow-full) calc(var(--tm-ink-turn) * 100%), color-mix(in oklab, var(--tm-ink-deep) var(--tm-ink-follow, 0%), var(--tm-ink-rest)));
+  --tm-ink-2: color-mix(in oklab, var(--tm-glow-full) calc(var(--tm-ink-turn) * 100%), color-mix(in oklab, var(--tm-ink-deep) var(--tm-ink-follow, 0%), var(--tm-ink-2-rest)));
+  --tm-ink-3: color-mix(in oklab, var(--tm-glow-full) calc(var(--tm-ink-turn) * 100%), color-mix(in oklab, var(--tm-ink-deep) var(--tm-ink-follow, 0%), var(--tm-ink-3-rest)));
+  --tm-line: color-mix(in oklab, var(--tm-night-line) calc(var(--tm-ink-turn) * 100%), var(--tm-line-rest));
+  --tm-line-strong: color-mix(in oklab, var(--tm-glow-4) calc(var(--tm-ink-turn) * 100%), var(--tm-line-strong-rest));
+  --tm-wash: color-mix(in oklab, var(--tm-night-line) calc(var(--tm-ink-turn) * 100%), var(--tm-wash-rest));
+  transition: --tm-ink-turn var(--tm-dur-turn) linear;
+}
+.tm.tm-index[data-ink="lit"] {
+  --tm-ink-turn: 1;
+}
+/* While the light drives the ink, nothing eases the ink behind it: a colour change on hover is immediate there, so its
+   words and rules never lag the light they stand in. */
+.tm-home[data-light] .tm-trail-step {
+  transition: none;
+}
+.tm-home[data-light] .tm.tm-index .tm-textlink {
+  transition: gap var(--tm-dur-base) var(--tm-ease-micro);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tm.tm-index {
+    transition: none;
+  }
+}
+/* The three sections the light's ink is written on keep its restyle to themselves. */
+.tm.tm-index,
+.tm.tm-proof,
+.tm.tm-closing {
+  contain: style;
+}
+
+/* ---------- The catalog, by compound class: the client's eight class cards ---------- */
+
+/* Paper, settling out of the opening's floor at its top. As the cards' last row passes the light begins to fall, and
+   the floor's lilac gives way to it as the ink follows (so no words of the section ever stand on it once lit). */
+.tm.tm-index {
+  --tm-bg: linear-gradient(to bottom, color-mix(in oklab, transparent var(--tm-ink-follow, 0%), var(--tm-mist-floor)), transparent var(--tm-space-10));
+  align-items: last baseline;
+  row-gap: var(--tm-space-7);
+  padding-top: calc(var(--tm-space-silence) + var(--tm-space-6));
+}
+/* The heading block at the top left; "View catalog" opposite, on its last line. */
+.tm-index-head {
   grid-column: 1 / span 7;
 }
-.tm-trail-aside {
-  grid-column: 9 / -1;
-  align-self: end;
+/* Its kicker sits in the lilac the catalog settles out of (nearest it on a phone): a quarter step darker than
+   the page's kicker ink keeps AA there. */
+.tm.tm-index .tm-eyebrow {
+  color: color-mix(in oklab, var(--tm-ink-2) 25%, var(--tm-ink-3));
 }
-.tm-trail-aside .tm-textlink {
+.tm.tm-index .tm-heading {
+  font-size: clamp(2rem, 3.6vw, 3.25rem);
+}
+.tm.tm-index .tm-section-note {
   margin-top: var(--tm-space-5);
+  max-width: 46ch;
 }
-.tm-trail-record {
+.tm.tm-index .tm-index-all {
+  grid-column: 8 / -1;
+  justify-self: end;
+}
+
+/* Four to a row, read across: each card is the class's way into the catalog. */
+.tm-class-grid {
+  --tm-class-drift: 22s;
   grid-column: 1 / -1;
-  margin-top: var(--tm-space-8);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--tm-gutter);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-class-grid > li {
+  display: flex;
+  min-width: 0;
+}
+/* A corner of the opening's room. Its lilac wall is lighter at the top, where the window's light reaches it, and
+   the brand's own ink stands on it at rest (the wall is the card's own, wherever the page's light stands). The
+   class's label colour is the colour of the light behind its vial. */
+.tm .tm-class {
+  --tm-ink: var(--tm-ink-rest);
+  --tm-ink-2: var(--tm-ink-2-rest);
+  --tm-ink-3: var(--tm-ink-3-rest);
+  --tm-line: var(--tm-line-rest);
+  --tm-line-strong: var(--tm-line-strong-rest);
+  --tm-class-wall: color-mix(in oklab, var(--tm-lilac-200) 55%, var(--tm-lilac-300));
+  /* The pedestal's width in the card, and the stage it stands on: its whole top and a third of its height seen, the
+     vial standing on it, a little air above. (The stage is the pedestal's width times 1.32: 0.42 of pedestal seen,
+     0.86 of vial over it, 0.04 of air.) How far the pedestal sinks below the stage's foot, in its own height. */
+  --tm-class-seat: 66%;
+  --tm-class-stage: 8 / 7;
+  --tm-class-sink: 23.3%;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--tm-space-5) var(--tm-space-5) 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--tm-paper) 60%, transparent);
+  border-radius: var(--tm-radius-lg);
+  background: linear-gradient(to bottom, var(--tm-lilac-100), var(--tm-class-wall) 58%);
+  box-shadow: var(--tm-shadow-whisper);
+  color: var(--tm-ink);
+  transition:
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    box-shadow var(--tm-dur-slow) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+.tm-class-number,
+.tm-class-name,
+.tm-class-members {
+  position: relative;
+  z-index: 2;
+}
+/* On the lilac, the small words take the second ink: the third falls short of AA there. */
+.tm-class-number {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink-2);
+}
+.tm-class-name {
+  max-width: 11ch;
+  margin-top: var(--tm-space-4);
+  font: var(--tm-weight-light) clamp(1.25rem, 1.7vw, 1.5rem) / 1.15 var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-ink);
+  text-wrap: balance;
+}
+.tm-class-members {
+  margin: var(--tm-space-3) 0 var(--tm-space-4);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+  text-wrap: pretty;
+}
+.tm-class-word {
+  white-space: nowrap;
+}
+/* The window's light on the wall, from the upper left, as in the photograph the pedestal is cut from. */
+.tm-class-light {
+  position: absolute;
+  z-index: 0;
+  top: -18%;
+  left: -26%;
+  width: 118%;
+  aspect-ratio: 1;
+  background: url("./window-light.webp") center / contain no-repeat;
+  opacity: 0.8;
+  pointer-events: none;
+}
+/* The stage at the card's foot: the pedestal rising out of it, the vial standing whole on the pedestal. */
+.tm-class-stage {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin: auto calc(var(--tm-space-5) * -1) 0;
+  aspect-ratio: var(--tm-class-stage);
+}
+/* The pedestal as cut (scripts/home-tiles.py), sunk into the card's foot until 0.42 of its width shows: its whole
+   top and the upper part of its body. */
+.tm-class-seat {
+  position: absolute;
+  left: calc((100% - var(--tm-class-seat)) / 2);
+  bottom: 0;
+  width: var(--tm-class-seat);
+  aspect-ratio: 703 / 385;
+  translate: 0 var(--tm-class-sink);
+}
+.tm-class-pedestal {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+/* The vial where the product page stands it on the same pedestal (stage.css .tm-pstage-vial), over the contact
+   shadow the photograph carries. Drawn as supplied: no filter, and never larger than its cutout. */
+.tm-class-vial {
+  position: absolute;
+  left: 24.2%;
+  bottom: 83.26%;
+  width: 49.46%;
+  aspect-ratio: 578 / 1112;
+  transition: translate var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.tm-class-vial img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+/* The label's colour as light on the wall behind the vial. */
+.tm-class-glow {
+  position: absolute;
+  left: 50%;
+  top: 39%;
+  width: calc(var(--tm-class-seat) * 1.2);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--tm-class-hue, var(--tm-ink)) 38%, var(--tm-paper)), transparent);
+  opacity: 0.55;
+  transition: opacity var(--tm-dur-slow) var(--tm-ease-enter);
+}
+/* The room's floor mist, about the pedestal's foot, its top left clear. */
+.tm-class-mist {
+  position: absolute;
+  inset: auto 0 0;
+  height: 22%;
+  background: linear-gradient(to top, color-mix(in srgb, var(--tm-paper) 55%, transparent), transparent);
+}
+@media (hover: hover) {
+  .tm .tm-class:hover {
+    border-color: color-mix(in srgb, var(--tm-paper) 90%, transparent);
+    box-shadow: var(--tm-shadow-lift);
+  }
+  .tm .tm-class:hover .tm-class-vial {
+    translate: 0 -3%;
+  }
+  .tm .tm-class:hover .tm-class-glow {
+    opacity: 0.9;
+  }
+}
+.tm .tm-class:active {
+  transform: scale(0.985);
+}
+.brand-refinement .tm .tm-class:focus-visible {
+  outline: none;
+  border-color: var(--tm-ink);
+  box-shadow: var(--tm-shadow-lift), 0 0 0 1px var(--tm-ink);
+}
+.tm .tm-class:focus-visible .tm-class-vial {
+  translate: 0 -3%;
+}
+.tm .tm-class:focus-visible .tm-class-glow {
+  opacity: 0.9;
+}
+/* Past the dusk's turn the cards stand in the dark: their ring of focus is the light's, so it is seen. */
+.brand-refinement .tm.tm-index[data-ink="lit"] .tm-class:focus-visible {
+  box-shadow: 0 0 0 2px var(--tm-glow-full);
+}
+/* The window's light drifts as a day's does, and brightens and dims as if clouds passed: every card's together, one
+   window over all of them. */
+@media (prefers-reduced-motion: no-preference) {
+  .tm-class-light {
+    animation: tm-class-light var(--tm-class-drift) var(--tm-ease-breathe) infinite alternate;
+  }
+}
+@keyframes tm-class-light {
+  from {
+    translate: -3% -2%;
+    opacity: 0.68;
+  }
+  to {
+    translate: 4% 3%;
+    opacity: 0.95;
+  }
+}
+/* Below a laptop's width, two to a row, the way in under the heading. */
+@media (max-width: 1099px) {
+  .tm-index-head,
+  .tm.tm-index .tm-index-all {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .tm-class-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* On a phone, one to a row, each its own moment as it comes up: the words at the left, and at the right the vial seen
+   close on its pedestal, whose body sinks out of the card into the floor's mist. */
+@media (max-width: 640px) {
+  .tm.tm-index {
+    row-gap: var(--tm-space-6);
+    padding-top: calc(var(--tm-space-silence) + var(--tm-space-3));
+  }
+  .tm.tm-index .tm-section-note {
+    margin-top: var(--tm-space-4);
+  }
+  .tm-class-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--tm-space-4);
+  }
+  /* Alone in its row a card needs no stretching to a neighbour's height, and as a plain block it keeps its own shape:
+     iOS Safari sizes a flex item with a ratio to its words, and the vial's cap went out of the card's top. */
+  .tm-class-grid > li {
+    display: block;
+  }
+  /* One card to a row: each arrives as it comes up, not a step after a neighbour. */
+  .tm-home > .tm.tm-index .tm-class-grid > [data-reveal] {
+    --tm-arrive-at: 0px;
+  }
+  .tm .tm-class {
+    /* The words' share of the card; the pedestal's width in it, how far it runs past the card's right edge, and how far
+       it sinks into the floor, so the vial stands whole on it under the card's top. */
+    --tm-class-words: 58%;
+    --tm-class-seat: 40%;
+    --tm-class-over: -6%;
+    --tm-class-sink: 26%;
+    display: grid;
+    grid-template-columns: var(--tm-class-words) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    aspect-ratio: 16 / 9;
+    padding: var(--tm-space-5) 0 var(--tm-space-5) var(--tm-space-5);
+  }
+  .tm-class-number,
+  .tm-class-name,
+  .tm-class-members {
+    grid-column: 1;
+  }
+  .tm-class-number {
+    grid-row: 1;
+  }
+  .tm-class-name {
+    grid-row: 2;
+    margin-top: var(--tm-space-3);
+    font-size: 1.375rem;
+  }
+  .tm-class-members {
+    grid-row: 3;
+    margin: var(--tm-space-2) 0 0;
+    font-size: var(--tm-type-micro);
+  }
+  /* The stage is the whole card behind the words: the floor's mist runs right across it. */
+  .tm-class-stage {
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    margin: calc(var(--tm-space-5) * -1) 0 calc(var(--tm-space-5) * -1) calc(var(--tm-space-5) * -1);
+    aspect-ratio: auto;
+  }
+  .tm-class-seat {
+    left: auto;
+    right: calc(var(--tm-class-over) * -1);
+  }
+  .tm-class-glow {
+    left: calc(100% + var(--tm-class-over) - var(--tm-class-seat) / 2);
+    top: 46%;
+  }
+  /* The pedestal's body goes into the floor's mist, as the opening's do. */
+  .tm-class-mist {
+    height: 36%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tm .tm-class,
+  .tm-class-vial,
+  .tm-class-glow {
+    transition: none;
+  }
+}
+
+/* ---------- The proof: one lot, end to end ---------- */
+
+/* One night chapter. The light falls into it behind the catalog's last rows and its own first words, across ordinary
+   section spacing, and rises out of it behind the record and the closing's first words (atmosphere.css, dusk.ts).
+   Beside the words the room stands behind its first spread, bled up to the chapter's top edge; the trace runs
+   beneath it, the lot's record beneath that. */
+.tm.tm-proof {
+  /* How far the room reaches above the chapter's first words: to the chapter's top edge. */
+  --tm-proof-top: var(--tm-space-silence);
+  --tm-bg: transparent;
+  row-gap: var(--tm-space-7);
+}
+/* The night floor, under the light: what the still form shows below its ramps. */
+.tm.tm-proof::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  background: var(--tm-night-floor);
+  pointer-events: none;
+}
+.tm-proof > :not(.tm-proof-room, .tm-dusk-gap) {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+/* The words, the lookup and the certificate, as wide as their widest line, so the plinth can stand beside them. */
+.tm-proof-copy {
+  grid-column: 1 / span 7;
+  grid-row: 1;
+  justify-self: start;
+  width: fit-content;
+  max-width: 100%;
+}
+/* Second only to the opening's headline, and set to keep that order on every screen. */
+.tm.tm-proof .tm-heading {
+  font-size: clamp(2rem, min(5.4vw, 6svh), 3.5rem);
+  line-height: 1.06;
+}
+.tm.tm-proof .tm-proof-copy .tm-section-note {
+  margin-top: var(--tm-space-6);
+  max-width: 44ch;
+}
+.tm-lookup {
+  display: flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  max-width: 26rem;
+  margin-top: var(--tm-space-7);
+  padding: var(--tm-space-1);
+  border: 1px solid var(--tm-night-line);
+  border-radius: var(--tm-radius-pill);
+  background: color-mix(in srgb, var(--tm-night-raised) 70%, transparent);
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
+}
+@media (hover: hover) {
+  .tm-lookup:hover {
+    border-color: var(--tm-glow-4);
+  }
+}
+.tm-lookup:focus-within {
+  border-color: var(--tm-glow-2);
+}
+.tm-lookup input {
+  flex: 1;
+  min-width: 0;
+  height: var(--tm-control);
+  padding: 0 var(--tm-space-4);
+  border: 0;
+  background: transparent;
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1 var(--tm-font-sans);
+  letter-spacing: 0.02em;
+  color: var(--tm-glow);
+  outline: none;
+}
+.tm-lookup input::placeholder {
+  color: var(--tm-glow-3);
+}
+.tm-lookup button {
+  flex: none;
+  height: max(44px, calc(var(--tm-control) - var(--tm-space-2)));
+  padding-inline: var(--tm-space-5);
+  border: 1px solid transparent;
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-glow);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
+  color: var(--tm-night);
+  cursor: pointer;
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+@media (hover: hover) {
+  .tm-lookup button:hover {
+    background: var(--tm-glow-2);
+  }
+}
+.tm-lookup button:active {
+  transform: scale(0.97);
+}
+.tm-lookup button:focus-visible {
+  outline: none;
+  border-color: var(--tm-night);
+  box-shadow: inset 0 0 0 1px var(--tm-night);
+}
+/* The certificate is one named lot, not a template: its lot stands over it. */
+.tm .tm-proof-featured {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--tm-space-2) var(--tm-space-3);
+  margin: var(--tm-space-8) 0 var(--tm-space-4);
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.2 var(--tm-font-sans);
+  color: var(--tm-glow);
+}
+.tm-proof-featured-label {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-glow-3);
+}
+.tm-proof-cert {
+  max-width: 32rem;
+}
+/* The certificate stays paper, as everywhere (certificate.css), but paper in a dark room: a shade quieter
+   than daylight, so the vial in its beam stays the brightest thing here. Its labels step darker to keep
+   their contrast on it. */
+.tm-proof .tm-coa {
+  background: color-mix(in oklab, var(--tm-paper) 93%, var(--tm-night-raised));
+}
+.tm.tm-proof .tm-coa-rows dt,
+.tm.tm-proof .tm-coa-rows .is-detailed small,
+.tm-proof .tm-coa-foot,
+.tm-proof .tm-coa-enter {
+  color: var(--tm-ink-2);
+}
+.tm-proof .tm-coa-status {
+  color: color-mix(in oklab, var(--tm-signal) 78%, black);
+}
+.tm-proof-cert .tm-coa-rows > div {
+  min-width: 0;
+}
+.tm-proof-cert .tm-coa-rows dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tm-proof-cert .tm-coa-rows dd svg {
+  flex: none;
+}
+
+/* The room: behind the first spread, bled to the chapter's edges, coming up out of the dusk at its top (it is
+   feathered in over the dusk's haze, so no band of dark lies between them) and settling into the night floor at
+   its foot. */
+.tm-proof-room {
+  position: relative;
+  z-index: 0;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  margin: calc(var(--tm-proof-top) * -1) calc(var(--tm-pad) * -1) 0;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--tm-ink) 30%, transparent) calc(var(--tm-dusk-feather) * 0.45), var(--tm-ink) var(--tm-dusk-feather), var(--tm-ink) 78%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--tm-ink) 30%, transparent) calc(var(--tm-dusk-feather) * 0.45), var(--tm-ink) var(--tm-dusk-feather), var(--tm-ink) 78%, transparent);
+}
+
+/* The one trace on the page, its peak rising under the vial. */
+.tm-proof-trace {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin-top: calc(var(--tm-space-8) * -1);
+}
+.tm-proof-trace:not(.is-visible) :is(.tm-trace-line, .tm-trace-caption) {
+  animation-play-state: paused;
+}
+.tm-proof-trace svg {
+  max-width: 100%;
+}
+.tm.tm-proof .tm-trace-night .tm-trace-caption {
+  color: var(--tm-glow-2);
+}
+
+/* The house lights (HomeSections.tsx, NightRoom): over the room and under the vial. The veil lifts as the beam comes
+   up, over the last of the dusk; the eyes' veil, a breath of the dark left once the night has fallen, lifts over
+   800ms once the chapter has settled, the way eyes and cameras adjust in a dark room. In the still form both are
+   up from the first. */
+.tm-proof-veil,
+.tm-proof-adapt {
+  position: absolute;
+  inset: 0;
+  background: var(--tm-night-floor);
+  pointer-events: none;
+}
+/* Before its own light comes up the room is only the dusk's last light: at its top the afterglow it arrives in, deepening
+   to the indigo overhead by the plinth (never the lilac: it comes on screen only once the sky is that deep), so it
+   emerges from the dusk rather than rising out of it as a darker box; its top comes up over a long feather. */
+.tm-proof-veil {
+  background: linear-gradient(in oklab to bottom, var(--tm-dusk-8-foot), var(--tm-dusk-9-top) 38%, var(--tm-dusk-10-top) 72%);
+  opacity: calc(1 - var(--tm-stage));
+  will-change: opacity;
+}
+.tm-proof-adapt {
+  opacity: 0;
+}
+.tm-home[data-light] .tm-proof:not([data-eyes="open"]) .tm-proof-adapt {
+  opacity: 0.2;
+}
+.tm-home[data-light] .tm-proof[data-eyes="open"] .tm-proof-adapt {
+  transition: opacity 820ms var(--tm-ease-breathe);
+}
+
+/* ---------- The lot's record, in light ink on the night floor ---------- */
+
+.tm-proof .tm-trail-record {
+  --tm-node: 0.6875rem;
+  --tm-leg: calc(var(--tm-dur-base) * 3);
+  --tm-trail-start: calc(var(--tm-dur-base) * 2);
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+.tm-trail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--tm-space-4) var(--tm-space-8);
+  padding-bottom: var(--tm-space-6);
+}
+.tm .tm-trail-title {
+  margin: 0;
+  font: var(--tm-weight-light) var(--tm-type-h3) / 1.2 var(--tm-font-display);
+  letter-spacing: var(--tm-track-heading);
+  color: var(--tm-glow);
+}
+.tm .tm-trail-title span {
+  color: var(--tm-glow-3);
+}
+.tm .tm-trail-note {
+  margin: 0;
+  max-width: 52ch;
+  font: var(--tm-weight-regular) var(--tm-type-body) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-glow-2);
 }
 .tm-trail-lot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--tm-space-3) var(--tm-space-6);
-  padding-bottom: var(--tm-space-7);
+  padding-block: var(--tm-space-5) var(--tm-space-7);
+  border-top: 1px solid var(--tm-night-line);
 }
 .tm .tm-trail-id {
   display: inline-flex;
@@ -35,21 +784,653 @@
   gap: var(--tm-space-3);
   margin: 0;
   font: var(--tm-weight-regular) var(--tm-type-lead) / 1 var(--tm-font-sans);
-  color: var(--tm-ink);
+  color: var(--tm-glow);
 }
 .tm-trail-label {
   font: var(--tm-weight-medium) var(--tm-type-nano) / 1 var(--tm-font-display);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--tm-ink-3);
+  color: var(--tm-glow-3);
 }
 .tm .tm-trail-compound {
   margin: 0;
   font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
-  color: var(--tm-ink-3);
+  color: var(--tm-glow-2);
+}
+/* The lot's peptide, residue by residue, drawn in the night's ink. */
+.tm-trail-lot .tm-chain-bead {
+  border-color: var(--tm-glow-4);
+  background: transparent;
+  color: var(--tm-glow-2);
+}
+.tm-trail-lot .tm-chain-bead + .tm-chain-bead::before {
+  background: var(--tm-glow-4);
+}
+.tm-trail-record .tm-chain-bead {
+  opacity: 0;
+  transform: scale(0.6);
+}
+.tm-trail-record.is-visible .tm-chain-bead {
+  animation: tm-bead-in var(--tm-dur-slow) var(--tm-ease-micro) forwards;
+  animation-delay: calc(var(--tm-i) * var(--tm-stagger) / 3 + var(--tm-dur-base));
 }
 
-/* The sample lot's peptide, residue by residue. */
+/* The track: the lot travels it, pausing at each station. */
+.tm-trail-rail {
+  position: relative;
+}
+/* The record's line runs to the content's edge, where the trace above it ends. */
+.tm-trail-rail::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--tm-node) / 2);
+  left: calc(var(--tm-node) / 2);
+  right: 0;
+  height: 1px;
+  background: var(--tm-glow-4);
+}
+.tm-trail-track {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--tm-trail-stops, 6), minmax(0, 1fr));
+  gap: var(--tm-gutter);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-trail-track li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.tm-trail-node {
+  width: var(--tm-node);
+  height: var(--tm-node);
+  margin-bottom: var(--tm-space-5);
+  border: 1px solid var(--tm-glow-3);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-night-floor);
+  transition: background-color var(--tm-dur-slow) var(--tm-ease-enter), border-color var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.tm-trail-date {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
+  font-variant-numeric: tabular-nums;
+  color: var(--tm-glow-2);
+}
+.tm-trail-step {
+  margin-top: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.2 var(--tm-font-display);
+  letter-spacing: -0.01em;
+  color: var(--tm-glow-3);
+  transition: color var(--tm-dur-slow) var(--tm-ease-enter);
+}
+.tm-trail-detail {
+  margin-top: var(--tm-space-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-glow-2);
+}
+/* What the client promises of this station for every lot. */
+.tm-trail-promise {
+  margin-top: var(--tm-space-3);
+  max-width: 24ch;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.45 var(--tm-font-sans);
+  color: var(--tm-glow-2);
+}
+.tm-trail-promise b {
+  display: block;
+  margin-bottom: var(--tm-space-1);
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-glow);
+}
+.tm-trail-progress {
+  position: absolute;
+  z-index: 0;
+  top: calc(var(--tm-node) / 2);
+  left: calc(var(--tm-node) / 2);
+  width: 0;
+  height: 1px;
+  background: var(--tm-glow);
+}
+/* The lot itself: the logo's dot, lit from beneath by the brand gradient. */
+.tm-trail-progress::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(var(--tm-node) * -0.5 - 1px);
+  width: calc(var(--tm-node) + 2px);
+  height: calc(var(--tm-node) + 2px);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-gradient);
+  box-shadow: 0 0 0 3px var(--tm-night-floor);
+  transform: translateY(-50%) scale(0);
+}
+.tm-trail-record.is-visible .tm-trail-progress {
+  animation: tm-trail-reach calc(var(--tm-leg) * (var(--tm-trail-done) - 1)) linear var(--tm-trail-start) forwards;
+}
+.tm-trail-record.is-visible .tm-trail-progress::after {
+  animation: tm-trail-tip var(--tm-dur-slow) var(--tm-ease-micro) var(--tm-dur-base) forwards;
+}
+/* A station lights as the lot arrives: legs travel for two thirds of their time. */
+.tm-trail-record.is-visible li.is-done .tm-trail-node {
+  animation: tm-trail-node-on var(--tm-dur-slow) var(--tm-ease-enter) forwards;
+}
+.tm-trail-record.is-visible li.is-done .tm-trail-step {
+  animation: tm-trail-step-on var(--tm-dur-slow) var(--tm-ease-enter) forwards;
+}
+.tm-trail-record.is-visible li.is-done :is(.tm-trail-node, .tm-trail-step) {
+  animation-delay: calc(var(--tm-trail-start) + var(--tm-i) * var(--tm-leg) - var(--tm-leg) / 3);
+}
+.tm-trail-record.is-visible li:first-child :is(.tm-trail-node, .tm-trail-step) {
+  animation-delay: var(--tm-trail-start);
+}
+/* Release is the moment the lot is verified: its station takes the signal green. */
+.tm-trail-record.is-visible li.is-release .tm-trail-node {
+  animation-name: tm-trail-release;
+}
+/* The station the lot is at now. */
+.tm-trail-track li.is-current .tm-trail-node {
+  border-color: var(--tm-glow);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tm-glow) 16%, transparent);
+}
+.tm-trail-track li.is-current .tm-trail-step {
+  color: var(--tm-glow);
+}
+@keyframes tm-trail-reach {
+  to {
+    width: calc((100% + var(--tm-gutter)) * (var(--tm-trail-done) - 1) / var(--tm-trail-stops));
+  }
+}
+@keyframes tm-trail-node-on {
+  to {
+    background-color: var(--tm-glow);
+    border-color: var(--tm-glow);
+  }
+}
+@keyframes tm-trail-step-on {
+  to {
+    color: var(--tm-glow);
+  }
+}
+@keyframes tm-trail-release {
+  to {
+    background-color: var(--tm-signal-night);
+    border-color: var(--tm-signal-night);
+  }
+}
+@keyframes tm-trail-tip {
+  to {
+    transform: translateY(-50%) scale(1);
+  }
+}
+@keyframes tm-bead-in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Below a laptop's width the chapter stacks: the words, the lookup, the certificate, its trace and its record,
+   and last the vial in a shallow frame of its own (HomeSections.tsx, STACKED). */
+@media (max-width: 1099px) {
+  .tm-proof-copy {
+    grid-column: 1 / -1;
+    width: auto;
+  }
+  .tm-proof-trace {
+    margin-top: 0;
+  }
+  .tm-proof-room {
+    grid-row: 4;
+    height: max(45svh, 18rem);
+    margin: 0 calc(var(--tm-pad) * -1);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, var(--tm-ink) 16%, var(--tm-ink) 80%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, var(--tm-ink) 16%, var(--tm-ink) 80%, transparent);
+  }
+}
+/* ---------- On a phone or a small tablet: the chapter opens on the vial ---------- */
+/* Out of the dusk comes the night's one picture, a shallow band: the vial in its beam (HomeSections.tsx,
+   nightBand). Under it, the heading and the lookup land on the chapter's first screen, the client's note
+   after them; then the featured lot's certificate, its trace, and the record, set as a ledger of six lines. */
+@media (max-width: 960px) {
+  .tm.tm-proof {
+    /* About a third of the screen: never so short that the vial outgrows it, never a poster. */
+    --tm-proof-band: clamp(13.5rem, 36svh, 22rem);
+    /* The words come up into the band's last light. */
+    --tm-proof-rise: calc(var(--tm-space-6) * -1);
+  }
+  .tm-proof-room {
+    grid-row: 1;
+    height: var(--tm-proof-band);
+    /* The band is shallower than the feather: it comes up over its top half, eased, out of a sky already deep. */
+    -webkit-mask-image: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--tm-ink) 30%, transparent) 22%, var(--tm-ink) 50%, var(--tm-ink) 74%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--tm-ink) 30%, transparent) 22%, var(--tm-ink) 50%, var(--tm-ink) 74%, transparent);
+  }
+  /* A phone on its side: the room stands contained in the band, and its right side falls away into the night. */
+  .tm-proof-room[data-contained] .tm-room-plate {
+    -webkit-mask-image: linear-gradient(to right, var(--tm-ink) 80%, transparent);
+    mask-image: linear-gradient(to right, var(--tm-ink) 80%, transparent);
+  }
+  /* The heading, then the lookup, then the note: the task before its explanation. Only the note moves, and
+     it holds no control, so the order of focus is the order on screen. */
+  .tm-proof-copy {
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--tm-proof-rise);
+  }
+  .tm-proof-copy > .tm-lookup {
+    order: 1;
+    margin-top: var(--tm-space-5);
+  }
+  .tm.tm-proof .tm-proof-copy .tm-section-note {
+    order: 2;
+    margin-top: var(--tm-space-5);
+  }
+  .tm .tm-proof-featured {
+    order: 3;
+    margin: var(--tm-space-7) 0 var(--tm-space-3);
+  }
+  .tm-proof-cert {
+    order: 4;
+  }
+  .tm-proof-trace {
+    grid-row: 3;
+  }
+  /* No room beside the peak on a phone or a tablet: the caption reads as the chart's title instead, on one
+     line at the left. Trace.tsx sizes it inline for the space beside the peak, so it's overridden. */
+  .tm-proof-trace .tm-trace-caption {
+    left: 0 !important;
+    right: auto !important;
+    max-width: 60% !important;
+    white-space: nowrap;
+    text-align: left !important;
+  }
+  .tm-proof .tm-trail-record {
+    /* One station's line: its date, step and detail share it, and the rail runs from line to line. */
+    --tm-trail-line: 1.5rem;
+    /* The date's column, as wide as its longest word ("Pending"). */
+    --tm-trail-date: 3.75rem;
+    grid-row: 4;
+  }
+
+  /* The certificate, compact: the same document, its rows closer. */
+  .tm-proof-cert .tm-coa {
+    padding: var(--tm-space-5);
+  }
+  .tm-proof-cert .tm-coa-head {
+    padding-bottom: var(--tm-space-4);
+  }
+  .tm-proof-cert .tm-coa-rows > div {
+    padding-block: var(--tm-space-2);
+  }
+  .tm-proof-cert .tm-coa-links {
+    padding-block: var(--tm-space-3);
+  }
+  .tm-proof-cert .tm-coa-foot {
+    padding-top: var(--tm-space-4);
+  }
+
+  /* The paper trail and its lot, closer to the record they introduce. */
+  .tm-trail-head {
+    gap: var(--tm-space-3);
+    padding-bottom: var(--tm-space-5);
+  }
+  .tm-trail-lot {
+    gap: var(--tm-space-3) var(--tm-space-5);
+    padding-block: var(--tm-space-4) var(--tm-space-6);
+  }
+
+  /* The record as a ledger: one line a station (date, step, detail), the client's two promises under their
+     stations. Stations are as tall as their words, so the rail is drawn station by station: each draws its
+     leg down to the next, and a leg lights once the lot has travelled it. */
+  .tm-trail-rail::before,
+  .tm-trail-progress {
+    display: none;
+  }
+  /* The track holds the ledger's four columns; each station takes them as its own (subgrid), so the step
+     column is as wide as the longest step and every detail starts on one line down the record. */
+  .tm-trail-track {
+    grid-template-columns: var(--tm-node) var(--tm-trail-date) max-content minmax(0, 1fr);
+    column-gap: var(--tm-space-3);
+    row-gap: 0;
+  }
+  .tm-trail-track li {
+    position: relative;
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: baseline;
+    padding-bottom: var(--tm-space-4);
+  }
+  .tm-trail-track li:last-child {
+    padding-bottom: 0;
+  }
+  .tm-trail-node {
+    position: relative;
+    z-index: 1;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    margin: calc((var(--tm-trail-line) - var(--tm-node)) / 2) 0 0;
+  }
+  .tm-trail-date {
+    grid-column: 2;
+    grid-row: 1;
+    line-height: var(--tm-trail-line);
+  }
+  .tm-trail-step {
+    grid-column: 3;
+    grid-row: 1;
+    margin: 0;
+    line-height: var(--tm-trail-line);
+  }
+  .tm-trail-detail {
+    grid-column: 4;
+    grid-row: 1;
+    margin: 0;
+    line-height: var(--tm-trail-line);
+  }
+  .tm-trail-promise {
+    grid-column: 3 / -1;
+    grid-row: 2;
+    margin-top: var(--tm-space-1);
+    max-width: 38ch;
+  }
+  /* Each station's leg, down to the next station's node: the rail at rest, and over it the lit leg. */
+  .tm-trail-track li:not(:last-child)::before,
+  .tm-trail-track li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: calc(var(--tm-trail-line) / 2);
+    bottom: calc(var(--tm-trail-line) / -2);
+    left: calc(var(--tm-node) / 2);
+    width: 1px;
+    transform: translateX(-50%);
+  }
+  .tm-trail-track li:not(:last-child)::before {
+    background: var(--tm-glow-4);
+  }
+  .tm-trail-track li:not(:last-child)::after {
+    background: var(--tm-glow);
+    transform: translateX(-50%) scaleY(0);
+    transform-origin: top;
+  }
+  /* A leg lights once the lot has reached the station at its foot, one leg after another. */
+  .tm-trail-record.is-visible li:has(+ li:is(.is-done, .is-current))::after {
+    animation: tm-trail-leg var(--tm-leg) linear forwards;
+    animation-delay: calc(var(--tm-trail-start) + var(--tm-i) * var(--tm-leg));
+  }
+  /* The lot itself, the logo's dot lit by the brand gradient, comes to rest on the station it has reached. */
+  .tm-trail-track li[data-here] .tm-trail-node::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: var(--tm-radius-pill);
+    background: var(--tm-gradient);
+    box-shadow: 0 0 0 3px var(--tm-night-floor);
+    transform: scale(0);
+  }
+  .tm-trail-record.is-visible li[data-here] .tm-trail-node::after {
+    animation: tm-trail-tip-in var(--tm-dur-slow) var(--tm-ease-micro) forwards;
+    animation-delay: calc(var(--tm-trail-start) + var(--tm-i) * var(--tm-leg));
+  }
+}
+@keyframes tm-trail-leg {
+  to {
+    transform: translateX(-50%) scaleY(1);
+  }
+}
+@keyframes tm-trail-tip-in {
+  to {
+    transform: scale(1);
+  }
+}
+@media (max-width: 560px) {
+  .tm.tm-proof {
+    --tm-pad: var(--tm-space-4);
+  }
+  .tm-proof-cert .tm-coa {
+    padding: var(--tm-space-5) var(--tm-space-4);
+  }
+  .tm-proof-cert .tm-coa-head {
+    flex-wrap: wrap;
+  }
+  .tm-proof-cert .tm-coa-rows > div {
+    gap: var(--tm-space-2);
+  }
+  /* The lot's whole peptide reads on one line, the way the specification table sets it. */
+  .tm-trail-lot .tm-chain-bead {
+    width: calc(var(--tm-space-4) + 2px);
+    height: calc(var(--tm-space-4) + 2px);
+    font-size: var(--tm-type-nano);
+  }
+  .tm-trail-lot .tm-chain-bead + .tm-chain-bead {
+    margin-left: var(--tm-space-1);
+  }
+  .tm-trail-lot .tm-chain-bead + .tm-chain-bead::before {
+    width: var(--tm-space-1);
+  }
+}
+/* Without motion, every station the lot has passed shows as passed, and the lot rests where it is. */
+@media (prefers-reduced-motion: reduce) {
+  .tm-trail-record .tm-chain-bead,
+  .tm-trail-record.is-visible .tm-chain-bead {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .tm-trail-record.is-visible .tm-trail-progress {
+    animation: none;
+    width: calc((100% + var(--tm-gutter)) * (var(--tm-trail-done) - 1) / var(--tm-trail-stops));
+  }
+  .tm-trail-record.is-visible .tm-trail-progress::after {
+    animation: none;
+    transform: translateY(-50%) scale(1);
+  }
+  .tm-trail-record.is-visible li.is-done :is(.tm-trail-node, .tm-trail-step) {
+    animation: none;
+  }
+  .tm-trail-record.is-visible li.is-done .tm-trail-node {
+    background-color: var(--tm-glow);
+    border-color: var(--tm-glow);
+  }
+  .tm-trail-record.is-visible li.is-done .tm-trail-step {
+    color: var(--tm-glow);
+  }
+  .tm-trail-record.is-visible li.is-release .tm-trail-node {
+    background-color: var(--tm-signal-night);
+    border-color: var(--tm-signal-night);
+  }
+}
+@media (prefers-reduced-motion: reduce) and (max-width: 960px) {
+  .tm-trail-record li:has(+ li:is(.is-done, .is-current))::after {
+    animation: none;
+    transform: translateX(-50%) scaleY(1);
+  }
+  .tm-trail-record li[data-here] .tm-trail-node::after {
+    animation: none;
+    transform: scale(1);
+  }
+}
+
+/* ---------- Buying with us: who can buy, and the questions that remain ---------- */
+
+/* Paper, come up out of the dawn. Type carries it; its headings are the page's quietest. */
+.tm.tm-closing {
+  --tm-bg: transparent;
+  row-gap: var(--tm-space-8);
+}
+.tm.tm-closing .tm-heading {
+  font-size: clamp(1.375rem, 1.8vw, 1.75rem);
+  letter-spacing: var(--tm-track-heading);
+}
+.tm.tm-closing .tm-eyebrow {
+  color: var(--tm-ink-2);
+}
+.tm-closing-buyers {
+  grid-column: 1 / span 4;
+}
+.tm.tm-closing .tm-closing-buyers .tm-section-note {
+  margin-top: var(--tm-space-4);
+}
+.tm-closing-list {
+  margin: var(--tm-space-6) 0 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--tm-line);
+}
+.tm .tm-closing-list li {
+  padding-block: var(--tm-space-3);
+  border-top: 1px solid var(--tm-line);
+  font: var(--tm-weight-regular) var(--tm-type-body) / 1.35 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+.tm.tm-closing .tm-closing-apply {
+  margin-top: var(--tm-space-6);
+}
+/* The research-use terms, under the way to apply. */
+.tm-closing-terms {
+  display: grid;
+  gap: var(--tm-space-4);
+  margin: var(--tm-space-7) 0 0;
+}
+.tm-closing-terms dt {
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink);
+}
+.tm-closing-terms dd {
+  margin: var(--tm-space-1) 0 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.45 var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+/* The questions, level with the buyers' heading: they start below the eyebrow's line. */
+.tm-closing-questions {
+  grid-column: 6 / -1;
+  padding-top: calc(var(--tm-type-micro) + var(--tm-space-5));
+}
+.tm-closing-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--tm-space-4) var(--tm-space-7);
+  margin: var(--tm-space-4) 0 var(--tm-space-6);
+}
+.tm.tm-closing .tm-closing-more .tm-section-note {
+  max-width: 44ch;
+}
+.brand-refinement .tm-closing .tm-faq summary {
+  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.35 var(--tm-font-display);
+  letter-spacing: -0.01em;
+}
+/* Side by side, the two columns share the spread's rows (the kicker, the heading, the note, then the body), so
+   the buyers' ruled list and the questions start on one rule however their headings and notes wrap. */
+@media (min-width: 1024px) {
+  .tm.tm-closing {
+    row-gap: 0;
+  }
+  .tm-closing-buyers,
+  .tm-closing-questions {
+    display: grid;
+    grid-row: 1 / span 4;
+    grid-template-rows: subgrid;
+  }
+  .tm-closing-questions {
+    padding-top: 0;
+  }
+  .tm-closing-questions > .tm-heading {
+    grid-row: 2;
+  }
+  .tm-closing-questions > .tm-closing-more {
+    grid-row: 3;
+    margin-bottom: 0;
+  }
+  .tm-closing-body {
+    grid-row: 4;
+    padding-top: var(--tm-space-6);
+  }
+  .tm-closing-body > .tm-closing-list {
+    margin-top: 0;
+  }
+}
+@media (max-width: 1023px) {
+  .tm-closing-buyers,
+  .tm-closing-questions {
+    grid-column: 1 / -1;
+  }
+  .tm-closing-buyers {
+    max-width: 36rem;
+  }
+  .tm-closing-questions {
+    padding-top: 0;
+  }
+}
+/* On a phone or a small tablet the spread is one calm column: who can buy and the way to apply, then the
+   questions. Each control spans the column, so a thumb finds it wherever it lands, and an answer reads at
+   the column's full measure instead of holding back from its right edge. */
+@media (max-width: 960px) {
+  .tm.tm-closing {
+    row-gap: var(--tm-space-7);
+  }
+  .tm .tm-closing-list li {
+    padding-block: var(--tm-space-2);
+  }
+  .tm.tm-closing .tm-closing-apply {
+    width: 100%;
+    margin-top: var(--tm-space-5);
+  }
+  .tm-closing-terms {
+    margin-top: var(--tm-space-6);
+  }
+  .tm-closing-more {
+    margin: var(--tm-space-3) 0 0;
+  }
+  /* The way to the resources hub is a row across the column, its arrow at the far end. Its rule, in the
+     questions' own hairline, is the questions' first rule too, so the note leads into one ruled list and no
+     two rules stand apart with nothing between them. */
+  .tm.tm-closing .tm-closing-more .tm-textlink {
+    flex: 1 1 100%;
+    justify-content: space-between;
+    min-height: var(--tm-control);
+    border-bottom-color: var(--tm-line);
+  }
+  .tm.tm-closing .tm-faq details:first-child {
+    border-top: 0;
+  }
+  /* A finger's height already, the row needs no reach beyond itself, which would fall on the first question. */
+  .tm.tm-closing .tm-closing-more .tm-textlink::after {
+    display: none;
+  }
+  .tm.tm-closing .tm-closing-more .tm-textlink:focus-visible {
+    border-bottom-color: var(--tm-ink);
+  }
+  .tm.tm-closing .tm-faq summary {
+    padding-block: var(--tm-space-4);
+  }
+  .tm.tm-closing .tm-faq p {
+    padding: 0 0 var(--tm-space-5);
+  }
+}
+@media (max-width: 960px) and (hover: hover) {
+  .tm.tm-closing .tm-closing-more .tm-textlink:hover {
+    border-bottom-color: var(--tm-ink);
+  }
+}
+/* A tapped question keeps its resting plus: hover is for a pointer that hovers. */
+@media (hover: none) {
+  .tm-closing .tm-faq summary:hover svg {
+    color: var(--tm-ink-3);
+  }
+}
+
+/* ---------- The sequence chain (SequenceChain.tsx), here and in the product's specification table ---------- */
+
 .tm .tm-chain {
   display: flex;
   flex-wrap: wrap;
@@ -83,651 +1464,11 @@
   height: 1px;
   background: var(--tm-line-strong);
 }
-.tm-trail-record .tm-chain-bead {
-  opacity: 0;
-  transform: scale(0.6);
-}
-.tm-trail-record.is-visible .tm-chain-bead {
-  animation: tm-bead-in 520ms var(--tm-ease-micro) forwards;
-  animation-delay: calc(var(--tm-i) * 45ms + 240ms);
-}
-
-/* The track: a lot travels it, pausing at each station. */
-.tm-trail-rail {
-  position: relative;
-}
-.tm-trail-rail::before {
-  content: "";
-  position: absolute;
-  top: calc(var(--tm-node) / 2);
-  left: calc(var(--tm-node) / 2);
-  right: calc(var(--tm-pad) * -1);
-  height: 1px;
-  background: linear-gradient(90deg, var(--tm-line-strong) 84%, transparent);
-}
-.tm-trail-track {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: var(--tm-gutter);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.tm-trail-track li {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
-}
-.tm-trail-node {
-  width: var(--tm-node);
-  height: var(--tm-node);
-  margin-bottom: var(--tm-space-5);
-  border: 1px solid var(--tm-ink-4);
-  border-radius: var(--tm-radius-pill);
-  background: var(--tm-paper);
-  transition: background-color var(--tm-dur-slow) var(--tm-ease-enter), border-color var(--tm-dur-slow) var(--tm-ease-enter);
-}
-.tm-trail-date {
-  font: var(--tm-weight-regular) var(--tm-type-ui) / 1 var(--tm-font-sans);
-  font-variant-numeric: tabular-nums;
-  color: var(--tm-ink-3);
-}
-.tm-trail-step {
-  margin-top: var(--tm-space-3);
-  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.2 var(--tm-font-display);
-  letter-spacing: -0.01em;
-  color: var(--tm-ink-3);
-  transition: color var(--tm-dur-slow) var(--tm-ease-enter);
-}
-.tm-trail-detail {
-  margin-top: var(--tm-space-2);
-  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
-  color: var(--tm-ink-3);
-}
-.tm-trail-progress {
-  position: absolute;
-  z-index: 0;
-  top: calc(var(--tm-node) / 2);
-  left: calc(var(--tm-node) / 2);
-  width: 0;
-  height: 1px;
-  background: var(--tm-ink);
-}
-/* The lot itself: the logo's dot, lit from beneath by the brand gradient. */
-.tm-trail-progress::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: calc(var(--tm-node) * -0.5 - 1px);
-  width: calc(var(--tm-node) + 2px);
-  height: calc(var(--tm-node) + 2px);
-  border-radius: var(--tm-radius-pill);
-  background: var(--tm-gradient);
-  box-shadow: 0 0 0 3px var(--tm-paper);
-  transform: translateY(-50%) scale(0);
-}
-.tm-trail-record.is-visible .tm-trail-progress {
-  animation: tm-trail-run calc(var(--tm-leg) * 5) linear 500ms forwards;
-}
-.tm-trail-record.is-visible .tm-trail-progress::after {
-  animation: tm-trail-tip 420ms var(--tm-ease-micro) 300ms forwards;
-}
-/* A station lights as the lot arrives: legs travel for two thirds of their time. */
-.tm-trail-record.is-visible .tm-trail-node {
-  animation: tm-trail-node-on var(--tm-dur-slow) var(--tm-ease-enter) forwards;
-  animation-delay: calc(500ms + var(--tm-i) * var(--tm-leg) - var(--tm-leg) / 3);
-}
-.tm-trail-record.is-visible .tm-trail-step {
-  animation: tm-trail-step-on var(--tm-dur-slow) var(--tm-ease-enter) forwards;
-  animation-delay: calc(500ms + var(--tm-i) * var(--tm-leg) - var(--tm-leg) / 3);
-}
-.tm-trail-record.is-visible li:first-child :is(.tm-trail-node, .tm-trail-step) {
-  animation-delay: 500ms;
-}
-
-/*
- * Each leg: travel for two thirds of its time, then hold at the station.
- * Stations sit at the start of each of six equal columns (gap included), so
- * station n lies at n/6 of the track width plus n/6 of one gap.
- */
-/* A station holding its place: no arrival, no colour. */
-.tm-trail-record.is-visible li.is-skeleton :is(.tm-trail-node, .tm-trail-step) {
-  animation: none;
-}
-@keyframes tm-trail-run {
-  0% {
-    width: 0;
-  }
-  13.33% {
-    width: calc((100% + var(--tm-gutter)) / 6);
-  }
-  20% {
-    width: calc((100% + var(--tm-gutter)) / 6);
-  }
-  33.33% {
-    width: calc((100% + var(--tm-gutter)) * 2 / 6);
-  }
-  40% {
-    width: calc((100% + var(--tm-gutter)) * 2 / 6);
-  }
-  53.33% {
-    width: calc((100% + var(--tm-gutter)) * 3 / 6);
-  }
-  60% {
-    width: calc((100% + var(--tm-gutter)) * 3 / 6);
-  }
-  73.33% {
-    width: calc((100% + var(--tm-gutter)) * 4 / 6);
-  }
-  80% {
-    width: calc((100% + var(--tm-gutter)) * 4 / 6);
-  }
-  93.33%,
-  100% {
-    width: calc((100% + var(--tm-gutter)) * 5 / 6);
-  }
-}
-@keyframes tm-trail-node-on {
-  to {
-    background-color: var(--tm-ink);
-    border-color: var(--tm-ink);
-  }
-}
-@keyframes tm-trail-step-on {
-  to {
-    color: var(--tm-ink);
-  }
-}
-/* Release is the moment the lot is verified: its station takes the signal green. */
-.tm-trail-record.is-visible li.is-release .tm-trail-node {
-  animation-name: tm-trail-release;
-}
-@keyframes tm-trail-release {
-  to {
-    background-color: var(--tm-signal);
-    border-color: var(--tm-signal);
-  }
-}
-@keyframes tm-trail-tip {
-  to {
-    transform: translateY(-50%) scale(1);
-  }
-}
-@keyframes tm-bead-in {
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* ---------- Catalog, by compound class ---------- */
-
-.tm-classes {
-  --tm-bg: var(--tm-lilac-floor);
-  padding-top: 0;
-  row-gap: 0;
-}
-.tm-classes-photo {
-  grid-column: 1 / -1;
-  grid-row: 1;
-  margin-inline: calc(var(--tm-pad) * -1);
-  -webkit-mask-image: linear-gradient(to bottom, #000 88%, transparent);
-  mask-image: linear-gradient(to bottom, #000 88%, transparent);
-}
-.tm-classes-photo img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-/* Set in the photograph's own headroom, above the pedestals. */
-.tm-classes-head {
-  grid-column: 1 / span 5;
-  grid-row: 1;
-  align-self: start;
-  position: relative;
-  padding-top: clamp(2.5rem, 5.5vw, 5.5rem);
-}
-.tm .tm-classes-head .tm-heading {
-  font-size: clamp(2rem, 3.6vw, 3.25rem);
-}
-.tm-classes-head .tm-eyebrow {
-  color: var(--tm-ink-2);
-}
-.tm-classes-intro {
-  position: relative;
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--tm-space-5) var(--tm-space-8);
-  margin-top: calc(var(--tm-space-9) * -1);
-}
-.tm .tm-classes-intro .tm-section-note {
-  max-width: 46ch;
-}
-.tm-class-grid {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--tm-gutter);
-  margin: var(--tm-space-7) 0 0;
-  padding: 0;
-  list-style: none;
-}
-.tm .tm-class {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 15rem;
-  height: 100%;
-  padding: var(--tm-space-5);
-  overflow: hidden;
-  border: 1px solid var(--tm-line);
-  border-radius: var(--tm-radius-lg);
-  background: var(--tm-paper);
-  box-shadow: var(--tm-shadow-whisper);
-  color: var(--tm-ink);
-  transition:
-    border-color var(--tm-dur-base) var(--tm-ease-enter),
-    box-shadow var(--tm-dur-slow) var(--tm-ease-enter),
-    transform var(--tm-dur-quick) var(--tm-ease-micro);
-}
-.tm-class-number {
-  font: var(--tm-weight-medium) var(--tm-type-nano) / var(--tm-leading-label) var(--tm-font-display);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--tm-ink-3);
-}
-.tm-class-name {
-  max-width: 11ch;
-  margin-top: var(--tm-space-4);
-  font: var(--tm-weight-light) clamp(1.25rem, 1.7vw, 1.5rem) / 1.15 var(--tm-font-display);
-  letter-spacing: -0.02em;
-  color: var(--tm-ink);
-}
-.tm-class-members {
-  max-width: 58%;
-  margin-top: var(--tm-space-3);
-  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.45 var(--tm-font-sans);
-  color: var(--tm-ink-3);
-}
-/* The class's vial stands just behind the card's lower edge, and rises on hover. */
-.tm-class-vial {
-  position: absolute;
-  right: var(--tm-space-5);
-  bottom: -18%;
-  width: 24%;
-  transition: transform var(--tm-dur-slow) var(--tm-ease-enter);
-}
-.tm-class-vial img {
-  display: block;
-  width: 100%;
-  height: auto;
-  user-select: none;
-}
-.tm .tm-class:hover {
-  border-color: var(--tm-line-strong);
-  box-shadow: var(--tm-shadow-lift);
-}
-.tm .tm-class:hover .tm-class-vial {
-  transform: translateY(-12%);
-}
-.tm .tm-class:active {
-  transform: scale(0.99);
-}
-.brand-refinement .tm .tm-class:focus-visible {
-  outline: none;
-  border-color: var(--tm-ink);
-}
-.tm .tm-class:focus-visible .tm-class-vial {
-  transform: translateY(-12%);
-}
-
-/* ---------- Verification ---------- */
-
-.tm-vband {
-  row-gap: var(--tm-space-8);
-  padding-bottom: 0;
-  /* The night studio (shop.css): the key above the certificate, the peak's glow on the floor. */
-  --tm-key-at: 72% 26%;
-  --tm-peak-x: 70%;
-  --tm-peak-y: 96%;
-}
-.tm-vband > * { min-width: 0; }
-.tm-vband-copy {
-  grid-column: 1 / span 5;
-  align-self: center;
-}
-.tm .tm-vband-copy .tm-section-note {
-  margin-top: var(--tm-space-6);
-  max-width: 44ch;
-}
-.tm-lookup {
-  display: flex;
-  align-items: center;
-  gap: var(--tm-space-2);
-  max-width: 26rem;
-  margin-top: var(--tm-space-7);
-  padding: var(--tm-space-1);
-  border: 1px solid var(--tm-night-line);
-  border-radius: var(--tm-radius-pill);
-  background: color-mix(in srgb, var(--tm-night-raised) 70%, transparent);
-  transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
-}
-.tm-lookup:hover {
-  border-color: var(--tm-glow-4);
-}
-.tm-lookup:focus-within {
-  border-color: var(--tm-glow-2);
-}
-.tm-lookup input {
-  flex: 1;
-  min-width: 0;
-  height: var(--tm-control);
-  padding: 0 var(--tm-space-4);
-  border: 0;
-  background: transparent;
-  font: var(--tm-weight-regular) var(--tm-type-body) / 1 var(--tm-font-sans);
-  letter-spacing: 0.02em;
-  color: var(--tm-glow);
-  outline: none;
-}
-.tm-lookup input::placeholder {
-  color: var(--tm-glow-4);
-}
-.tm-lookup button {
-  flex: none;
-  height: calc(var(--tm-control) - var(--tm-space-2));
-  padding-inline: var(--tm-space-5);
-  border: 1px solid transparent;
-  border-radius: var(--tm-radius-pill);
-  background: var(--tm-glow);
-  font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
-  color: var(--tm-night);
-  cursor: pointer;
-  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
-}
-.tm-lookup button:hover {
-  background: var(--tm-glow-2);
-}
-.tm-lookup button:active {
-  transform: scale(0.97);
-}
-.tm-lookup button:focus-visible {
-  outline: none;
-  border-color: var(--tm-night);
-  box-shadow: inset 0 0 0 1px var(--tm-night);
-}
-
-/* The certificate (src/brand/certificate.css) sits beside the copy. */
-.tm-vband-cert {
-  position: relative;
-  z-index: 1;
-  grid-column: 7 / -1;
-  align-self: center;
-}
-.tm-vband-trace {
-  grid-column: 1 / -1;
-  margin: calc(var(--tm-space-7) * -1) 0 0;
-}
-.tm-vband-trace:not(.is-visible) :is(.tm-trace-line, .tm-trace-caption) {
-  animation-play-state: paused;
-}
-
-/* ---------- Who we supply ---------- */
-
-.tm-supply {
-  --tm-bg: var(--tm-lilac-50);
-  row-gap: var(--tm-space-7);
-}
-.tm-supply-copy {
-  grid-column: 1 / span 5;
-  align-self: end;
-}
-.tm-supply-copy .tm-eyebrow {
-  color: var(--tm-ink-2);
-}
-.tm .tm-supply-copy .tm-section-note {
-  margin-top: var(--tm-space-5);
-}
-.tm-supply-list {
-  grid-column: 7 / -1;
-  align-self: end;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: var(--tm-gutter);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.tm .tm-supply-list li {
-  padding-block: var(--tm-space-4);
-  border-top: 1px solid var(--tm-line-strong);
-  font: var(--tm-weight-regular) var(--tm-type-body) / 1.35 var(--tm-font-sans);
-  color: var(--tm-ink);
-}
-
-/* ---------- Common questions ---------- */
-
-.tm-bquestions {
-  padding-top: var(--tm-space-silence);
-}
-.tm-bquestions .tm-questions-head .tm-section-note {
-  margin-top: var(--tm-space-5);
-}
-.brand-refinement .tm-bquestions .tm-faq summary {
-  font: var(--tm-weight-regular) var(--tm-type-lead) / 1.35 var(--tm-font-display);
-  letter-spacing: -0.01em;
-}
-
-/* ---------- Motion preferences ---------- */
-
-@media (prefers-reduced-motion: reduce) {
-  .tm-trail-record .tm-chain-bead,
-  .tm-trail-record.is-visible .tm-chain-bead {
-    opacity: 1;
-    transform: none;
-    animation: none;
-  }
-  .tm-trail-record.is-visible .tm-trail-progress {
-    animation: none;
-    width: calc((100% + var(--tm-gutter)) * 5 / 6);
-  }
-  .tm-trail-record.is-visible .tm-trail-progress::after {
-    animation: none;
-    transform: translateY(-50%) scale(1);
-  }
-  /* Without motion, every station shows as the lot has passed it. */
-  .tm-trail-record.is-visible .tm-trail-node {
-    background-color: var(--tm-ink);
-    border-color: var(--tm-ink);
-  }
-  .tm-trail-record.is-visible li.is-release .tm-trail-node {
-    background-color: var(--tm-signal);
-    border-color: var(--tm-signal);
-  }
-  .tm-trail-record.is-visible .tm-trail-step {
-    color: var(--tm-ink);
-  }
-}
-@media (prefers-reduced-motion: reduce) and (max-width: 960px) {
-  /* The track runs down the page here. */
-  .tm-trail-record.is-visible .tm-trail-progress {
-    width: 1px;
-    height: calc(100% * 5 / 6);
-  }
-  .tm-trail-record.is-visible .tm-trail-progress::after {
-    transform: translateX(-50%) scale(1);
-  }
-}
-
-/* ---------- Narrow screens ---------- */
-
-@media (max-width: 1100px) {
-  .tm-classes-head {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    padding-top: var(--tm-space-7);
-  }
-  .tm-classes-intro {
-    margin-top: var(--tm-space-5);
-  }
-  .tm-class-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .tm-vband-copy,
-  .tm-vband-cert {
-    grid-column: 1 / -1;
-  }
-  .tm-vband-cert {
-    margin-top: var(--tm-space-6);
-  }
-  .tm-supply-copy,
-  .tm-supply-list {
-    grid-column: 1 / -1;
-  }
-}
-@media (max-width: 960px) {
-  .tm-trail-head,
-  .tm-trail-aside {
-    grid-column: 1 / -1;
-  }
-  /* The track turns to run down the page, from the first station's centre to the last one's:
-     the stations stand in equal rows, so the last centre lies (stops − 1) / stops of the way down. */
-  .tm-trail-rail::before {
-    top: calc(var(--tm-node) / 2 + var(--tm-space-1) / 2);
-    bottom: auto;
-    left: calc(var(--tm-node) / 2);
-    right: auto;
-    width: 1px;
-    height: calc(100% * (var(--tm-trail-stops, 6) - 1) / var(--tm-trail-stops, 6));
-    background: var(--tm-line-strong);
-  }
-  .tm-trail-track {
-    grid-template-columns: 1fr;
-    grid-auto-rows: 1fr;
-    gap: 0;
-  }
-  .tm-trail-track li {
-    display: grid;
-    grid-template-columns: var(--tm-node) 4.5rem minmax(0, 1fr);
-    grid-template-areas: "node date step" ". . detail";
-    column-gap: var(--tm-space-4);
-    align-items: baseline;
-    padding-bottom: var(--tm-space-6);
-  }
-  .tm-trail-node {
-    grid-area: node;
-    align-self: start;
-    margin: 0;
-    transform: translateY(calc(var(--tm-space-1) / 2));
-  }
-  .tm-trail-date {
-    grid-area: date;
-  }
-  .tm-trail-step {
-    grid-area: step;
-    margin: 0;
-  }
-  .tm-trail-detail {
-    grid-area: detail;
-  }
-  /* Measured from the first station's centre, so each leg ends on a station. */
-  .tm-trail-progress {
-    top: calc(var(--tm-node) / 2 + var(--tm-space-1) / 2);
-    left: calc(var(--tm-node) / 2);
-    width: 1px;
-    height: 0;
-  }
-  .tm-trail-progress::after {
-    top: auto;
-    right: auto;
-    bottom: calc(var(--tm-node) * -0.5 - 1px);
-    left: 50%;
-    transform: translateX(-50%) scale(0);
-  }
-  .tm-trail-record.is-visible .tm-trail-progress {
-    animation-name: tm-trail-run-down;
-  }
-  .tm-trail-record.is-visible .tm-trail-progress::after {
-    animation-name: tm-bead-down;
-  }
-  .tm-trail { padding-top: calc(var(--tm-space-7) + var(--tm-space-2)); }
-  /* The record follows its link closely; the section's own row gap is enough. */
-  .tm-trail-record { margin-top: var(--tm-space-4); }
-  .tm-trail-lot { padding-bottom: var(--tm-space-6); }
-  .tm-supply-list { grid-template-columns: minmax(0, 1fr); }
-
-}
-@keyframes tm-trail-run-down {
-  0% {
-    height: 0;
-  }
-  13.33%,
-  20% {
-    height: calc(100% / 6);
-  }
-  33.33%,
-  40% {
-    height: calc(100% * 2 / 6);
-  }
-  53.33%,
-  60% {
-    height: calc(100% * 3 / 6);
-  }
-  73.33%,
-  80% {
-    height: calc(100% * 4 / 6);
-  }
-  93.33%,
-  100% {
-    height: calc(100% * 5 / 6);
-  }
-}
-@keyframes tm-bead-down {
-  to {
-    transform: translateX(-50%) scale(1);
-  }
-}
 @media (max-width: 640px) {
-  /* On a phone, move in on the middle three vials. */
-  .tm-classes-photo img {
-    aspect-ratio: 1;
-    object-fit: cover;
-    object-position: 49% 60%;
-  }
-  .tm-class-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--tm-space-3);
-  }
-  /* A row each: the name on one line, its members beneath, the vial standing at the right. */
-  .tm .tm-class {
-    min-height: 0;
-    padding: var(--tm-space-5) 30% var(--tm-space-5) var(--tm-space-5);
-  }
-  .tm-class-name {
-    max-width: none;
-    margin-top: var(--tm-space-3);
-  }
-  .tm-class-members {
-    max-width: none;
-  }
-  .tm-class-vial {
-    width: 4.5rem;
-    bottom: -2.5rem;
-  }
-  .tm-supply-list {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .tm .tm-chain {
     margin-left: 0;
   }
 }
-
 /* In a specification table the chain is set compact, so the whole peptide reads on one line. */
 .tm-spec-table .tm-chain {
   flex-wrap: nowrap;
@@ -762,98 +1503,103 @@
   }
 }
 
-/* Allow the document's intrinsic text widths to shrink inside the twelve-column grid. */
-.tm-vband-cert .tm-coa-rows > div { min-width: 0; }
-.tm-vband-cert .tm-coa-rows dd { min-width: 0; overflow-wrap: anywhere; }
-.tm-vband-cert .tm-coa-rows dd svg { flex: none; }
-.tm-vband-trace .tm-trace-caption { left: auto !important; right: 0; max-width: 100%; white-space: normal; text-align: right; }
-.tm-vband-trace svg { max-width: 100%; }
-@media (max-width: 560px) {
-  .tm-vband { --tm-pad: var(--tm-space-4); }
-  .tm-vband-cert .tm-coa { padding: var(--tm-space-5) var(--tm-space-4); }
-  .tm-vband-cert .tm-coa-head { flex-wrap: wrap; }
-  .tm-vband-cert .tm-coa-rows > div { gap: var(--tm-space-2); }
+/* ---------- Reach and focus on the home page ---------- */
+/* Tabbing never leaves a focused control under the sticky header: wherever focus moves, up the page or down it,
+   the page scrolls the control clear of the header, with room to breathe. On the home page only: elsewhere the
+   sections links land on keep their own scroll-margin for the header, and a page-wide padding would add to it. */
+html:has(.tm-home) {
+  scroll-padding-top: calc(var(--review-bar-height, 0px) + var(--tm-header-height) + var(--tm-space-5));
+}
+/* A text link's target reaches a finger's width around it, though the link looks no larger. */
+.tm-home .tm-textlink {
+  position: relative;
+}
+.tm-home .tm-textlink::after {
+  content: "";
+  position: absolute;
+  inset: -0.8rem -0.4rem;
+}
+.tm-home .tm-faq summary:focus-visible {
+  outline: 2px solid var(--tm-ink);
+  outline-offset: 4px;
+  border-radius: var(--tm-radius-sm);
 }
 
-/* ---------- A live lot's stations ---------- */
+/* ---------- Across the home page ---------- */
+/* Headings set in balanced lines, paragraphs without a word left alone on their last line. */
+.tm .tm-trail-title,
+.tm-home .tm-faq summary {
+  text-wrap: balance;
+}
+.tm .tm-trail-note,
+.tm-trail-promise,
+.tm-closing-terms dd,
+.tm-home .tm .tm-faq p {
+  text-wrap: pretty;
+}
+/* A question answers a press as well as a pointer and a key. */
+.tm-home .tm-faq summary:active {
+  background: var(--tm-wash);
+}
+/* The smallest labels (kickers, lot labels, class numbers, the certificate's status) never fall under 11px. */
+.tm-home {
+  --tm-type-nano: 0.75rem;
+}
+/* The batch number under the certificate reads at the same 11px floor as the other small labels. */
+.tm-home .tm-coa-foot .tm-mono {
+  font-size: 0.75rem;
+}
+/* The certificate's two links, stacked on a phone, each keep a finger's reach of their own. */
+.tm-home .tm-coa-links {
+  row-gap: 1.5rem;
+}
+/* The sequence chain's letters at the home page's 11px floor. */
+.tm-home .tm-chain-bead {
+  font-size: 0.75rem;
+}
 
-/* Every station shows; the lot travels to the one it is at, and the rest wait, unlit. */
-@media (min-width: 961px) {
-  .tm-trail-record[data-stops] .tm-trail-track {
-    grid-template-columns: repeat(var(--tm-trail-stops), minmax(0, 1fr));
-  }
-}
-.tm-trail-record.is-visible[data-stops] .tm-trail-progress {
-  animation: tm-trail-reach calc(var(--tm-leg) * (var(--tm-trail-done) - 1)) linear 500ms forwards;
-}
-@keyframes tm-trail-reach {
-  to {
-    width: calc((100% + var(--tm-gutter)) * (var(--tm-trail-done) - 1) / var(--tm-trail-stops));
-  }
-}
-.tm-trail-record.is-visible :is(li.is-current, li.is-next) :is(.tm-trail-node, .tm-trail-step) {
-  animation: none;
-}
-.tm-trail-track li.is-current .tm-trail-node {
-  border-color: var(--tm-ink);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tm-ink) 10%, transparent);
-}
-.tm-trail-track li.is-current .tm-trail-step {
-  color: var(--tm-ink);
-}
-@keyframes tm-trail-reach-down {
-  to {
-    height: calc(100% * (var(--tm-trail-done) - 1) / var(--tm-trail-stops));
-  }
-}
-@media (max-width: 960px) {
-  .tm-trail-record.is-visible[data-stops] .tm-trail-progress {
-    animation-name: tm-trail-reach-down;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .tm-trail-record.is-visible[data-stops] .tm-trail-progress {
-    animation: none;
-    width: calc((100% + var(--tm-gutter)) * (var(--tm-trail-done) - 1) / var(--tm-trail-stops));
-  }
-  .tm-trail-record.is-visible :is(li.is-current, li.is-next) .tm-trail-node {
-    background-color: var(--tm-paper);
-  }
-  .tm-trail-record.is-visible li.is-next .tm-trail-node {
-    border-color: var(--tm-ink-4);
-  }
-  .tm-trail-record.is-visible li.is-next .tm-trail-step {
-    color: var(--tm-ink-3);
-  }
-}
-@media (prefers-reduced-motion: reduce) and (max-width: 960px) {
-  .tm-trail-record.is-visible[data-stops] .tm-trail-progress {
-    width: 1px;
-    height: calc(100% * (var(--tm-trail-done) - 1) / var(--tm-trail-stops));
-  }
-}
+/* ---------- A phone: the landing's words stand centred ---------- */
+/* Headings, their eyebrows and notes, the trust lines and the ways on sit on the page's centre line, as the client's
+   phone pages do. What is read as data keeps its left edge: the class cards, the label's details, the lot record and
+   its findings, the six stations, the lists' rules and the questions. */
 @media (max-width: 560px) {
-  /* No room beside the peak on a phone: the caption reads as the chart's title instead, on one
-     line at the left. Trace.tsx sizes it inline for the space beside the peak, so it's overridden. */
-  .tm-vband-trace .tm-trace-caption {
-    left: 0 !important;
-    right: auto;
-    max-width: 60% !important;
-    white-space: nowrap;
-    text-align: left;
+  .tm-home :is(
+      .tm-seq-words,
+      .tm-seq-finale-words,
+      .tm-seq-finale-aside,
+      .tm-seq-principles,
+      .tm-index-head,
+      .tm-trail-head,
+      .tm-lookup-copy,
+      .tm-closing-buyers,
+      .tm-closing-questions > .tm-heading,
+      .tm-closing-more,
+      .tm-closing-terms
+    ) {
+    text-align: center;
   }
-}
-@media (max-width: 560px) {
-  /* The sample lot's whole peptide reads on one line, the way the specification table sets it. */
-  .tm-trail-lot .tm-chain-bead {
-    width: calc(var(--tm-space-4) + 2px);
-    height: calc(var(--tm-space-4) + 2px);
-    font-size: var(--tm-type-nano);
+  .tm-home :is(.tm-seq-words, .tm-seq-finale-aside, .tm-index-head, .tm-trail-head, .tm-lookup-copy, .tm-closing-buyers, .tm-closing-more)
+    :is(p, .tm-section-note, .tm-trail-note, .tm-seq-text) {
+    margin-inline: auto;
   }
-  .tm-trail-lot .tm-chain-bead + .tm-chain-bead {
-    margin-left: var(--tm-space-1);
+  .tm-home :is(.tm-seq-explore, .tm.tm-closing .tm-closing-more .tm-textlink) {
+    justify-content: center;
+    gap: var(--tm-space-2);
   }
-  .tm-trail-lot .tm-chain-bead + .tm-chain-bead::before {
-    width: var(--tm-space-1);
+  .tm-home .tm-seq-stills figcaption,
+  .tm-home .tm-seq-paper-links,
+  .tm-home .tm-proof-featured {
+    justify-content: center;
+    text-align: center;
+  }
+  .tm-home :is(.tm-index-head, .tm-closing-more) {
+    justify-items: center;
+    align-items: center;
+  }
+  .tm-home .tm.tm-index .tm-index-all {
+    justify-self: center;
+  }
+  .tm-home .tm-closing-list li {
+    text-align: center;
   }
 }

@@ -6,7 +6,7 @@ import { ArrowUpRight } from "lucide-react";
 import { money } from "../data";
 import { demoBuyer, demoDraft, demoPartner } from "../demo/order";
 import { quote } from "../platform/store";
-import { BrandDot } from "./HeroShelf";
+import { BrandDot } from "./BrandDot";
 import "./review-live.css";
 
 function previewNotices() {

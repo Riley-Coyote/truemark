@@ -2,7 +2,7 @@ import { useRef } from "react";
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { assetUrl } from "../../../assetUrl";
-import { BrandDot } from "../../../brand/HeroShelf";
+import { BrandDot } from "../../../brand/BrandDot";
 import { Trace } from "../../../brand/Trace";
 import { useReveal } from "../../motion";
 import "../../../brand/about.css";

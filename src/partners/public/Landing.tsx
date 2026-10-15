@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Images, Link2, Receipt, Wallet } from "lucide-react";
 import { SectionLink } from "../../SectionLink";
-import { BrandDot } from "../../brand/HeroShelf";
+import { BrandDot } from "../../brand/BrandDot";
 import { useReveal } from "../../shop/motion";
 import { SAMPLE_TERMS, disclosure, disclosurePlacement, doRules, dontRules, ordinal, percent, scene } from "../program";
 import { VialTrio } from "../VialTrio";

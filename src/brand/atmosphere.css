@@ -1,0 +1,246 @@
+/*
+ * The light on the home page (Atmosphere.tsx, dusk.ts). Between the catalog and the night, and again between the night
+ * and the closing, the light falls (and rises) everywhere at once: one fixed layer behind the page holds the room's
+ * ambient light, and its light is a function of where the page has been scrolled.
+ *
+ * The light is read off two passages, each the space between the last words lit by one light and the first lit by
+ * the other (.tm-dusk-gap, .tm-dawn-gap; their edges are measured). They are ordinary section spacing: the light changes
+ * behind the words on either side, not in added space. Each passage is a view timeline over the screen with a lead-in
+ * before it (dusk.ts): the lead-in and entry (only the words above are on screen), the middle (both are), and exit
+ * (only the words below). At dusk the catalog's words turn to light as the sky passes the middle (home.css); at dawn
+ * the light rises behind the gap between the record and the closing, so each side keeps its own ink.
+ *
+ * It is light, not paint. At dusk the sky darkens from overhead first, while low down a rose afterglow gathers and is
+ * the last of the light to go; soft panes of window light from the upper left, the opening's, lengthen and sink and
+ * blush rose as the sun goes, and go out at the dusk's turn, as the night's own beam comes up on the vial. The dawn is
+ * its own event: the light comes back low first, cool and clear. Every ink in a passage follows the light (home.css),
+ * so it keeps AA at every scroll position.
+ *
+ * It is drawn as still plates of sky, one for each moment of a passage (dusk.ts, DUSK and DAWN), the later fading in
+ * over the earlier, and the window light moved and faded as a whole: a scroll changes only layers' opacity and
+ * transform, which a browser composites without drawing anything again. With reduced motion the page is the still
+ * form: one long eased ramp across each passage, dithered, in the sky's own order of colour.
+ */
+
+/* ---------- The passages ---------- */
+
+/* The two passages and the still ramps laid across them (Atmosphere.tsx measures where each begins and ends). */
+.tm-dusk-gap,
+.tm-dawn-gap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--tm-gap-top, 0px);
+  height: var(--tm-gap-height, 0px);
+  pointer-events: none;
+}
+/* The still form of each passage. It lies under the light, so it shows only where the light isn't drawn. */
+.tm-dusk-gap::before,
+.tm-dawn-gap::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: -2;
+}
+.tm-dusk-gap::before {
+  /* The catalog keeps its paper to its last words. Through the passage the sky darkens as it does overhead, through
+     lilac and violet to indigo; then, low, the rose afterglow, and below it the night, behind the chapter's first
+     spread, where it settles. */
+  --tm-below: 75svh;
+  --tm-g: var(--tm-gap-height, 0px);
+  top: 0;
+  bottom: calc(var(--tm-below) * -1);
+  background:
+    var(--tm-dither) 0 0 / 64px 64px repeat,
+    linear-gradient(
+      in oklab to bottom,
+      var(--tm-sky-0) 0px,
+      var(--tm-dusk-2-top) calc(var(--tm-g) * 0.16),
+      var(--tm-dusk-4-top) calc(var(--tm-g) * 0.34),
+      var(--tm-dusk-9-top) calc(var(--tm-g) * 0.52),
+      var(--tm-dusk-8-foot) calc(var(--tm-g) * 0.68),
+      var(--tm-dusk-10-foot) calc(var(--tm-g) * 0.84),
+      var(--tm-dusk-12-top) var(--tm-g),
+      var(--tm-night-floor) calc(var(--tm-g) + var(--tm-below) * 0.3)
+    );
+}
+.tm-dawn-gap::before {
+  /* The night holds over the record; the light comes back through the passage, clear and cool, and settles into the
+     closing's paper. */
+  --tm-below: calc(28svh + var(--tm-space-6));
+  --tm-g: var(--tm-gap-height, 0px);
+  top: 0;
+  bottom: calc(var(--tm-below) * -1);
+  background:
+    var(--tm-dither) 0 0 / 64px 64px repeat,
+    linear-gradient(
+      in oklab to bottom,
+      var(--tm-night-floor) 0px,
+      var(--tm-dawn-2-top) calc(var(--tm-g) * 0.16),
+      var(--tm-dawn-1-foot) calc(var(--tm-g) * 0.36),
+      var(--tm-dawn-3-foot) calc(var(--tm-g) * 0.56),
+      var(--tm-dawn-8-foot) calc(var(--tm-g) * 0.76),
+      var(--tm-dawn-9-foot) var(--tm-g),
+      var(--tm-sky-0) calc(var(--tm-g) + var(--tm-below) * 0.5)
+    );
+}
+
+/* ---------- The light ---------- */
+
+/* Blue-noise dither: a 64px tile of grey at about 1.6% strength, so no gradient or slow change of light bands. */
+.tm-home {
+  --tm-dither: url("./blue-noise.png");
+}
+.tm-atmo {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  display: none;
+  pointer-events: none;
+  background: var(--tm-sky-0);
+  /* Nothing in it is ever laid out or drawn again by a scroll, and nothing outside it is touched by it. */
+  contain: strict;
+}
+.tm-home[data-light] .tm-atmo {
+  display: block;
+}
+.tm-atmo-plate,
+.tm-atmo-window,
+.tm-atmo-panes,
+.tm-atmo-grain {
+  position: absolute;
+  inset: 0;
+}
+.tm-atmo-plate,
+.tm-atmo-panes,
+.tm-atmo-grain {
+  will-change: opacity;
+}
+
+/* A plate: the sky at one moment, overhead (--tm-z) to low down (--tm-h), the colour of low down gathering in the
+   lower half. One linear gradient, so a plate is quick to draw the once it is drawn. */
+.tm-atmo-plate {
+  background: linear-gradient(
+    in oklab to bottom,
+    var(--tm-z) 0%,
+    color-mix(in oklab, var(--tm-z) 66%, var(--tm-h)) 40%,
+    color-mix(in oklab, var(--tm-z) 24%, var(--tm-h)) 74%,
+    var(--tm-h) 100%
+  );
+}
+/* The plate fading in waits unseen until it is driven. */
+.tm-atmo-plate + .tm-atmo-plate {
+  opacity: 0;
+}
+.tm-atmo-plate[data-plate="dusk-0"],
+.tm-atmo-plate[data-plate="dawn-16"] {
+  --tm-z: var(--tm-sky-0);
+  --tm-h: var(--tm-sky-0);
+}
+.tm-atmo-plate[data-plate="dusk-13"],
+.tm-atmo-plate[data-plate="dawn-0"] {
+  --tm-z: var(--tm-night-floor);
+  --tm-h: var(--tm-night-floor);
+}
+.tm-atmo-plate[data-plate="dusk-1"] { --tm-z: var(--tm-dusk-1-top); --tm-h: var(--tm-dusk-1-foot); }
+.tm-atmo-plate[data-plate="dusk-2"] { --tm-z: var(--tm-dusk-2-top); --tm-h: var(--tm-dusk-2-foot); }
+.tm-atmo-plate[data-plate="dusk-3"] { --tm-z: var(--tm-dusk-3-top); --tm-h: var(--tm-dusk-3-foot); }
+.tm-atmo-plate[data-plate="dusk-4"] { --tm-z: var(--tm-dusk-4-top); --tm-h: var(--tm-dusk-4-foot); }
+.tm-atmo-plate[data-plate="dusk-5"] { --tm-z: var(--tm-dusk-5-top); --tm-h: var(--tm-dusk-5-foot); }
+.tm-atmo-plate[data-plate="dusk-6"] { --tm-z: var(--tm-dusk-6-top); --tm-h: var(--tm-dusk-6-foot); }
+.tm-atmo-plate[data-plate="dusk-7"] { --tm-z: var(--tm-dusk-7-top); --tm-h: var(--tm-dusk-7-foot); }
+.tm-atmo-plate[data-plate="dusk-8"] { --tm-z: var(--tm-dusk-8-top); --tm-h: var(--tm-dusk-8-foot); }
+.tm-atmo-plate[data-plate="dusk-9"] { --tm-z: var(--tm-dusk-9-top); --tm-h: var(--tm-dusk-9-foot); }
+.tm-atmo-plate[data-plate="dusk-10"] { --tm-z: var(--tm-dusk-10-top); --tm-h: var(--tm-dusk-10-foot); }
+.tm-atmo-plate[data-plate="dusk-11"] { --tm-z: var(--tm-dusk-11-top); --tm-h: var(--tm-dusk-11-foot); }
+.tm-atmo-plate[data-plate="dusk-12"] { --tm-z: var(--tm-dusk-12-top); --tm-h: var(--tm-dusk-12-foot); }
+.tm-atmo-plate[data-plate="dawn-1"] { --tm-z: var(--tm-dawn-1-top); --tm-h: var(--tm-dawn-1-foot); }
+.tm-atmo-plate[data-plate="dawn-2"] { --tm-z: var(--tm-dawn-2-top); --tm-h: var(--tm-dawn-2-foot); }
+.tm-atmo-plate[data-plate="dawn-3"] { --tm-z: var(--tm-dawn-3-top); --tm-h: var(--tm-dawn-3-foot); }
+.tm-atmo-plate[data-plate="dawn-4"] { --tm-z: var(--tm-dawn-4-top); --tm-h: var(--tm-dawn-4-foot); }
+.tm-atmo-plate[data-plate="dawn-5"] { --tm-z: var(--tm-dawn-5-top); --tm-h: var(--tm-dawn-5-foot); }
+.tm-atmo-plate[data-plate="dawn-6"] { --tm-z: var(--tm-dawn-6-top); --tm-h: var(--tm-dawn-6-foot); }
+.tm-atmo-plate[data-plate="dawn-7"] { --tm-z: var(--tm-dawn-7-top); --tm-h: var(--tm-dawn-7-foot); }
+.tm-atmo-plate[data-plate="dawn-8"] { --tm-z: var(--tm-dawn-8-top); --tm-h: var(--tm-dawn-8-foot); }
+.tm-atmo-plate[data-plate="dawn-9"] { --tm-z: var(--tm-dawn-9-top); --tm-h: var(--tm-dawn-9-foot); }
+.tm-atmo-plate[data-plate="dawn-10"] { --tm-z: var(--tm-dawn-10-top); --tm-h: var(--tm-dawn-10-foot); }
+.tm-atmo-plate[data-plate="dawn-11"] { --tm-z: var(--tm-dawn-11-top); --tm-h: var(--tm-dawn-11-foot); }
+.tm-atmo-plate[data-plate="dawn-12"] { --tm-z: var(--tm-dawn-12-top); --tm-h: var(--tm-dawn-12-foot); }
+.tm-atmo-plate[data-plate="dawn-13"] { --tm-z: var(--tm-dawn-13-top); --tm-h: var(--tm-dawn-13-foot); }
+.tm-atmo-plate[data-plate="dawn-14"] { --tm-z: var(--tm-dawn-14-top); --tm-h: var(--tm-dawn-14-foot); }
+.tm-atmo-plate[data-plate="dawn-15"] { --tm-z: var(--tm-dawn-15-top); --tm-h: var(--tm-dawn-15-foot); }
+
+/* The window light: two columns of three panes, their edges soft as daylight's through glass, slanting down from the
+   upper left and falling away from the window. Atmosphere.tsx moves it as one (lengthening it and sinking it as the
+   sun goes down) and fades it; its rose copy fades in over it as it blushes. */
+.tm-atmo-window {
+  inset: -14vh auto auto -10vw;
+  width: 64vw;
+  height: 84vh;
+  opacity: 0;
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+  -webkit-mask-image: radial-gradient(70% 72% at 30% 30%, var(--tm-ink) 25%, transparent 78%);
+  mask-image: radial-gradient(70% 72% at 30% 30%, var(--tm-ink) 25%, transparent 78%);
+}
+.tm-atmo-panes {
+  --tm-pane: var(--tm-window-day);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--tm-pane) 7%,
+    var(--tm-pane) 44%,
+    transparent 50%,
+    var(--tm-pane) 56%,
+    var(--tm-pane) 93%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, var(--tm-ink) 5%, var(--tm-ink) 28%, transparent 33%, var(--tm-ink) 38%, var(--tm-ink) 61%, transparent 66%, var(--tm-ink) 71%, var(--tm-ink) 94%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, var(--tm-ink) 5%, var(--tm-ink) 28%, transparent 33%, var(--tm-ink) 38%, var(--tm-ink) 61%, transparent 66%, var(--tm-ink) 71%, var(--tm-ink) 94%, transparent 100%);
+}
+.tm-atmo-panes-dusk {
+  --tm-pane: var(--tm-window-dusk);
+  opacity: 0;
+}
+.tm-atmo-mist {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+/* Grain, as a film's or an eye's: none on paper, the full whisper from twilight down. */
+.tm-atmo-grain {
+  background: var(--tm-dither) 0 0 / 64px 64px repeat;
+  opacity: 0;
+}
+
+/* ---------- The header's glass ---------- */
+
+/* The light overhead, wherever the header is lit by it (chrome.css): the sky's stop at how dark it is (--tm-dark), passing
+   from one stop to the next in OKLab. */
+html[data-tm-header-light] .tm-header::before {
+  --tm-s: calc(var(--tm-dark) * 6);
+  --tm-sky: color-mix(
+    in oklab,
+    color-mix(
+      in oklab,
+      color-mix(
+        in oklab,
+        color-mix(
+          in oklab,
+          color-mix(
+            in oklab,
+            color-mix(in oklab, var(--tm-sky-0), var(--tm-sky-1) calc(clamp(0, var(--tm-s), 1) * 100%)),
+            var(--tm-sky-2) calc(clamp(0, var(--tm-s) - 1, 1) * 100%)
+          ),
+          var(--tm-sky-3) calc(clamp(0, var(--tm-s) - 2, 1) * 100%)
+        ),
+        var(--tm-sky-4) calc(clamp(0, var(--tm-s) - 3, 1) * 100%)
+      ),
+      var(--tm-sky-5) calc(clamp(0, var(--tm-s) - 4, 1) * 100%)
+    ),
+    var(--tm-sky-6) calc(clamp(0, var(--tm-s) - 5, 1) * 100%)
+  );
+}

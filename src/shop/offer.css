@@ -133,6 +133,7 @@
   color: var(--tm-ink);
 }
 .tm .tm-offer-copy {
+  position: relative;
   display: inline-grid;
   place-items: center;
   min-height: var(--tm-control-sm);
@@ -192,6 +193,7 @@
   margin-top: var(--tm-space-2);
 }
 .tm .tm-offer-later {
+  position: relative;
   padding: var(--tm-space-1) 0;
   border: 0;
   border-bottom: 1px solid transparent;
@@ -239,6 +241,12 @@
 .tm .tm-offer-close:focus-visible {
   outline: none;
   border-color: var(--tm-ink-3);
+}
+/* Copy, Not now and Close each take a finger's size, though they look no larger. */
+.tm :is(.tm-offer-copy, .tm-offer-later, .tm-offer-close)::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc(50% - var(--tm-reach) / 2));
 }
 
 @media (hover: hover) {

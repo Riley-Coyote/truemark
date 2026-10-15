@@ -612,8 +612,14 @@
 }
 .pp-trio.pp-guide-trio {
   --pp-vial: clamp(5rem, 8.4vw, 8.5rem);
+  width: min(100%, calc(var(--pp-vial) * 3 + var(--pp-trio-gap) * 2));
+  min-width: 0;
   justify-self: end;
   margin-bottom: var(--tm-space-6);
+}
+.pp-guide-trio .pp-trio-vial {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .pp-rules-card .kit-card-body {

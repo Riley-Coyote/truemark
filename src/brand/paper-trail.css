@@ -1,0 +1,233 @@
+/*
+ * The paper trail (HomeSections.tsx, PaperTrail): the featured lot's record, then the lookup for the reader's own, in
+ * daylight, after the closer look has shown the lot's certificate. One chapter on one paper, a breath of the opening's
+ * lilac, between the catalog's white and the closing's.
+ *
+ * The record and the lookup were drawn for the night (home.css): every ink they use is a night ink. Here each night ink
+ * is the brand's daylight ink in the same role, so the same record reads in the same order on paper.
+ */
+
+.tm.tm-papertrail {
+  --tm-bg: var(--tm-lilac-50);
+  --tm-glow: var(--tm-ink-rest);
+  --tm-glow-2: var(--tm-ink-2-rest);
+  --tm-glow-3: var(--tm-ink-3-rest);
+  --tm-glow-4: var(--tm-line-strong-rest);
+  --tm-night-line: var(--tm-line-rest);
+  /* What the night floor was to the record (an open station's fill, the ring round the lot's dot) is this paper. */
+  --tm-night-floor: var(--tm-lilac-50);
+  --tm-night-raised: var(--tm-paper);
+  /* The lookup's button: ink, its word paper. */
+  --tm-night: var(--tm-paper);
+  --tm-signal-night: var(--tm-signal);
+}
+
+/* ---------- The record ---------- */
+
+.tm-papertrail .tm-trail-record {
+  --tm-node: 0.6875rem;
+  --tm-leg: calc(var(--tm-dur-base) * 3);
+  --tm-trail-start: calc(var(--tm-dur-base) * 2);
+  grid-column: 1 / -1;
+}
+
+/* ---------- The lookup: the same paper, straight on from the record ---------- */
+
+.tm.tm-lookup-section {
+  align-items: end;
+  row-gap: var(--tm-space-7);
+  padding-top: var(--tm-space-8);
+}
+.tm-lookup-copy {
+  grid-column: 1 / span 6;
+}
+.tm-lookup-use {
+  grid-column: 8 / -1;
+}
+/* Second only to the opening's headline, as it was in the night chapter. */
+.tm.tm-lookup-section .tm-heading {
+  font-size: clamp(2rem, min(5.4vw, 6svh), 3.5rem);
+  line-height: 1.06;
+}
+.tm.tm-lookup-section .tm-section-note {
+  margin-top: var(--tm-space-6);
+  max-width: 44ch;
+}
+.tm-lookup-use .tm-lookup {
+  margin-top: 0;
+}
+
+/* ---------- Where the number is: the featured lot's vial, and a reading glass on its lot line (LotOnTheVial) ----------
+
+   The vial stands on the collection's pedestal, placed as the collection's cases place it (home.css .tm-class-vial), the
+   pedestal's body falling away into the wall. Beside it a reading glass, the closer look's (sequence.css .tm-seq-loupe),
+   holds the label's lot line as the client prints it, and a hairline runs from the glass along that line's foot to the
+   same number printed on the vial. The glass's number and the vial's share the hairline as their foot, so the eye
+   reads across from one to the other, and on down to the field that takes it.
+
+   One measure sets it all, the pedestal's width P: the glass is 0.7 P across, a tenth of P from the pedestal, and the
+   vial's cap is the top of the picture, which ends 0.39 P down the pedestal's body. The picture is 1.8 P by 1.25 P;
+   each part is placed in its fractions. */
+.tm.tm-lookup-section {
+  --tm-lookup-glass-edge: 0 0 0 1px color-mix(in srgb, var(--tm-paper) 95%, transparent), 0 0 0 2px color-mix(in srgb, var(--tm-ink) 14%, transparent);
+  --tm-lookup-glass-cast: 8px 16px 30px -10px color-mix(in srgb, var(--tm-ink) 40%, transparent);
+  --tm-lookup-glass-focus: linear-gradient(to bottom, transparent 31%, var(--tm-ink) 38.5%, var(--tm-ink) 62%, transparent 84%);
+  --tm-lookup-glass-shine:
+    radial-gradient(circle at 30% 24%, color-mix(in srgb, var(--tm-paper) 34%, transparent), color-mix(in srgb, var(--tm-paper) 8%, transparent) 26%, transparent 46%),
+    radial-gradient(circle at 50% 50%, transparent 70%, color-mix(in srgb, var(--tm-ink) 8%, transparent) 100%);
+}
+.tm-lookup-still {
+  position: relative;
+  width: min(100%, 27rem);
+  aspect-ratio: 1.8 / 1.25;
+  margin-bottom: var(--tm-space-6);
+}
+.tm-lookup-seat {
+  position: absolute;
+  left: 44.444%;
+  top: 68.784%;
+  width: 55.556%;
+  aspect-ratio: 703 / 385;
+}
+/* The pedestal's body falls away into the wall below its top, where the picture ends. */
+.tm-lookup-pedestal {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-mask-image: linear-gradient(to bottom, var(--tm-ink) 30%, transparent 70%);
+  mask-image: linear-gradient(to bottom, var(--tm-ink) 30%, transparent 70%);
+  user-select: none;
+}
+.tm-lookup-vial {
+  position: absolute;
+  left: 24.2%;
+  bottom: 83.26%;
+  width: 49.46%;
+  aspect-ratio: 578 / 1112;
+}
+.tm-lookup-vial img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+}
+.tm-lookup-lead {
+  position: absolute;
+  left: 38.889%;
+  top: 46.688%;
+  width: 26.939%;
+  border-top: 1px solid var(--tm-ink-2);
+  transform-origin: 0 50%;
+}
+.tm-lookup-glass {
+  position: absolute;
+  left: 0;
+  top: 15.64%;
+  width: 38.889%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--tm-paper);
+  box-shadow: var(--tm-lookup-glass-edge), var(--tm-lookup-glass-cast);
+}
+/* The glass is in focus on the lot line alone: the print above and below it (the wordmark, the band) dissolves into the
+   label's paper toward the rim, as it would at the edge of a lens, so nothing is seen cut and only the lot is read. */
+.tm-lookup-glass img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  -webkit-mask-image: var(--tm-lookup-glass-focus);
+  mask-image: var(--tm-lookup-glass-focus);
+  user-select: none;
+}
+.tm-lookup-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--tm-lookup-glass-shine);
+  pointer-events: none;
+}
+/* With the scroll, the glass is set down as the picture comes up, and the hairline is drawn from it to the vial. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .tm-home .tm-lookup-glass {
+      animation: tm-lookup-glass linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 100%;
+    }
+    .tm-home .tm-lookup-lead {
+      animation: tm-lookup-lead linear both;
+      animation-timeline: view();
+      animation-range: cover 12% cover 30%;
+    }
+  }
+}
+@keyframes tm-lookup-glass {
+  from {
+    opacity: 0;
+    scale: 0.94;
+  }
+}
+@keyframes tm-lookup-lead {
+  from {
+    scale: 0 1;
+  }
+}
+.tm .tm-lookup-use .tm-proof-featured {
+  margin: var(--tm-space-5) 0 0;
+  padding-left: var(--tm-space-5);
+}
+/* The featured lot is the closer look's: its number opens its certificate. */
+.tm-lookup-featured {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tm-space-2);
+  font-size: var(--tm-type-ui);
+  letter-spacing: 0.04em;
+  color: var(--tm-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--tm-line-strong);
+  outline: none;
+  transition: border-color var(--tm-dur-base) var(--tm-ease-enter), gap var(--tm-dur-base) var(--tm-ease-micro);
+}
+/* Its target reaches a finger's height above and below its line, though the line looks no larger. */
+.tm-lookup-featured::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--tm-space-4) * -1) calc(var(--tm-space-2) * -1);
+}
+@media (hover: hover) {
+  .tm-lookup-featured:hover {
+    gap: var(--tm-space-3);
+    border-bottom-color: var(--tm-ink-3);
+  }
+}
+.tm-lookup-featured:focus-visible {
+  border-bottom-color: var(--tm-ink);
+}
+.tm-lookup-featured:active {
+  color: var(--tm-ink-2);
+}
+
+/* ---------- Stacked ---------- */
+
+@media (max-width: 1099px) {
+  .tm-lookup-copy,
+  .tm-lookup-use {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 960px) {
+  .tm-papertrail .tm-trail-record {
+    /* One station's line: its date, step and detail share it, and the rail runs from line to line. */
+    --tm-trail-line: 1.5rem;
+    /* The date's column, as wide as its longest word ("Pending"). */
+    --tm-trail-date: 3.75rem;
+  }
+  .tm .tm-lookup-use .tm-proof-featured {
+    padding-left: 0;
+  }
+}

@@ -15,6 +15,15 @@ export function entryUrl(href: string, base: string, pathRouter: boolean, hashRo
   const url = new URL(href);
   const basePath = new URL(base, url).pathname.replace(/\/?$/, "/");
   if (pathRouter) {
+    // Existing Auth templates and transactional emails use hash routes. Translate
+    // them before Auth/bootstrap so previously sent links keep working at launch.
+    if (url.hash.startsWith("#/") && !url.hash.startsWith("#//")) {
+      const route = new URL(basePath + url.hash.slice(2), url.origin);
+      for (const [key, value] of url.searchParams) {
+        if (!route.searchParams.has(key)) route.searchParams.append(key, value);
+      }
+      return route.pathname + route.search + route.hash;
+    }
     if (url.pathname === basePath || url.pathname === basePath.slice(0, -1)) {
       const restored = url.searchParams.get("p");
       if (restored?.startsWith("/") && !restored.startsWith("//")) {

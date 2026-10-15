@@ -1,15 +1,20 @@
 /* Moving forward between pages (src/Navigation.tsx).
    On a phone the next page slides in from the right edge over the last, which eases back and
    dims a little: the iPhone push, and the mirror of Safari's own swipe back, which moves the
-   whole page the same way. Wider screens change pages at once, as pages do. Either way a tapped
-   vial flies to its product page as one solid picture. Going back is Safari's own: a swipe, or
-   an instant tap. */
+   whole page the same way. Wider screens dissolve to the next page, forward and back. Either
+   way a tapped vial flies to its product page as one solid picture. Going back on a phone is
+   Safari's own: a swipe, or an instant tap; a page's own way back there is the push reversed. */
 
 :root {
   --tm-ease-glide: cubic-bezier(0.32, 0.72, 0, 1);
   --tm-dur-glide: 420ms;
   --tm-dur-glide-fade: 220ms;
+  /* A page's own way back holds still this long first, so the page returned to has drawn before it is uncovered. */
+  --tm-delay-glide-back: 50ms;
   --tm-glide-shade: rgba(16, 10, 40, 0.16);
+  /* Wider screens: the next page dissolves in over the last, which holds until it is covered (never a blank between). */
+  --tm-ease-page: cubic-bezier(0.4, 0, 0.2, 1);
+  --tm-dur-page-in: 220ms;
 }
 
 /* The two pages are stacked, never blended. */
@@ -18,24 +23,41 @@
   mix-blend-mode: normal;
 }
 
-/* Wider screens: the page changes at once; only the vial travels, over the new page. */
+/* Wider screens: the next page dissolves in over the last, quickly; a tapped vial travels over both. */
 ::view-transition-old(root) {
   animation: none;
-  opacity: 0;
 }
 ::view-transition-new(root) {
-  animation: none;
+  animation: tm-page-in var(--tm-dur-page-in) var(--tm-ease-page) both;
+}
+@keyframes tm-page-in {
+  from {
+    opacity: 0;
+  }
 }
 
 /* Phones: the iPhone push. */
 @media (max-width: 760px) {
   ::view-transition-old(root) {
-    opacity: 1;
     animation: tm-glide-recede var(--tm-dur-glide) var(--tm-ease-glide) both;
   }
   ::view-transition-new(root) {
     box-shadow: 0 0 40px var(--tm-glide-shade);
     animation: tm-glide-push var(--tm-dur-glide) var(--tm-ease-glide) both;
+  }
+}
+
+/* Phones, a page's own way back (Navigation.tsx stepBack): the push, reversed. The page slides away to the right and
+   uncovers the one before it, which comes forward from where it receded to. */
+@media (max-width: 760px) {
+  :root[data-glide="back"]::view-transition-old(root) {
+    z-index: 1;
+    box-shadow: 0 0 40px var(--tm-glide-shade);
+    animation: tm-glide-pop var(--tm-dur-glide) var(--tm-ease-glide) var(--tm-delay-glide-back) both;
+  }
+  :root[data-glide="back"]::view-transition-new(root) {
+    box-shadow: none;
+    animation: tm-glide-uncover var(--tm-dur-glide) var(--tm-ease-glide) var(--tm-delay-glide-back) both;
   }
 }
 
@@ -46,6 +68,17 @@
 }
 @keyframes tm-glide-recede {
   to {
+    transform: translateX(-30%);
+    filter: brightness(0.92);
+  }
+}
+@keyframes tm-glide-pop {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes tm-glide-uncover {
+  from {
     transform: translateX(-30%);
     filter: brightness(0.92);
   }

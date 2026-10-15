@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { assetUrl } from "./assetUrl";
 import { BrandLogo } from "./BrandLogo";
-import { BrandDot } from "./brand/HeroShelf";
+import { BrandDot } from "./brand/BrandDot";
 import { Trace } from "./brand/Trace";
 import { ReviewLive } from "./brand/ReviewLive";
 import { startReviewing } from "./review/index";

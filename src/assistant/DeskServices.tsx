@@ -96,14 +96,14 @@ function BagPanel({ onNavigate, onAsk }: { onNavigate: () => void; onAsk?: (text
   // Live, the bag and checkout open with a research account; the review site's sample bag is open to all.
   if (!shop || (LIVE && !chatContext()?.signedIn)) return (
     <div className="tm-desk-card">
-      <p className="tm-desk-note">Your bag opens once you're signed in to a research account.</p>
+      <p className="tm-desk-note">Your cart opens once you're signed in to a research account.</p>
       <div className="tm-desk-actions"><Link className="tm-desk-add" to="/access" onClick={onNavigate}>Sign in</Link></div>
     </div>
   );
   const lines = shop.cart.map((item) => ({ item, product: productById(item.id) })).filter((l) => l.product);
   if (!lines.length) return (
     <div className="tm-desk-card">
-      <p className="tm-desk-note">Your bag is empty.</p>
+      <p className="tm-desk-note">Your cart is empty.</p>
       {onAsk && <div className="tm-chat-suggestions">
         <button type="button" className="tm-chat-chip" onClick={() => onAsk("Help me plan an order")}>Help me plan an order</button>
         <button type="button" className="tm-chat-chip" onClick={() => onAsk("What do you carry?")}>What do you carry?</button>
@@ -116,7 +116,7 @@ function BagPanel({ onNavigate, onAsk }: { onNavigate: () => void; onAsk?: (text
   const threshold = settings.data?.freeShippingThreshold ?? null;
   const remaining = threshold != null && subtotal != null ? Math.max(0, threshold - (subtotal - off)) : null;
   return (
-    <article className="tm-desk-card tm-desk-bag" aria-label="Your bag">
+    <article className="tm-desk-card tm-desk-bag" aria-label="Your cart">
       <ul className="tm-plan-lines">
         {lines.map(({ item, product }, i) => (
           <li key={item.id} style={{ "--tm-i": i } as CSSProperties}>
@@ -143,7 +143,7 @@ function BagPanel({ onNavigate, onAsk }: { onNavigate: () => void; onAsk?: (text
       {remaining != null && <p className="tm-desk-note">{remaining > 0 ? `${money(remaining)} more ships it free.` : "It ships free."} Shipping and any tax are added at checkout.</p>}
       <div className="tm-desk-actions">
         <Link className="tm-desk-add" to="/checkout" onClick={onNavigate}>Check out</Link>
-        <Link className="tm-desk-link" to="/cart" onClick={onNavigate}>Review the bag {go}</Link>
+        <Link className="tm-desk-link" to="/cart" onClick={onNavigate}>Review the cart {go}</Link>
       </div>
     </article>
   );
@@ -433,7 +433,7 @@ function AboutPanel({ onNavigate }: { onNavigate: () => void }) {
 export const menu: { title: string; items: [string, LucideIcon][] }[] = [
   { title: "Find", items: [["Help me plan an order", ClipboardList], ["What do you carry?", LayoutGrid], ["What are your most popular compounds?", PackageSearch]] },
   { title: "Verify", items: [["Verify a lot", QrCode], ["Show me a real certificate", FileCheck2], ["How is every lot tested?", FlaskConical]] },
-  { title: "Order", items: [["What's in my bag?", ShoppingBag], ["Apply a discount code", Tag], ["Track an order", Truck], ["How does shipping work?", Receipt]] },
+  { title: "Order", items: [["What's in my cart?", ShoppingBag], ["Apply a discount code", Tag], ["Track an order", Truck], ["How does shipping work?", Receipt]] },
   { title: "Help", items: [["Apply for an account", UserRoundPlus], ["What's your return policy?", Undo2], ["Common questions", HelpCircle], ["Talk to a person", Mail], ["Show me the research blog", BookOpen], ["About TrueMark", Building2]] },
 ];
 

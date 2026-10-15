@@ -23,11 +23,6 @@ export const SCENE = {
     highlightWeight: 2.5, highlightLow: 0.78, highlightHigh: 1, luma: [0.2126, 0.7152, 0.0722],
     toneFloor: 0.86, toneSlope: 0.05, mipBias: -0.5,
     spiralNoise: { scale: 52.9829189, x: 0.06711056, y: 0.00583715 } },
-  glint: { seconds: 1.2, curve: [0.45, 0, 0.55, 1], peak: 0.5,
-    // The five stops are the asymmetric .tm-sheen falloff, normalized to its peak.
-    stops: [-0.20, -0.07, 0, 0.025, 0.06], levels: [0, 0.16, 1, 0.22, 0],
-    travel: [-0.10, 1.24], fringeSeparation: 0.015, fringeStrength: 0.15,
-    leading: [233 / 255, 40 / 255, 76 / 255], trailing: [10 / 255, 46 / 255, 169 / 255] },
   motion: { seed: 23011, truck: 0.014, truckPeriod: 47, pedestal: 0.012, pedestalPeriod: 61,
     push: 0.035, pushPeriod: 71, pushSubject: 0,
     driftPeriods: [23, 29, 31, 37, 41, 43], depthPeriods: [53, 59, 67],
@@ -309,30 +304,15 @@ uniform vec2 mip;
 uniform float imageMix;
 uniform float tone;
 uniform float opacity;
-uniform float glint;
 const float GOLDEN = ${glsl(Math.PI * (3 - Math.sqrt(5)))};
 float IGN(vec2 p) {
   return fract(${glsl(SCENE.optics.spiralNoise.scale)} * fract(dot(p, vec2(${glsl(SCENE.optics.spiralNoise.x)}, ${glsl(SCENE.optics.spiralNoise.y)}))));
-}
-float band(float x) {
-  ${SCENE.glint.stops.slice(0, -1).map((stop, i) => `if (x >= ${glsl(stop)} && x < ${glsl(SCENE.glint.stops[i + 1])}) return mix(${glsl(SCENE.glint.levels[i])}, ${glsl(SCENE.glint.levels[i + 1])}, smoothstep(${glsl(stop)}, ${glsl(SCENE.glint.stops[i + 1])}, x));`).join("\n  ")}
-  return 0.0;
 }
 vec4 glass(vec2 p) {
   // CLAMP_TO_EDGE alone repeats edge texels across the expanded blur quad.
   if (any(lessThan(p, vec2(0.0))) || any(greaterThan(p, vec2(1.0)))) return vec4(0.0);
   vec4 sampleColour = textureLod(smallImage, p, mip.x);
   if (imageMix > 0.0) sampleColour = mix(sampleColour, textureLod(largeImage, p, mip.y), imageMix);
-  if (glint >= 0.0) {
-    float centre = mix(${SCENE.glint.travel.map(glsl).join(", ")}, glint);
-    float x = p.x - centre;
-    vec3 white = vec3(band(x));
-    vec3 fringe = (band(x - ${glsl(SCENE.glint.fringeSeparation / 2)}) * vec3(${SCENE.glint.leading.map(glsl).join(", ")})
-                + band(x + ${glsl(SCENE.glint.fringeSeparation / 2)}) * vec3(${SCENE.glint.trailing.map(glsl).join(", ")})) * 0.5;
-    vec3 light = ${glsl(SCENE.glint.peak)} * min(vec3(1.0), white + ${glsl(SCENE.glint.fringeStrength)} * fringe * (vec3(1.0) - white));
-    // Screen blend in premultiplied space: never brighten transparent margins.
-    sampleColour.rgb += (vec3(sampleColour.a) - sampleColour.rgb) * light;
-  }
   return sampleColour;
 }
 void main() {
@@ -392,7 +372,7 @@ class Film {
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
       gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
       gl.useProgram(this.program);
-      for (const name of ["viewport", "centre", "size", "rotation", "radius", "taps", "mip", "imageMix", "tone", "opacity", "glint", "smallImage", "largeImage"]) {
+      for (const name of ["viewport", "centre", "size", "rotation", "radius", "taps", "mip", "imageMix", "tone", "opacity", "smallImage", "largeImage"]) {
         this.uniforms[name] = gl.getUniformLocation(this.program, name);
       }
       gl.uniform1i(this.uniforms.smallImage, 0); gl.uniform1i(this.uniforms.largeImage, 1);
@@ -459,7 +439,7 @@ class Film {
     this.gl.viewport(0, 0, width, height);
   }
 
-  draw(time: number, layout: LensLayout, poses: Float64Array, focusDepth: number, extraBlur: number, opacity: number, glintIndex: number, glintProgress: number, still: boolean) {
+  draw(time: number, layout: LensLayout, poses: Float64Array, focusDepth: number, extraBlur: number, opacity: number, still: boolean) {
     const gl = this.gl, u = this.uniforms;
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(this.program); gl.bindVertexArray(this.vao);
@@ -495,7 +475,6 @@ class Film {
       if (still) imageMix = wanted;
       gl.uniform1f(u.imageMix, imageMix);
       gl.uniform1f(u.tone, Math.max(SCENE.optics.toneFloor, 1 - SCENE.optics.toneSlope * Math.max(0, z - 1)));
-      gl.uniform1f(u.glint, i === glintIndex ? glintProgress : -1);
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, material.small);
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, material.large ?? material.small);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -546,7 +525,6 @@ export class LensPlayer {
   private hoverAt = 0;
   private lotIndex = -1;
   private lotPhase: LotPhase = "opening";
-  private openingGlint = true;
   declare private review?: LensReview;
   declare private hudAt: number;
   declare private hudFrames: number;
@@ -558,7 +536,6 @@ export class LensPlayer {
     if (import.meta.env.DEV && review?.time !== undefined) initialTime = 0;
     this.clock = new SceneClock(initialTime);
     this.autoShift = initialTime ? initialTime - LANDING : 0;
-    this.openingGlint = !openingPlayed && !reduced;
     try { this.film = new Film(canvas); }
     catch { this.fail(); return; }
     void this.film.loadSmall(sources).then(async () => {
@@ -615,7 +592,6 @@ export class LensPlayer {
     if (!reduced && this.now() < SCENE.opening.pushSeconds) {
       this.clock = new SceneClock(SCENE.opening.pushSeconds);
       this.autoShift = SCENE.opening.pushSeconds - LANDING;
-      this.openingGlint = false;
     }
     this.hover = -1; this.mouseX = NaN; this.mouseY = NaN;
     this.resize(this.layout);
@@ -659,7 +635,6 @@ export class LensPlayer {
     this.resumeAt = touch ? time + SCENE.pointer.resumeAfter : Infinity;
     if (this.manualTarget === index) return;
     this.manualFrom = this.inverse; this.manualTarget = index; this.manualAt = time;
-    this.openingGlint = false;
     this.emitLot(this.lotIndex < 0 ? 0 : this.lotIndex, "leave");
   }
 
@@ -703,7 +678,7 @@ export class LensPlayer {
       reviewFocus = this.review.focus ?? -1;
     }
     project(time, this.layout, this.reduced, this.poses);
-    let glintIndex = -1, glintProgress = -1, extraBlur = 0, opacity = 1;
+    let extraBlur = 0, opacity = 1;
     if (this.reduced || reviewFocus >= 0) {
       const target = this.reduced ? 0 : reviewFocus;
       this.inverse = 1 / this.poses[target * POSE.stride + POSE.z];
@@ -726,22 +701,14 @@ export class LensPlayer {
         this.inverse = amount === 1 ? to : this.manualFrom + (to - this.manualFrom) * amount;
         this.emitLot(progress < SCENE.focus.arrival ? (this.lotIndex < 0 ? 0 : this.lotIndex) : this.manualTarget,
           progress < SCENE.focus.arrival ? "leave" : "enter");
-        const sinceLanding = time - this.manualAt - SCENE.pointer.rackSeconds;
-        if (sinceLanding >= 0 && sinceLanding < SCENE.glint.seconds) {
-          glintIndex = this.manualTarget; glintProgress = ease(sinceLanding / SCENE.glint.seconds, SCENE.glint.curve);
-        }
       } else {
         const leaving = f.duration > 0 && !f.opening && f.progress < SCENE.focus.arrival;
         this.emitLot(leaving ? f.from : f.to, f.opening ? "opening" : leaving ? "leave" : "enter");
-        const sinceLanding = time - LANDING;
-        if (this.openingGlint && sinceLanding >= 0 && sinceLanding < SCENE.glint.seconds) {
-          glintIndex = 0; glintProgress = ease(sinceLanding / SCENE.glint.seconds, SCENE.glint.curve);
-        }
       }
       extraBlur = SCENE.opening.defocus * (1 - ease((time - SCENE.opening.rackAt) / SCENE.opening.rackSeconds, SCENE.focus.curve));
       opacity = ease(time / SCENE.opening.fade, SCENE.opening.easeOut);
     }
-    this.film.draw(time, this.layout, this.poses, 1 / this.inverse, extraBlur, opacity, glintIndex, glintProgress, this.reduced || frozen);
+    this.film.draw(time, this.layout, this.poses, 1 / this.inverse, extraBlur, opacity, this.reduced || frozen);
     if (!this.presented) {
       this.presented = true;
       if (!frozen && reviewFocus < 0) openingPlayed = true;

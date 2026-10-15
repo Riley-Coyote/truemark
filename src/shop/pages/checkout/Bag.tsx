@@ -1,8 +1,8 @@
 import { stockProblem } from "../../../platform/commerce";
 import { InsuranceRow, useInsuranceChoice } from "../../Insurance";
 import { LIVE, storageKey } from "../../../platform/mode";
-import { useEffect, useId, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, CircleAlert, Plus } from "lucide-react";
 import { money, products } from "../../../data";
@@ -12,6 +12,7 @@ import type { Discount } from "../../../platform/types";
 import { productCutout } from "../../catalog";
 import { pairsFor } from "../../pairs";
 import { readReferral, useShop } from "../../context";
+import { afterExit, usePrefersReducedMotion } from "../../motion";
 import { ProductName, Quantity } from "../../ui";
 import { ShippingProgress, useShipping } from "../../ShippingProgress";
 import { priceQuote, defaultSettings, roundMoney } from "../../../platform/pricing";
@@ -350,6 +351,56 @@ function useBagFocus(length: number) {
   };
 }
 
+/**
+ * A removed line folds away: it fades where it is, then the lines below rise into its place, and only then does it
+ * leave the cart. Its Remove keeps focus meanwhile, and focus moves on as before once the line has gone (useBagFocus).
+ * A second press while it folds is the same press. Reduce Motion removes it at once.
+ */
+function useLineFold(ids: string[], remove: (id: string) => void, mark: (index: number) => void) {
+  const reduced = usePrefersReducedMotion();
+  const [folding, setFolding] = useState<string[]>([]);
+  const order = useRef(ids);
+  order.current = ids;
+  const gone = (id: string) => {
+    setFolding((now) => now.filter((other) => other !== id));
+    mark(Math.max(0, order.current.indexOf(id)));
+    remove(id);
+  };
+  const fold = (id: string, line: HTMLElement | null) => {
+    if (folding.includes(id)) return;
+    if (reduced || !line) return gone(id);
+    line.style.setProperty("--tm-line-height", `${line.offsetHeight}px`);
+    setFolding((now) => [...now, id]);
+  };
+  return { folding, fold, gone };
+}
+
+/** A line of the bag or the cart, folding away once removed (useLineFold). */
+function FoldingLine({ id, className, folding, onGone, children }: { id: string; className: string; folding: boolean; onGone: (id: string) => void; children: ReactNode }) {
+  const line = useRef<HTMLLIElement>(null);
+  const gone = useRef(onGone);
+  gone.current = onGone;
+  useLayoutEffect(() => {
+    const element = line.current;
+    if (!folding || !element) return;
+    let finished = false;
+    const stop = afterExit(element, () => {
+      finished = true;
+      gone.current(id);
+    });
+    // Put away before it has finished folding (the bag going with a page), it leaves the cart all the same.
+    return () => {
+      stop();
+      if (!finished) gone.current(id);
+    };
+  }, [folding, id]);
+  return (
+    <li ref={line} className={className} data-product-id={id} data-state={folding ? "leaving" : undefined}>
+      {children}
+    </li>
+  );
+}
+
 function PairsWith({ onAdd }: { onAdd: (id: string) => void }) {
   const { cart, catalogChecking, catalogError } = useShop();
   const title = useId();
@@ -372,7 +423,7 @@ function PairsWith({ onAdd }: { onAdd: (id: string) => void }) {
               type="button"
               className="tm-pair-add"
               disabled={disabled}
-              aria-label={`Add ${product.name} ${product.size} to bag`}
+              aria-label={`Add ${product.name} ${product.size} to cart`}
               onClick={() => {
                 // The live catalog can refresh between rendering and activation.
                 if (!disabled && pairsFor(products, cart).some((candidate) => candidate.id === product.id)) onAdd(product.id);
@@ -393,6 +444,7 @@ export function BagContents() {
   const [insured] = useInsuranceChoice();
   const blocked = issues.length > 0 || catalogChecking || Boolean(catalogError);
   const focus = useBagFocus(lines.length);
+  const lineFold = useLineFold(lines.map((line) => line.product.id), (id) => change(id, 0), focus.mark);
   const code = useBagCode();
   const shipping = useShipping();
   const discount = code.discount ? discountOn(subtotal, code.discount) : 0;
@@ -403,7 +455,7 @@ export function BagContents() {
     return (
       <div className="tm tm-bag is-empty">
         <div className="tm-bag-empty">
-          <p className="tm-bag-empty-title">Your bag is empty.</p>
+          <p className="tm-bag-empty-title">Your cart is empty.</p>
           <Link ref={focus.fallback} className="tm-button tm-button-primary" to="/products" onClick={closeCart}>
             Shop the collection
           </Link>
@@ -418,9 +470,9 @@ export function BagContents() {
         {itemCount(count)}
       </p>
       <div className="tm-bag-body">
-        <ul className="tm-bag-lines" ref={focus.list} aria-label="Items in your bag">
-          {lines.map(({ product, quantity, total }, i) => (
-            <li className="tm-bag-line" key={product.id} data-product-id={product.id}>
+        <ul className="tm-bag-lines" ref={focus.list} aria-label="Items in your cart">
+          {lines.map(({ product, quantity, total }) => (
+            <FoldingLine className="tm-bag-line" key={product.id} id={product.id} folding={lineFold.folding.includes(product.id)} onGone={lineFold.gone}>
               <Thumb product={product} />
               <div className="tm-bag-info">
                 <Link className="tm-line-name" to={`/product/${product.id}`} onClick={closeCart}>
@@ -437,18 +489,11 @@ export function BagContents() {
                   onChange={(q) => change(product.id, q)}
                   label={`Quantity for ${product.name} ${product.size}`}
                 />
-                <button
-                  type="button"
-                  className="tm-remove"
-                  onClick={() => {
-                    focus.mark(i);
-                    change(product.id, 0);
-                  }}
-                >
+                <button type="button" className="tm-remove" onClick={(event) => lineFold.fold(product.id, event.currentTarget.closest("li"))}>
                   Remove<span className="sr-only"> {product.name} {product.size}</span>
                 </button>
               </div>
-            </li>
+            </FoldingLine>
           ))}
         </ul>
         <PairsWith onAdd={(id) => { focus.added(id); add(id, 1); }} />
@@ -472,7 +517,7 @@ export function BagContents() {
             Check out
           </Link>
           <Link className="tm-textlink" to="/cart" onClick={closeCart}>
-            View bag <ArrowRight size={16} strokeWidth={1.6} />
+            View cart <ArrowRight size={16} strokeWidth={1.6} />
           </Link>
         </div>
       </div>
@@ -489,6 +534,7 @@ export function CartPage() {
   const blocked = issues.length > 0 || catalogChecking || Boolean(catalogError);
   const code = useBagCode();
   const focus = useBagFocus(lines.length);
+  const lineFold = useLineFold(lines.map((line) => line.product.id), (id) => change(id, 0), focus.mark);
   const shipping = useShipping();
   const method = shipping.data?.methods.find((m) => m.id === "cold-2day") ?? null;
   const discount = code.discount ? discountOn(subtotal, code.discount) : 0;
@@ -499,9 +545,9 @@ export function CartPage() {
       <div className="tm-page tm-purchase">
         <section className="tm tm-purchase-empty" aria-labelledby="tm-cart-title">
           <div className="tm-empty-page">
-            <p className="tm-eyebrow">Your bag</p>
+            <p className="tm-eyebrow">Your cart</p>
             <h1 id="tm-cart-title" className="tm-page-title">
-              Your bag is empty.
+              Your cart is empty.
             </h1>
             <Link ref={focus.fallback} className="tm-button tm-button-primary" to="/products">
               Shop the collection
@@ -516,7 +562,7 @@ export function CartPage() {
     <div className="tm-page tm-purchase">
       <section className="tm tm-cart" aria-labelledby="tm-cart-title">
         <header className="tm-purchase-head">
-          <p className="tm-eyebrow">Your bag</p>
+          <p className="tm-eyebrow">Your cart</p>
           <h1 id="tm-cart-title" className="tm-heading">
             {itemCount(count)}.
             <br />
@@ -524,9 +570,9 @@ export function CartPage() {
           </h1>
         </header>
 
-        <ul className="tm-cart-lines" ref={focus.list} aria-label="Items in your bag">
-          {lines.map(({ product, quantity, total: lineTotal }, i) => (
-            <li className="tm-cart-line" key={product.id} data-product-id={product.id}>
+        <ul className="tm-cart-lines" ref={focus.list} aria-label="Items in your cart">
+          {lines.map(({ product, quantity, total: lineTotal }) => (
+            <FoldingLine className="tm-cart-line" key={product.id} id={product.id} folding={lineFold.folding.includes(product.id)} onGone={lineFold.gone}>
               <Thumb product={product} size="lg" />
               <div className="tm-cart-line-body">
                 <h2 className="tm-cart-name">
@@ -546,14 +592,7 @@ export function CartPage() {
                     onChange={(q) => change(product.id, q)}
                     label={`Quantity for ${product.name} ${product.size}`}
                   />
-                  <button
-                    type="button"
-                    className="tm-remove"
-                    onClick={() => {
-                      focus.mark(i);
-                      change(product.id, 0);
-                    }}
-                  >
+                  <button type="button" className="tm-remove" onClick={(event) => lineFold.fold(product.id, event.currentTarget.closest("li"))}>
                     Remove<span className="sr-only"> {product.name} {product.size}</span>
                   </button>
                   {quantity > 1 && product.price !== undefined && (
@@ -561,7 +600,7 @@ export function CartPage() {
                   )}
                 </div>
               </div>
-            </li>
+            </FoldingLine>
           ))}
         </ul>
 

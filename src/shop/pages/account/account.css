@@ -1666,7 +1666,8 @@
     padding: var(--tm-space-5) var(--tm-space-5) 0;
   }
   .tm-acct-again-vial {
-    flex-basis: 9rem;
+    flex-basis: 6rem;
+    min-width: 0;
   }
   .tm-acct-again-copy {
     padding: var(--tm-space-5) var(--tm-space-6) var(--tm-space-6);

@@ -1,4 +1,10 @@
-.tm-addbar { display: none; }
+/* Wider screens: the vial's flight to the cart shows what was added, and the bar is not drawn. What it says is still
+   read out, as on a phone; its picture and buttons are left out, so nothing unseen takes focus. (Two classes, so the
+   shop's own .tm surface, which would draw it across the page, never wins.) */
+@media not all and (max-width: 760px) {
+  .tm.tm-addbar { position: fixed; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .tm-addbar > :is(img, button) { display: none; }
+}
 .tm-add-flight { position: fixed; z-index: 100; pointer-events: none; object-fit: contain; }
 @media (max-width: 760px) {
   .tm.tm-addbar {
@@ -13,12 +19,23 @@
     padding: var(--tm-space-4);
     border-top: 1px solid var(--tm-line-strong);
     background: var(--tm-paper);
-    animation: tm-addbar-in 220ms var(--tm-ease-enter) both;
+    /* It rises into place, and leaves the way it rose (below); asked back on its way, it turns from wherever it was. */
+    transition: opacity var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-base) var(--tm-ease-enter);
+  }
+  @starting-style {
+    .tm.tm-addbar { opacity: 0; transform: translateY(var(--tm-space-6)); }
+  }
+  /* Leaving (MobileAdd.tsx): it sinks back as it fades, in two thirds of the time it took to rise, taking no taps. */
+  .tm.tm-addbar[data-state="closing"] {
+    opacity: 0;
+    transform: translateY(var(--tm-space-6));
+    transition-duration: var(--tm-dur-leave);
   }
   .tm-addbar-thumb { width: 100%; height: var(--tm-control); object-fit: contain; }
   .tm .tm-addbar-title { margin: 0; font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans); color: var(--tm-ink); }
   .tm-addbar .tm-shipping-progress { grid-column: 2 / -1; margin: 0; }
   .tm-addbar :is(.tm-addbar-view, .tm-addbar-close, .tm-addbar-retry) {
+    position: relative;
     min-height: var(--tm-control-sm);
     padding: 0;
     background: transparent;
@@ -29,6 +46,8 @@
     cursor: pointer;
     transition: color var(--tm-dur-quick) var(--tm-ease-enter), border-color var(--tm-dur-quick) var(--tm-ease-enter);
   }
+  /* Each one's target is a finger's size, though it looks no larger. */
+  .tm-addbar :is(.tm-addbar-view, .tm-addbar-close, .tm-addbar-retry)::after { content: ""; position: absolute; inset: min(0px, calc(50% - var(--tm-reach) / 2)); }
   .tm-addbar-close { display: grid; place-items: center; }
   .tm-addbar-retry { grid-column: 2 / -1; justify-self: start; }
   .tm-addbar button:hover { color: var(--tm-ink); border-bottom-color: var(--tm-ink-3); }
@@ -36,5 +55,4 @@
   .tm-addbar button:active { color: var(--tm-purple); }
   .tm-addbar button:disabled { opacity: 0.5; cursor: default; }
 }
-@keyframes tm-addbar-in { from { opacity: 0; transform: translateY(var(--tm-space-6)); } }
-@media (prefers-reduced-motion: reduce) { .tm.tm-addbar { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .tm.tm-addbar { transition: none; } }

@@ -13,6 +13,12 @@
   cursor: pointer;
   transition: background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter);
 }
+/* Each reaches a finger's size past its disc, though it looks no larger: further on its outer side than toward its
+   neighbour, so the two reaches never meet. */
+.tm-more-tools .tm-rail-controls button { position: relative; }
+.tm-more-tools .tm-rail-controls button::after { content: ""; position: absolute; inset: calc(var(--tm-space-2) * -1) calc(var(--tm-space-1) * -1); }
+.tm-more-tools .tm-rail-controls button:first-child::after { left: calc(var(--tm-space-3) * -1); }
+.tm-more-tools .tm-rail-controls button:last-child::after { right: calc(var(--tm-space-3) * -1); }
 .tm-more-tools .tm-rail-controls button:hover { background: var(--tm-wash); color: var(--tm-ink); }
 .tm-more-tools .tm-rail-controls button:focus-visible { outline: none; border-color: var(--tm-ink); }
 .tm-more-tools .tm-rail-controls button:active { background: var(--tm-lilac-100); }

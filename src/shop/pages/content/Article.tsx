@@ -11,7 +11,7 @@ import {
   sectionId,
 } from "../../../brand/articles";
 import type { ArticleBlock } from "../../../brand/articles";
-import { BrandDot } from "../../../brand/HeroShelf";
+import { BrandDot } from "../../../brand/BrandDot";
 import { ArticlePhoto, JournalCard } from "../../../brand/JournalCard";
 import { Trace } from "../../../brand/Trace";
 import { useReveal } from "../../motion";

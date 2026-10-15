@@ -2,6 +2,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent, RefObject } from "react";
 import { createPortal } from "react-dom";
 import { usePrefersReducedMotion } from "./motion";
+import { useStepWaiting } from "../stepping";
 import "./sheet.css";
 
 /*
@@ -90,19 +91,24 @@ export function useScrollLock() {
 /**
  * Arriving and leaving. A sheet enters from off screen (one frame in its starting place, then the
  * move), and asking it to close lets it leave before the owner removes it. Reduce Motion skips both.
+ * Closed by a step forward (a link in it followed), it holds as the tap left it until the page is
+ * taken for the step, and goes with the page whole (stepping.ts).
  */
 export function useSheetPresence(onClose: () => void) {
   const reduced = usePrefersReducedMotion();
+  const waiting = useStepWaiting();
   const [state, setState] = useState<SheetState>(reduced ? "open" : "entering");
   const finish = useRef(onClose);
   finish.current = onClose;
   const leaving = useRef(false);
+  const timer = useRef(0);
 
   useLayoutEffect(() => {
     if (state !== "entering") return;
     let second = 0;
+    // Closed before it has arrived, it leaves from where it is.
     const first = requestAnimationFrame(() => {
-      second = requestAnimationFrame(() => setState("open"));
+      second = requestAnimationFrame(() => setState((now) => (now === "entering" ? "open" : now)));
     });
     return () => {
       cancelAnimationFrame(first);
@@ -120,36 +126,72 @@ export function useSheetPresence(onClose: () => void) {
       return;
     }
     setState("leaving");
-    window.setTimeout(() => finish.current(), SHEET_MS);
+    timer.current = window.setTimeout(() => finish.current(), SHEET_MS);
   }, [reduced]);
 
-  return { state, requestClose };
+  /** Opened again while it leaves: it comes back from wherever it had reached. */
+  const reopen = useCallback(() => {
+    if (!leaving.current) return;
+    leaving.current = false;
+    window.clearTimeout(timer.current);
+    setState("open");
+  }, []);
+
+  return { state: waiting && state === "leaving" ? "open" : state, requestClose, reopen };
+}
+
+/**
+ * A sheet its owner opens and closes (`open`), kept drawn by the owner until it has gone (`onGone`; Modal.tsx). Closed,
+ * however that came (its own Close, Escape, a link in it followed, the page changing beneath it), it leaves first;
+ * opened again before it has gone, it comes back from wherever it had reached.
+ */
+export function useSheetLeaving(open: boolean, onGone: () => void): SheetState {
+  const { state, requestClose, reopen } = useSheetPresence(onGone);
+  useLayoutEffect(() => {
+    if (open) reopen();
+    else requestClose();
+  }, [open, reopen, requestClose]);
+  return state;
 }
 
 /**
  * Focus while open: where it lands, Escape to close, Tab kept inside, and back where it was after.
  * `field` says when to land in the first field: "always" (search, where typing is the point),
  * "fine" (with a mouse and keyboard only, so a phone's keyboard never rises unasked), or "never"
- * (the sheet itself takes focus).
+ * (the sheet itself takes focus). A sheet that is `leaving` takes no input: focus goes back where
+ * it was as it begins to go, not once it has gone, and comes in again if it is opened once more.
  */
-export function useSheetFocus(panel: RefObject<HTMLElement | null>, onEscape: () => void, field: "always" | "fine" | "never") {
+export function useSheetFocus(panel: RefObject<HTMLElement | null>, onEscape: () => void, field: "always" | "fine" | "never", leaving = false) {
   const escape = useRef(onEscape);
   escape.current = onEscape;
+  const away = useRef(leaving);
+  away.current = leaving;
+  const previous = useRef<HTMLElement | null>(null);
+  const returned = useRef(false);
+  const settle = useRef(0);
+  const target = () => {
+    const root = panel.current;
+    const fine = window.matchMedia?.("(pointer: fine)").matches ?? true;
+    const input = root?.querySelector<HTMLElement>("input:not([type=hidden]), textarea");
+    return input && (field === "always" || (field === "fine" && fine)) ? input : root;
+  };
+  /** Back where it was, unless the reader has since gone somewhere else. */
+  const giveBack = () => {
+    returned.current = true;
+    const now = document.activeElement;
+    if (!now || now === document.body || panel.current?.contains(now)) previous.current?.focus?.({ preventScroll: true });
+  };
   // A layout effect, so a field can take focus inside the tap that opened the sheet.
   useLayoutEffect(() => {
-    const previous = document.activeElement as HTMLElement | null;
+    previous.current = document.activeElement as HTMLElement | null;
     const root = panel.current;
     if (!root) return;
-    const fine = window.matchMedia?.("(pointer: fine)").matches ?? true;
-    const target = () => {
-      const input = root.querySelector<HTMLElement>("input:not([type=hidden]), textarea");
-      return input && (field === "always" || (field === "fine" && fine)) ? input : root;
-    };
     // A field focused in the same moment as the tap that opened the sheet brings up an iPhone's
     // keyboard; one focused later does not, so search tries at once and again once it has settled.
-    if (field === "always") target().focus({ preventScroll: true });
-    const timer = window.setTimeout(() => target().focus({ preventScroll: true }), 60);
+    if (field === "always") target()?.focus({ preventScroll: true });
+    settle.current = window.setTimeout(() => target()?.focus({ preventScroll: true }), 60);
     function onKey(event: KeyboardEvent) {
+      if (away.current) return;
       if (event.key === "Escape") {
         event.preventDefault();
         escape.current();
@@ -169,13 +211,25 @@ export function useSheetFocus(panel: RefObject<HTMLElement | null>, onEscape: ()
     }
     document.addEventListener("keydown", onKey);
     return () => {
-      window.clearTimeout(timer);
+      window.clearTimeout(settle.current);
       document.removeEventListener("keydown", onKey);
-      previous?.focus?.({ preventScroll: true });
+      if (!returned.current) giveBack();
     };
     // Set up once, when the sheet opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useLayoutEffect(() => {
+    if (leaving === returned.current) return;
+    if (leaving) {
+      window.clearTimeout(settle.current);
+      giveBack();
+      return;
+    }
+    returned.current = false;
+    target()?.focus({ preventScroll: true });
+    // Only a change of leaving moves focus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leaving]);
 }
 
 /**

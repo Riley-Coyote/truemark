@@ -1,0 +1,67 @@
+/* The site failed to start (RootBoundary.tsx): the brand's ink on its paper, in the brand's two faces where they have
+   loaded and the system's otherwise. Its values are the shop's tokens (src/shop/tokens.css), repeated here because
+   that stylesheet may be what failed to arrive. */
+.tm-root-failure {
+  --ink: #241a4a;
+  --ink-2: #4a3f6b;
+  --paper: #fdfdfe;
+  --line: rgba(36, 26, 74, 0.22);
+  box-sizing: border-box;
+  min-height: 100vh;
+  margin: 0;
+  padding: 2rem 1rem;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  max-width: 36rem;
+  margin-inline: auto;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1.0625rem / 1.55 "TeX Gyre Heros", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+.tm-root-failure h1 {
+  margin: 0 0 1rem;
+  font: 300 clamp(1.75rem, 1.2rem + 2vw, 2.5rem) / 1.15 "Poppins", system-ui, sans-serif;
+}
+.tm-root-failure p {
+  margin: 0 0 1rem;
+  color: var(--ink-2);
+}
+.tm-root-failure .tm-root-failure-name {
+  font-weight: 700;
+  color: var(--ink);
+}
+.tm-root-failure-ways {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.tm-root-failure-ways button,
+.tm-root-failure-ways a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.tm-root-failure-ways button {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.tm-root-failure-ways button:hover,
+.tm-root-failure-ways a:hover {
+  border-color: var(--ink);
+}
+.tm-root-failure-ways button:focus-visible,
+.tm-root-failure-ways a:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}

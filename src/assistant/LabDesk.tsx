@@ -74,7 +74,7 @@ function ProductView({ card, onAdd, onNavigate }: { card: ProductCard; onAdd?: (
       <div className="tm-desk-actions">
         {onAdd && size.price != null && (
           <button type="button" className="tm-desk-add" data-added={added === size.id || undefined} onClick={() => { onAdd(size.id, 1); setAdded(size.id); }}>
-            {added === size.id ? <><Check size={14} strokeWidth={2.2} aria-hidden="true" /> Added to your bag</> : "Add to bag"}
+            {added === size.id ? <><Check size={14} strokeWidth={2.2} aria-hidden="true" /> Added to your cart</> : "Add to cart"}
           </button>
         )}
         <Link className="tm-desk-link" to={`/product/${encodeURIComponent(size.id)}`} onClick={onNavigate}>View <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" /></Link>
@@ -191,7 +191,7 @@ function ShippingView({ shipping, onNavigate }: { shipping: ShippingCard; onNavi
     <article className="tm-desk-card tm-desk-shipping" aria-label="Shipping">
       {progress != null && shipping.remaining != null && (
         <div className="tm-desk-free">
-          <p>{shipping.remaining > 0 ? <>Your bag is <strong>{money(shipping.remaining)}</strong> from free shipping.</> : <>Your bag ships free.</>}</p>
+          <p>{shipping.remaining > 0 ? <>Your cart is <strong>{money(shipping.remaining)}</strong> from free shipping.</> : <>Your cart ships free.</>}</p>
           <span className="tm-desk-bar" aria-hidden="true"><i style={{ "--tm-desk-fill": progress } as CSSProperties} /></span>
         </div>
       )}
@@ -626,11 +626,11 @@ export function greetingFor(context: ChatContext | null, product?: { name: strin
   const page = context?.page ?? "/";
   if (product) return `This is ${product.name} ${product.size}, with its current lot below. Ask me about its certificate, its sizes, storage or shipping.`;
   const inBag = context?.bag?.items ?? 0;
-  if (page.startsWith("/cart") && inBag > 0) return `Your bag holds ${inBag} ${inBag === 1 ? "vial" : "vials"}. I can tell you how far you are from free shipping, when it would arrive, or how it's kept cold.`;
+  if (page.startsWith("/cart") && inBag > 0) return `Your cart holds ${inBag} ${inBag === 1 ? "vial" : "vials"}. I can tell you how far you are from free shipping, when it would arrive, or how it's kept cold.`;
   if (returning) return `Welcome back${returning.first ? `, ${returning.first}` : ""}. Your last order, ${returning.number}, ${returning.line}. What can I help with?`;
   if (page.startsWith("/verify")) return "Every TrueMark label carries a lot number. Give me yours and I'll open its certificate, or ask me what any line on a certificate means.";
   const items = context?.bag?.items ?? 0;
-  if (page.startsWith("/cart") || items > 0) return `Your bag holds ${items} ${items === 1 ? "vial" : "vials"}. I can tell you how far you are from free shipping, when it would arrive, or how it's kept cold.`;
+  if (page.startsWith("/cart") || items > 0) return `Your cart holds ${items} ${items === 1 ? "vial" : "vials"}. I can tell you how far you are from free shipping, when it would arrive, or how it's kept cold.`;
   if (back.planned && !page.startsWith("/access")) return "Welcome back. Your order plan is right where you left it, whenever you're ready to pick it up again.";
   if (back.recent && !page.startsWith("/access")) return `Welcome back. Last time you were looking at ${back.recent.name} ${back.recent.size}. Want to pick up where you left off, or start something new?`;
   if (page.startsWith("/access")) return "Hi, welcome to TrueMark BioLabs. Pricing and ordering open with a research account, but you're welcome to look around first: I can show you what we carry, how every lot is tested, or a real certificate.";

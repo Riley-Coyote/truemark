@@ -15,9 +15,9 @@ export function catalogPhotoPath(productId: string, file: Pick<File, "size" | "t
 }
 
 export function stockProblem(product: Product, quantity: number): string | null {
-  if (product.active === false) return `${product.name} is no longer available. Remove it from your bag.`;
+  if (product.active === false) return `${product.name} is no longer available. Remove it from your cart.`;
   if (product.stock != null && quantity > product.stock) {
-    return product.stock === 0 ? `${product.name} is out of stock. Remove it from your bag to continue.`
+    return product.stock === 0 ? `${product.name} is out of stock. Remove it from your cart to continue.`
       : `Only ${product.stock} left of ${product.name}. Reduce the quantity to continue.`;
   }
   return null;

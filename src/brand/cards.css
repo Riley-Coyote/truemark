@@ -157,6 +157,15 @@
 .tm-card-plus svg {
   transition: transform var(--tm-dur-slow) var(--tm-ease-micro);
 }
+/* Its target reaches a finger's width past the disc, though the disc looks no larger. */
+.tm-card-plus {
+  position: relative;
+}
+.tm-card-plus::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--tm-space-2) * -1);
+}
 /* Hover only where there is hover: on a phone a tapped control would otherwise stay lit. */
 @media (hover: hover) {
   .tm-card-plus:hover {
@@ -193,7 +202,25 @@
   border-radius: var(--tm-radius-md);
   background: var(--tm-paper);
   box-shadow: var(--tm-shadow-lift);
-  animation: tm-card-menu var(--tm-dur-base) var(--tm-ease-enter) both;
+  transform-origin: top right;
+  /* They come and go by transition, so asked back on their way in or out, they turn from wherever they had reached. */
+  transition:
+    opacity var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-base) var(--tm-ease-enter);
+}
+/* Arriving, they drop from the + that opened them. */
+@starting-style {
+  .tm-card-sizes {
+    opacity: 0;
+    transform: translateY(calc(var(--tm-space-2) * -1));
+  }
+}
+/* Leaving (ProductCard.tsx), they draw back up into it as they fade, a little smaller, in two thirds of the time they
+   took to arrive, taking no taps meanwhile. */
+.tm-card-sizes[data-state="closing"] {
+  opacity: 0;
+  transform: translateY(calc(var(--tm-space-2) * -1)) scale(0.96);
+  transition-duration: var(--tm-dur-leave);
 }
 .tm-card-size-add {
   display: flex;
@@ -267,12 +294,6 @@
 }
 .tm-card-size-step .tm-card-count {
   min-width: 1.25rem;
-}
-@keyframes tm-card-menu {
-  from {
-    opacity: 0;
-    transform: translateY(calc(var(--tm-space-2) * -1));
-  }
 }
 
 /* In the bag: the disc you pressed stays lit and grows a counter, − and + around the count.
@@ -464,9 +485,11 @@
   .tm-card-step svg {
     transition: none;
   }
-  .tm-card-sizes,
   .tm-card-stepper {
     animation: none;
+  }
+  .tm-card-sizes {
+    transition: none;
   }
   .tm-card-step {
     transition: none;

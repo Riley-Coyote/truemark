@@ -17,14 +17,14 @@ export async function twilioSignature(url: string,params: URLSearchParams,secret
 }
 export async function sendResend(deps: Deps,recipient: string,rendered: Rendered): Promise<string> {
  if(!deps.resendKey)throw new Error('Email configuration missing');
- const response=await deps.fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${deps.resendKey}`,'Content-Type':'application/json'},
+ const response=await deps.fetch('https://api.resend.com/emails',{method:'POST',signal:AbortSignal.timeout(15_000),headers:{Authorization:`Bearer ${deps.resendKey}`,'Content-Type':'application/json'},
  body:JSON.stringify({from:deps.emailFrom,to:[recipient],subject:rendered.subject,html:rendered.html,text:rendered.text,...(rendered.reply_to?{reply_to:rendered.reply_to}:{})})});
  if(!response.ok)throw new Error(`Email provider request failed (${response.status})`);
  const data=await response.json() as {id?: unknown};if(typeof data.id!=='string'||!data.id)throw new Error('Email provider returned no message id');return data.id;
 }
 export async function sendTwilio(deps: Deps,recipient: string,rendered: Rendered): Promise<string> {
  if(!deps.twilioSid||!deps.twilioToken||!deps.twilioFrom)throw new Error('Text message configuration missing');
- const response=await deps.fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(deps.twilioSid)}/Messages.json`,{method:'POST',
+ const response=await deps.fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(deps.twilioSid)}/Messages.json`,{method:'POST',signal:AbortSignal.timeout(15_000),
  headers:{Authorization:'Basic '+btoa(deps.twilioSid+':'+deps.twilioToken),'Content-Type':'application/x-www-form-urlencoded'},
  body:new URLSearchParams({To:recipient,From:deps.twilioFrom,Body:rendered.text}).toString()});
  if(!response.ok)throw new Error(`Text provider request failed (${response.status})`);
@@ -47,8 +47,10 @@ export async function fetchTemplateData(deps: Deps,row: Row): Promise<TemplateDa
  return c;
 }
 export async function flush(deps: Deps): Promise<number> {
- let handled=0;
- while(handled<200){const rows=await deps.db.rpc<Row[]>('system_claim_outbox',{batch:Math.min(25,200-handled)});if(!rows.length)break;
+ let handled=0;const started=performance.now();
+ // Claim only what this worker can start now. A 25-row batch used to leave later
+ // rows waiting behind slow providers until their two-minute leases had expired.
+ while(handled<200&&performance.now()-started<40_000){const rows=await deps.db.rpc<Row[]>('system_claim_outbox',{batch:1});if(!rows.length)break;
  for(const row of rows){handled++;const channel=row.channel==='sms'?'sms':'email';const connection=await readConnection(deps.db,channel);
  if(connection.mode==='off'){await deps.db.rpc('system_suppress_outbox',{id:row.id});continue;}
  // A STOP or removed consent received after enqueue also prevents delivery.
@@ -60,10 +62,13 @@ export async function flush(deps: Deps): Promise<number> {
  try {
   if(connection.mode==='live'&&!(channel==='email'&&provider==='resend'||channel==='sms'&&provider==='twilio'))throw new Error(`No adapter for ${provider}`);
   rendered=renderTemplate(row.template,await fetchTemplateData(deps,row));
+  // Leave enough lease time for the provider timeout and recording its result.
+  // If rendering used that time, leave the row for recovery without sending it.
+  if(row.locked_until&&Date.parse(row.locked_until)-Date.parse(deps.now())<45_000)return handled-1;
   id=connection.mode==='simulated'?'sim_'+deps.uuid():channel==='email'?await sendResend(deps,row.recipient,rendered):await sendTwilio(deps,row.recipient,rendered);
  }catch(failure){
   // Only our own bounded errors are presentable, never arbitrary payloads.
-  const known=/^(No adapter for [a-z0-9-]*|(?:Email|Text message) configuration missing|(?:Email|Text) provider (?:request failed \(\d{3}\)|returned no message id)|Unknown message template)$/;
+  const known=/^(No adapter for [a-z0-9-]*|(?:Email|Text message) configuration missing|Message site configuration missing or invalid|(?:Email|Text) provider (?:request failed \(\d{3}\)|returned no message id)|Unknown message template)$/;
   error=failure instanceof Error&&known.test(failure.message)?failure.message:'The message could not be sent.';
  }
  await deps.db.rpc('system_finish_outbox',{id:row.id,ok:error===null,provider,provider_message_id:id,subject:rendered?.subject??null,body_html:rendered?.html??null,body_text:rendered?.text??null,error});

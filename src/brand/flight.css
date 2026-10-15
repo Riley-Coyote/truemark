@@ -1,0 +1,75 @@
+/*
+ * The shop's page in its view slots (FlightViews.tsx). At rest one slot holds the page and none of this shows.
+ * During the opening's camera move both pages share one place on the page, the product's drawn over the
+ * opening's; the arriving page waits, laid out but undrawn, until the camera starts.
+ */
+
+.tm-views {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.tm-view {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.tm-view[data-pending] {
+  visibility: hidden;
+}
+/* The opening a move left, kept for Back under the product page (flight.ts): laid out exactly as it was and held at
+   the camera's last frame, drawn beneath the product page, which covers it whole (its room and the ground below), so
+   Back has nothing to lay out, decode or rasterise. It is never reached: inert, and no pointer. A layer of its own in
+   the page's z order, beneath the product page that follows it; the product page itself is no stacking context, so its
+   dialogs still rise over the header. */
+.tm-view[data-parked] {
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* While the camera moves: the product's page over the opening's, neither taking the pointer. The stacking
+   exists only for the move, so a page's own dialogs still rise over the header at rest. */
+.tm-views[data-moving] .tm-view {
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+}
+.tm-views[data-moving] .tm-view[data-view="product"] {
+  z-index: 1;
+}
+/* The layers the camera fades are composited for the move. The plates that it scales are composited by their own
+   animations (and the opening's always is), so the browser draws them at the size the move needs. */
+.tm-views[data-moving] :is(.tm-proom-fade, .tm-room-page-ground) {
+  will-change: opacity;
+}
+/* The opening's plate is its lens's whole world while the camera moves, as the product page's room is at rest
+   (stage.css): the focus blurs the room alone, never the page around the stage. */
+.tm-views[data-moving] .tm-room-plate {
+  will-change: opacity;
+}
+/* The opening's words, which the camera fades out and back in, are drawn in layers of their own at rest too: never
+   drawn again as a move settles, so they never shift by a pixel there. */
+.tm.tm-mist :is(.tm-mist-head, .tm-mist-lead, .tm-mist-way, .tm-mist-foot) {
+  will-change: opacity;
+}
+
+/* One room: while the camera moves it is the opening's plate that shows it, the product page's plate carrying only its
+   vial. The product page's room is drawn from the frame the camera hands the room over (flight.ts settle; going back,
+   the opening's plate takes it over in the move's first frame). */
+.tm-views[data-moving][data-camera] .tm-view[data-view="product"] .tm-proom-room {
+  visibility: hidden;
+}
+/* Nor does the product page's stage clip the vial on its way there: on a phone that stage is shorter than the opening's,
+   and the vial starts low in the opening. */
+.tm-views[data-moving][data-camera] .tm-view[data-view="product"] .tm-proom-scene {
+  overflow: visible;
+}
+/* The opening the camera pulls back to stands as it was left: none of its entrances replays. */
+.tm.tm-mist[data-arrived] .tm-room-vial,
+.tm.tm-mist[data-arrived] .tm-bhero-line > span,
+.tm.tm-mist[data-arrived] .tm-bhero-title .tm-brand-dot {
+  animation: none;
+}
+/* The vial that travels is the product's own; the opening's stands aside. */
+.tm-room-vial[data-flying] > * {
+  visibility: hidden;
+}
