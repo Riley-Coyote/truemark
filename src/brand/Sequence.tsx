@@ -1171,7 +1171,16 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       section.removeAttribute("data-story-back");
     };
 
+    let receivingStory = false;
+    const publishStory = () => {
+      if (receivingStory) return;
+      window.dispatchEvent(new CustomEvent("tm-story-state", { detail: {
+        open, clock, paused, holding, light, rushTo, back, backEdge,
+        phase: section.getAttribute("data-story"),
+      } }));
+    };
     const drawBars = () => {
+      publishStory();
       chrome.fills.forEach((fill, i) => {
         const span = spans[i];
         const share = Math.min(1, Math.max(0, (clock - span.t0) / Math.max(1, span.t1 - span.t0)));
@@ -1184,6 +1193,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       write.attr(chrome.pause, "aria-label", paused ? "Play the story" : "Pause the story");
       section.toggleAttribute("data-story-paused", paused);
       section.toggleAttribute("data-story-held", holding);
+      publishStory();
     };
     // While the story plays, the page holds still at its top: no scroll, and no touch anywhere on it moves it (Safari
     // scrolls a page under overflow: hidden from a touch outside the story, on the header).
@@ -1216,7 +1226,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
           settle();
           return;
         }
-      } else if (!still()) {
+      } else if (!still() || clock < rushTo) {
         // Going on: a move at speed, a reading passed over in a moment (crossed, not cut, so the picture never jumps).
         const s = segAt(clock);
         if (clock < rushTo) clock = Math.min(rushTo, clock + dt * (s.move ? RUSH : (s.t1 - s.t0) / PASS));
@@ -1228,7 +1238,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
         close();
         return;
       }
-      if (back >= 0 || !still()) frame = requestAnimationFrame(tick);
+      if (back >= 0 || clock < rushTo || !still()) frame = requestAnimationFrame(tick);
       else last = 0;
     };
     const wake = () => {
@@ -1340,6 +1350,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
     // same room, and the page scrolls on from there.
     const finish = () => {
       section.setAttribute("data-story", "ending");
+      publishStory();
       closing = window.setTimeout(() => {
         closing = 0;
         settle();
@@ -1356,6 +1367,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
         return;
       }
       section.setAttribute("data-story", "closing");
+      publishStory();
       closing = window.setTimeout(() => {
         closing = 0;
         settle();
@@ -1693,6 +1705,34 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       write.attr(el.steps[0], "aria-disabled", rest === 0 ? "true" : null);
     };
 
+    // The presentation follows one clock, but computes the camera independently
+    // for each viewport. No stretched desktop coordinates or second autoplay timer.
+    const followStory = (event: Event) => {
+      const state = (event as CustomEvent).detail;
+      if (!state || typeof state.open !== "boolean" || !Number.isFinite(state.clock)) return;
+      receivingStory = true;
+      try {
+        if (!state.open) {
+          if (open) { window.clearTimeout(closing); closing = 0; settle(); }
+          return;
+        }
+        if (!open) { window.scrollTo({ top: 0, behavior: "instant" }); begin(); }
+        cancelAnimationFrame(frame);
+        frame = 0;
+        last = 0;
+        clock = Math.max(0, Math.min(end, state.clock));
+        paused = !!state.paused;
+        holding = !!state.holding;
+        light = state.light;
+        rushTo = state.rushTo;
+        back = state.back;
+        backEdge = state.backEdge;
+        showPaused();
+        draw(pAt(clock));
+        drawBars();
+        if (state.phase === "closing" || state.phase === "ending") close();
+      } finally { receivingStory = false; }
+    };
     const remeasure = () => {
       measure();
       draw(pAt(clock));
@@ -1709,6 +1749,8 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
     window.addEventListener("resize", remeasure);
     window.addEventListener("tm-flight", remeasure);
     window.addEventListener(STORY_EVENT, onOpen);
+    window.addEventListener("tm-story-follow", followStory);
+    window.addEventListener("tm-story-release", wake);
     window.addEventListener("keydown", onKey);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onCancel);
@@ -1724,6 +1766,8 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       window.removeEventListener("resize", remeasure);
       window.removeEventListener("tm-flight", remeasure);
       window.removeEventListener(STORY_EVENT, onOpen);
+      window.removeEventListener("tm-story-follow", followStory);
+      window.removeEventListener("tm-story-release", wake);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onCancel);

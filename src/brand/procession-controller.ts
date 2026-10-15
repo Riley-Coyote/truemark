@@ -248,7 +248,8 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       opacity(copy, copyOpacity); opacity(cue, grounded() ? 1 : 1 - smooth(passage / .10));
       if (copy) copy.style.visibility = copyOpacity > .001 ? "" : "hidden";
       opacity(lead, grounded() ? 1 : smooth((passage - .18) / .2));
-      camera.style.pointerEvents = passage > .06 && !grounded() ? "none" : "";
+      // Keep the visible hero vials interactive until the room actually leaves the frame.
+      camera.style.pointerEvents = handed ? "none" : "";
     }
     emit(arrived);
     const progressing = Math.abs(requested - passage) > .00015;

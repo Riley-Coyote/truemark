@@ -99,6 +99,17 @@ export function FlightViews({ allowed, children }: { allowed: boolean; children:
   useLayoutEffect(() => {
     bindRouter(location, navigate);
   });
+  useEffect(() => {
+    // Studio can change a guided stop without reloading this document or losing
+    // the parked opening used by the reversible camera flight.
+    const receive = (event: Event) => {
+      const path = (event as CustomEvent<unknown>).detail;
+      if (typeof path !== "string" || !path.startsWith("/") || path.startsWith("//")) return;
+      if (path !== location.pathname + location.search + location.hash) navigate(path);
+    };
+    window.addEventListener("tm-presentation-navigate", receive);
+    return () => window.removeEventListener("tm-presentation-navigate", receive);
+  }, [location, navigate]);
   // The opening is drawn under the product, so a product page always comes after it. A parked opening is drawn only
   // while the reader stays on the product page the camera brought them to: leaving it any other way, the opening
   // goes in the same commit as the new page comes (flight.ts bindRouter then forgets it).
