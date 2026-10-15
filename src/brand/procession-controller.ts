@@ -31,7 +31,8 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   const world = document.createElement("div"); world.className = "tm-procession-world"; world.setAttribute("aria-hidden", "true");
   const fill = document.createElement("img"), room = document.createElement("img");
   fill.className = "tm-procession-world-fill"; room.className = "tm-procession-world-room";
-  fill.alt = room.alt = ""; world.append(fill, room); home.append(world); document.body.append(layer);
+  // The room's field lies first, under the window's light on its wall (WallLight), and stays behind the whole page.
+  fill.alt = room.alt = ""; world.append(fill, room); home.prepend(world); document.body.append(layer);
 
   let options: Options = { size: 100, tempo: 1, hold: 5.5, depth: 2.1, drift: "continuous", still: false };
   let moving = true, paused = false, frozen = false, visible = false, disposed = false, dirty = true, story = false;
@@ -50,7 +51,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   }
   let directScroll = false;
   let width = 1, height = 1, stageTop = 0, end = 1, spacing = 1, vialHeight = 1, baseFoot = 1;
-  let plateX = 0, plateY = 0, plateW = 1, plateH = 1, sectionEnd = 1;
+  let plateX = 0, plateY = 0, plateW = 1, plateH = 1;
   let heroX = 0, heroY = 0, pivotX = 0, pivotY = 0, fall = 0, lift = 0;
   let sources = new Map<string, Point>();
   const still = () => !moving || options.still;
@@ -72,7 +73,6 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     // jump cannot stop at 99.94% and leave the collection inert.
     end = Math.max(1, Math.ceil(section.getBoundingClientRect().top + y - header - 24));
     section.dataset.scrollEnd = String(end);
-    sectionEnd = section.getBoundingClientRect().bottom + y;
     const actorStyle = getComputedStyle(actors[0]), plateStyle = getComputedStyle(plate);
     // offsetHeight/offsetLeft round fractional CSS pixels. The carried image
     // must meet the actual rendered box, including phone heights like 219.32px.
@@ -221,8 +221,8 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       glass.style.transform = `translate3d(${x - glassHeight * 578 / 1112 / 2}px,${foot - glassHeight}px,0) scale(${glassHeight / 1112})`;
       glass.style.visibility = (passage < RISE ? !!source : onscreen) ? "visible" : "hidden";
     });
-    const worldOpacity = story ? 0 : 1 - smooth((y - sectionEnd + height * .4) / (height * .9));
-    opacity(world, worldOpacity);
+    // The opening's room goes on down the page: its defocused field stays behind every section to the footer.
+    opacity(world, story ? 0 : 1);
     room.style.transform = `translate3d(${plateX * filmed.zoom + filmed.x}px,${plateY * filmed.zoom + filmed.y}px,0) scale(${filmed.zoom})`;
     // Once the entire collection is below the frame, soften the now-empty wall
     // into the same photograph's defocused continuation. No visible object fades.
@@ -232,8 +232,11 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       // CSS scroll animations relinquish this camera while Procession owns it.
       // Correct for the hero's resting offset, so its plate and the fixed world
       // use the exact same viewport matrix even under a header or review dock.
-      camera.style.transform = still() ? "none" : `translate3d(${filmed.x + heroX * (filmed.zoom - 1)}px,${filmed.y + heroY * (filmed.zoom - 1) + y}px,0) scale(${filmed.zoom})`;
-      opacity(camera, still() || passage < HANDOFF ? 1 : 0);
+      // Once the camera has handed the room over it is out of sight, and it rests: carried on down the page with the
+      // scroll, its zoomed room would stretch the page's own length past the footer.
+      const handed = !still() && passage >= HANDOFF;
+      camera.style.transform = still() || handed ? "none" : `translate3d(${filmed.x + heroX * (filmed.zoom - 1)}px,${filmed.y + heroY * (filmed.zoom - 1) + y}px,0) scale(${filmed.zoom})`;
+      opacity(camera, handed ? 0 : 1);
       const words = still() ? 1 : 1 - smooth(passage / .24);
       opacity(word, words);
       const copyOpacity = still() ? 1 : 1 - smooth(passage / .14);
@@ -318,6 +321,27 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     if (pointer.resume && paused && !still()) resumeAfterSwipe();
     dragging = false; pointer = undefined; delete stage.dataset.dragging; schedule();
   }
+  // A trackpad swipes sideways as a finger does on glass: two fingers drawn across the stage carry the collection with
+  // them, momentum included, and it settles on the nearest class once they stop. Over the stage the browser's own
+  // sideways swipe (back a page) stays off; a swipe more up than across stays the page's scroll.
+  let wheeling = 0, wheelResume = false;
+  function wheel(e: WheelEvent) {
+    if (!priorArrival || story || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    if (!wheeling) { wheelResume = !paused || !!resumeTimer; cancelResume(); }
+    window.clearTimeout(wheeling);
+    dragging = true; paused = true; frozen = false; driftVelocity = velocity = 0;
+    phase += (e.deltaMode === 1 ? e.deltaX * 16 : e.deltaX) / spacing;
+    target = phase;
+    wheeling = window.setTimeout(() => {
+      wheeling = 0; dragging = false;
+      phase = still() ? Math.round(phase) : phase; target = Math.round(phase);
+      if (wheelResume && !still()) resumeAfterSwipe();
+      schedule();
+    }, 140);
+    schedule();
+  }
+  stage.addEventListener("wheel", wheel, { passive: false });
   const resized = new ResizeObserver(resize);
   for (const el of [hero, plate, section, stage]) resized.observe(el);
   const observer = new MutationObserver(stateChange);
@@ -357,7 +381,8 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     step, select, toggle, pauseAutoplay,
     setMotion(value: boolean) { moving = value; if (!value) cancelResume(); if (still()) { phase = target = Math.round(target); velocity = driftVelocity = 0; } schedule(); },
     destroy() {
-      disposed = true; cancelResume(); cancelAnimationFrame(frame); resized.disconnect(); observer.disconnect(); seen.disconnect();
+      disposed = true; cancelResume(); window.clearTimeout(wheeling); cancelAnimationFrame(frame); resized.disconnect(); observer.disconnect(); seen.disconnect();
+      stage.removeEventListener("wheel", wheel);
       window.removeEventListener("scroll", schedule); window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", stateChange);
       stage.removeEventListener("pointerdown", down); stage.removeEventListener("pointermove", move);

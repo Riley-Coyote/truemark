@@ -59,7 +59,12 @@
   cursor: pointer;
   pointer-events: auto;
   outline: none;
-  transition: opacity var(--tm-dur-slow) var(--tm-ease-enter), background-color var(--tm-dur-base) var(--tm-ease-micro), border-color var(--tm-dur-base) var(--tm-ease-micro);
+  transition:
+    opacity var(--tm-dur-slow) var(--tm-ease-enter),
+    background-color var(--tm-dur-base) var(--tm-ease-micro),
+    border-color var(--tm-dur-base) var(--tm-ease-micro),
+    translate var(--tm-dur-spring) var(--tm-ease-spring),
+    scale var(--tm-dur-spring) var(--tm-ease-spring);
 }
 /* Its target reaches a finger's height past the pill (the room's scale included), though the pill looks no larger. */
 .tm-story-cue::after {
@@ -67,15 +72,22 @@
   position: absolute;
   inset: calc(var(--tm-space-2) * -1);
 }
+/* Pointed at, it rises a hair off the pedestal's face toward the light; pressed, it goes back onto it, and let go, it
+   comes back as a spring does (shop.css .tm-button). */
 .tm-story-cue:hover {
   background: var(--tm-paper);
+  translate: -50% -1px;
 }
 .tm-story-cue:focus-visible {
   border-color: var(--tm-ink);
+  outline: 2px solid var(--tm-ink);
+  outline-offset: 3px;
 }
 .tm-story-cue:active {
   background: var(--tm-paper);
+  translate: -50% 0;
   scale: 0.97;
+  transition-duration: var(--tm-dur-press);
 }
 /* Until the story's pictures are ready, and while it plays. */
 .tm-story-cue:disabled,

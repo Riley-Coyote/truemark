@@ -40,7 +40,6 @@
   /* The back wall stays behind what stands before it: the pointer's depth moves it less than the room. */
   transform: translate3d(calc(var(--mx, 0) * 3px), calc(var(--my, 0) * 2px), 0);
   transition: transform 1600ms var(--tm-ease-enter), opacity var(--tm-dur-scene) var(--tm-ease-enter);
-  animation: tm-word-in 2400ms var(--tm-ease-enter) 280ms backwards;
 }
 /* The faces. The box reaches above the line so the tallest strokes (the V, the f, the d, the dots of the i) are painted
    whole. */
@@ -69,10 +68,60 @@
   height: 0.1em;
   margin-left: 0.035em;
 }
-@keyframes tm-word-in {
+
+/* ---------- The arrival: the room comes into focus ---------- */
+/* As the page first opens on the room, the room is found the way a lens finds it: out of its own haze (the page's first
+   paint is that haze, vite.config.ts startHead), soft and a little bright, settling into focus. The vials are set down
+   on their pedestals inside that haze, whole glass all the while, never seen through. The headline rises on the wall in
+   front of it (hero.css), and "Verified." comes into focus last, its full stop with it, as a lens breathes a little
+   while it focuses. Once (MistOpening.tsx data-dawn): not as the camera brings the room back, nor as motion is turned
+   on again. The fades are filters, not opacity, so the scroll's own fading of these same layers
+   (procession-controller.ts) is never overridden. */
+:root {
+  /* The room through a lens not yet focused: its light down the middle, its dusk at the sides (sampled from the relit
+     room, blurred, as a laptop's first screen shows it). The page's first paint is this same haze, written out in
+     vite.config.ts startHead, since it is drawn before any stylesheet arrives. */
+  --tm-dawn-haze: #968fa9 radial-gradient(46% 80% at 50% 48%, #e3dcec 0%, #d9d1e4 30%, #b4abc6 68%, #8f88a2 100%) no-repeat;
+}
+.tm.tm-mist[data-dawn] .tm-room-plate,
+.tm-home:has(> .tm.tm-mist[data-dawn]) .tm-procession-world {
+  animation: tm-dawn-focus 1700ms cubic-bezier(0.45, 0.05, 0.25, 1) backwards;
+}
+/* Until the room's picture is drawn, what lies behind it is that same haze, not the paler wall the page below stands on
+   (home.css, procession.css), so the first paint, the frame and the room meet without a seam. The opening's own still
+   of the room is drawn meanwhile (the scroll's shared photograph, procession-controller.ts, takes it over only once its
+   own layer is made), coinciding with that photograph exactly until the camera hands the room over. */
+.tm-home:has(> .tm.tm-mist[data-dawn]) {
+  background-color: #b4abc6;
+}
+.tm-home:has(> .tm.tm-mist[data-dawn]) .tm-procession-world {
+  background: var(--tm-dawn-haze);
+}
+.tm-home[data-procession] .tm-mist[data-dawn]:not([data-story]) .tm-room-plate > .tm-room-still {
+  opacity: 1;
+}
+@keyframes tm-dawn-focus {
   from {
-    opacity: 0;
-    filter: blur(14px);
+    filter: blur(22px) brightness(1.07) saturate(0.86);
+  }
+}
+/* Set down inside the haze, the vials keep that entrance however the switch is turned afterwards (data-dawned); an
+   opening that first stood still keeps its own (rooms.css). */
+.tm.tm-mist[data-dawned] .tm-room-vial {
+  animation-name: tm-vial-set-down;
+}
+@keyframes tm-vial-set-down {
+  from {
+    transform: translate(-50%, calc(-100% + 18px));
+  }
+}
+.tm.tm-mist[data-dawn] .tm-mist-word {
+  animation: tm-word-focus 1500ms var(--tm-ease-enter) 900ms backwards;
+}
+@keyframes tm-word-focus {
+  from {
+    filter: opacity(0) blur(14px);
+    scale: 1.015;
   }
 }
 
@@ -142,15 +191,36 @@
 /* ---------- What stands in the shade keeps a little light of its own ---------- */
 /* The second way in and the Motion switch stand on the floor where the room falls into shade: each is backed with the
    room's own lilac light, frosted, so its words stay as clear as the primary's. */
+/* It is frosted glass standing in the room's light as the primary does (shop.css): the light along its top edge, a
+   little shade along its foot, its own soft shade on the wall; pointed at, it rises toward the light and clears. */
 .brand-refinement .tm.tm-mist .tm-button-outline {
   border-color: rgba(255, 255, 255, 0.7);
   background: rgba(250, 248, 255, 0.74);
   -webkit-backdrop-filter: blur(12px) saturate(1.2);
   backdrop-filter: blur(12px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(36, 26, 74, 0.06),
+    0 1px 1px rgba(36, 26, 74, 0.08),
+    0 5px 12px -6px rgba(36, 26, 74, 0.2);
 }
 .brand-refinement .tm.tm-mist .tm-button-outline:hover {
-  border-color: var(--tm-ink);
+  border-color: rgba(255, 255, 255, 0.95);
   background: rgba(255, 255, 255, 0.92);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(36, 26, 74, 0.06),
+    0 2px 3px rgba(36, 26, 74, 0.08),
+    0 12px 24px -10px rgba(36, 26, 74, 0.3);
+}
+.brand-refinement .tm.tm-mist .tm-button-outline:active {
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -1px 0 rgba(36, 26, 74, 0.05),
+    0 0.5px 1px rgba(36, 26, 74, 0.14),
+    0 1px 3px -1px rgba(36, 26, 74, 0.16);
 }
 .tm.tm-mist .tm-seq-switch.tm-seq-switch-rest {
   border-radius: var(--tm-radius-pill);

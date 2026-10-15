@@ -12,27 +12,35 @@
 .tm-home:has(> .tm-wall-light) > .tm.tm-papertrail {
   --tm-bg: transparent;
 }
-/* The wall settles into the footer's grey across the last section's closing silence, its light with it, so the page
-   meets the footer without a seam. */
+/* The room settles into the footer's grey across the last section, its light with it, so the page meets the footer
+   without a seam: over the closing's last screen the room's field and the window's light give way to the footer's
+   paper, easing in and out of the change (a smoothstep) so neither of its ends shows as a line. It is the section's
+   own ground, so it lies under every word. */
 .tm-home:has(> .tm-wall-light) {
   position: relative;
 }
-.tm-home:has(> .tm-wall-light)::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--tm-space-silence);
-  background: linear-gradient(to bottom, color-mix(in srgb, var(--tm-studio) 0%, transparent), var(--tm-studio));
-  pointer-events: none;
+.tm-home:has(> .tm-wall-light) > .tm.tm-closing {
+  background:
+    linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--tm-studio) 0%, transparent),
+        color-mix(in srgb, var(--tm-studio) 4.3%, transparent) 12.5%,
+        color-mix(in srgb, var(--tm-studio) 15.6%, transparent) 25%,
+        color-mix(in srgb, var(--tm-studio) 31.6%, transparent) 37.5%,
+        color-mix(in srgb, var(--tm-studio) 50%, transparent) 50%,
+        color-mix(in srgb, var(--tm-studio) 68.4%, transparent) 62.5%,
+        color-mix(in srgb, var(--tm-studio) 84.4%, transparent) 75%,
+        color-mix(in srgb, var(--tm-studio) 95.7%, transparent) 87.5%,
+        var(--tm-studio)
+      )
+      bottom / 100% min(100%, 80svh) no-repeat;
 }
 body:has(.tm-wall-light) .tm-footer {
   border-top-color: transparent;
 }
-/* On the wall the third ink falls short of AA; a step toward the second keeps it, wherever the light is or isn't. The
-   catalog and the closing draw their third ink from its rest (below); the paper trail takes it from the root, so it is
-   drawn again here. */
+/* Over the room the third ink falls short of AA; most of the way toward the second keeps it, wherever the light is or
+   isn't, and the small labels it sets keep their place by size, case and tracking. The catalog and the closing draw
+   their third ink from its rest (below); the paper trail takes it from the root, so it is drawn again here. */
 .tm-home:has(> .tm-wall-light) > .tm:not(.tm-mist) {
   --tm-ink-3-rest: var(--tm-ink-3-lilac);
 }
@@ -584,6 +592,8 @@ body:has(.tm-wall-light) .tm-footer {
   border: 1px solid var(--tm-night-line);
   border-radius: var(--tm-radius-pill);
   background: color-mix(in srgb, var(--tm-night-raised) 70%, transparent);
+  /* A shallow well in the wall: the light from above leaves a little shade under its top lip. */
+  box-shadow: inset 0 1px 2px rgba(36, 26, 74, 0.07);
   transition: border-color var(--tm-dur-base) var(--tm-ease-enter);
 }
 @media (hover: hover) {
@@ -615,19 +625,23 @@ body:has(.tm-wall-light) .tm-footer {
   padding-inline: var(--tm-space-5);
   border: 1px solid transparent;
   border-radius: var(--tm-radius-pill);
-  background: var(--tm-glow);
+  /* Lit from above as every button is (shop.css .tm-button). */
+  background: var(--tm-glow) linear-gradient(to bottom, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 60%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
   font: var(--tm-weight-medium) var(--tm-type-ui) / 1 var(--tm-font-display);
   color: var(--tm-night);
   cursor: pointer;
-  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro);
+  transition: background-color var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-spring) var(--tm-ease-spring);
 }
 @media (hover: hover) {
   .tm-lookup button:hover {
-    background: var(--tm-glow-2);
+    background-color: var(--tm-glow-2);
   }
 }
 .tm-lookup button:active {
   transform: scale(0.97);
+  transition-duration: var(--tm-dur-press);
+  transition-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
 }
 .tm-lookup button:focus-visible {
   outline: none;

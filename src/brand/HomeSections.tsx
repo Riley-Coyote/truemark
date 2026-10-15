@@ -33,17 +33,18 @@ function LotOnTheVial() {
       <span className="tm-lookup-seat">
         <img
           className="tm-lookup-pedestal"
-          src={assetUrl("images/scenes/pedestal-sm.webp")}
-          srcSet={`${assetUrl("images/scenes/pedestal-sm.webp")} 351w, ${assetUrl("images/scenes/pedestal.webp")} 703w`}
-          sizes="15rem"
-          width={351}
-          height={192}
+          src={assetUrl("images/scenes/pedestal-room-sm.webp")}
+          srcSet={`${assetUrl("images/scenes/pedestal-room-sm.webp")} 320w, ${assetUrl("images/scenes/pedestal-room.webp")} 640w`}
+          sizes="16.5rem"
+          width={320}
+          height={117}
           alt=""
           loading="lazy"
           decoding="async"
           draggable={false}
         />
         <span className="tm-lookup-vial">
+          <span className="tm-lookup-shadow" />
           <img
             src={productCutout(product, "sm")}
             srcSet={`${productCutout(product, "sm")} 289w, ${productCutout(product, "lg")} 578w`}

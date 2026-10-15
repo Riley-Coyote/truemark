@@ -69,6 +69,9 @@ const WORD_ROOM = { wide: 0.4, tall: 0.07, from: 680 } as const;
 /** The opening's floor mist: a denser, deeper bank than a product page's, climbing the pedestals' feet and catching
  *  the room's light (fog/fog.ts FogParams). */
 const ROOM_FOG = { density: 2.9, depth: 2, climb: 2.1, light: 3.2 } as const;
+/** How long the room takes to come into focus as the page first opens on it, the word last (mist-word.css), with a
+ *  little to spare: after this the arrival's rules are put away. */
+const DAWN_MS = 2800;
 
 /**
  * The opening: the collection in its misty room, quietly alive (daylight breathing on the walls, mist
@@ -115,6 +118,21 @@ export function MistOpening() {
   const featuredAt = vials.findIndex((product) => product.id === FEATURED);
   const told = featuredAt >= 0;
   const seq = !still && told;
+  // The room comes into focus once, as the page first opens on it (mist-word.css): not when the camera brings it back,
+  // nor when motion is turned on again later.
+  const [dawn, setDawn] = useState(() => seq && !arrived);
+  // Whether it did, for as long as the opening stands: its vials were set down inside the haze, and keep that entrance
+  // (mist-word.css) however the switch is turned afterwards, so it never plays again.
+  const [dawned] = useState(dawn);
+  useEffect(() => {
+    // The page's first paint is the room's own haze (vite.config.ts startHead); with the room drawn, it is put away.
+    const frame = requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.removeAttribute("data-tm-dawn")));
+    const timer = window.setTimeout(() => setDawn(false), DAWN_MS);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, []);
   const softs = vials.map(softCutout);
   const ready = useSequenceReady(seq, softs.filter((src): src is string => Boolean(src)));
   // Each shown lot's record in the current world, which the caption reads. Found by its lot, so a set still loading
@@ -424,7 +442,7 @@ export function MistOpening() {
   );
   return (
     <>
-      <section className="tm tm-mist" aria-labelledby="tm-mist-title" data-shape={tall ? "tall" : "wide"} data-arrived={arrived ? "" : undefined} data-seq={seq ? "" : undefined}>
+      <section className="tm tm-mist" aria-labelledby="tm-mist-title" data-shape={tall ? "tall" : "wide"} data-arrived={arrived ? "" : undefined} data-seq={seq ? "" : undefined} data-dawn={dawn && seq ? "" : undefined} data-dawned={dawned ? "" : undefined}>
         <SequenceTrack on={seq} scene={{ box, plateScale: PLATE_SCALE, seat: seats[featuredAt], tall }} lead={null} ready={ready}>
           {scene}
         </SequenceTrack>

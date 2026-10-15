@@ -75,6 +75,12 @@ export default function App() {
     if (ref) void rememberLink(ref).catch(() => { /* Referral capture does not block sign-in. */ });
   }, [location.search]);
   const gated = LIVE && gatedShopPath(location.pathname);
+  // The opening's haze under the page's first paint (vite.config.ts startHead) belongs to the opening alone, which puts
+  // it away itself once its room is drawn (MistOpening.tsx): any other page, a sign-in the opening sends to included,
+  // puts it away at once.
+  useEffect(() => {
+    if (location.pathname !== "/") document.documentElement.removeAttribute("data-tm-dawn");
+  }, [location.pathname]);
   useEffect(() => {
     if (!LIVE || session.loading) return;
     if (catalogReloadNeeded(catalogAccess(), Boolean(session.data), gated, sessionStorage)) window.location.reload();

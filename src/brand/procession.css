@@ -20,15 +20,15 @@
 .tm-procession-caption .tm-eyebrow{font-size:10px;letter-spacing:.18em;margin:0 0 12px}
 .tm-procession-caption .tm-eyebrow span{margin-inline:6px;opacity:.5}
 .tm-procession-caption h3{font:400 clamp(28px,2.8vw,38px)/1.16 var(--tm-font-display);letter-spacing:-.045em;margin:0;text-wrap:balance}
-.tm-procession-members{font-size:14px;line-height:1.6;color:var(--tm-ink-2);margin:12px auto 10px;max-width:55ch;text-wrap:balance}
+.tm .tm-procession-members{font-size:14px;line-height:1.6;color:var(--tm-ink-2);margin:12px auto 10px;max-width:55ch;text-wrap:balance}
 .tm-procession-caption .tm-textlink{font-size:14px;min-height:44px;justify-content:center}
 .tm-procession-navigation{display:flex;justify-content:space-between;align-items:center;gap:20px;max-width:1220px;margin:0 auto 20px}
-.tm-procession-hint{font-size:12px;color:var(--tm-ink-2);line-height:1.6}
+.tm .tm-procession-hint{font-size:12px;color:var(--tm-ink-2);line-height:1.6}
 .tm-procession-controls{display:flex;gap:8px;align-items:center}
 .tm-procession-controls button{display:flex;justify-content:center;align-items:center;gap:8px;min-width:44px;height:44px;padding:0;border:1px solid color-mix(in srgb,var(--tm-ink) 20%,transparent);border-radius:50%;background:transparent;color:var(--tm-ink);cursor:pointer;transition:background-color var(--tm-dur-base) var(--tm-ease-enter)}
 .tm-procession-controls .tm-procession-play{border-radius:30px;width:88px;font:12px var(--tm-font-sans)}
 .tm-procession-controls button:disabled{cursor:default;opacity:.55}
-.tm-procession-specs{max-width:1220px;margin:28px auto 0;color:var(--tm-ink-3);font-size:11px;line-height:1.8}
+.tm .tm-procession-specs{max-width:1220px;margin:28px auto 0;color:var(--tm-ink-3);font-size:11px;line-height:1.8}
 .tm-procession :is(button,a):focus-visible{outline:2px solid var(--tm-ink);outline-offset:5px}
 
 /* One shared photographic field, behind the entire passage. It meets the site's
@@ -36,6 +36,9 @@
 .tm-home[data-procession]{overflow-x:clip}
 .tm-procession-world{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:-1;contain:strict;background:#ded7e9}
 .tm-procession-world-fill{position:absolute;inset:-12%;width:124%;height:124%;object-fit:cover;object-position:50% 0;filter:blur(28px);transform:scale(3);transform-origin:50% 0;opacity:.7}
+/* An upright phone's field is the tall room's, whose wall above the pedestals is a narrower light between dusk: lifted
+   to the wide room's tone, so the words over it keep the same inks at every width. */
+@media (max-width:560px) and (max-aspect-ratio:11/10){.tm-procession-world-fill{filter:blur(28px) brightness(1.2)}}
 .tm-procession-world-room{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;will-change:transform;mask-image:linear-gradient(transparent,black 10%)}
 .tm-procession-passage{position:fixed;inset:0;z-index:8;overflow:clip;contain:strict;pointer-events:none}
 .tm-procession-passage[hidden]{display:none}
@@ -47,14 +50,12 @@
 .tm-home[data-procession] .tm-mist:not([data-story]) .tm-room-plate>.tm-room-still{opacity:0}
 .tm-home[data-procession] .tm-mist:not([data-story]) .tm-room-plate{transform:scale(1.015);transition:none}
 .tm-home[data-procession] .tm-mist:not([data-story]) .tm-seq-camera{animation:none;translate:none;scale:1;transform-origin:0 0}
-.tm-home[data-procession] .tm-mist:not([data-story]) :is(.tm-mist-word,.tm-mist-copy,.tm-story-cue){animation:none}
+.tm-home[data-procession] .tm-mist:not([data-story]) :is(.tm-mist-copy,.tm-story-cue){animation:none}
 .tm-home[data-procession] .tm-mist:not([data-story]) .tm-mist-stage::after{display:none}
 .tm-home[data-procession-flight] .tm-mist:not([data-story]) .tm-room-vial{visibility:hidden}
 .tm-home[data-procession] .tm-mist:not([data-story]) .tm-mist-foot{background:none;animation:none;translate:none;margin-top:0;padding-block:clamp(48px,7vh,90px)}
 .tm-home[data-procession-still] .tm-mist:not([data-story]) .tm-room-plate>.tm-room-still{opacity:1}
 .tm-home[data-procession-still] .tm-mist:not([data-story]) .tm-mist-stage{overflow:clip;mask-image:linear-gradient(black 85%,transparent)}
-.tm-home[data-procession] .tm-wall-light{opacity:.3}
-.tm-home[data-procession-story] .tm-wall-light{opacity:1}
 /* Phone: direct manipulation, with only a quiet motion toggle below the vial. */
 @media(max-width:700px){
   .tm.tm-procession{padding-top:20px;padding-bottom:max(48px,env(safe-area-inset-bottom));scroll-margin-top:80px}
@@ -69,14 +70,14 @@
   .tm-procession-details{margin:0 auto 12px;min-height:134px}
   .tm-procession-caption .tm-eyebrow{margin-bottom:8px;font-size:10px}
   .tm-procession-caption h3{font-size:clamp(24px,6.7vw,28px);line-height:1.12;max-width:15em;margin:auto}
-  .tm-procession-members{font-size:12px;max-width:34ch;margin:8px auto 2px;line-height:1.5}
+  .tm .tm-procession-members{font-size:12px;max-width:34ch;margin:8px auto 2px;line-height:1.5}
   .tm-procession-caption .tm-textlink{font-size:13px;min-height:44px}
   .tm-procession-navigation{gap:10px;margin-bottom:0;align-items:center}
-  .tm-procession-hint{display:block;font-size:12px;line-height:1.5;margin:0;color:var(--tm-ink-2)}
+  .tm .tm-procession-hint{display:block;font-size:12px;line-height:1.5;margin:0;color:var(--tm-ink-2)}
   .tm-procession-controls{gap:4px;flex:none}
   .tm-procession-controls button,.tm-procession-controls .tm-procession-play{width:auto;min-width:88px;height:44px;border:0;background:transparent;border-radius:22px;padding:0 10px}
   .tm-procession-controls .tm-procession-play span{display:inline}
-  .tm-procession-specs{margin:20px auto 0;font-size:11px;line-height:1.7;text-align:center;max-width:34em}
+  .tm .tm-procession-specs{margin:20px auto 0;font-size:11px;line-height:1.7;text-align:center;max-width:34em}
 }
 .tm-procession button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .tm-procession button:active{background-color:#ffffff65}

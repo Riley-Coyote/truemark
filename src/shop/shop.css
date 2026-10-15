@@ -100,6 +100,11 @@
   gap: var(--tm-space-5);
   margin-top: var(--tm-space-7);
 }
+/* A button is a thing standing in the page's one light, which falls from above: its top edge catches the light, its
+   underside turns from it, and it rests on the surface in its own soft shade. Pointed at, it rises a hair toward the
+   light, its shade growing wider and softer beneath it; pressed, it goes down onto the surface at once, its shade drawn
+   in to where it touches; let go, it comes back as a spring does (tokens.css --tm-ease-spring). Shade only: nothing
+   glows beneath it. Under a finger there is no pointing, only the press (press.ts). */
 .tm .tm-button {
   display: inline-flex;
   align-items: center;
@@ -114,24 +119,49 @@
   transition:
     background-color var(--tm-dur-base) var(--tm-ease-enter),
     border-color var(--tm-dur-base) var(--tm-ease-enter),
-    box-shadow var(--tm-dur-base) var(--tm-ease-enter),
-    transform var(--tm-dur-quick) var(--tm-ease-micro);
+    color var(--tm-dur-base) var(--tm-ease-enter),
+    box-shadow var(--tm-dur-spring) var(--tm-ease-enter),
+    transform var(--tm-dur-spring) var(--tm-ease-spring);
 }
 .tm .tm-button-primary {
-  background: var(--tm-ink);
+  background: var(--tm-ink) linear-gradient(to bottom, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0) 60%);
   color: var(--tm-paper);
-  box-shadow: var(--tm-shadow-whisper), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(10, 6, 30, 0.24),
+    0 1px 1px rgba(36, 26, 74, 0.12),
+    0 5px 12px -6px rgba(36, 26, 74, 0.28);
 }
 .tm .tm-button-primary:hover {
-  background: var(--tm-ink-hover);
-  box-shadow: var(--tm-shadow-lift), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  background-color: var(--tm-ink-hover);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(10, 6, 30, 0.24),
+    0 2px 3px rgba(36, 26, 74, 0.1),
+    0 12px 24px -10px rgba(36, 26, 74, 0.36);
 }
 .tm .tm-button:active {
-  transform: scale(0.975);
+  transform: translateY(0.5px) scale(0.975);
+  transition-duration: var(--tm-dur-press);
+  transition-timing-function: cubic-bezier(0.2, 0, 0.2, 1);
 }
-.tm .tm-button-primary:focus-visible {
-  outline: none;
-  border-color: var(--tm-glow-3);
+.tm .tm-button-primary:active {
+  background-color: var(--tm-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(10, 6, 30, 0.2),
+    0 0.5px 1px rgba(36, 26, 74, 0.2),
+    0 1px 3px -1px rgba(36, 26, 74, 0.2);
+}
+/* One ring for every button, drawn clear of it in the ink; on the night, in its light. */
+.tm .tm-button:focus-visible {
+  outline: 2px solid var(--tm-ink);
+  outline-offset: 3px;
+}
+.tm-night .tm-button:focus-visible,
+.tm .tm-button-glow:focus-visible {
+  outline-color: var(--tm-glow);
 }
 .tm .tm-button-glow {
   background: var(--tm-glow);
@@ -140,13 +170,10 @@
 .tm .tm-button-glow:hover {
   background: var(--tm-glow-hover);
 }
-.tm .tm-button-glow:focus-visible {
-  outline: none;
-  border-color: var(--tm-ink-3);
-}
 .tm .tm-button[aria-disabled="true"],
 .tm .tm-button:disabled {
   opacity: 0.4;
+  box-shadow: none;
   pointer-events: none;
 }
 .tm .tm-textlink {
@@ -172,10 +199,10 @@
 }
 .tm .tm-textlink svg {
   flex: none;
-  transition: transform var(--tm-dur-base) var(--tm-ease-micro);
+  transition: transform var(--tm-dur-spring) var(--tm-ease-spring);
 }
 .tm .tm-textlink:hover svg {
-  transform: translateX(1px);
+  transform: translateX(2px);
 }
 .tm .tm-textlink:active {
   opacity: 0.7;
@@ -1052,7 +1079,32 @@
 }
 .tm-faq summary svg {
   color: var(--tm-ink-3);
-  transition: transform var(--tm-dur-slow) var(--tm-ease-micro), color var(--tm-dur-base) var(--tm-ease-enter);
+  transition: transform var(--tm-dur-spring) var(--tm-ease-spring), color var(--tm-dur-base) var(--tm-ease-enter);
+}
+/* An answer opens as a drawer does: the rows part, and the words rise into the space a beat behind. Where the browser
+   can grow a box to its own height (interpolate-size), the space opens and folds back smoothly; elsewhere it is there at
+   once, and only the words rise into it. */
+.tm-faq details[open] > p {
+  animation: tm-faq-answer 560ms var(--tm-ease-enter) 60ms both;
+}
+@keyframes tm-faq-answer {
+  from {
+    opacity: 0;
+    translate: 0 calc(var(--tm-space-2) * -1);
+  }
+}
+@supports (interpolate-size: allow-keywords) {
+  .tm-faq {
+    interpolate-size: allow-keywords;
+  }
+  .tm-faq details::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    transition: block-size var(--tm-dur-slow) var(--tm-ease-enter), content-visibility var(--tm-dur-slow) allow-discrete;
+  }
+  .tm-faq details[open]::details-content {
+    block-size: auto;
+  }
 }
 .tm-faq summary:hover svg {
   color: var(--tm-ink);

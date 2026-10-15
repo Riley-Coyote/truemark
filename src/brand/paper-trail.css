@@ -59,15 +59,18 @@
 
 /* ---------- Where the number is: the featured lot's vial, and a reading glass on its lot line (LotOnTheVial) ----------
 
-   The vial stands on the collection's pedestal, placed as the collection's cases place it (home.css .tm-class-vial), the
-   pedestal's body falling away into the wall. Beside it a reading glass, the closer look's (sequence.css .tm-seq-loupe),
-   holds the label's lot line as the client prints it, and a hairline runs from the glass along that line's foot to the
-   same number printed on the vial. The glass's number and the vial's share the hairline as their foot, so the eye
-   reads across from one to the other, and on down to the field that takes it.
+   The vial stands on the opening's own pedestal, the room's centre one under the window's light, cut from the room's
+   photograph as the collection's plinths are (procession-controller.ts) and stood on as the room stands it: the same
+   pedestal and the same light, come close, its body falling away into the room's field. Beside it a reading glass, the
+   closer look's (sequence.css .tm-seq-loupe), holds the label's lot line as the client prints it, and a hairline runs
+   from the glass along that line's foot to the same number printed on the vial. The glass's number and the vial's
+   share the hairline as their foot, so the eye reads across from one to the other, and on down to the field that
+   takes it.
 
-   One measure sets it all, the pedestal's width P: the glass is 0.7 P across, a tenth of P from the pedestal, and the
-   vial's cap is the top of the picture, which ends 0.39 P down the pedestal's body. The picture is 1.8 P by 1.25 P;
-   each part is placed in its fractions. */
+   One measure sets it all, P: the picture is 1.8 P by 1.25 P, the glass 0.7 P across at its left, and the vial
+   0.4946 P wide, its cap the picture's top. The pedestal is sized from the vial by the room's own proportions (the
+   centre seat on the centre pedestal, Rooms.tsx and fog/scenes.ts, in open-crisp's 2560 × 1430), its right side the
+   picture's; it is cut where the picture ends. Each part is placed in its fractions. */
 .tm.tm-lookup-section {
   --tm-lookup-glass-edge: 0 0 0 1px color-mix(in srgb, var(--tm-paper) 95%, transparent), 0 0 0 2px color-mix(in srgb, var(--tm-ink) 14%, transparent);
   --tm-lookup-glass-cast: 8px 16px 30px -10px color-mix(in srgb, var(--tm-ink) 40%, transparent);
@@ -84,39 +87,64 @@
 }
 .tm-lookup-seat {
   position: absolute;
-  left: 44.444%;
-  top: 68.784%;
-  width: 55.556%;
-  aspect-ratio: 703 / 385;
+  left: 39.35%;
+  top: 68.503%;
+  width: 60.65%;
+  aspect-ratio: 294 / 108.03;
+  pointer-events: none;
 }
-/* The pedestal's body falls away into the wall below its top, where the picture ends. */
+/* The pedestal's top is cut round along its rim, as the collection's are, and its body falls away into the room's
+   field below its top, where the picture ends. */
 .tm-lookup-pedestal {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  -webkit-mask-image: linear-gradient(to bottom, var(--tm-ink) 30%, transparent 70%);
-  mask-image: linear-gradient(to bottom, var(--tm-ink) 30%, transparent 70%);
+  object-fit: cover;
+  object-position: top;
+  clip-path: inset(0 round 50% 50% 0 0 / 14.041% 14.041% 0 0);
+  -webkit-mask-image: linear-gradient(to bottom, var(--tm-ink) 41.8%, transparent 96.4%);
+  mask-image: linear-gradient(to bottom, var(--tm-ink) 41.8%, transparent 96.4%);
   user-select: none;
 }
 .tm-lookup-vial {
   position: absolute;
-  left: 24.2%;
-  bottom: 83.26%;
-  width: 49.46%;
+  left: 26.962%;
+  bottom: 76.271%;
+  width: 45.305%;
   aspect-ratio: 578 / 1112;
 }
 .tm-lookup-vial img {
+  position: relative;
   display: block;
   width: 100%;
   height: 100%;
   user-select: none;
 }
+/* Where the glass meets the lit top: the collection's contact shadow (procession.css .tm-procession-shadow). */
+.tm-lookup-shadow {
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  bottom: -0.4%;
+  height: 2%;
+  border-radius: 50%;
+  background: #3323424a;
+  filter: blur(3px);
+}
+.tm-lookup-shadow::after {
+  content: "";
+  position: absolute;
+  inset: -2px -40%;
+  border-radius: 50%;
+  background: #33234225;
+  filter: blur(7px);
+}
 .tm-lookup-lead {
   position: absolute;
   left: 38.889%;
   top: 46.688%;
-  width: 26.939%;
+  width: 24.753%;
   border-top: 1px solid var(--tm-ink-2);
   transform-origin: 0 50%;
 }
