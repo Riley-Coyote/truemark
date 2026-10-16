@@ -1,4 +1,4 @@
-import { advance, advanceDrift, clamp01, distance, HANDOFF, mix, modulo, pose, RISE, scene, smooth } from "./procession-math";
+import { advance, advanceDrift, clamp01, distance, HANDOFF, mix, modulo, pose, RISE, scene, smooth, swipeTarget } from "./procession-math";
 import { FOG_SCENES, pedestalCrop } from "./fog/scenes";
 
 export type ProcessionStatus = { active: number; paused: boolean; reduced: boolean; arrived: boolean; progress: number };
@@ -49,7 +49,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       paused = frozen = false; elapsed = 0; last = 0; schedule();
     }, 3500);
   }
-  let directScroll = false;
+  let directScroll = false, manual = false;
   let width = 1, height = 1, stageTop = 0, end = 1, spacing = 1, vialHeight = 1, baseFoot = 1;
   let plateX = 0, plateY = 0, plateW = 1, plateH = 1;
   let heroX = 0, heroY = 0, pivotX = 0, pivotY = 0, fall = 0, lift = 0;
@@ -59,7 +59,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   // the carried vials and the zoomed room lag the page and pile onto its words. There the flight is grounded: the
   // opening and the collection stand in the page and scroll with it, as with motion off, and the collection still
   // drifts and answers a swipe.
-  const grounded = () => still() || directScroll;
+  const grounded = () => still() || directScroll || manual;
   function measure() {
     dirty = false;
     // The hero inserts its word after measuring, and replaces floor copy across
@@ -70,7 +70,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     lead = opening.querySelector<HTMLElement>(".tm-mist-foot");
     const y = window.scrollY, heroRect = hero.getBoundingClientRect(), r = stage.getBoundingClientRect();
     width = window.innerWidth; height = window.innerHeight;
-    directScroll = matchMedia("(pointer: coarse)").matches;
+    directScroll = matchMedia("(any-pointer: coarse)").matches;
     stageTop = r.top + y;
     const headerEl = document.querySelector<HTMLElement>(".tm-header");
     const header = headerEl ? headerEl.offsetHeight + (parseFloat(getComputedStyle(headerEl).top) || 0) : 80;
@@ -156,6 +156,9 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     const dt = Math.min(last ? (now - last) / 1000 : 1 / 60, .064); last = now;
     if (dirty) measure();
     const y = Math.max(0, window.scrollY), requested = clamp01(y / end);
+    // Once grabbed, the collection belongs to the finger rather than the hero's
+    // scroll timeline. Returning to the top restores the desktop camera.
+    if (requested === 0 && !pointer && !dragging) manual = false;
     // Short input damping smooths wheel steps. Never trap the document scroll or
     // replay a missed scene after a fast flick, tab switch or deep link.
     if (grounded() || story || Math.abs(requested - passage) > .6) passage = requested;
@@ -295,10 +298,12 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     }
     last = 0; dirty = true; schedule();
   }
-  let pointer: { id: number; x: number; y: number; phase: number; time: number; lastX: number; frozen: boolean; resume: boolean } | undefined;
+  let pointer: { id: number; x: number; y: number; phase: number; time: number; lastX: number; spacing: number; frozen: boolean; resume: boolean } | undefined;
   function down(e: PointerEvent) {
-    if (!e.isPrimary || pointer || e.button !== 0 || !priorArrival) return;
-    pointer = { id: e.pointerId, x: e.clientX, y: e.clientY, phase, time: e.timeStamp, lastX: e.clientX, frozen, resume: !paused || !!resumeTimer };
+    if (!e.isPrimary || pointer || e.button !== 0 || story) return;
+    pointer = { id: e.pointerId, x: e.clientX, y: e.clientY, phase, time: e.timeStamp, lastX: e.clientX, spacing, frozen, resume: !paused || !!resumeTimer };
+    manual = true;
+    stage.setPointerCapture(e.pointerId);
     cancelResume();
     // Hold the presentation on contact; intent is resolved without fighting the
     // page's vertical pan. Horizontal motion then tracks the finger directly.
@@ -308,35 +313,44 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     if (!pointer || pointer.id !== e.pointerId) return;
     const dx = e.clientX - pointer.x, dy = e.clientY - pointer.y;
     if (!dragging) {
-      if (Math.abs(dy) > Math.abs(dx) + 6) { frozen = pointer.frozen; if (pointer.resume && paused) resumeAfterSwipe(); pointer = undefined; schedule(); return; }
-      if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy) + 6) return;
-      stage.setPointerCapture(e.pointerId); dragging = true; paused = true; frozen = false;
+      if (Math.abs(dy) > Math.abs(dx) + 6) {
+        frozen = pointer.frozen;
+        if (pointer.resume && paused) resumeAfterSwipe();
+        const id = pointer.id;
+        pointer = undefined;
+        if (stage.hasPointerCapture(id)) stage.releasePointerCapture(id);
+        schedule(); return;
+      }
+      if (Math.abs(dx) < 6 || Math.abs(dx) <= Math.abs(dy) * 1.1) return;
+      dragging = true; paused = true; frozen = false;
       stage.dataset.dragging = "";
     }
     e.preventDefault();
-    phase = pointer.phase - dx / spacing;
-    velocity = -(e.clientX - pointer.lastX) / spacing / Math.max(.008, (e.timeStamp - pointer.time) / 1000);
+    phase = pointer.phase - dx / pointer.spacing;
+    velocity = -(e.clientX - pointer.lastX) / pointer.spacing / Math.max(.008, (e.timeStamp - pointer.time) / 1000);
     pointer.lastX = e.clientX; pointer.time = e.timeStamp; schedule();
   }
   function up(e: PointerEvent) {
     if (!pointer || pointer.id !== e.pointerId) return;
     if (dragging) {
-      if (e.type === "pointercancel" || e.timeStamp - pointer.time > 100) velocity = 0;
+      if (e.type !== "pointerup" || e.timeStamp - pointer.time > 100) velocity = 0;
       velocity = Math.max(-4, Math.min(4, velocity));
-      target = Math.round(phase + velocity * .16);
+      target = swipeTarget(pointer.phase, phase, velocity, pointer.spacing, e.type !== "pointerup");
       if (still()) { phase = target = Math.round(target); velocity = driftVelocity = 0; }
-      if (stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId);
     } else frozen = pointer.frozen;
     if (pointer.resume && paused && !still()) resumeAfterSwipe();
-    dragging = false; pointer = undefined; delete stage.dataset.dragging; schedule();
+    dragging = false; pointer = undefined; delete stage.dataset.dragging;
+    if (stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId);
+    schedule();
   }
   // A trackpad swipes sideways as a finger does on glass: two fingers drawn across the stage carry the collection with
   // them, momentum included, and it settles on the nearest class once they stop. Over the stage the browser's own
   // sideways swipe (back a page) stays off; a swipe more up than across stays the page's scroll.
   let wheeling = 0, wheelResume = false;
   function wheel(e: WheelEvent) {
-    if (!priorArrival || story || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    if (story || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
     e.preventDefault();
+    manual = true;
     if (!wheeling) { wheelResume = !paused || !!resumeTimer; cancelResume(); }
     window.clearTimeout(wheeling);
     dragging = true; paused = true; frozen = false; driftVelocity = velocity = 0;
@@ -365,6 +379,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   window.addEventListener("scroll", schedule, { passive: true }); window.addEventListener("resize", resize);
   document.addEventListener("visibilitychange", stateChange);
   stage.addEventListener("pointerdown", down); stage.addEventListener("pointermove", move);
+  stage.addEventListener("lostpointercapture", up);
   // A press can leave the stage before horizontal intent captures the pointer.
   window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
   section.addEventListener("focusin", focus);
@@ -401,6 +416,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       window.removeEventListener("scroll", schedule); window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", stateChange);
       stage.removeEventListener("pointerdown", down); stage.removeEventListener("pointermove", move);
+      stage.removeEventListener("lostpointercapture", up);
       window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
       section.removeEventListener("focusin", focus); section.removeEventListener("tm-procession-control", labControl);
       layer.remove(); world.remove();

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { advance, advanceDrift, distance, HANDOFF, pose, scene } from '../src/brand/procession-math';
+import { advance, advanceDrift, distance, HANDOFF, pose, scene, swipeTarget } from '../src/brand/procession-math';
 
 test('continuous drift starts gently and travels identically at 30, 60 and 120 fps', () => {
   const first = advanceDrift(2, 0, 1 / 60);
@@ -68,4 +68,17 @@ test('center scale has no cusp, and the loop wraps outside the visible stage', (
     const spacing = Math.max(width <= 700 ? width * .56 : Math.min(350, width * .235), 330 * 1.12);
     assert.ok(Math.abs(pose(distance(4, 0, 8), spacing, 330).x) - 100 > width / 2);
   }
+});
+
+
+test('short deliberate swipes advance from any drifting phase in either direction', () => {
+  for (const spacing of [180, 220, 350]) {
+    for (const start of [0, .3, .7, 7.95]) {
+      assert.ok(swipeTarget(start, start + 40 / spacing, 0, spacing) >= Math.round(start) + 1);
+      assert.ok(swipeTarget(start, start - 40 / spacing, 0, spacing) <= Math.round(start) - 1);
+    }
+  }
+  assert.equal(swipeTarget(2, 2.05, 0, 220), 2);
+  assert.equal(swipeTarget(2, 4.2, 0, 220), 4);
+  assert.equal(swipeTarget(2, 2.2, 4, 220, true), 2);
 });

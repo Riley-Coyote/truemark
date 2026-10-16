@@ -40,3 +40,14 @@ export function scene(p: number, px: number, py: number, depth: number, fall: nu
   const drop = smooth((t - .12) / .88);
   return { zoom, x: px * (1 - zoom), y: py * (1 - zoom) + fall * drop, drop };
 }
+
+/** A deliberate short swipe advances a class even if the finger stops before
+ * release. Tiny adjustments settle naturally; long drags can cross many slots. */
+export function swipeTarget(start: number, position: number, velocity: number, spacing: number, cancelled = false) {
+  if (cancelled) return Math.round(position);
+  const travel = position - start;
+  const projected = Math.round(position + Math.max(-4, Math.min(4, velocity)) * .16);
+  if (Math.abs(travel * spacing) < 28) return projected;
+  const direction = Math.sign(travel);
+  return direction > 0 ? Math.max(projected, Math.round(start) + 1) : Math.min(projected, Math.round(start) - 1);
+}
