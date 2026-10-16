@@ -948,6 +948,17 @@ export function SequenceTrack({ on, scene, lead, ready, children }: {
  *  for a long way (a new chapter's picture). */
 const travelTime = (from: number, to: number) => 640 + Math.min(1, Math.abs(to - from) / 0.1) * 420;
 const smootherstep = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
+type FilmResume = {
+  requested: boolean;
+  clock: number;
+  paused: boolean;
+  light: number;
+  rushTo: number;
+  back: number;
+  backEdge: number;
+  phase: string | null;
+  afterClose: (() => void) | null;
+};
 
 /**
  * The film's player: plays the story on its own clock once the reader starts it, and writes every part for each moment,
@@ -957,7 +968,9 @@ const smootherstep = (t: number) => t * t * t * (t * (t * 6 - 15) + 10);
  */
 function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: SceneBase, ready: boolean, go: RefObject<(rest: number) => void>, skip: RefObject<() => void>) {
   const { box, plateScale, seat, tall } = base;
+  const resume = useRef<FilmResume | null>(null);
   useLayoutEffect(() => {
+    if (!on) resume.current = null;
     const root = on ? track.current : null;
     const section = root?.closest<HTMLElement>(".tm-mist");
     const view = root?.querySelector<HTMLElement>(".tm-seq-view");
@@ -1156,6 +1169,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       close: q(".tm-story-close"),
     };
     let open = false, clock = 0, frame = 0, last = 0, closing = 0;
+    let requested = false, openingFrame = 0, disposed = false;
     // Where the taps have asked the story to go on to (the start of a rest's reading: the clock runs on fast until it
     // gets there); the clock running back to an earlier rest (and the edge past which it lands there); paused by the
     // button, or held by a finger on the picture.
@@ -1171,7 +1185,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       section.removeAttribute("data-story-back");
     };
 
-    let receivingStory = false;
+    let receivingStory = resume.current !== null;
     const publishStory = () => {
       if (receivingStory) return;
       window.dispatchEvent(new CustomEvent("tm-story-state", { detail: {
@@ -1205,7 +1219,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
 
     const tick = (now: number) => {
       frame = 0;
-      if (!open) return;
+      if (disposed || !open) return;
       if (held(root)) {
         last = 0;
         return;
@@ -1242,7 +1256,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       else last = 0;
     };
     const wake = () => {
-      if (open && !frame) frame = requestAnimationFrame(tick);
+      if (!disposed && open && !frame) frame = requestAnimationFrame(tick);
     };
 
     // On: a move runs on fast to its rest; from a reading, on to the next rest's. Each tap counts: tapped again while
@@ -1291,8 +1305,14 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
     };
 
     // Opening: from the room at the page's top (scrolled there first, if the reader had started down the page).
+    const cancelOpening = () => {
+      requested = false;
+      cancelAnimationFrame(openingFrame);
+      openingFrame = 0;
+    };
     const begin = () => {
-      if (open) return;
+      if (disposed || open) return;
+      cancelOpening();
       open = true;
       clock = 0;
       last = 0;
@@ -1309,18 +1329,21 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       wake();
     };
     const onOpen = () => {
-      if (open || closing) return;
+      if (disposed || open || closing || requested) return;
       if (window.scrollY <= 1) {
         begin();
         return;
       }
+      requested = true;
       window.scrollTo({ top: 0, behavior: "smooth" });
       const since = performance.now();
       const wait = () => {
+        openingFrame = 0;
+        if (disposed || !requested) return;
         if (window.scrollY <= 1 || performance.now() - since > 1400) begin();
-        else requestAnimationFrame(wait);
+        else openingFrame = requestAnimationFrame(wait);
       };
-      requestAnimationFrame(wait);
+      openingFrame = requestAnimationFrame(wait);
     };
     // Settled on the room: the story is closed, and the page is the reader's again.
     const settle = () => {
@@ -1361,6 +1384,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
     // Closing: the room's mist comes in over the story, the camera is back in the room behind it, and the mist clears.
     // From the finale, whose picture is the room already, the story finishes instead.
     const close = () => {
+      cancelOpening();
       if (!open || closing) return;
       if (clock >= dwellOf(RESTS.length - 1).t0) {
         finish();
@@ -1451,7 +1475,8 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       if (open) event.preventDefault();
     };
     const onKey = (event: KeyboardEvent) => {
-      if (!open || event.defaultPrevented || event.altKey || event.metaKey || event.ctrlKey) return;
+      if ((!open && !requested) || event.defaultPrevented || event.altKey || event.metaKey || event.ctrlKey) return;
+      if (!open && event.key !== "Escape") return;
       const onControl = event.target instanceof Element && Boolean(event.target.closest("a, button, input"));
       if (event.key === "Escape") close();
       else if (event.key === "ArrowRight") next();
@@ -1738,6 +1763,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       } finally { receivingStory = false; }
     };
     const remeasure = () => {
+      if (disposed) return;
       measure();
       draw(pAt(clock));
     };
@@ -1761,7 +1787,32 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
     view.addEventListener("pointerdown", onDown);
     chrome.root?.addEventListener("click", onChrome);
     section.addEventListener("focusin", onFocusIn);
+    // Viewport, font and decoded-image layout changes can rebuild the geometry
+    // while a story is running. Keep its clock and intent through that rebuild.
+    const saved = resume.current;
+    resume.current = null;
+    receivingStory = false;
+    if (saved?.requested) onOpen();
+    else if (saved) {
+      receivingStory = true;
+      begin();
+      clock = Math.min(end, saved.clock);
+      paused = saved.paused;
+      light = saved.light;
+      rushTo = saved.rushTo;
+      back = saved.back;
+      backEdge = saved.backEdge;
+      afterClose = saved.afterClose;
+      receivingStory = false;
+      showPaused();
+      draw(pAt(clock));
+      drawBars();
+      if (saved.phase === "closing" || saved.phase === "ending") close();
+    }
     return () => {
+      resume.current = open || requested ? { requested, clock, paused, light, rushTo, back, backEdge, phase: section.getAttribute("data-story"), afterClose } : null;
+      disposed = true;
+      cancelOpening();
       cancelAnimationFrame(frame);
       window.clearTimeout(closing);
       backDone();
