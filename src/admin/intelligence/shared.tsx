@@ -382,6 +382,7 @@ export function Table<T>({
           title: "No matching records",
           note: "Try another range or filter. Unknown values stay unknown.",
         }}
+        stickyHeader={false}
         onRowClick={onSelect}
       />
     </div>

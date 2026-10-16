@@ -12,6 +12,7 @@ import {
 } from "../../app-kit";
 import {
   analyze,
+  orderCode,
   customerHealth,
   dateWindow,
   forecast,
@@ -73,8 +74,8 @@ export function SalesAnalytics() {
         (o) =>
           channel === "all" ||
           (channel === "partners" && o.discount?.partnerId) ||
-          (channel === "promo" && !o.discount?.partnerId && o.discount?.code) ||
-          (channel === "unknown" && !o.discount?.code),
+          (channel === "promo" && !o.discount?.partnerId && orderCode(o)) ||
+          (channel === "unknown" && !orderCode(o)),
       ),
     }),
     [source, channel],

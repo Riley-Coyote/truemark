@@ -1,3 +1,4 @@
+import type { Benefits } from "../../../platform/live/programs";
 import { live } from "../../../platform/live/runtime";
 import { PaymentOutcomes } from "./Pay";
 import type { Outcome } from "../../../platform/live/payments";
@@ -431,7 +432,9 @@ function OrderSummary({
   addressChosen,
   sampleRates,
   locked,
+  benefits,
 }: {
+  benefits?: Benefits | null;
   lines: BagLine[];
   subtotal: number;
   code: BagCode;
@@ -480,7 +483,9 @@ function OrderSummary({
           <dt>Subtotal</dt>
           <dd>{money(subtotal)}</dd>
         </div>
-        <DiscountRow discount={code.discount} amount={discountAmount} />
+        <DiscountRow discount={benefits?.membershipAmount ? null : code.discount} amount={benefits ? benefits.promoAmount : discountAmount} />
+        {Boolean(benefits?.membershipAmount) && <div className="tm-totals-row"><dt>{benefits?.membershipName} member benefit</dt><dd>−{money(benefits!.membershipAmount)}</dd></div>}
+        {Boolean(benefits?.rewardAmount) && <div className="tm-totals-row"><dt>Reward credit · {benefits?.rewardPoints} points</dt><dd>−{money(benefits!.rewardAmount)}</dd></div>}
         <InsuranceRow amount={insurance} applied={insuranceApplied} />
         <div className="tm-totals-row">
           <dt>
@@ -544,9 +549,14 @@ export default function Checkout() {
   // An address added here joins the account's own once it is saved there; list it once.
   const addresses = [...(buyer?.addresses ?? []), ...added.filter((a) => !buyer?.addresses.some((saved) => saved.id === a.id))];
   const address = addresses.find((a) => a.id === addressId) ?? null;
-  const discountAmount = code.discount ? discountOn(subtotal, code.discount) : 0;
+  const [rewardPoints, setRewardPoints] = useState(0);
+  const promoAmount = settings.data ? priceQuote(subtotal, code.discount?.percent ?? 0, null, settings.data).discountAmount : (code.discount ? discountOn(subtotal, code.discount) : 0);
+  const wallet = useResource(() => LIVE && verified ? live().programs.myWallet() : Promise.resolve(null), [buyer?.id, verified]);
+  const benefits = useResource(() => LIVE && verified ? live().programs.benefits(subtotal, promoAmount, rewardPoints) : Promise.resolve(null), [buyer?.id, verified, subtotal, promoAmount, rewardPoints]);
+  const appliedBenefits: Benefits | null = heldOrder ? { membershipName: heldOrder.benefits?.membershipName ?? null, membershipAmount: heldOrder.benefits?.membershipAmount ?? 0, rewardAmount: heldOrder.benefits?.rewardAmount ?? 0, rewardPoints: heldOrder.benefits?.rewardPoints ?? 0, promoAmount: (heldOrder.discount?.amount ?? 0) - (heldOrder.benefits?.membershipAmount ?? 0) - (heldOrder.benefits?.rewardAmount ?? 0) } : benefits.data ?? null;
+  const discountAmount = appliedBenefits ? appliedBenefits.promoAmount + appliedBenefits.membershipAmount + appliedBenefits.rewardAmount : promoAmount;
   const selectedMethod = methods.data?.find((m) => m.id === methodId) ?? null;
-  const priced = settings.data ? priceQuote(subtotal, code.discount?.percent ?? 0, selectedMethod, settings.data, insured, LIVE ? address : null, taxRates.data ?? []) : null;
+  const priced = settings.data ? priceQuote(subtotal, code.discount?.percent ?? 0, selectedMethod, settings.data, insured, LIVE ? address : null, taxRates.data ?? [], discountAmount) : null;
   const method = selectedMethod ? { ...selectedMethod, price: priced?.shipping ?? selectedMethod.price } : null;
 
   // Preselect the account's first saved address once it is known; drop a selection that left.
@@ -611,6 +621,7 @@ export default function Checkout() {
   if (!heldOrder && (issues.length || catalogChecking || catalogError)) needs.push("available stock");
   if (LIVE && (paymentMode.loading || paymentMode.error || !paymentMode.data || paymentMode.data === "live")) needs.push("payments");
   if (LIVE && settings.data?.taxMode === "rates" && (taxRates.loading || taxRates.error)) needs.push("tax rates");
+  if (LIVE && verified && !heldOrder && (benefits.loading || benefits.error || !benefits.data)) needs.push("current program benefits");
   if (code.checking) needs.push("code verification");
   if (!attested) needs.push("the research-use confirmation");
   const canPlace = needs.length === 0 && (heldOrder !== null || lines.length > 0) && !placing;
@@ -625,6 +636,7 @@ export default function Checkout() {
         address,
         shipping: method.id,
         insurance: insured,
+        rewardPoints,
         discountCode: code.discount?.code,
         via: code.source === "link" ? "link" : "code",
       });
@@ -670,7 +682,7 @@ export default function Checkout() {
     const product = productById(line.productId);
     return product ? [{ product, quantity: line.quantity, total: roundMoney(line.quantity * line.unitPrice) }] : [];
   }) : null;
-  const summaryProps = { lines: heldLines ?? lines, subtotal: heldOrder?.subtotal ?? subtotal, code, discountAmount: heldOrder?.discount?.amount ?? discountAmount, method: heldOrder && method ? { ...method, price: heldOrder.shipping.price } : method, total,
+  const summaryProps = { benefits: appliedBenefits, lines: heldLines ?? lines, subtotal: heldOrder?.subtotal ?? subtotal, code, discountAmount: heldOrder?.discount?.amount ?? discountAmount, method: heldOrder && method ? { ...method, price: heldOrder.shipping.price } : method, total,
     tax: heldOrder?.tax ?? priced?.tax ?? 0, taxMode: settings.data?.taxMode ?? "off", addressChosen: address !== null, sampleRates, locked: heldOrder !== null,
     insurance: heldOrder?.insurance ?? priced?.insurance ?? 0, insuranceApplied: heldOrder?.insuranceApplied ?? priced?.insuranceApplied ?? false };
   const listFormat = new Intl.ListFormat("en", { style: "long", type: "conjunction" });
@@ -686,6 +698,15 @@ export default function Checkout() {
         </header>
         {!LIVE && <p className="tm-purchase-preview">Design preview · sample data</p>}
 
+        {LIVE && verified && wallet.data && <section className="tm-acct-block" aria-label="Checkout benefits">
+          <h2 className="tm-acct-label">Rewards & membership</h2>
+          <p className="tm-step-fine">{wallet.data.tier ? `${wallet.data.tier.name} · ${wallet.data.tier.discount}% member benefit. ` : ''}{wallet.data.available.toLocaleString()} points available. The larger of your membership benefit or promotion applies, then eligible reward credit.</p>
+          {wallet.data.settings.rewards_enabled && <label className="tm-field">Points to redeem (minimum {wallet.data.settings.min_points}; {wallet.data.settings.points_per_dollar} points = $1)
+            <input aria-label="Points to redeem" type="number" min={0} max={wallet.data.available} step={wallet.data.settings.points_per_dollar} value={rewardPoints} disabled={placing || heldOrder!==null} onChange={e=>setRewardPoints(Math.max(0,Math.trunc(Number(e.target.value)||0)))}/>
+          </label>}
+          {benefits.error && <p role="alert">{benefits.error.message} Reduce the points or set them to zero.</p>}
+          <p className="tm-step-fine"><Link to="/account/programs">View your points and program rules</Link></p>
+        </section>}
         {/* Narrow screens: the summary folds into a bar above the four parts. */}
         <div className="tm-summary-sheet">
           <button

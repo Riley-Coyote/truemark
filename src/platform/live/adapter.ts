@@ -12,6 +12,7 @@ import { createTeam } from "./team";
 import { createMessages } from "./messages";
 import { createPayments } from "./payments";
 import { createConnections } from "./connections";
+import { createPrograms } from "./programs";
 import { createShipping } from "./shipping";
 import type { AccountOptions } from "./accounts";
 import type { Profile } from "../accounts";
@@ -39,7 +40,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
       let query = client.from(table).select(select);
       for (const [key, value] of Object.entries(filters)) query = query.eq(key, value);
       // Stable pagination, also for tables whose key is not an `id` column.
-      const key = table === "tax_rates" ? "region" : table === "lots" ? "lot" : table === "discounts" ? "code" : table === "visits" ? "date" : table === "contact_routes" ? "topic" : "id";
+      const key = table === "customer_program_settings" ? "id" : table === "tax_rates" ? "region" : table === "lots" ? "lot" : table === "discounts" ? "code" : table === "visits" ? "date" : table === "contact_routes" ? "topic" : "id";
       const page = unwrap<map.Row[]>(await query.order(key).range(offset, offset + 999).returns<map.Row[]>());
       result.push(...page);
       if (page.length < 1000) return result;
@@ -132,7 +133,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
       get: getOrder,
       place: async (_buyerId, draft: OrderDraft) => refreshedOrder(await rpc<map.Row>("place_order", { draft: {
         lines: draft.lines.map(({ productId, quantity }) => ({ productId, quantity })), address: draft.address,
-        shipping: draft.shipping, insurance: draft.insurance === true, discountCode: draft.discountCode, via: draft.via ?? "code",
+        shipping: draft.shipping, rewardPoints: draft.rewardPoints ?? 0, insurance: draft.insurance === true, discountCode: draft.discountCode, via: draft.via ?? "code",
       } })),
       advance: async (id, status, extra = {}) => {
         const order = id.startsWith("TM-") ? await getOrder(id) : null;
@@ -264,7 +265,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
     }
     channel.subscribe((status) => { if (status === "SUBSCRIBED") changed(); });
   }
-  return { store, auth, owner, team, notices, startRealtime, stopRealtime, partnerApplications: accounts.applications,
+  return { store, auth, owner, team, notices, programs: createPrograms(rows, rpc, changed), startRealtime, stopRealtime, partnerApplications: accounts.applications,
     shipping: createShipping(client, rows, rpc, changed),
     messages: createMessages(rows, rpc, changed),
     payments: createPayments(client, rows, rpc, changed),
@@ -288,8 +289,9 @@ export function createLiveAdapter(client: SupabaseClient, options: {
         return { productId, quantity, unitPrice: product.price, lot: product.lot };
       });
       const subtotal = roundMoney(lines.reduce((sum, line) => sum + line.quantity * line.unitPrice, 0));
-      const priced = priceQuote(subtotal, discount?.percent ?? 0, selected, settings, draft.insurance, draft.address, rates.map((r) => ({ region: String(r.region), rate: Number(r.rate) })));
-      return { ...priced, lines, discount, method: { ...selected, price: priced.shipping } };
+      const benefits = await createPrograms(rows, rpc, changed).benefits(subtotal, priceQuote(subtotal, discount?.percent ?? 0, null, settings).discountAmount, draft.rewardPoints ?? 0);
+      const priced = priceQuote(subtotal, 0, selected, settings, draft.insurance, draft.address, rates.map((r) => ({ region: String(r.region), rate: Number(r.rate) })), benefits.promoAmount + benefits.membershipAmount + benefits.rewardAmount);
+      return { ...priced, benefits, lines, discount, method: { ...selected, price: priced.shipping } };
     },
     showcase: async () => (await rpc<map.Row[]>("catalog_showcase")).map(map.product),
     products: () => store.catalog.products(),

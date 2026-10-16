@@ -1,3 +1,4 @@
+import { ConnectedPrograms, ConnectedWorkspaceLink } from "./ConnectedPrograms";
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
@@ -231,7 +232,8 @@ const inquiriesValid = (v: unknown): v is Inquiry[] =>
       numeric(r.units),
   );
 
-export function CustomerPrograms() {
+export function CustomerPrograms() { return LIVE ? <ConnectedPrograms /> : <PreviewCustomerPrograms />; }
+function PreviewCustomerPrograms() {
   const data = useBusiness(),
     [params, setParams] = useSearchParams();
   const tab = ["rewards", "memberships", "wholesale", "import"].includes(
@@ -403,7 +405,8 @@ export function CustomerPrograms() {
                 />{" "}
                 Include rewards in the launch plan
               </label>
-              <DeviceNote warning={rulesWarning} />
+              <ConnectedWorkspaceLink area="programs" />
+      <DeviceNote warning={rulesWarning} />
             </Card>
             <Card title="Redemption simulator">
               <div className="bi-fields">

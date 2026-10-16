@@ -11,6 +11,8 @@ import { OrderDetail, OrderList } from "./Orders";
 import Overview from "./Overview";
 import { AccountContext, Empty, Loading, Problem, attempt, useTitle } from "./parts";
 import Profile from "./Profile";
+import Programs from "./Programs";
+import { LIVE } from "../../../platform/mode";
 
 /** Signed-out visitors go to /access and come back here after signing in. */
 export default function Account() {
@@ -96,6 +98,7 @@ function Desk({ buyer, signOut }: { buyer: Buyer; signOut: () => Promise<void> }
     ["Certificates", "/account/certificates", received, false],
     ["Addresses", "/account/addresses", undefined, false],
     ["Account", "/account/profile", undefined, false],
+    ...(LIVE ? [["Rewards & membership", "/account/programs", undefined, false] as [string,string,number|undefined,boolean]] : []),
   ];
   return (
     <AccountContext.Provider value={{ buyer, orders, lots, signOut }}>
@@ -127,6 +130,7 @@ function Desk({ buyer, signOut }: { buyer: Buyer; signOut: () => Promise<void> }
             <Route path="certificates" element={<Certificates />} />
             <Route path="addresses" element={<Addresses />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="programs" element={<Programs />} />
             <Route path="*" element={<Missing />} />
           </Routes>
         </div>

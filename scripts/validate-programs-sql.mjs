@@ -1,0 +1,84 @@
+/** Real migrations and authorization roles; synthetic records, no network. */
+import assert from 'node:assert/strict';
+import { createPlatformDb } from './lib/platform-db.mjs';
+const h=await createPlatformDb(); const {db,auth,service,scalar,rows,denied,person}=h;
+const pass=name=>console.log(`PASS ${name}`);
+try {
+ const owner=await person('owner@fixture.test','owner'), staff=await person('staff@fixture.test','staff'), buyer=await person('buyer@fixture.test'), other=await person('other@fixture.test');
+ for(const [id,email] of [[buyer,'buyer@fixture.test'],[other,'other@fixture.test']])await db.query("insert into buyers(id,user_id,name,email,institution,status) values($1,$1,'Fixture buyer',$2,'Fixture lab','verified')",[id,email]);
+ await db.exec('update products set stock=10000;');
+ const settings=async()=> (await rows('select * from customer_program_settings'))[0];
+ const configure=async(patch={})=>{const s={...await settings(),...patch}; for(const k of ['earn_per_dollar','points_per_dollar','min_points','max_percent'])s[k]=Number(s[k]);return (await auth(owner,'select * from set_customer_programs($1,$2)',[s,s.version]))[0];};
+ const balance=()=>scalar('select coalesce(sum(points),0)::int from reward_ledger where buyer_id=$1',[buyer]);
+ const tier=(await auth(owner,'select * from save_membership_tier($1)',[{name:'Research partner',threshold:0,discount:10,note:'Test tier',active:true}]))[0];
+ await denied('authenticated',buyer,'select * from set_customer_programs($1,1)',[await settings()]);
+ await denied('authenticated',staff,'select * from save_membership_tier($1)',[{name:'No',threshold:0,discount:99,active:true}]);
+ await denied('anon',null,'select * from customer_program_settings');
+ await denied('authenticated',owner,"update customer_program_settings set rewards_enabled=true");
+ await denied('authenticated',buyer,'select program_wallet($1)',[other]);
+ assert.equal((await auth(other,'select * from reward_ledger')).length,0);pass('program grants and role boundaries');
+ const saved=await configure({rewards_enabled:true,memberships_enabled:true,earn_per_dollar:10,min_points:100,max_percent:50});
+ await assert.rejects(()=>auth(owner,'select * from set_customer_programs($1,1)',[saved]),/another session/);pass('optimistic configuration conflict');
+ const request='11111111-1111-4111-8111-111111111111';
+ await auth(owner,'select * from adjust_reward_points($1,1000,$2,$3)',[buyer,'Test points',request]);
+ await auth(owner,'select * from adjust_reward_points($1,1000,$2,$3)',[buyer,'Test points',request]);assert.equal(await balance(),1000);
+ await assert.rejects(()=>auth(owner,'select * from adjust_reward_points($1,1001,$2,$3)',[buyer,'Test points',request]),/different adjustment/);
+ await assert.rejects(()=>configure({points_per_dollar:10}),/fixed/);pass('idempotent adjustment and fixed point value');
+ const address={institution:'Fixture lab',attention:'Fixture buyer',line1:'1 Fixture Road',city:'Austin',region:'TX',postal:'78701',country:'United States'};
+ const draft={lines:[{productId:'bpc-157-10-mg',quantity:2}],address,shipping:'cold-2day',rewardPoints:500};
+ const place=async(d=draft)=>(await auth(buyer,'select * from place_order($1)',[d]))[0];
+ let seq=0;
+ const event=async(p,type,amount=Number(p.amount),eventId=`test-${++seq}`)=>(await service('select system_apply_payment_event($1,$2,$3,$4,$5,$6,null) result',['simulator',eventId,type,p.id,`sim-${eventId}`,amount]))[0].result;
+ const charge=async(o)=>(await service("select * from system_create_charge($1,'simulator',$2)",[o.id,buyer]))[0];
+ await auth(owner,"select set_connection_mode('payments','simulated',null)");
+ await auth(owner,"select set_tax_settings('rates',true)");await auth(owner,"select set_tax_rate('TX',.0625)");
+ const first=await place();assert.equal(first.membership_name,'Research partner');assert.equal(Number(first.membership_amount),Number(first.subtotal)*.1);assert.equal(Number(first.reward_amount),5);assert.equal(Number(first.discount_amount),Number(first.membership_amount)+5);assert.equal(await balance(),500);
+ assert.equal(Number(first.total),Number((Number(first.subtotal)-Number(first.discount_amount)+Number(first.shipping_price)+Number(first.insurance)+Number(first.tax)).toFixed(2)));
+ const p=await charge(first);await event(p,'charge.succeeded');const after=await balance();assert(after>500);
+ await event(p,'charge.succeeded',Number(p.amount),'duplicate-distinct-event');assert.equal(await balance(),after);
+ assert.equal((await auth(other,'select * from reward_ledger')).length,0);assert((await auth(buyer,'select * from reward_ledger')).length>0);pass('checkout pricing, redemption reservation, earning and webhook retries');
+ await db.exec("insert into discounts(code,kind,percent,active) values('BETTER20','promo',20,true),('SMALL5','promo',5,true)");
+ const better=await place({...draft,discountCode:'BETTER20',rewardPoints:0});assert.equal(Number(better.membership_amount),0);assert.equal(better.discount_code,'BETTER20');assert.equal(Number(better.discount_amount),Number(better.subtotal)*.2);
+ const smaller=await place({...draft,discountCode:'SMALL5',rewardPoints:0});assert.equal(smaller.discount_code,null);assert.equal(Number(smaller.membership_amount),Number(smaller.subtotal)*.1);assert.equal(Number(await scalar("select uses from discounts where code='SMALL5'")),0);pass('best membership or promo, never both');
+ await assert.rejects(()=>place({...draft,rewardPoints:1}),/minimum/);await assert.rejects(()=>place({...draft,rewardPoints:999999}),/minimum/);await assert.rejects(()=>place({...draft,rewardPoints:100.5}),/Invalid benefit/);
+ const pending=await place({...draft,rewardPoints:100});const reserved=await balance();await auth(buyer,'select * from cancel_unpaid_order($1)',[pending.id]);assert.equal(await balance(),reserved+100);
+ await assert.rejects(()=>auth(buyer,'select * from cancel_unpaid_order($1)',[pending.id]),/not awaiting payment/);assert.equal(await balance(),reserved+100);pass('invalid point claims and cancellation return once');
+ const refund=(await service('select * from system_create_refund($1,$2,$3,false,$4)',[first.id,Math.floor(Number(first.total)*50)/100,'Fixture half refund',owner]))[0];
+ // Money in provider requests is cents; choose a representable amount.
+ await event(refund,'refund.succeeded',Number(refund.amount));const partial=await balance();assert(partial<after+10000);const earnedSum=await scalar("select sum(points)::int from reward_ledger where order_id=$1 and kind in('earn','earn_reversal')",[first.id]);
+ const current=(await rows('select * from orders where id=$1',[first.id]))[0];assert.equal(earnedSum,Math.floor(Math.round((Number(current.subtotal)-Number(current.discount_amount))*(Number(current.total)-Number(current.refunded))/Number(current.total)*100)/100*10));
+ const remaining=Math.round((Number(current.total)-Number(current.refunded))*100)/100; const rest=(await service('select * from system_create_refund($1,$2,$3,false,$4)',[first.id,remaining,'Fixture remaining refund',owner]))[0];await event(rest,'refund.succeeded');
+ assert.equal(Number(await scalar("select sum(points) from reward_ledger where order_id=$1 and kind in('earn','earn_reversal')",[first.id])),0);
+ assert.equal(Number(await scalar("select sum(points) from reward_ledger where order_id=$1 and kind='redeem_return'",[first.id])),500);pass('partial and full refund reconciliation');
+ // Expiry, stale membership edits, and manual payment mode use the same ledger.
+ const expiring=await place({...draft,rewardPoints:100});const beforeExpiry=await balance();await db.query("update orders set payment_expires_at=now()-interval '1 minute' where id=$1",[expiring.id]);await service('select system_expire_unpaid_orders()');assert.equal(await balance(),beforeExpiry+100);await service('select system_expire_unpaid_orders()');assert.equal(await balance(),beforeExpiry+100);
+ await assert.rejects(()=>auth(owner,'select * from save_membership_tier($1,999)',[{...tier,threshold:Number(tier.threshold),discount:Number(tier.discount)}]),/another session/);
+ await auth(owner,"select set_connection_mode('payments','off',null)");const manual=await place({...draft,rewardPoints:100});await auth(owner,"select advance_order($1,'paid')",[manual.id]);assert(Number(await scalar("select sum(points) from reward_ledger where order_id=$1 and kind='earn'",[manual.id]))>0);await auth(owner,"select advance_order($1,'refunded')",[manual.id]);assert.equal(Number(await scalar("select sum(points) from reward_ledger where order_id=$1",[manual.id])),0);pass('expiry, stale tier protection and manual payment/refund parity');
+ await auth(owner,"select set_connection_mode('payments','simulated',null)");
+ // Marketing: consent never follows merely from having an account.
+ await denied('anon',null,'select * from marketing_contacts');assert.equal((await auth(buyer,'select * from marketing_contacts')).length,0);
+ assert.deepEqual((await auth(buyer,'select my_marketing_consent() c'))[0].c,{subscribed:false,consentAt:null,source:null});
+ const flow=(await rows("select * from marketing_flows where id='welcome'"))[0];await auth(staff,'select * from save_marketing_flow($1,$2)',[{...flow,active:true,delay_hours:0},flow.version]);
+ await auth(buyer,'select set_my_marketing_consent(true)'); const contact=(await rows('select * from marketing_contacts where email=$1',['buyer@fixture.test']))[0];
+ await auth(staff,'select run_marketing_test_queue()');assert.equal(Number(await scalar("select count(*) from marketing_deliveries where flow_id='welcome' and status='simulated'")),1);
+ await auth(staff,'select run_marketing_test_queue()');assert.equal(Number(await scalar("select count(*) from marketing_deliveries where flow_id='welcome'")),1);pass('explicit account opt-in, welcome enrollment and idempotent worker');
+ const campaign=(await auth(staff,'select * from save_marketing_campaign($1)',[{name:'Client test',subject:'Research update',body:'Fixture content <safe as text>',segment:'all'}]))[0];
+ assert.equal((await auth(staff,'select schedule_marketing_campaign($1,now(),$2) n',[campaign.id,campaign.version]))[0].n,1);
+ await assert.rejects(()=>auth(staff,'select schedule_marketing_campaign($1,now(),$2)',[campaign.id,campaign.version]),/already queued/);
+ await auth(buyer,'select set_my_marketing_consent(false)');await auth(staff,'select run_marketing_test_queue()');assert.equal(Number(await scalar("select count(*) from marketing_deliveries where campaign_id=$1 and status='suppressed'",[campaign.id])),1);
+ await auth(staff,'select import_marketing_contacts($1)',[[{name:'Cannot override suppression',email:'BUYER@fixture.test',consent_at:new Date().toISOString(),source:'Test import consent'}]]);assert.equal(await scalar('select status from marketing_contacts where id=$1',[contact.id]),'suppressed');pass('last-minute opt-out, audience snapshot, duplicate schedule and sticky suppression');
+ await auth(buyer,'select set_my_marketing_consent(true)');
+ const campaign2=(await auth(owner,'select * from save_marketing_campaign($1)',[{name:'Future test',subject:'Future',body:'Future content',segment:'buyers'}]))[0];
+ await auth(owner,"select schedule_marketing_campaign($1,now()+interval '1 day',$2)",[campaign2.id,campaign2.version]);await service('select system_run_marketing()');assert.equal(await scalar('select status from marketing_deliveries where campaign_id=$1',[campaign2.id]),'queued');
+ await auth(owner,'select cancel_marketing_campaign($1,$2)',[campaign2.id,campaign2.version+1]);assert.equal(await scalar('select status from marketing_deliveries where campaign_id=$1',[campaign2.id]),'suppressed');pass('scheduling and cancellation');
+ // A post-purchase flow enrolls once, and a later full refund suppresses it.
+ const post=(await rows("select * from marketing_flows where id='post_purchase'"))[0];await auth(owner,'select save_marketing_flow($1,$2)',[{...post,active:true,delay_hours:1},post.version]);
+ const postOrder=await place({...draft,rewardPoints:0});const postCharge=await charge(postOrder);await event(postCharge,'charge.succeeded');await auth(staff,'select run_marketing_test_queue()');
+ assert.equal(await scalar("select status from marketing_deliveries where flow_id='post_purchase' and order_id=$1",[postOrder.id]),'queued');
+ const postRefund=(await service('select * from system_create_refund($1,$2,$3,false,$4)',[postOrder.id,Number(postOrder.total),'Full refund fixture',owner]))[0];await event(postRefund,'refund.succeeded');await db.query("update marketing_deliveries set due_at=now() where order_id=$1",[postOrder.id]);await auth(staff,'select run_marketing_test_queue()');assert.equal(await scalar("select status from marketing_deliveries where flow_id='post_purchase' and order_id=$1",[postOrder.id]),'suppressed');
+ const welcome=(await rows("select * from marketing_flows where id='welcome'"))[0];await auth(owner,'select save_marketing_flow($1,$2)',[{...welcome,active:false},welcome.version]);pass('order-event enrollment and eligibility recheck after refund');
+ const future=new Date(Date.now()+86400000).toISOString();await assert.rejects(()=>auth(staff,'select import_marketing_contacts($1)',[[{name:'No',email:'future@fixture.test',consent_at:future,source:'Future'}]]),/past opt-in/);
+ await denied('authenticated',owner,"insert into marketing_contacts(email,name,consent_at,source) values('bypass@fixture.test','Bypass',now(),'Bypass')");
+ await denied('authenticated',buyer,'select run_marketing_test_queue()');await denied('authenticated',owner,'select system_run_marketing()');pass('marketing consent validation and grants');
+ console.log('PASS shared programs and marketing SQL acceptance');
+} finally {await db.close();}

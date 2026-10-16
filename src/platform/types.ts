@@ -107,7 +107,8 @@ export type Order = {
   paymentProvider?: string;
   insurance?: Money;
   insuranceApplied?: boolean;
-  discount?: { code: string; amount: Money; partnerId?: string };
+  benefits?: { membershipName?: string; membershipAmount: Money; rewardAmount: Money; rewardPoints: number };
+  discount?: { code: string; amount: Money; partnerId?: string; source?: "promotion" | "program" };
   total: Money;
   events: OrderEvent[];
 };
@@ -117,6 +118,7 @@ export type OrderDraft = {
   address: Address;
   shipping: ShippingMethodId;
   discountCode?: string;
+  rewardPoints?: number;
   insurance?: boolean;
   /** How a partner's code arrived: typed at checkout, or carried by their link. */
   via?: "link" | "code";

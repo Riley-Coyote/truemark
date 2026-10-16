@@ -44,7 +44,7 @@ function fixture() {
         getPublicUrl(path: string) { return { data: { publicUrl: `https://fixture.example/storage/v1/object/public/${bucket}/${path}` } }; },
       };
     } },
-    async rpc(name: string, args: unknown) { calls.push({ type: 'rpc', name, args }); return { data: rpcData, error }; },
+    async rpc(name: string, args: unknown) { calls.push({ type: 'rpc', name, args }); return { data: name === 'my_checkout_benefits' ? { membershipName: null, membershipAmount: 0, rewardAmount: 0, rewardPoints: 0, promoAmount: (args as {promo_amount:number}).promo_amount } : rpcData, error }; },
     auth: {
       async getSession() { return { data: { session }, error }; },
       async signInWithPassword(args: unknown) { calls.push({ type: 'auth', name: 'signIn', args }); return { data: { session }, error }; },
@@ -210,7 +210,7 @@ test('checkout uses only RPC and accepts server totals, rejecting price injectio
   const f = fixture(); f.setRpc(order);
   const result = await f.adapter.store.orders.place('forged-buyer-id', { lines: [{ productId: 'compound', quantity: 2, unitPrice: 1 }], address, shipping: 'cold-2day', discountCode: 'FIXTURE10', via: 'link', total: 1 } as OrderDraft);
   assert.equal(result.total, 114); assert.equal(result.payment, 'authorized');
-  assert.deepEqual(f.calls.find((call) => call.name === 'place_order')?.args, { draft: { lines: [{ productId: 'compound', quantity: 2 }], address, shipping: 'cold-2day', insurance: false, discountCode: 'FIXTURE10', via: 'link' } });
+  assert.deepEqual(f.calls.find((call) => call.name === 'place_order')?.args, { draft: { lines: [{ productId: 'compound', quantity: 2 }], address, shipping: 'cold-2day', insurance: false, rewardPoints: 0, discountCode: 'FIXTURE10', via: 'link' } });
   assert.equal(f.calls.some((call) => ['insert', 'update'].includes(call.type)), false);
 });
 

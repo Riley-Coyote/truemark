@@ -67,7 +67,7 @@ test('preview and the live adapter quote agree on insurance to the cent in every
     const query = { select() { return query; }, eq(key, value) { result = result.filter((row) => String(row[key]) === String(value)); return query; },
       order() { return query; }, range() { return query; }, returns() { return query; }, then(resolve) { return Promise.resolve({ data: result, error: null }).then(resolve); } };
     return query;
-  }, rpc: async () => ({ data: { percent: 10, partnerName: null }, error: null }) };
+  }, rpc: async (name,args) => ({ data: name==='my_checkout_benefits'?{membershipName:null,membershipAmount:0,rewardAmount:0,rewardPoints:0,promoAmount:args.promo_amount}:{ percent: 10, partnerName: null }, error: null }) };
   const adapter = current.createLiveAdapter(client);
   try {
     for (const mode of ['off', 'optional', 'automatic']) for (const rate of [0, .0125, .03755, .5]) for (const price of [.01, 1.05, 16.99, 166.66, 166.67, 166.68, 999.99]) for (const insurance of [false, true]) {

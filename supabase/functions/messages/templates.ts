@@ -86,7 +86,7 @@ export function renderTemplate(template: string,c: TemplateData): Rendered {
   subject=`Order confirmed · ${number}`;preheader="We'll write again when it ships.";
   heading('Your order is confirmed.');text(`Order ${number} is on file in your research account, with the lot number of every vial.`);
   figure('Order total',money(o.total),`${plural(vials,'vial')} · ${c.method?.label??'Cold chain'}`);
-  rows([...lineRows,...(o.discount_code?[[`Code ${o.discount_code}`,`−${money(o.discount_amount)}`]]:[]),['Shipping',money(o.shipping_price)],
+  rows([...lineRows,...(Number(o.discount_amount)>0?[[o.discount_code?`Code ${o.discount_code} / benefits`:'Membership / reward benefits',`−${money(o.discount_amount)}`]]:[]),['Shipping',money(o.shipping_price)],
   ...(o.insurance_applied||Number(o.insurance)>0?[['Insurance',money(o.insurance)]]:[]),...(Number(o.tax)>0?[['Tax',money(o.tax)]]:[]),['Total',money(o.total)]]);
   text('We’ll write again when it ships.');button('View your order',link('/account/orders/'+id));break;
  case 'buyer.order_shipped': {

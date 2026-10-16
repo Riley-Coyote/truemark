@@ -78,6 +78,8 @@ export const inWindow = (iso: string, window: DateWindow, asOf = Infinity) => {
 /** Current captured amounts for an order cohort, not bank settlement transactions.
  * A partial refund is allocated proportionally across goods, shipping, insurance and tax.
  * This allocation is an estimate until line-level refund records are available. */
+export function orderCode(order: Order) { return order.discount?.source === "program" ? undefined : order.discount?.code; }
+
 export function orderMoney(order: Order) {
   const paid = ["captured", "partially_refunded", "refunded"].includes(
     order.payment,
@@ -284,11 +286,11 @@ export function analyze(data: BusinessData, window: DateWindow) {
     channels: group((o) =>
       o.discount?.partnerId
         ? "Partners"
-        : o.discount?.code
+        : orderCode(o)
           ? "Other promo codes"
           : "Unattributed",
     ),
-    codes: group((o) => o.discount?.code ?? "No code"),
+    codes: group((o) => orderCode(o) ?? "No code"),
     states: group((o) => o.address.region || "Unknown"),
     payments: group((o) => o.paymentProvider || "Provider not recorded"),
   };

@@ -33,8 +33,8 @@ export function insurancePrice(base: number, settings: StorefrontSettings, opted
     ? fractionOfMoney(base, Math.round((settings.insuranceRate ?? 0) * 100000), 100000) : 0;
 }
 
-export function priceQuote(subtotal: number, percent: number, method: ShippingMethod | null, settings: StorefrontSettings, optedIn = false, address?: Address | null, rates: TaxRate[] = []) {
-  const discountAmount = fractionOfMoney(subtotal, Math.round(percent * 100), 10000);
+export function priceQuote(subtotal: number, percent: number, method: ShippingMethod | null, settings: StorefrontSettings, optedIn = false, address?: Address | null, rates: TaxRate[] = [], benefitAmount?: number) {
+  const discountAmount = benefitAmount ?? fractionOfMoney(subtotal, Math.round(percent * 100), 10000);
   const base = roundMoney(subtotal - discountAmount);
   const shipping = method ? shippingPrice(base, method, settings) : 0;
   const insuranceApplied = settings.insuranceMode === "automatic" || (settings.insuranceMode === "optional" && optedIn);

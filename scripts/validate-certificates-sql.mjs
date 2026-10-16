@@ -20,7 +20,7 @@ const checks = {};
 const pass = (name, detail) => console.log(`PASS ${name}: ${detail}`);
 const release = 'select * from public.release_lot($1,$2::jsonb,$3,$4::date,$5)';
 try {
-  assert.deepEqual(migrations.slice(-2), ['20261006000000_certificates.sql', '20261006000100_cjc_tested_size.sql']);
+  assert.deepEqual(migrations.filter(name => name.startsWith('20261006')), ['20261006000000_certificates.sql', '20261006000100_cjc_tested_size.sql']);
   // CJC (No DAC) / Ipamorelin moves to the size and lot its certificate tested; its first listing's lot stays on file.
   assert.deepEqual(await rows("select size, lot from public.products where id = 'cjc-ipa-1010-mg'"), [{ size: '5 mg / 5 mg', lot: 'TM-CJI5-2609-01' }]);
   assert.deepEqual((await rows("select lot, status from public.lots where product_id = 'cjc-ipa-1010-mg' order by lot")).map((l) => `${l.lot} ${l.status}`), ['TM-CJI10-2609-01 testing', 'TM-CJI5-2609-01 testing']);

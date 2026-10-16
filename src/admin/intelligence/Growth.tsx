@@ -1,3 +1,4 @@
+import { ConnectedMarketing, ConnectedWorkspaceLink } from "./ConnectedPrograms";
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
@@ -524,7 +525,8 @@ const initialFlows: Flow[] = [
   },
 ];
 
-export function Marketing() {
+export function Marketing() { return LIVE ? <ConnectedMarketing /> : <PreviewMarketing />; }
+function PreviewMarketing() {
   const data = useBusiness(),
     range = useDateRange();
   const [tab, setTab] = useWorkspaceTab("performance", [
@@ -588,7 +590,7 @@ export function Marketing() {
   return (
     <div className="bi-page">
       <PageHeader description="Measure recorded attribution, prepare campaigns and flows, and review consent before building an audience." />
-      <SourceNote />
+      <SourceNote /><ConnectedWorkspaceLink area="marketing" />
       <Segmented
         label="Marketing workspace"
         value={tab}

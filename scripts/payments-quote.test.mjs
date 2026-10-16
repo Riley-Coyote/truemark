@@ -41,8 +41,10 @@ const baseline=await bundle(baselineDir,'baseline');
 
 // The shopper's bag is called a cart since round 5 of the landing: the base is read with that one rename.
 const asCart=html=>html.replaceAll('Edit bag','Edit cart').replaceAll('Your bag is empty.','Your cart is empty.').replaceAll(' to your bag',' to your cart');
-test('preview checkout, confirmation and account orders render identically to base',()=>{
- for(const key of ['checkout','confirmation','ordersRender']) assert.equal(current[key](),asCart(baseline[key]()),key);
+// Conditional live-only controls can shift React useId positions; keep references consistent.
+const normalizeIds=html=>{const ids=new Map();return html.replace(/_R_[A-Za-z0-9]+_/g,id=>{if(!ids.has(id))ids.set(id,`generated-${ids.size}`);return ids.get(id);});};
+test('preview checkout, confirmation and account orders retain base markup apart from generated ids',()=>{
+ for(const key of ['checkout','confirmation','ordersRender']) assert.equal(normalizeIds(current[key]()),normalizeIds(asCart(baseline[key]())),key);
 });
 test('preview quote retains base totals, shipping, discount and insurance',()=>{
  const draft={lines:[{productId:'bpc-157-10-mg',quantity:2}],address:{region:'TX',country:'US'},shipping:'cold-2day'};
@@ -55,7 +57,7 @@ test('live adapter tax quote agrees with PostgreSQL numeric for rated, unrated a
   const rates=[{region:'TX',rate:.0625},{region:'NY',rate:.08875},{region:'DC',rate:.06}];let settings;
   const product={...current.data.products[0],id:'fixture-product',price:40,stock:null,active:true};
   const client={from(table){let found=table==='products'?[product]:table==='settings'?[{id:true,free_shipping_threshold:null,free_shipping_method:'cold-2day',insurance_mode:settings.insuranceMode,insurance_rate:settings.insuranceRate,tax_mode:settings.taxMode,tax_shipping:settings.taxShipping}]:table==='tax_rates'?rates:table==='shipping_methods'?[{id:'cold-2day',label:'Fixture delivery',detail:'Fixture',price:24,active:true}]:[];
-   const q={select(){return q;},eq(k,v){found=found.filter(r=>String(r[k])===String(v));return q;},order(){return q;},range(){return q;},returns(){return q;},then(resolve){return Promise.resolve({data:found,error:null}).then(resolve);}};return q;},rpc:async()=>({data:{percent:10,partnerName:null},error:null})};
+   const q={select(){return q;},eq(k,v){found=found.filter(r=>String(r[k])===String(v));return q;},order(){return q;},range(){return q;},returns(){return q;},then(resolve){return Promise.resolve({data:found,error:null}).then(resolve);}};return q;},rpc:async(name,args)=>({data:name==='my_checkout_benefits'?{membershipName:null,membershipAmount:0,rewardAmount:0,rewardPoints:0,promoAmount:args.promo_amount}:{percent:10,partnerName:null},error:null})};
   const adapter=current.createLiveAdapter(client);
   for(const mode of ['off','rates']) for(const shipping of [false,true]) for(const insurance of ['off','automatic']) for(const price of [.01,1.05,16.99,40,166.67,999.99]) for(const [region,country] of [['TX','US'],[' t e x a s ',' United States '],['NY','USA'],['District of Columbia','United States of America'],['California','US'],['Texas','Canada']]) {
    settings={...current.pricing.defaultSettings,freeShippingThreshold:null,insuranceMode:insurance,insuranceRate:.03755,taxMode:mode,taxShipping:shipping};product.price=price;
