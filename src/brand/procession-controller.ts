@@ -277,6 +277,9 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     paused = true; schedule();
   }
   function focus(event: FocusEvent) {
+    // A touch focuses the stage too. That is direct manipulation, not a
+    // keyboard request to stop autoplay; pointer release owns its resumption.
+    if (pointer) return;
     if (!(event.target as HTMLElement).closest('.tm-procession-play')) pauseAutoplay();
   }
   function stateChange() {
@@ -306,7 +309,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     const dx = e.clientX - pointer.x, dy = e.clientY - pointer.y;
     if (!dragging) {
       if (Math.abs(dy) > Math.abs(dx) + 6) { frozen = pointer.frozen; if (pointer.resume && paused) resumeAfterSwipe(); pointer = undefined; schedule(); return; }
-      if (Math.abs(dx) < 8) return;
+      if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy) + 6) return;
       stage.setPointerCapture(e.pointerId); dragging = true; paused = true; frozen = false;
       stage.dataset.dragging = "";
     }
@@ -352,7 +355,13 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   for (const el of [hero, plate, section, stage]) resized.observe(el);
   const observer = new MutationObserver(stateChange);
   observer.observe(opening, { attributes: true, attributeFilter: ["data-story", "data-seq"], childList: true, subtree: true });
-  const seen = new IntersectionObserver(([entry]) => { visible = entry.intersectionRatio >= .55; last = 0; schedule(); }, { threshold: [0, .55, 1] }); seen.observe(stage);
+  // Hysteresis avoids repeatedly braking at one boundary while Safari's
+  // toolbar or the presentation frame changes the visible portion of the stage.
+  const seen = new IntersectionObserver(([entry]) => {
+    const next = entry.isIntersecting && entry.intersectionRatio >= (visible ? .1 : .25);
+    if (next === visible) return;
+    visible = next; last = 0; schedule();
+  }, { threshold: [0, .1, .25, 1] }); seen.observe(stage);
   window.addEventListener("scroll", schedule, { passive: true }); window.addEventListener("resize", resize);
   document.addEventListener("visibilitychange", stateChange);
   stage.addEventListener("pointerdown", down); stage.addEventListener("pointermove", move);
