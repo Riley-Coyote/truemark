@@ -23,21 +23,22 @@ class Element extends EventTarget {
   cloneNode() { return new Element(); }
   closest() { return null; }
 }
-function fixture(scrollY = 450) {
+function fixture(scrollY = 450, touch = false) {
   let time = 0, id = 0, reported;
   const frames = new Map();
   const win = new EventTarget(); Object.assign(win, { innerWidth: 390, innerHeight: 844, scrollY, setTimeout: () => 1, clearTimeout() {} });
   const home = new Element(), opening = new Element(), hero = new Element(), plate = new Element(), stage = new Element(), section = new Element();
+  stage.rect.top = 180;
   stage.children = Array.from({length: 8}, (_, i) => { const el = new Element(); el.dataset.productId = `vial-${i}`; return el; });
   plate.children = stage.children;
-  section.closest = () => home;
+  section.closest = selector => selector === ".tm-home" ? home : null;
   home.map['.tm-mist'] = opening; opening.map['.tm-mist-stage'] = hero; hero.map['.tm-room-plate'] = plate;
   section.map['.tm-procession-stage'] = stage;
   const previous = new Map();
   const install = (name, value) => { previous.set(name, Object.getOwnPropertyDescriptor(globalThis, name)); Object.defineProperty(globalThis, name, {value, configurable:true,writable:true}); };
   install('window', win);
   install('document', Object.assign(new EventTarget(), { hidden:false, body:new Element(), createElement:()=>new Element(), querySelector:()=>null, fonts:{ready:Promise.resolve()} }));
-  install('matchMedia',()=>({matches:false}));
+  install('matchMedia',()=>({matches:touch}));
   install('getComputedStyle',()=>({height:'200',width:'390',bottom:'66',left:'0',top:'0'}));
   install('ResizeObserver',class {observe() {} disconnect() {}});
   install('MutationObserver',class {observe() {} disconnect() {}});
@@ -48,7 +49,7 @@ function fixture(scrollY = 450) {
   const tick = (n=1) => {for(let i=0;i<n;i++){time+=1000/60;const batch=[...frames.values()];frames.clear();batch.forEach(fn=>fn(time));}};
   const event = (type,x,y=120) => { const e=new Event(type,{cancelable:true});Object.assign(e,{isPrimary:true,pointerId:1,button:0,clientX:x,clientY:y});Object.defineProperty(e,'timeStamp',{value:time});(type==='pointerup'||type==='pointercancel'?win:stage).dispatchEvent(e);tick(); };
   tick();
-  return { stage, section, win, event, tick, status:()=>reported, close(){controller.destroy();for(const [name,desc] of previous) desc?Object.defineProperty(globalThis,name,desc):delete globalThis[name];} };
+  return { home, hero, stage, section, win, event, tick, status:()=>reported, close(){controller.destroy();for(const [name,desc] of previous) desc?Object.defineProperty(globalThis,name,desc):delete globalThis[name];} };
 }
 
 for (const scrollY of [100, 450, 1800]) test(`short swipe advances independently of arrival and visibility at scroll ${scrollY}`,()=>{
@@ -70,5 +71,28 @@ test('cancelled capture and vertical pan do not strand the next swipe',()=>{
   assert.equal(f.stage.dataset.dragging,undefined);
   f.event('pointerdown',200);f.event('pointermove',150);f.tick(12);f.event('pointerup',150);f.tick(120);
   assert.equal(f.status().active,3);
+ }finally{f.close();}
+});
+
+
+test('touch enables the camera, follows scroll without damping, and resets manual ownership',()=>{
+ const f=fixture(100,true);try{
+  assert.equal(f.home.hasAttribute('data-procession-still'),false);
+  const before=f.section.dataset.passage;
+  f.win.scrollY=220;f.win.dispatchEvent(new Event('scroll'));f.tick();
+  assert.notEqual(f.section.dataset.passage,before);
+  assert.equal(Number(f.section.dataset.passage),Number((220/Number(f.section.dataset.scrollEnd)).toFixed(4)));
+  f.event('pointerdown',200);f.event('pointermove',150);f.event('pointerup',150);f.tick(120);
+  assert.equal(f.home.hasAttribute('data-procession-still'),true);
+  f.win.scrollY=0;f.win.dispatchEvent(new Event('scroll'));f.tick();
+  assert.equal(f.home.hasAttribute('data-procession-still'),false);
+ }finally{f.close();}
+});
+test('touch-generated focus does not pause but keyboard focus does',()=>{
+ const f=fixture();try{
+  const touchFocus=new Event('focusin');f.section.matches=()=>false;f.section.dispatchEvent(touchFocus);f.tick();
+  assert.equal(f.status().paused,false);
+  f.section.matches=()=>true;f.section.dispatchEvent(new Event('focusin'));f.tick();
+  assert.equal(f.status().paused,true);
  }finally{f.close();}
 });

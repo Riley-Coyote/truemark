@@ -50,7 +50,7 @@ export function Procession() {
         {classes.map((c, i) => <div className="tm-procession-caption" key={c.id} aria-hidden={i !== status.active} data-selected={i === status.active ? "" : undefined}>
           <p className="tm-eyebrow">Class {String(c.position).padStart(2, "0")} <span>/</span> {String(classes.length).padStart(2, "0")}</p>
           <h3>{c.name}</h3><p className="tm-procession-members">{c.members}</p>
-          <Link className="tm-textlink" to={`/products?class=${c.id}`} tabIndex={i === status.active ? 0 : -1} onFocus={() => controller.current?.pauseAutoplay()} onPointerEnter={() => controller.current?.pauseAutoplay()}>Explore class <ArrowRight size={15} strokeWidth={1.6} /></Link>
+          <Link className="tm-textlink" to={`/products?class=${c.id}`} tabIndex={i === status.active ? 0 : -1} onPointerEnter={event => { if (event.pointerType === "mouse") controller.current?.pauseAutoplay(); }}>Explore class <ArrowRight size={15} strokeWidth={1.6} /></Link>
         </div>)}
       </div>
       <div className="tm-procession-navigation">

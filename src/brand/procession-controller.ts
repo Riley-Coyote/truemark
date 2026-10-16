@@ -55,11 +55,9 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   let heroX = 0, heroY = 0, pivotX = 0, pivotY = 0, fall = 0, lift = 0;
   let sources = new Map<string, Point>();
   const still = () => !moving || options.still;
-  // On a touch screen the page scrolls natively and the script that would carry the flight runs a frame behind it, so
-  // the carried vials and the zoomed room lag the page and pile onto its words. There the flight is grounded: the
-  // opening and the collection stand in the page and scroll with it, as with motion off, and the collection still
-  // drifts and answers a swipe.
-  const grounded = () => still() || directScroll || manual;
+  // Touch uses the same camera journey, but follows native scroll directly.
+  // Only explicit still mode or a manual collection gesture grounds the scene.
+  const grounded = () => still() || manual;
   function measure() {
     dirty = false;
     // The hero inserts its word after measuring, and replaces floor copy across
@@ -158,10 +156,10 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     const y = Math.max(0, window.scrollY), requested = clamp01(y / end);
     // Once grabbed, the collection belongs to the finger rather than the hero's
     // scroll timeline. Returning to the top restores the desktop camera.
-    if (requested === 0 && !pointer && !dragging) manual = false;
+    if ((requested === 0 || y + height < stageTop) && !pointer && !dragging) manual = false;
     // Short input damping smooths wheel steps. Never trap the document scroll or
     // replay a missed scene after a fast flick, tab switch or deep link.
-    if (grounded() || story || Math.abs(requested - passage) > .6) passage = requested;
+    if (directScroll || grounded() || story || Math.abs(requested - passage) > .6) passage = requested;
     else passage += (requested - passage) * (1 - Math.exp(-dt / .055));
     if (Math.abs(requested - passage) < .00015) passage = requested;
     const arrived = grounded() || passage >= .94;
@@ -282,7 +280,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   function focus(event: FocusEvent) {
     // A touch focuses the stage too. That is direct manipulation, not a
     // keyboard request to stop autoplay; pointer release owns its resumption.
-    if (pointer) return;
+    if (pointer || !(event.target as HTMLElement).matches(":focus-visible")) return;
     if (!(event.target as HTMLElement).closest('.tm-procession-play')) pauseAutoplay();
   }
   function stateChange() {
