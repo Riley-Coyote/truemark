@@ -54,8 +54,46 @@ try {
   await denied('authenticated',buyerUser,'select retry_shipment($1)',[retryOrder]);
   await auth(staff,'select retry_shipment($1)',[retryOrder]); assert.equal((await get(retryOrder)).attempts,0);
   checks.push_retries_and_alert = true;
+  await denied('service_role',null,'select system_record_shipping_label($1,$2,$3,$4,$5,$6,$7)',
+    [retryOrder,'UPS','Standard','1ZSIM0123456789ABC',null,'simulator','export-race'],'40001');
+  assert.equal(await scalar("select count(*) from shipping_events where event_id='label:export-race'"),0);
   await claim(); await rpc('system_shipment_pushed','$1,$2',[retry.id,'sim_or_fixture']);
   const args = [retryOrder,'UPS','Cold two day','1ZSIM0123456789ABC','2026-10-05T14:00:00Z','simulator','sim_sh_event'];
+  const labelArgs = [...args];
+  const label = () => rpc('system_record_shipping_label','$1,$2,$3,$4,$5,$6,$7',labelArgs);
+  assert.equal((await label())[0].system_record_shipping_label.outcome,'applied');
+  assert.equal((await label())[0].system_record_shipping_label.outcome,'duplicate');
+  assert.equal(await scalar('select status from orders where id=$1',[retryOrder]),'paid');
+  assert.equal((await get(retryOrder)).status,'pushed');
+  assert.equal((await get(retryOrder)).shipped_at,null);
+  assert.equal((await get(retryOrder)).provider_shipment_id,'sim_sh_event');
+  assert.equal(await scalar("select count(*) from notifications where kind='order.shipped' and href='/account/orders/'||$1::text",[retryOrder]),0);
+  assert.equal(await scalar("select count(*) from order_events where order_id=$1 and status='shipped'",[retryOrder]),0);
+  assert.equal((await auth(buyerUser,'select tracking from orders where id=$1',[retryOrder]))[0].tracking,args[3]);
+  const oldLabel = [...args]; oldLabel[4]='2026-10-04T00:00:00Z'; oldLabel[6]='old-label'; oldLabel[3]='old-tracking';
+  assert.equal((await rpc('system_record_shipping_label','$1,$2,$3,$4,$5,$6,$7',oldLabel))[0].system_record_shipping_label.outcome,'ignored');
+  assert.equal((await get(retryOrder)).tracking,args[3]);
+  for (const user of [owner,staff,buyerUser,partner]) await denied('authenticated',user,'select system_record_shipping_label($1,$2,$3,$4,$5,$6,$7)',args);
+  await denied('anon',null,'select system_record_shipping_label($1,$2,$3,$4,$5,$6,$7)',args);
+  const invalid = [...args]; invalid[3]=''; invalid[6]='invalid-label';
+  await denied('service_role',null,'select system_record_shipping_label($1,$2,$3,$4,$5,$6,$7)',invalid,'22023');
+  // Void, replay and replacement must not resurrect an obsolete label.
+  const voidArgs=[retryOrder,'simulator','sim_sh_event'];
+  assert.equal((await rpc('system_void_shipping_label','$1,$2,$3',voidArgs))[0].system_void_shipping_label.outcome,'applied');
+  assert.equal((await get(retryOrder)).label_created_at,null);
+  assert.equal(await scalar('select tracking from orders where id=$1',[retryOrder]),null);
+  assert.equal((await label())[0].system_record_shipping_label.outcome,'duplicate');
+  assert.equal((await get(retryOrder)).tracking,null);
+  const replacement=[...args]; replacement[6]='replacement-label';
+  assert.equal((await rpc('system_record_shipping_label','$1,$2,$3,$4,$5,$6,$7',replacement))[0].system_record_shipping_label.outcome,'applied');
+  assert.equal((await rpc('system_void_shipping_label','$1,$2,$3',voidArgs))[0].system_void_shipping_label.outcome,'duplicate');
+  assert.equal((await get(retryOrder)).provider_shipment_id,'replacement-label');
+  // A void received before its creation event also prevents that label being used.
+  await rpc('system_void_shipping_label','$1,$2,$3',[retryOrder,'simulator','void-before-create']);
+  const voided=[...args]; voided[6]='void-before-create';
+  assert.equal((await rpc('system_record_shipping_label','$1,$2,$3,$4,$5,$6,$7',voided))[0].system_record_shipping_label.outcome,'ignored');
+  assert.equal((await get(retryOrder)).provider_shipment_id,'replacement-label');
+  checks.label_is_not_shipment = true;
   const mark = () => rpc('system_mark_shipped','$1,$2,$3,$4,$5,$6,$7',args);
   assert.equal((await mark())[0].system_mark_shipped.outcome,'applied');
   const snapshot = await scalar('select jsonb_build_object(\'order\',(select to_jsonb(o) from orders o where id=$1),\'shipment\',(select to_jsonb(s) from shipments s where order_id=$1),\'events\',(select jsonb_agg(e) from order_events e where order_id=$1),\'notices\',(select jsonb_agg(n) from notifications n where href=\'/account/orders/\'||$1::text))',[retryOrder]);
@@ -75,6 +113,16 @@ try {
   assert.equal((await get(retryOrder)).status,'delivered');
   assert.equal(await scalar("select body from notifications where kind='order.delivered' and href='/account/orders/'||$1::text",[retryOrder]),'Certificates for each lot are in your account.');
   checks.delivered_scan = true;
+  const lateLabel = [...args]; lateLabel[6]='late-label'; lateLabel[3]='different-tracking';
+  assert.equal((await rpc('system_record_shipping_label','$1,$2,$3,$4,$5,$6,$7',lateLabel))[0].system_record_shipping_label.outcome,'ignored');
+  assert.equal((await get(retryOrder)).status,'delivered');
+  assert.equal((await get(retryOrder)).tracking,args[3]);
+  const cancelledLabel = [...args]; cancelledLabel[0]=paid; cancelledLabel[6]='cancelled-label';
+  assert.equal((await rpc('system_record_shipping_label','$1,$2,$3,$4,$5,$6,$7',cancelledLabel))[0].system_record_shipping_label.outcome,'ignored');
+  assert.equal((await get(paid)).status,'cancelled');
+  assert.equal((await rpc('system_record_shipping_label','$1,$2,$3,$4,$5,$6,$7',cancelledLabel))[0].system_record_shipping_label.outcome,'duplicate');
+  assert.equal(await scalar("select count(*) from notifications where title='A cancelled order has a label'"),2);
+
 
   const edit = "select upsert_shipping_method($1,$2,$3,$4,$5)";
   const value = ['cold-2day','Cold two day','Cold pack',0,true];
@@ -99,8 +147,8 @@ try {
     await denied('authenticated',owner,`delete from ${table}`);
     await denied('service_role',null,`delete from ${table}`);
   }
-  const functions = await rows("select p.oid::regprocedure::text as signature, p.prosecdef, p.proconfig from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('system_queue_shipment','system_claim_shipments','system_shipment_pushed','system_shipment_cancelled','system_shipment_failed','system_mark_shipped','system_mark_delivered','system_create_simulated_label','retry_shipment','upsert_shipping_method')");
-  assert.equal(functions.length,10);
+  const functions = await rows("select p.oid::regprocedure::text as signature, p.prosecdef, p.proconfig from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('system_queue_shipment','system_claim_shipments','system_shipment_pushed','system_shipment_cancelled','system_shipment_failed','system_mark_shipped','system_record_shipping_label','system_void_shipping_label','system_mark_delivered','system_create_simulated_label','retry_shipment','upsert_shipping_method')");
+  assert.equal(functions.length,12);
   for (const f of functions) {
     assert.ok(f.prosecdef); assert.ok(f.proconfig.includes('search_path=public'));
     for (const role of ['anon','authenticated','service_role']) assert.equal(await scalar('select has_function_privilege($1,$2,\'execute\')',[role,f.signature]),f.signature.startsWith('system_') ? role==='service_role' : role==='authenticated');

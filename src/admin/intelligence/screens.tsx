@@ -15,7 +15,7 @@ import {
 } from "./Operations";
 import { Traffic, Marketing, ConnectionsGuide } from "./Growth";
 import { CustomerPrograms } from "./Programs";
-import { Reviews, SearchReadiness } from "./Content";
+import { SearchReadiness } from "./Content";
 
 export const intelligenceScreens = [
   { path: "analytics", element: <SalesAnalytics /> },
@@ -29,7 +29,6 @@ export const intelligenceScreens = [
   { path: "traffic", element: <Traffic /> },
   { path: "marketing", element: <Marketing /> },
   { path: "programs", element: <CustomerPrograms /> },
-  { path: "reviews", element: <Reviews /> },
   { path: "seo", element: <SearchReadiness /> },
   { path: "integrations", element: <ConnectionsGuide /> },
   { path: "activity", element: <ActivityLog /> },

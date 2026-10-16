@@ -8,6 +8,7 @@ export function shipment(row: Row): Shipment {
   return { id: String(row.id), orderId: String(row.order_id), provider: String(row.provider), status: row.status as Shipment['status'],
     providerOrderId: nullable(row.provider_order_id), carrier: nullable(row.carrier), service: nullable(row.service), tracking: nullable(row.tracking),
     cancelRequested: row.cancel_requested === true, attempts: Number(row.attempts), nextAttemptAt: String(row.next_attempt_at),
+    labelCreatedAt: nullable(row.label_created_at), providerShipmentId: nullable(row.provider_shipment_id),
     lockedUntil: nullable(row.locked_until), lastError: nullable(row.last_error), pushedAt: nullable(row.pushed_at), shippedAt: nullable(row.shipped_at),
     deliveredAt: nullable(row.delivered_at), cancelledAt: nullable(row.cancelled_at), updatedAt: String(row.updated_at) };
 }
@@ -20,7 +21,7 @@ export function createShipping(client: SupabaseClient,
       return row ? shipment(row) : null;
     },
     async retry(orderId: string) { await rpc('retry_shipment', { order_id: orderId }); changed(); },
-    async simulate(orderId: string, action: 'label' | 'delivered') {
+    async simulate(orderId: string, action: 'label' | 'shipped' | 'delivered') {
       const { data, error } = await client.functions.invoke('shipping/simulate', { body: { orderId, action } });
       if (error) {
         const context = error.context;
@@ -30,7 +31,7 @@ export function createShipping(client: SupabaseClient,
         }
         throw error;
       }
-      changed(); return data as { status: 'shipped' | 'delivered' };
+      changed(); return data as { status: 'label_created' | 'shipped' | 'delivered' };
     },
     methods: async () => (await rows('shipping_methods')).map(method),
     async saveMethod(value: ShippingMethod) {

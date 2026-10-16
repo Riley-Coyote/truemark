@@ -1,5 +1,5 @@
 import { LIVE } from "../platform/mode";
-import { Activity, BarChart3, BookOpen, Boxes, Building2, ChartNoAxesCombined, ClipboardCheck, Coins, FlaskConical, Gauge, Handshake, HeartHandshake, Inbox, LayoutDashboard, Mail, Megaphone, NotebookTabs, PackageSearch, Receipt, SearchCheck, Settings, ShieldCheck, Star, TicketPercent, Truck, Unplug, UsersRound } from "lucide-react";
+import { Activity, BarChart3, BookOpen, Boxes, Building2, ChartNoAxesCombined, ClipboardCheck, Coins, FlaskConical, Gauge, Handshake, HeartHandshake, Inbox, LayoutDashboard, Mail, Megaphone, NotebookTabs, PackageSearch, Receipt, SearchCheck, Settings, ShieldCheck, TicketPercent, Truck, Unplug, UsersRound } from "lucide-react";
 import type { NavGroup, NavItem } from "../app-kit";
 
 export const HOME = "/admin";
@@ -32,7 +32,6 @@ export const navGroups: NavGroup[] = [
       { to: `${HOME}/products`, label: "Products & inventory", icon: Boxes },
       { to: `${HOME}/restock`, label: "Restock planning", icon: PackageSearch },
       { to: `${HOME}/discounts`, label: "Discount codes", icon: TicketPercent },
-      { to: `${HOME}/reviews`, label: "Review moderation", icon: Star },
     ],
   },
   {
@@ -95,7 +94,6 @@ const pages: Record<string, PageInfo> = {
   traffic: { title: "Traffic & funnel", search: null },
   marketing: { title: "Marketing & audience", search: null },
   programs: { title: "Customer programs", search: null },
-  reviews: { title: "Review moderation", search: null },
   seo: { title: "Search readiness", search: null },
   integrations: { title: "Integrations", search: null },
   activity: { title: "Activity log", search: null },

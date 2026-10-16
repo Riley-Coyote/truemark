@@ -1,6 +1,6 @@
 export type Row = Record<string, unknown>;
 export type ShippingOrder = Row & { order_lines: Row[]; address: Row; methodLabel: string; customerEmail: string };
-export type Shipment = { shipmentId: string; orderKey: string; orderNumber: string; carrierCode: string; serviceCode: string; trackingNumber: string; shipDate: string; voided: boolean };
+export type Shipment = { shipmentId: string; orderKey: string; orderNumber: string; carrierCode: string; serviceCode: string; trackingNumber: string; shipDate: string; labelCreatedAt?: string; voided: boolean };
 export type Provider = {
   createOrder(order: ShippingOrder): Promise<{ providerOrderId: string }>;
   cancelOrder(order: ShippingOrder): Promise<void>;
@@ -28,7 +28,7 @@ export function shipstationOrder(order: ShippingOrder, cancelled = false): Row {
       const product = line.products as Row;
       return { sku: line.product_id, name: `${product.name} ${product.size}`, quantity: line.quantity, unitPrice: Number(line.unit_price) };
     }), amountPaid: Number(order.total), shippingAmount: Number(order.shipping_price), taxAmount: Number(order.tax ?? 0),
-    requestedShippingService: order.methodLabel, internalNotes: `Cold chain. Lots: ${order.order_lines.map((line) => line.lot).join(', ')}` };
+    requestedShippingService: order.methodLabel, internalNotes: `Lots: ${order.order_lines.map((line) => line.lot).join(', ')}` };
 }
 export function createShipStation(key: string, secret: string, fetcher: typeof fetch): Provider {
   async function call(url: string, init: RequestInit = {}): Promise<Row> {
@@ -52,7 +52,7 @@ export function createShipStation(key: string, secret: string, fetcher: typeof f
       if (!Array.isArray(result.shipments)) throw new ProviderError('Invalid ShipStation response');
       return result.shipments.map((row: Row) => ({ shipmentId: String(row.shipmentId), orderKey: String(row.orderKey ?? ''), orderNumber: String(row.orderNumber ?? ''),
         carrierCode: String(row.carrierCode ?? ''), serviceCode: String(row.serviceCode ?? ''), trackingNumber: String(row.trackingNumber ?? ''),
-        shipDate: String(row.shipDate ?? ''), voided: row.voided === true }));
+        shipDate: String(row.shipDate ?? ''), labelCreatedAt: String(row.createDate ?? ''), voided: row.voided === true }));
     },
   };
 }

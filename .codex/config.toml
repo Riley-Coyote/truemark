@@ -1,0 +1,4 @@
+# Copy to .codex/config.toml in the client's trusted project folder.
+# Authenticate with the client's own Supabase account; no secret is embedded here.
+[mcp_servers.truemark_supabase]
+url = "https://mcp.supabase.com/mcp?project_ref=gydihnfzmuqmbnykaihg"

@@ -1,3 +1,4 @@
+import { Navigate } from "react-router-dom";
 import { LIVE } from "../platform/mode";
 import { TeamGate } from "../platform/live/TeamGate";
 import { OwnerAssistant } from "../assistant/Assistant";
@@ -114,6 +115,7 @@ function CommandCenter() {
         <Routes>
           <Route index element={<Overview />} />
           <Route path="orders" element={<Orders />} />
+          <Route path="reviews" element={<Navigate to="/admin/inbox" replace />} />
           <Route path="inbox" element={LIVE ? <Inbox /> : <MessageWorkspace kind="inbox" />} />
           <Route path="messages" element={LIVE ? <SentMessages /> : <MessageWorkspace kind="deliveries" />} />
           <Route path="lots" element={<Lots />} />

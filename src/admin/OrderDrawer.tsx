@@ -306,7 +306,7 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
       </Section>
 
       {LIVE && <PaymentSection order={o} />}
-      {LIVE && <ShipmentSection shipment={shipment.data} />}
+      {LIVE && <ShipmentSection shipment={shipment.data} packed={o.status === "packed"} />}
 
       <Section title="Lines">
         <ul className="cc-lines">

@@ -70,7 +70,7 @@ test('ShipStation v1 request shapes, Basic auth, countries, tax and cancel with 
     customerEmail: fixtureOrder.customerEmail, billTo: { name: 'Fixture researcher', company: 'Fixture lab', street1: '1 Fixture St', street2: 'Lab 2', city: 'Test', state: 'TX', postalCode: '12345', country: 'US', phone: '+15555550123' },
     shipTo: { name: 'Fixture researcher', company: 'Fixture lab', street1: '1 Fixture St', street2: 'Lab 2', city: 'Test', state: 'TX', postalCode: '12345', country: 'US', phone: '+15555550123' },
     items: [{ sku: 'bpc-157', name: 'BPC-157 5 mg', quantity: 2, unitPrice: 50 }], amountPaid: 124, shippingAmount: 24, taxAmount: 0,
-    requestedShippingService: 'Cold two day', internalNotes: 'Cold chain. Lots: LOT-FIXTURE' });
+    requestedShippingService: 'Cold two day', internalNotes: 'Lots: LOT-FIXTURE' });
   assert.equal(JSON.parse(String(calls[1].init.body)).orderStatus,'cancelled');
   assert.equal(JSON.parse(String(calls[1].init.body)).taxAmount,8.25);
   for (const value of ['US','usa','United States','United States of America']) assert.equal(countryCode(value),'US');
@@ -107,7 +107,7 @@ test('flush sends ShipStation push and cancellation, handles provider failure, a
   assert.equal(response.status,500); assert.ok(!(await response.text()).includes('private'));
 });
 
-test('webhook key is required, only SHIP_NOTIFY is handled, voided and foreign orders are ignored', async () => {
+test('webhook key is required, only SHIP_NOTIFY is handled, voids are recorded and foreign orders are ignored', async () => {
   const f = fakeDb('live'); const reads: string[] = [];
   const db: Db = { ...f.db, async one<T>(path: string) { if (path.startsWith('orders') && !path.includes(id)) return null; return f.db.one<T>(path); } };
   const deps = makeDeps({ db, fetch:(async (input) => { reads.push(String(input)); return Response.json({shipments:[
@@ -120,9 +120,11 @@ test('webhook key is required, only SHIP_NOTIFY is handled, voided and foreign o
   assert.equal((await handler(request(`/webhook?key=${deps.webhookKey}`,{resource_type:'OTHER'}))).status,200);
   assert.equal(reads.length,0);
   assert.equal((await handler(request(`/webhook?key=${deps.webhookKey}`,payload))).status,200);
-  const marks = f.calls.filter((c) => c.name==='system_mark_shipped'); assert.equal(marks.length,1);
+  assert.ok(!f.calls.some((c) => c.name==='system_mark_shipped'));
+  const marks = f.calls.filter((c) => c.name==='system_record_shipping_label'); assert.equal(marks.length,1);
   assert.equal(marks[0].args?.carrier,'FedEx'); assert.equal(marks[0].args?.event_id,'fixture-1');
-  f.fail('system_mark_shipped');
+  assert.equal(f.calls.filter((c) => c.name==='system_void_shipping_label').length,1);
+  f.fail('system_record_shipping_label');
   assert.equal((await handler(request(`/webhook?key=${deps.webhookKey}`,payload))).status,500);
 });
 
@@ -157,7 +159,7 @@ test('off flush and webhook leave manual shipping untouched; OPTIONS is availabl
   for (const path of ['/flush','/webhook','/simulate','/sim/resource']) assert.equal((await handler(new Request(`https://fixture/shipping${path}`,{method:'OPTIONS'}))).status,204);
 });
 
-test('label -> signed resource -> SHIP_NOTIFY -> shipped and delivered use real local SQL over injected HTTP', async () => {
+test('label stays paid; packing then a separate carrier scan ship and deliver using real local SQL', async () => {
   const h = await createPlatformDb();
   try {
     const owner=await h.person('server-owner@shipping.fixture','owner');
@@ -201,11 +203,20 @@ test('label -> signed resource -> SHIP_NOTIFY -> shipped and delivered use real 
     assert.equal(await h.scalar('select status from shipments where order_id=$1',[orderId]),'pushed');
     const headers={authorization:'Bearer fixture-owner-token'};
     const label=await handler(request('/simulate',{orderId,action:'label'},headers));
-    assert.equal(label.status,200,await label.clone().text()); assert.deepEqual(await label.json(),{status:'shipped'});
+    assert.equal(label.status,200,await label.clone().text()); assert.deepEqual(await label.json(),{status:'label_created'});
     assert.ok(http.includes('/functions/v1/shipping/webhook')); assert.ok(http.includes('/functions/v1/shipping/sim/resource'));
     const tracking=await h.scalar('select tracking from shipments where order_id=$1',[orderId]);
     assert.equal((await frontend('live')).trackingError('UPS',tracking),undefined);
     assert.match(await h.scalar('select id from simulated_labels'),/^sim_sh_[0-9a-f]{24}$/);
+    assert.equal(await h.scalar('select status from orders where id=$1',[orderId]),'paid');
+    assert.equal(await h.scalar('select status from shipments where order_id=$1',[orderId]),'pushed');
+    assert.equal(await h.scalar("select count(*) from notifications where kind='order.shipped'"),0);
+    assert.equal((await handler(request('/simulate',{orderId,action:'shipped'},headers))).status,400);
+    assert.equal((await handler(request('/simulate',{orderId,action:'delivered'},headers))).status,400);
+    assert.equal((await handler(request('/simulate',{orderId,action:'label'},headers))).status,400);
+    await h.db.query("update orders set status='packed' where id=$1",[orderId]);
+    assert.equal((await handler(request('/simulate',{orderId,action:'shipped'},headers))).status,200);
+    assert.equal((await handler(request('/simulate',{orderId,action:'shipped'},headers))).status,400);
     assert.equal(await h.scalar("select count(*) from notifications where kind='order.shipped'"),1);
     assert.equal((await handler(request('/simulate',{orderId,action:'delivered'},headers))).status,200);
     assert.equal(await h.scalar('select status from orders where id=$1',[orderId]),'delivered');
@@ -261,7 +272,7 @@ function frontend(mode: string, baseline = false) {
       export { trackingError };
       export const settings = () => renderToStaticMarkup(h(MemoryRouter, {}, h(AppearanceProvider, {}, h(Settings))));
       export const fulfilment = (order, shipment) => renderToStaticMarkup(h(Fulfilment, { order, shipment, onDone() {} }));
-      export const section = (shipment) => renderToStaticMarkup(h(ShipmentSection, { shipment }));
+      export const section = (shipment, packed = false) => renderToStaticMarkup(h(ShipmentSection, { shipment, packed }));
     ` }, outfile, bundle: true, format: 'esm', platform: 'node', jsx: 'automatic', loader: { '.css': 'empty' },
       banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
       define: { 'import.meta.env': JSON.stringify({ VITE_PLATFORM: mode, BASE_URL: '/', PROD: false }), 'process.env.NODE_ENV': '\"production\"' }, logLevel: 'silent',
@@ -278,22 +289,39 @@ function frontend(mode: string, baseline = false) {
   })());
   return frontCache.get(key)!;
 }
-test('preview settings and fulfilment render identically to HEAD; live shipping renders only the specified states and controls', async () => {
+test('packing requires label details; live shipment transitions have no manual shipped button', async () => {
   const current = await frontend('preview'), before = await frontend('preview',true), live = await frontend('live');
   assert.equal(current.settings(), before.settings());
-  for (const status of ['placed','paid','packed','shipped']) {
-    const order = { id, number:'TM-10501', status };
-    assert.equal(current.fulfilment(order),before.fulfilment(order));
+  const paid = { id, number:'TM-10501', status:'paid' };
+  assert.ok(current.fulfilment(paid).includes('Print label (simulated)'));
+  assert.ok(!live.fulfilment(paid, {status:'pushed',provider:'shipstation'}).includes('Mark packed'));
+  assert.ok(live.fulfilment(paid, {status:'pushed',provider:'shipstation'}).includes('Print label in ShipStation'));
+  assert.ok(live.fulfilment(paid, {status:'pushed',provider:'shipstation',labelCreatedAt:'2026-10-16'}).includes('Mark packed'));
+  for (const status of ['pushed','failed','cancelled']) {
+    const output = live.fulfilment({ id, number:'TM-10501', status:'packed' }, {status,labelCreatedAt:'2026-10-16'});
+    assert.ok(output.includes('awaiting carrier confirmation'));
+    assert.ok(!output.includes('Mark shipped'));
+    assert.ok(!output.includes('Enter tracking by hand'));
   }
-  const order = { id, number:'TM-10501', status:'packed' };
-  assert.ok(live.fulfilment(order, {status:'pushed'}).includes('Enter tracking by hand'));
-  assert.ok(live.fulfilment(order, {status:'failed'}).includes('Mark shipped'));
-  assert.ok(live.fulfilment(order, {status:'cancelled'}).includes('Mark shipped'));
+  assert.ok(live.fulfilment({id,number:'TM-10501',status:'packed'}, {status:'pushed',provider:'shipstation',labelCreatedAt:null}).includes('Print label in ShipStation'));
   assert.equal(live.section(null),'');
   for (const [status, text] of [['queued','Sending to ShipStation.'],['pushed','In ShipStation, awaiting a label.'],['cancelled','Removed from ShipStation.'],['delivered','Delivered'],['failed',"Couldn&#x27;t reach ShipStation"]]) {
     assert.ok(live.section({status,provider:'simulator',lastError:'fixture',deliveredAt:'2026-10-05T12:00:00Z'}).includes(text));
   }
-  assert.ok(live.section({status:'pushed',provider:'simulator'}).includes('Print label (simulated)'));
-  assert.ok(live.section({status:'shipped',provider:'simulator',carrier:'UPS',tracking:'1ZSIM0123456789ABC',service:'Cold'}).includes('Simulate delivery scan'));
-  assert.ok(!live.section({status:'pushed',provider:'shipstation'}).includes('Print label (simulated)'));
+  const labelled = {status:'pushed',provider:'simulator',labelCreatedAt:'2026-10-16',tracking:'1ZSIM0000000000000'};
+  assert.ok(live.section(labelled).includes('Label ready'));
+  assert.ok(!live.section(labelled).includes('Simulate carrier pickup'));
+  assert.ok(live.section(labelled,true).includes('Simulate carrier pickup'));
+  assert.ok(live.section({status:'shipped',provider:'simulator',carrier:'UPS',tracking:'1ZSIM0123456789ABC',service:'Standard'}).includes('Simulate delivery scan'));
+  assert.ok(!live.section({...labelled,provider:'shipstation'},true).includes('Simulate carrier pickup'));
+});
+
+test('provider failures return a retryable response instead of acknowledging a lost label', async () => {
+  const f = fakeDb('live');
+  const deps = makeDeps({db:f.db,fetch:(async()=>new Response('',{status:502})) as typeof fetch});
+  const response = await createHandler(deps)(request(`/webhook?key=${deps.webhookKey}`,{
+    resource_type:'SHIP_NOTIFY',resource_url:'https://ssapi.shipstation.com/shipments?fixture=1',
+  }));
+  assert.equal(response.status,503);
+  assert.ok(!f.calls.some((c)=>c.name==='system_record_shipping_label' || c.name==='system_mark_shipped'));
 });

@@ -5,6 +5,12 @@ center and contextual chat. The approved landing is integrated with the platform
 activation still requires host/service configuration and acceptance; real payment processing
 is a separate integration.
 
+## Mason and Codex: start here
+
+Read [the owner handoff](docs/owner-handoff/START_HERE.md). It covers the project, current implementation, remaining decisions, account setup and how Codex should work with Mason. Root `AGENTS.md` directs Codex there automatically. For the first chat, use [this short introduction](docs/owner-handoff/FIRST_PROMPT.md).
+
+The shipping correction and owner handoff are included in this source. Publishing source does not apply database migrations, deploy server functions, activate providers or rebuild the pinned Studio release. See [shipping rollout notes](docs/platform/SHIPPING-WORKFLOW-UPDATE.md) before deploying these changes.
+
 ## Local development
 
 Use Node 22 and the lockfile:

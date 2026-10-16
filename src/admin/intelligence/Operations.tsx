@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   Button,
@@ -8,7 +8,10 @@ import {
   Segmented,
   formatDate,
   formatDateTime,
+  statusLabel,
 } from "../../app-kit";
+import { OrderDrawer } from "../OrderDrawer";
+import { useQueryParam } from "../state";
 import { LIVE } from "../../platform/mode";
 import { live } from "../../platform/live/runtime";
 import {
@@ -332,8 +335,10 @@ export function Restock() {
   );
 }
 
-export function ShippingDesk() {
+export function ShippingDesk({ renderOrder }: { renderOrder?: (id: string, onClose: () => void) => ReactNode } = {}) {
   const data = useBusiness();
+  const [openId, setOpenId] = useQueryParam("order");
+  const closeOrder = () => setOpenId(null, { replace: true });
   const [tab, setTab] = useState("ready"),
     [selected, setSelected] = useState<string[]>([]),
     [numbers, setNumbers] = useState(""),
@@ -346,6 +351,8 @@ export function ShippingDesk() {
   const category = (o: (typeof data.orders)[number]) =>
     ["shipped", "delivered"].includes(o.status)
       ? "shipped"
+      : o.status === "packed"
+        ? "packed"
       : readyToShip(o)
         ? "ready"
         : "held";
@@ -452,6 +459,11 @@ export function ShippingDesk() {
             note: "Captured orders with a usable address",
           },
           {
+            label: "Packed · awaiting carrier",
+            value: data.orders.filter((o) => category(o) === "packed").length,
+            note: "Ready for handoff, not yet shipped",
+          },
+          {
             label: "Shipped / delivered",
             value: data.orders.filter((o) => category(o) === "shipped").length,
             note: "Based on recorded order states",
@@ -471,7 +483,8 @@ export function ShippingDesk() {
             value={tab}
             onChange={setTab}
             options={[
-              { value: "ready", label: "Ready" },
+              { value: "ready", label: "Ready to pack" },
+              { value: "packed", label: "Packed" },
               { value: "shipped", label: "Shipped" },
               { value: "held", label: "Held" },
               { value: "all", label: "All" },
@@ -548,7 +561,7 @@ export function ShippingDesk() {
             {
               key: "order",
               label: "Order",
-              get: (o) => <OrderLink id={o.id}>{o.number}</OrderLink>,
+              get: (o) => <button type="button" className="bi-link" onClick={() => setOpenId(o.id)}>{o.number}</button>,
               sort: (o) => o.number,
             },
             {
@@ -566,7 +579,7 @@ export function ShippingDesk() {
             {
               key: "status",
               label: "Status",
-              get: (o) => o.status,
+              get: (o) => statusLabel(o.status),
               sort: (o) => o.status,
             },
             {
@@ -613,7 +626,7 @@ export function ShippingDesk() {
                 key: "number",
                 label: "Order",
                 get: (r) =>
-                  r.id ? <OrderLink id={r.id}>{r.number}</OrderLink> : r.number,
+                  r.id ? <button type="button" className="bi-link" onClick={() => setOpenId(r.id!)}>{r.number}</button> : r.number,
               },
               { key: "status", label: "Current result", get: (r) => r.status },
               {
@@ -650,6 +663,7 @@ export function ShippingDesk() {
           </p>
         )}
       </Card>
+      {openId && (renderOrder ? renderOrder(openId, closeOrder) : <OrderDrawer key={openId} id={openId} onClose={closeOrder} />)}
     </div>
   );
 }

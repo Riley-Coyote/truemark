@@ -71,16 +71,22 @@ export function createHandler(deps: Deps) {
           const provider = connection.mode === 'simulated' ? simulator : shipstation;
           const shipments = await provider.fetchShipments(String(payload.resource_url ?? ''));
           for (const s of shipments) {
-            if (s.voided || !isUuid(s.orderKey)) continue;
+            if (!isUuid(s.orderKey)) continue;
             const ours = await db.one<Row>(`orders?id=eq.${s.orderKey}&select=*&limit=1`);
             if (!ours) continue;
-            await db.rpc('system_mark_shipped', { order_id: s.orderKey, carrier: carrierLabel(s.carrierCode), service: s.serviceCode,
-              tracking: s.trackingNumber, shipped_at: s.shipDate, provider: connection.mode === 'simulated' ? 'simulator' : 'shipstation', event_id: s.shipmentId });
+            if (s.voided) {
+              await db.rpc('system_void_shipping_label', { order_id: s.orderKey,
+                provider: connection.mode === 'simulated' ? 'simulator' : 'shipstation', event_id: s.shipmentId });
+              continue;
+            }
+            await db.rpc('system_record_shipping_label', { order_id: s.orderKey, carrier: carrierLabel(s.carrierCode), service: s.serviceCode,
+              tracking: s.trackingNumber, label_created_at: s.labelCreatedAt || deps.now().toISOString(), provider: connection.mode === 'simulated' ? 'simulator' : 'shipstation', event_id: s.shipmentId });
           }
           await reportStatus(db, 'shipping', true);
         } catch (error) {
           if (error instanceof DbError) throw error;
           await reportStatus(db, 'shipping', false, error instanceof ProviderError ? error.message : 'ShipStation request failed');
+          return message(503, 'Shipping label details could not be retrieved.');
         }
         return json(200, {});
       }
@@ -92,7 +98,7 @@ export function createHandler(deps: Deps) {
         const shipments = await Promise.all(labels.map(async (label) => {
           const o = await db.one<Row>(`orders?id=eq.${label.order_id}&select=*&limit=1`);
           return { shipmentId: label.id, orderKey: label.order_id, orderNumber: o?.number,
-            carrierCode: label.carrier, serviceCode: label.service, trackingNumber: label.tracking, shipDate: label.created_at, voided: false };
+            carrierCode: label.carrier, serviceCode: label.service, trackingNumber: label.tracking, shipDate: label.created_at, labelCreatedAt: label.created_at, voided: false };
         }));
         return json(200, { shipments });
       }
@@ -101,15 +107,25 @@ export function createHandler(deps: Deps) {
         if (!isTeam(caller)) return message(403, 'Team access required.');
         if ((await readConnection(db, 'shipping')).mode !== 'simulated') return message(400, 'Shipping is not simulated.');
         const payload = await body(req);
-        if (!isUuid(payload.orderId) || !['label', 'delivered'].includes(String(payload.action))) return message(400, 'Invalid simulation.');
+        if (!isUuid(payload.orderId) || !['label', 'shipped', 'delivered'].includes(String(payload.action))) return message(400, 'Invalid simulation.');
         const s = await db.one<Row>(`shipments?order_id=eq.${payload.orderId}&select=*&limit=1`);
         if (!s || s.provider !== 'simulator' || s.cancel_requested) return message(400, 'Shipment unavailable.');
+        if (payload.action === 'shipped') {
+          const o = await order(String(payload.orderId));
+          if (o.status !== 'packed' || s.status !== 'pushed' || !s.label_created_at || !s.tracking)
+            return message(400, 'Print the label and confirm packing before the carrier scan.');
+          const result = await db.rpc<Row>('system_mark_shipped', { order_id: payload.orderId,
+            carrier: s.carrier, service: s.service, tracking: s.tracking,
+            shipped_at: deps.now().toISOString(), provider: 'simulator', event_id: `sim_ship_${payload.orderId}` });
+          if (result.outcome !== 'applied' && result.outcome !== 'duplicate') return message(400, 'The shipment changed. Refresh and try again.');
+          return json(200, { status: 'shipped' });
+        }
         if (payload.action === 'delivered') {
           if (s.status !== 'shipped') return message(400, 'The shipment must be shipped.');
           await db.rpc('system_mark_delivered', { order_id: payload.orderId, delivered_at: deps.now().toISOString(), provider: 'simulator', event_id: `sim_dl_${payload.orderId}` });
           return json(200, { status: 'delivered' });
         }
-        if (s.status !== 'pushed') return message(400, 'The shipment must be pushed.');
+        if (s.status !== 'pushed' || s.label_created_at) return message(400, 'The shipment must be pushed.');
         if (!deps.simSecret || deps.webhookKey.length < 32) return message(503, 'Shipping simulator configuration missing.');
         const batch = hex(deps.random(12));
         const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -121,8 +137,8 @@ export function createHandler(deps: Deps) {
         });
         if (!response.ok) return message(500, 'The label could not be processed.');
         const saved = await db.one<Row>(`shipments?order_id=eq.${payload.orderId}&select=*&limit=1`);
-        if (saved?.status !== 'shipped') return message(500, 'The label could not be processed.');
-        return json(200, { status: 'shipped' });
+        if (!saved?.label_created_at) return message(500, 'The label could not be processed.');
+        return json(200, { status: 'label_created' });
       }
       return message(404, 'Not found');
     } catch (error) {
