@@ -232,7 +232,11 @@ const inquiriesValid = (v: unknown): v is Inquiry[] =>
       numeric(r.units),
   );
 
-export function CustomerPrograms() { return LIVE ? <ConnectedPrograms /> : <PreviewCustomerPrograms />; }
+export function CustomerPrograms() {
+  const [params] = useSearchParams();
+  const planning = ["wholesale", "import"].includes(params.get("tab") ?? "");
+  return LIVE && !planning ? <ConnectedPrograms /> : <PreviewCustomerPrograms />;
+}
 function PreviewCustomerPrograms() {
   const data = useBusiness(),
     [params, setParams] = useSearchParams();
@@ -405,7 +409,7 @@ function PreviewCustomerPrograms() {
                 />{" "}
                 Include rewards in the launch plan
               </label>
-              <ConnectedWorkspaceLink area="programs" />
+              {!LIVE && <ConnectedWorkspaceLink area="programs" />}
       <DeviceNote warning={rulesWarning} />
             </Card>
             <Card title="Redemption simulator">

@@ -21,7 +21,7 @@ import type {
 } from "../../platform/live/programs";
 import { analyze } from "./model";
 import { Kpis, useDateRange, NumberField, Table, useBusiness } from "./shared";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { contactImport } from "./workflows";
 
 const CONNECTED = "https://riley-coyote.github.io/truemark/live/";
@@ -162,6 +162,10 @@ export function ConnectedPrograms({
           { value: "ledger", label: "Point ledger" },
         ]}
       />
+      <nav className="bi-toolbar" aria-label="Other customer tools">
+        <Link className="bi-link" to="/admin/programs?tab=wholesale">Wholesale planning ↗</Link>
+        <Link className="bi-link" to="/admin/programs?tab=import">Customer import plan ↗</Link>
+      </nav>
       {action.notice}
       {!owner && (
         <p className="bi-small">
