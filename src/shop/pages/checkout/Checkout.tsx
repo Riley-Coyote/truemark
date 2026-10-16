@@ -720,14 +720,20 @@ export default function Checkout() {
         </div>
 
         <div className="tm-steps">
-        {LIVE && verified && wallet.data && <section className="tm-step" aria-label="Checkout benefits">
+        {LIVE && verified && <section className="tm-step" aria-label="Checkout benefits">
           <h2 className="tm-step-title">Rewards & membership</h2>
           <div className="tm-step-body">
-          <p className="tm-step-note">{wallet.data.tier ? `${wallet.data.tier.name} · ${wallet.data.tier.discount}% member benefit. ` : ''}{wallet.data.available.toLocaleString()} points available. The larger of your membership benefit or promotion applies, then eligible reward credit.</p>
-          {wallet.data.settings.rewards_enabled && <label className="tm-field">Points to redeem (minimum {wallet.data.settings.min_points}; {wallet.data.settings.points_per_dollar} points = $1)
+          {heldOrder ? <p className="tm-step-note">Your benefits are reserved on order {heldOrder.number}. The order summary shows its saved pricing.</p> : <>
+          {wallet.data && <p className="tm-step-note">{wallet.data.tier ? `${wallet.data.tier.name} · ${wallet.data.tier.discount}% member benefit. ` : ''}{wallet.data.available.toLocaleString()} points available. The larger of your membership benefit or promotion applies, then eligible reward credit.</p>}
+          {wallet.loading && !wallet.data && <p className="tm-step-note" role="status">Loading your benefits…</p>}
+          {wallet.data?.settings.rewards_enabled && <label className="tm-field">Points to redeem (minimum {wallet.data.settings.min_points}; {wallet.data.settings.points_per_dollar} points = $1)
             <input aria-label="Points to redeem" type="number" min={0} max={wallet.data.available} step={wallet.data.settings.points_per_dollar} value={rewardPoints} disabled={placing || heldOrder!==null} onChange={e=>setRewardPoints(Math.max(0,Math.trunc(Number(e.target.value)||0)))}/>
           </label>}
-          {benefits.error && <p role="alert">{benefits.error.message} Reduce the points or set them to zero.</p>}
+          {(wallet.error || benefits.error) && <div role="alert">
+            <p className="tm-step-note">Your current benefits could not be loaded. {(benefits.error ?? wallet.error)?.message}{rewardPoints > 0 ? " Reduce the points or set them to zero if they are unavailable." : ""}</p>
+            <button type="button" className="tm-text-button" disabled={placing || wallet.loading || benefits.loading} onClick={() => { wallet.reload(); benefits.reload(); }}>Retry benefits</button>
+          </div>}
+          </>}
           <p className="tm-step-fine"><Link to="/account/programs">View your points and program rules</Link></p>
           </div>
         </section>}

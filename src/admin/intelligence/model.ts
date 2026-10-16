@@ -88,10 +88,9 @@ export function orderMoney(order: Order) {
   const refund = paid
     ? clamp(
         cents(
-          order.refunded ??
-            (order.payment === "refunded" || order.status === "refunded"
-              ? order.total
-              : 0),
+          order.payment === "refunded" || order.status === "refunded"
+            ? order.total
+            : order.refunded ?? 0,
         ),
         0,
         amount,

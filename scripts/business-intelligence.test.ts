@@ -122,6 +122,30 @@ test("full refunds with no explicit refunded field retain gross and contribute z
   assert.equal(m.refund, 109);
   assert.equal(m.revenue, 0);
 });
+test("a completed refund overrides a stale zero or partial refund amount across reports", () => {
+  for (const refunded of [0, 54.5]) {
+    for (const status of [
+      { payment: "refunded" as const, status: "refunded" as const },
+      { payment: "captured" as const, status: "refunded" as const },
+    ]) {
+      const order = makeOrder("refunded", { ...status, refunded });
+      const report = analyze(
+        fixture([order]),
+        dateWindow("2026-09-01", "2026-09-25"),
+      );
+      assert.equal(report.current.refunds, order.total);
+      assert.equal(report.current.revenue, 0);
+      assert.equal(report.current.tax, 0);
+      assert.equal(report.products[0].net, 0);
+      const data = fixture([order]);
+      assert.equal(
+        businessSummary({ ...data, products: [], partners: [] }, "30d", data.asOf, true).revenue,
+        0,
+      );
+      assert.equal(readyToShip(order), false);
+    }
+  }
+});
 test("discount/refund allocation of product cents reconciles for uneven multiple lines", () => {
   const order = makeOrder("1", {
     lines: [
