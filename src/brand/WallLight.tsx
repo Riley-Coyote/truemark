@@ -23,6 +23,8 @@ export function WallLight() {
     const light = startWallLight(node, () => top, !moving);
     if (!light) return;
     const seen = new Set<Element>();
+    const touch = matchMedia('(max-width: 700px), (any-pointer: coarse)').matches;
+    let scrolling = false, scrollRest = 0;
     // The wall is in sight below the header only: what lies under the header is the header's.
     const header = document.querySelector(".tm-header")?.getBoundingClientRect().bottom ?? 0;
     const watch = new IntersectionObserver((entries) => {
@@ -30,7 +32,7 @@ export function WallLight() {
         if (entry.isIntersecting) seen.add(entry.target);
         else seen.delete(entry.target);
       }
-      light.setActive(seen.size > 0);
+      light.setActive(seen.size > 0 && !scrolling);
       // With none of the wall in sight the light is put away (home.css): Safari reads a fixed layer at the screen's
       // foot as the colour under its toolbar, and keeps the one it first read, so at the page's end the footer's own
       // colour would never show there.
@@ -42,12 +44,17 @@ export function WallLight() {
       light.redraw();
     });
     if (opening) sized.observe(opening);
-    const scrolled = () => light.redraw();
-    if (!moving) window.addEventListener("scroll", scrolled, { passive: true });
+    const scrolled = () => {
+      if (!touch) { light.redraw(); return; }
+      if (!scrolling) { scrolling = true; light.setActive(false); }
+      window.clearTimeout(scrollRest);
+      scrollRest = window.setTimeout(() => { scrolling = false; light.setActive(seen.size > 0); }, 180);
+    };
+    if (touch || !moving) window.addEventListener("scroll", scrolled, { passive: true });
     return () => {
       watch.disconnect();
       sized.disconnect();
-      window.removeEventListener("scroll", scrolled);
+      window.removeEventListener("scroll", scrolled); window.clearTimeout(scrollRest);
       light.stop();
     };
   }, [moving]);

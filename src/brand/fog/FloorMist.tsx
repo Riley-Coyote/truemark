@@ -161,9 +161,10 @@ export function FloorMist({ scene, still, ambient, zoom = 1, tune, fallback = nu
       if (live) setFailed(reason);
     };
     // Moving or waiting to move: hold still. Otherwise run (on screen and in a seen tab; the mist sees to that).
+    let scrolling = false, scrollRest = 0;
     const sync = () => {
       if (!host.mist) return;
-      if (held(el)) host.mist.fog.pause();
+      if (held(el) || scrolling) host.mist.fog.pause();
       else host.mist.fog.resume();
     };
     /** Make the mist: at once as the page first loads, or, while a camera move runs, once it has settled and the
@@ -259,12 +260,21 @@ export function FloorMist({ scene, still, ambient, zoom = 1, tune, fallback = nu
     window.addEventListener(FLIGHT, onFlight);
     window.addEventListener(SEQUENCE, onFlight);
     window.addEventListener("resize", onResize);
+    // Keep the last beautiful mist frame while a phone is panning. Rendering
+    // volumetric fog must not compete with native scroll for the GPU.
+    const onScroll = () => {
+      if (!scrolling) { scrolling = true; sync(); }
+      window.clearTimeout(scrollRest);
+      scrollRest = window.setTimeout(() => { scrolling = false; sync(); }, 180);
+    };
+    if (ambient) window.addEventListener('scroll', onScroll, {passive:true});
     return () => {
       live = false;
       unclaim();
       window.removeEventListener(FLIGHT, onFlight);
       window.removeEventListener(SEQUENCE, onFlight);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener('scroll', onScroll); window.clearTimeout(scrollRest);
       cancelBuild?.();
       hosts.set(key, (hosts.get(key) ?? []).filter((h) => h !== host));
       if (owners.get(key) !== host) return;

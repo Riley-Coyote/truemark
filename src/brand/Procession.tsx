@@ -6,6 +6,7 @@ import { productById, productCutout } from "../shop/catalog";
 import { collectionIds } from "./carousel";
 import { useMotion } from "./Sequence";
 import { createProcession } from "./procession-controller";
+import { createNativeProcession } from "./native-procession";
 import type { ProcessionController, ProcessionStatus } from "./procession-controller";
 import "./procession.css";
 
@@ -14,6 +15,7 @@ export function Procession() {
   const root = useRef<HTMLElement>(null);
   const controller = useRef<ProcessionController | null>(null);
   const moving = useMotion();
+  const movingNow = useRef(moving); movingNow.current = moving;
   const classes = compoundClasses.filter(c => c.onHome && productById(c.vial ?? ""));
   const original = collectionIds.map(id => classes.findIndex(c => c.vial === id)).filter(i => i >= 0);
   const order = [...original, ...classes.map((_, i) => i).filter(i => !original.includes(i))];
@@ -22,8 +24,14 @@ export function Procession() {
   const signature = classes.map(c => c.id).join("|");
   useEffect(() => {
     if (!root.current || !classes.length) return;
-    controller.current = createProcession(root.current, order, initial, setStatus);
-    return () => { controller.current?.destroy(); controller.current = null; };
+    const native = matchMedia('(max-width: 700px), (any-pointer: coarse)');
+    const mount = () => {
+      controller.current?.destroy();
+      controller.current = (native.matches ? createNativeProcession : createProcession)(root.current!, order, initial, setStatus);
+      controller.current.setMotion(movingNow.current);
+    };
+    mount(); native.addEventListener('change', mount);
+    return () => { native.removeEventListener('change', mount); controller.current?.destroy(); controller.current = null; };
     // A catalog refresh can change the collection; ordinary control updates cannot rebuild it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature]);

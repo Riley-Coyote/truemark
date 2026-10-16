@@ -90,3 +90,24 @@
 
 .tm-procession-stage:focus-visible{outline:2px solid var(--tm-ink);outline-offset:-5px}
 .tm-procession-controls .tm-procession-play{border:0;background:transparent}
+
+/* Mobile's alternative is one native document and one native horizontal scroller.
+   No fixed flight layer, scroll cancellation, counter-scroll transform or JS spring. */
+.tm-home[data-procession-native]{background:#ded7e9}
+.tm-home[data-procession-native] .tm-procession-stage{
+  --native-height:clamp(170px,25svh,222px);--native-width:calc(var(--native-height) * .51978);
+  display:flex;align-items:flex-start;gap:clamp(72px,24vw,180px);
+  height:calc(var(--native-height) + 86px);padding:20px calc((100vw - var(--native-width)) / 2) 66px;
+  box-sizing:border-box;overflow-x:auto;overflow-y:hidden;touch-action:auto;
+  scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;
+}
+.tm-home[data-procession-native] .tm-procession-stage::-webkit-scrollbar{display:none}
+.tm-home[data-procession-native] .tm-procession-light{display:none}
+.tm-home[data-procession-native] .tm-procession-actor{
+  position:relative;left:auto;bottom:auto;flex:0 0 var(--native-width);height:var(--native-height);width:var(--native-width);
+  opacity:1;visibility:visible;scroll-snap-align:center;transform:scale(.86);transition:transform 400ms cubic-bezier(.22,1,.36,1);will-change:auto;
+}
+.tm-home[data-procession-native] .tm-procession-actor[data-current]{transform:scale(1)}
+.tm-home[data-procession-native] .tm-procession-plinth{mask-image:linear-gradient(black 18%,transparent 82%)}
+.tm-home[data-procession-native] .tm-mist-foot{padding-block:32px 40px!important}
+.tm-home[data-procession-native] .tm-procession-heading,.tm-home[data-procession-native] .tm-procession-details,.tm-home[data-procession-native] .tm-procession-navigation{opacity:1}
