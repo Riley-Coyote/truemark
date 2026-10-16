@@ -386,3 +386,15 @@ test('unknown inventory sorts last in both directions and never becomes zero sto
   assert.equal(sumTracked([0, null]), 0);
   assert.equal(sumTracked([]), 0);
 });
+
+
+test('zero-percent codes preserve partner attribution while program-only benefits keep a discount record', () => {
+  const zero = map.order({ ...order, discount_amount: '0.00' });
+  assert.equal(zero.discount?.amount, 0);
+  assert.equal(zero.discount?.code, 'FIXTURE10');
+  assert.equal(zero.discount?.partnerId, 'partner-id');
+  const member = map.order({ ...order, discount_code: null, discount_partner_id: null, discount_amount: '5.00', membership_name: 'Research', membership_amount: '5.00' });
+  assert.equal(member.discount?.source, 'program');
+  assert.equal(member.discount?.amount, 5);
+  assert.equal(member.benefits?.membershipName, 'Research');
+});

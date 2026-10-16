@@ -59,7 +59,7 @@ export function order(row: Row): Order {
     shipping: { method: row.shipping_method_id as Order["shipping"]["method"], price: Number(row.shipping_price),
       carrier: optional(row.carrier), tracking: optional(row.tracking) }, subtotal: Number(row.subtotal),
     benefits: { membershipName: optional(row.membership_name), membershipAmount: Number(row.membership_amount ?? 0), rewardAmount: Number(row.reward_amount ?? 0), rewardPoints: Number(row.reward_points ?? 0) },
-    discount: Number(row.discount_amount) > 0 ? { code: row.discount_code ? String(row.discount_code) : "Member / rewards", amount: Number(row.discount_amount), partnerId: optional(row.discount_partner_id), source: row.discount_code ? "promotion" : "program" } : undefined,
+    discount: row.discount_code || Number(row.discount_amount) > 0 ? { code: row.discount_code ? String(row.discount_code) : "Member / rewards", amount: Number(row.discount_amount), partnerId: optional(row.discount_partner_id), source: row.discount_code ? "promotion" : "program" } : undefined,
     tax: Number(row.tax ?? 0), refunded: Number(row.refunded ?? 0), paymentExpiresAt: optional(row.payment_expires_at), paidAt: optional(row.paid_at), paymentProvider: optional(row.payment_provider),
     insurance: Number(row.insurance ?? 0), insuranceApplied: Boolean(row.insurance_applied), total: Number(row.total),
     lines: ((row.order_lines ?? []) as Row[]).map((line) => ({ productId: String(line.product_id), quantity: Number(line.quantity), unitPrice: Number(line.unit_price), lot: String(line.lot) })),
