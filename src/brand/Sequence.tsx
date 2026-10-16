@@ -1482,7 +1482,11 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       const L = layers(p);
       const cam = path(p);
       const { pose, air } = vial(p);
-      write(camera, "transform", p <= 0 ? "none" : cameraTransform(cam));
+      // Procession owns the resting camera. Toolbar/element resize callbacks
+      // must not reset that scroll-driven transform between its animation frames.
+      if (open || !section.closest("[data-procession]")) {
+        write(camera, "transform", p <= 0 ? "none" : cameraTransform(cam));
+      }
       // The camera has left the room's rest: the room holds still (its mist pauses), and nothing on it takes the pointer.
       const nowAway = p > AWAY;
       if (nowAway !== away) {

@@ -47,7 +47,9 @@
 .tm-home[data-procession] .tm-mist:not([data-story]) .tm-seq-view{overflow:visible;isolation:auto}
 .tm-home[data-procession]:not([data-procession-still]) .tm-mist:not([data-story]) .tm-mist-stage{overflow:visible}
 .tm-home[data-procession] .tm-mist:not([data-story]) :is(.tm-fly-fog,.tm-seq-floor,.tm-mist-fill){display:none}
-.tm-home[data-procession] .tm-mist:not([data-story]) .tm-room-plate>.tm-room-still{opacity:0}
+/* Keep the room photograph and its vials in the SAME scrolling/composited
+   camera. A fixed duplicate behind scrolling vials separates on iOS async pan. */
+.tm-home[data-procession] .tm-mist:not([data-story]) .tm-room-plate>.tm-room-still{opacity:1}
 .tm-home[data-procession] .tm-mist:not([data-story]) .tm-room-plate{transform:scale(1.015);transition:none}
 .tm-home[data-procession] .tm-mist:not([data-story]) .tm-seq-camera{animation:none;translate:none;scale:1;transform-origin:0 0}
 .tm-home[data-procession] .tm-mist:not([data-story]) :is(.tm-mist-copy,.tm-story-cue){animation:none}

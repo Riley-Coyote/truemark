@@ -50,6 +50,11 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     }, 3500);
   }
   let directScroll = false, manual = false;
+  // Safari's address bar changes innerHeight during a swipe. A stable large
+  // viewport keeps the offscreen handoff and return path fixed throughout it.
+  const viewport = document.createElement("div");
+  viewport.style.cssText = "position:fixed;width:0;height:100lvh;visibility:hidden;pointer-events:none";
+  home.append(viewport);
   let width = 1, height = 1, stageTop = 0, end = 1, spacing = 1, vialHeight = 1, baseFoot = 1;
   let plateX = 0, plateY = 0, plateW = 1, plateH = 1;
   let heroX = 0, heroY = 0, pivotX = 0, pivotY = 0, fall = 0, lift = 0;
@@ -67,8 +72,12 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     cue = hero.querySelector<HTMLElement>(".tm-story-cue");
     lead = opening.querySelector<HTMLElement>(".tm-mist-foot");
     const y = window.scrollY, heroRect = hero.getBoundingClientRect(), r = stage.getBoundingClientRect();
-    width = window.innerWidth; height = window.innerHeight;
     directScroll = matchMedia("(any-pointer: coarse)").matches;
+    const widthChanged = width !== window.innerWidth;
+    width = window.innerWidth;
+    height = directScroll
+      ? viewport.offsetHeight || (widthChanged ? window.innerHeight : height)
+      : window.innerHeight;
     stageTop = r.top + y;
     const headerEl = document.querySelector<HTMLElement>(".tm-header");
     const header = headerEl ? headerEl.offsetHeight + (parseFloat(getComputedStyle(headerEl).top) || 0) : 80;
@@ -232,7 +241,9 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     room.style.transform = `translate3d(${plateX * filmed.zoom + filmed.x}px,${plateY * filmed.zoom + filmed.y}px,0) scale(${filmed.zoom})`;
     // Once the entire collection is below the frame, soften the now-empty wall
     // into the same photograph's defocused continuation. No visible object fades.
-    opacity(room, grounded() ? 0 : 1 - smooth((passage - HANDOFF) / .10));
+    // Before departure the camera carries its own photograph, so native async
+    // scrolling cannot pull the glass away from a separately fixed pedestal.
+    opacity(room, grounded() || passage < HANDOFF ? 0 : 1 - smooth((passage - HANDOFF) / .10));
     fill.style.translate = grounded() ? "0 0" : `0 ${Math.min(height * .1, .22 * (passage < HANDOFF ? fall * filmed.drop : mix(fall, lift, rearrange) * (1 - rise)))}px`;
     if (!story) {
       // CSS scroll animations relinquish this camera while Procession owns it.
@@ -300,7 +311,6 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   function down(e: PointerEvent) {
     if (!e.isPrimary || pointer || e.button !== 0 || story) return;
     pointer = { id: e.pointerId, x: e.clientX, y: e.clientY, phase, time: e.timeStamp, lastX: e.clientX, spacing, frozen, resume: !paused || !!resumeTimer };
-    manual = true;
     stage.setPointerCapture(e.pointerId);
     cancelResume();
     // Hold the presentation on contact; intent is resolved without fighting the
@@ -320,6 +330,10 @@ export function createProcession(section: HTMLElement, order: number[], initial:
         schedule(); return;
       }
       if (Math.abs(dx) < 6 || Math.abs(dx) <= Math.abs(dy) * 1.1) return;
+      // Only an intentional horizontal gesture may take ownership from the
+      // camera. Contact, vertical scrolling and pointer cancellation must not
+      // replace a half-finished transition with the final collection.
+      manual = true;
       dragging = true; paused = true; frozen = false;
       stage.dataset.dragging = "";
     }
@@ -417,7 +431,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       stage.removeEventListener("lostpointercapture", up);
       window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
       section.removeEventListener("focusin", focus); section.removeEventListener("tm-procession-control", labControl);
-      layer.remove(); world.remove();
+      layer.remove(); world.remove(); viewport.remove();
       for (const el of [camera, word, copy, cue, lead]) { el?.style.removeProperty("opacity"); el?.style.removeProperty("transform"); }
       copy?.style.removeProperty("visibility");
       camera.style.removeProperty("pointer-events");

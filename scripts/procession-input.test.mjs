@@ -33,7 +33,7 @@ function fixture(scrollY = 450, touch = false) {
   plate.children = stage.children;
   section.closest = selector => selector === ".tm-home" ? home : null;
   home.map['.tm-mist'] = opening; opening.map['.tm-mist-stage'] = hero; hero.map['.tm-room-plate'] = plate;
-  section.map['.tm-procession-stage'] = stage;
+  section.map['.tm-procession-stage'] = stage; hero.map['.tm-seq-camera'] = new Element();
   const previous = new Map();
   const install = (name, value) => { previous.set(name, Object.getOwnPropertyDescriptor(globalThis, name)); Object.defineProperty(globalThis, name, {value, configurable:true,writable:true}); };
   install('window', win);
@@ -94,5 +94,24 @@ test('touch-generated focus does not pause but keyboard focus does',()=>{
   assert.equal(f.status().paused,false);
   f.section.matches=()=>true;f.section.dispatchEvent(new Event('focusin'));f.tick();
   assert.equal(f.status().paused,true);
+ }finally{f.close();}
+});
+
+for (const end of ['pointerup', 'pointercancel']) test(`vertical touch keeps hero timeline through ${end}`,()=>{
+ const f=fixture(450,true);try{
+  const before=f.section.dataset.passage;
+  f.event('pointerdown',200);
+  assert.equal(f.home.hasAttribute('data-procession-still'),false,'contact must not skip to arrival');
+  f.event('pointermove',195,180);f.event(end,195,180);
+  assert.equal(f.home.hasAttribute('data-procession-still'),false);
+  assert.equal(f.section.dataset.passage,before);
+ }finally{f.close();}
+});
+test('phone toolbar height changes do not rewrite the camera path',()=>{
+ const f=fixture(100,true);try{
+  const camera=f.hero.map['.tm-seq-camera'];
+  const before=camera.style.transform;
+  f.win.innerHeight+=100;f.win.dispatchEvent(new Event('resize'));f.tick();
+  assert.equal(camera.style.transform,before);
  }finally{f.close();}
 });
