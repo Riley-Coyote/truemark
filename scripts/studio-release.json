@@ -1,7 +1,7 @@
 {
-  "url": "https://github.com/Riley-Coyote/truemark/releases/download/studio-2026-10-16-v21/truemark-studio-2026-10-16-v21.tar.gz",
-  "sha256": "c10ae7ba5b331686977b27bd1a57f855ba007f6f4d0b401702a4718e85c3bd78",
-  "bytes": 565107167,
+  "url": "https://github.com/Riley-Coyote/truemark/releases/download/studio-2026-10-16-v22/truemark-studio-2026-10-16-v22.tar.gz",
+  "sha256": "1042766c5c13a603a5e7ddb1af788a1e708a9cf916a4eb8a2a661f7fc36e2db8",
+  "bytes": 565106087,
   "base": "/truemark/studio/",
   "fixtureOnly": true
 }

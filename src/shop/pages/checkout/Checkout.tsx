@@ -698,15 +698,6 @@ export default function Checkout() {
         </header>
         {!LIVE && <p className="tm-purchase-preview">Design preview · sample data</p>}
 
-        {LIVE && verified && wallet.data && <section className="tm-acct-block" aria-label="Checkout benefits">
-          <h2 className="tm-acct-label">Rewards & membership</h2>
-          <p className="tm-step-fine">{wallet.data.tier ? `${wallet.data.tier.name} · ${wallet.data.tier.discount}% member benefit. ` : ''}{wallet.data.available.toLocaleString()} points available. The larger of your membership benefit or promotion applies, then eligible reward credit.</p>
-          {wallet.data.settings.rewards_enabled && <label className="tm-field">Points to redeem (minimum {wallet.data.settings.min_points}; {wallet.data.settings.points_per_dollar} points = $1)
-            <input aria-label="Points to redeem" type="number" min={0} max={wallet.data.available} step={wallet.data.settings.points_per_dollar} value={rewardPoints} disabled={placing || heldOrder!==null} onChange={e=>setRewardPoints(Math.max(0,Math.trunc(Number(e.target.value)||0)))}/>
-          </label>}
-          {benefits.error && <p role="alert">{benefits.error.message} Reduce the points or set them to zero.</p>}
-          <p className="tm-step-fine"><Link to="/account/programs">View your points and program rules</Link></p>
-        </section>}
         {/* Narrow screens: the summary folds into a bar above the four parts. */}
         <div className="tm-summary-sheet">
           <button
@@ -729,6 +720,17 @@ export default function Checkout() {
         </div>
 
         <div className="tm-steps">
+        {LIVE && verified && wallet.data && <section className="tm-step" aria-label="Checkout benefits">
+          <h2 className="tm-step-title">Rewards & membership</h2>
+          <div className="tm-step-body">
+          <p className="tm-step-note">{wallet.data.tier ? `${wallet.data.tier.name} · ${wallet.data.tier.discount}% member benefit. ` : ''}{wallet.data.available.toLocaleString()} points available. The larger of your membership benefit or promotion applies, then eligible reward credit.</p>
+          {wallet.data.settings.rewards_enabled && <label className="tm-field">Points to redeem (minimum {wallet.data.settings.min_points}; {wallet.data.settings.points_per_dollar} points = $1)
+            <input aria-label="Points to redeem" type="number" min={0} max={wallet.data.available} step={wallet.data.settings.points_per_dollar} value={rewardPoints} disabled={placing || heldOrder!==null} onChange={e=>setRewardPoints(Math.max(0,Math.trunc(Number(e.target.value)||0)))}/>
+          </label>}
+          {benefits.error && <p role="alert">{benefits.error.message} Reduce the points or set them to zero.</p>}
+          <p className="tm-step-fine"><Link to="/account/programs">View your points and program rules</Link></p>
+          </div>
+        </section>}
           <PaymentLock disabled={heldOrder !== null}>
           {/* 01 */}
           <Step
