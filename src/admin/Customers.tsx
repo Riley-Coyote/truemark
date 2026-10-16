@@ -19,6 +19,7 @@ import type { Column } from "../app-kit";
 import { store, useResource } from "../platform/store";
 import type { Buyer, Order } from "../platform/types";
 import { isCounted } from "./metrics";
+import { orderMoney } from "./intelligence/model";
 import { HOME } from "./nav";
 import { AddressLines, DrawerLoading } from "./OrderDrawer";
 import { orderColumns } from "./Orders";
@@ -73,7 +74,7 @@ function withOrders(buyers: Buyer[], orders: Order[]): Row[] {
       ...buyer,
       orders: own,
       count: counted.length,
-      value: Math.round(counted.reduce((sum, o) => sum + o.total, 0) * 100) / 100,
+      value: Math.round(counted.reduce((sum, o) => sum + orderMoney(o).revenue, 0) * 100) / 100,
     };
   });
 }

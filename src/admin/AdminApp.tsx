@@ -2,7 +2,7 @@ import { LIVE } from "../platform/mode";
 import { TeamGate } from "../platform/live/TeamGate";
 import { OwnerAssistant } from "../assistant/Assistant";
 import { useEffect, useState } from "react";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { AppShell, SampleTag, SearchField, formatDate } from "../app-kit";
 import { AccountMenu, AppearanceProvider, useAppearance } from "./appearance";
 import { OrderToasts, OwnerBell, useNarrow } from "./alerts";
@@ -22,7 +22,11 @@ import Inbox from "./Inbox";
 import SentMessages from "./SentMessages";
 import Settings from "./Settings";
 import { SearchQuery } from "./state";
+import { BusinessProvider } from "./intelligence/shared";
+import { intelligenceScreens } from "./intelligence/screens";
+import { MessageWorkspace } from "./intelligence/Messaging";
 import "./admin.css";
+import "./intelligence/intelligence.css";
 
 const OPERATOR = { initials: "TM", label: LIVE ? "TrueMark operator" : "TrueMark operator, preview" };
 
@@ -71,9 +75,7 @@ function CommandCenter() {
           : undefined
       }
     />
-  ) : (
-    <SearchField value="" onChange={() => undefined} placeholder="Search" label="Search, not available on this page" disabled />
-  );
+  ) : null;
 
   return (
     <AppShell
@@ -112,8 +114,8 @@ function CommandCenter() {
         <Routes>
           <Route index element={<Overview />} />
           <Route path="orders" element={<Orders />} />
-          <Route path="inbox" element={<Inbox />} />
-          <Route path="messages" element={<SentMessages />} />
+          <Route path="inbox" element={LIVE ? <Inbox /> : <MessageWorkspace kind="inbox" />} />
+          <Route path="messages" element={LIVE ? <SentMessages /> : <MessageWorkspace kind="deliveries" />} />
           <Route path="lots" element={<Lots />} />
           <Route path="journal" element={<Journal />} />
           <Route path="applications" element={<Applications />} />
@@ -122,6 +124,9 @@ function CommandCenter() {
           <Route path="discounts" element={<Discounts />} />
           <Route path="partners" element={<Partners />} />
           <Route path="settings" element={<Settings />} />
+          <Route element={<BusinessProvider><Outlet/></BusinessProvider>}>
+            {intelligenceScreens.map(screen => <Route key={screen.path} path={screen.path} element={screen.element}/>)}
+          </Route>
           <Route path="*" element={<Missing />} />
         </Routes>
       </SearchQuery.Provider>

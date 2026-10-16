@@ -2,8 +2,8 @@ import { statusLabel } from "../app-kit";
 /**
  * Figures for the command center (the Overview, Orders and Partners), computed
  * from orders. The sample data runs to TODAY in seed.ts, so every window counts
- * back from the end of that day. Cancelled and refunded orders are left out of
- * revenue and order counts. Every figure is read from the same orders the Orders
+ * back from the end of that day. Financial figures count captured payments,
+ * deduct current refunds and exclude retained tax. Every figure is read from the same orders the Orders
  * page lists, and every order's status reads in one language (orderTone).
  */
 import { TODAY } from "../platform/seed";
@@ -14,6 +14,7 @@ import { formatCount, formatDay, formatMoney } from "../app-kit";
 import type { Tone } from "../app-kit";
 import type { PayoutBatch } from "./preview";
 import { NEXT_PAYOUT, awaitingPayout } from "./program";
+import { orderMoney } from "./intelligence/model";
 import type { PartnerRow } from "./program";
 
 const HOUR = 3_600_000;
@@ -29,7 +30,7 @@ export const MONTH_START = Date.UTC(TODAY_DATE.getUTCFullYear(), TODAY_DATE.getU
 
 const OPEN: OrderStatus[] = ["placed", "paid", "packed", "shipped"];
 export const isOpen = (status: OrderStatus) => OPEN.includes(status);
-export const isCounted = (order: Order) => order.status !== "cancelled" && order.status !== "refunded";
+export const isCounted = (order: Order) => orderMoney(order).paid;
 /** An order that came with a partner's code (or link, which carries the code). */
 export const viaPartner = (order: Order) => Boolean(order.discount?.partnerId);
 
@@ -42,19 +43,19 @@ export const units = (order: Order) => order.lines.reduce((total, line) => total
  * An order placed in the last `days` days, counted back from the end of the sample day as
  * every window here is. The Orders page's `?days=` and the pipeline's closed counts both use it.
  */
-export const placedWithin = (order: Order, days: number) => at(order.createdAt) >= END - days * DAY;
+export const placedWithin = (order: Order, days: number) => at(order.createdAt) >= END - days * DAY && at(order.createdAt) < END;
 
 /** Counted orders created from `from` days ago up to `to` days ago (0 = now, open-ended). */
 function between(orders: Order[], from: number, to: number) {
   const start = END - from * DAY;
-  const stop = to === 0 ? Infinity : END - to * DAY;
+  const stop = END - to * DAY;
   return orders.filter((o) => isCounted(o) && at(o.createdAt) >= start && at(o.createdAt) < stop);
 }
 
 export type Totals = { revenue: number; count: number; average: number };
 
 function totals(list: Order[]): Totals {
-  const revenue = sum(list.map((o) => o.total));
+  const revenue = sum(list.map((o) => orderMoney(o).revenue));
   return { revenue, count: list.length, average: list.length ? round2(revenue / list.length) : 0 };
 }
 
@@ -108,7 +109,7 @@ export type DayFigures = {
 
 function dayFigures(list: Order[]): DayFigures {
   const t = totals(list);
-  const partnerRevenue = sum(list.filter(viaPartner).map((o) => o.total));
+  const partnerRevenue = sum(list.filter(viaPartner).map((o) => orderMoney(o).revenue));
   return {
     revenue: t.revenue,
     count: t.count,
@@ -175,7 +176,7 @@ export type PartnerLine = { partner: Partner; orders: number; revenue: number; c
 
 export type PartnerFigures = {
   revenue: number;
-  /** Revenue from orders that came with a partner's code: the same order totals as everywhere else. */
+  /** Net revenue from captured orders attributed by partner code. */
   partnerRevenue: number;
   share: number | null;
   top: PartnerLine[];
@@ -188,7 +189,7 @@ export function partnerFigures(orders: Order[], referrals: Referral[], partners:
   const list = between(orders, days, 0);
   const via = list.filter(viaPartner);
   const revenue = totals(list).revenue;
-  const partnerRevenue = sum(via.map((o) => o.total));
+  const partnerRevenue = sum(via.map((o) => orderMoney(o).revenue));
   const referralFor = new Map(referrals.filter((r) => r.status !== "void").map((r) => [r.orderId, r]));
   const lines = partners
     .map((partner) => {
@@ -196,7 +197,7 @@ export function partnerFigures(orders: Order[], referrals: Referral[], partners:
       return {
         partner,
         orders: own.length,
-        revenue: sum(own.map((o) => o.total)),
+        revenue: sum(own.map((o) => orderMoney(o).revenue)),
         commission: sum(own.map((o) => referralFor.get(o.id)?.commission ?? 0)),
       };
     })
@@ -235,7 +236,7 @@ export type PartnerMonth = { revenue: number; orders: number; commission: number
 
 /**
  * Each partner's month so far: the totals of their orders placed since the 1st of the sample
- * month (cancelled and refunded orders left out, as from every revenue figure here), and the
+ * month (captured payments, current refunds deducted and retained tax excluded), and the
  * commission on them exactly as the partner's own portal counts "This month".
  */
 export function partnerMonths(orders: Order[], referrals: Referral[], partners: Partner[]): Map<string, PartnerMonth> {
@@ -246,7 +247,7 @@ export function partnerMonths(orders: Order[], referrals: Referral[], partners: 
       return [
         partner.id,
         {
-          revenue: sum(own.map((o) => o.total)),
+          revenue: sum(own.map((o) => orderMoney(o).revenue)),
           orders: own.length,
           commission: monthToDate(referrals.filter((r) => r.partnerId === partner.id)).current,
         },

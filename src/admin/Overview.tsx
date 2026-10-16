@@ -161,7 +161,7 @@ function PeriodCard({
           <Skeleton width="100%" height="100%" />
         </div>
       )}
-      <p className="cc-chart-note">Order totals by day, as the Orders page lists them; cancelled orders are left out.</p>
+      <p className="cc-chart-note">Captured orders by creation day. Revenue deducts current refunds and excludes retained tax. <Link className="bi-link" to="/admin/analytics">View the reconciliation ↗</Link></p>
     </Card>
   );
 }
@@ -260,6 +260,16 @@ export default function Overview() {
 
   return (
     <div className="kit-grid cc-overview">
+      <Card className="kit-span-12" title="Business workbench" meta="From the same order records">
+        <nav className="bi-command-links" aria-label="Business workbench">
+          <Link className="bi-link" to="/admin/analytics">Sales analytics ↗</Link>
+          <Link className="bi-link" to="/admin/forecasts">Forecasts & goals ↗</Link>
+          <Link className="bi-link" to="/admin/profit">Profit planner ↗</Link>
+          <Link className="bi-link" to="/admin/retention">Customer retention ↗</Link>
+          <Link className="bi-link" to="/admin/reports">Reports & exports ↗</Link>
+        </nav>
+        <p className="bi-command-note">Analyze recorded sales, compare periods, and save planning scenarios. Forecasts and cost assumptions are estimates saved on this device.</p>
+      </Card>
       {orders.error ? (
         <div className="kit-card kit-span-12">
           <EmptyState compact title="Figures could not be loaded." note={orders.error.message} action={<Button onClick={orders.reload}>Try again</Button>} />

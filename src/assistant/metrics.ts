@@ -1,9 +1,10 @@
 import type { Buyer, Lot, Order, Partner, Referral, Visit } from "../platform/types";
 import type { AssistantProduct } from "../platform/assistant-types";
+import { orderMoney, productSales } from "../admin/intelligence/model";
 
 const DAY = 86400000;
 const round = (n: number) => Math.round(n * 100) / 100;
-export const counted = (o: Order) => o.status !== "cancelled" && o.status !== "refunded";
+export const counted = (o: Order) => orderMoney(o).paid;
 export function windowFor(period: string, now: string) {
   const end = Date.parse(now);
   const date = new Date(now);
@@ -11,12 +12,12 @@ export function windowFor(period: string, now: string) {
   return { start, end, days: Math.max((end - start) / DAY, 1) };
 }
 export const within = (iso: string, window: { start: number; end: number }) => Date.parse(iso) >= window.start && Date.parse(iso) <= window.end;
-const net = (o: Order) => o.subtotal - (o.discount?.amount ?? 0);
+const net = (o: Order) => orderMoney(o).revenue;
 export function recordedStock(product: AssistantProduct, lots: Lot[]) {
   if (product.stock !== null) return { stock: product.stock, stockBasis: "Recorded product stock" };
-  const own = lots.filter((lot) => lot.productId === product.id && ["quarantine", "testing", "released"].includes(lot.status));
+  const own = lots.filter((lot) => lot.productId === product.id && lot.status === "released");
   return { stock: own.length && own.every((lot) => lot.units !== null) ? own.reduce((sum, lot) => sum + lot.units!, 0) : null,
-    stockBasis: "Units on hand in quarantine, testing and released lots, as in Products. Includes unreleased inventory; unknown counts stay unknown." };
+    stockBasis: "Recorded product stock, or units in released lots only. Testing and quarantine do not count as sellable; unknown counts stay unknown." };
 }
 export function reorder(orders: Order[], now: string) {
   const dates = orders.filter(counted).map((o) => Date.parse(o.createdAt)).sort((a, b) => a - b);
@@ -62,7 +63,7 @@ export function businessSummary(data: { orders: Order[]; buyers: Buyer[]; produc
     return first && within(first.createdAt, w);
   });
   const anomalies = (rows: Order[]) => ({ orders: rows.length, cancellations: rows.filter((o) => o.status === "cancelled").length, refunds: rows.filter((o) => o.status === "refunded").length });
-  return { sample, asOf: now, period, days: round(w.days), basis: "Order creation dates; revenue is merchandise after discounts, excluding cancelled/refunded orders. Stock pace is an estimate, not a forecast.",
+  return { sample, asOf: now, period, days: round(w.days), basis: "Order creation dates; captured-order net revenue deducts current refunds and excludes retained tax. Stock pace is an estimate, not a forecast.",
     orders: current.length, revenue: round(paid.reduce((sum, o) => sum + net(o), 0)), previousRevenue: round(before.filter(counted).reduce((sum, o) => sum + net(o), 0)),
     reorderCandidates: reorders.filter((b) => b.due).slice(0, 3), insufficientReorderHistory: reorders.filter((b) => b.intervals < 2).length,
     bundles: [...pairs].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([products, ordersTogether]) => ({ products, ordersTogether, outOfOrders: paid.length })),
@@ -83,14 +84,14 @@ export function trend(orders: Order[], metric: string, period: string, groupBy: 
     if (groupBy === "product") {
       for (const id of new Set(o.lines.map((l) => l.productId))) {
         const lines = o.lines.filter((l) => l.productId === id);
-        const n = metric === "revenue" ? lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0) * (o.subtotal ? net(o) / o.subtotal : 0)
+        const n = metric === "revenue" ? productSales([o], []).find(p => p.id === id)?.net ?? 0
           : metric === "units" ? lines.reduce((sum, l) => sum + l.quantity, 0) : 1;
         groups.set(id, (groups.get(id) ?? 0) + n);
       }
     } else {
-      const key = groupBy === "day" ? o.createdAt.slice(0, 10) : groupBy === "partner" ? o.discount?.partnerId ?? "direct" : o.buyerId;
+      const key = groupBy === "day" ? o.createdAt.slice(0, 10) : groupBy === "partner" ? o.discount?.partnerId ?? "unattributed" : o.buyerId;
       groups.set(key, (groups.get(key) ?? 0) + value);
     }
   }
-  return { metric, period, groupBy, asOf: now, ordersInPeriod: selected.length, basis: "Order creation date; net merchandise, excluding cancelled/refunded orders except when counting those statuses", rows: [...groups].sort((a, b) => groupBy === "day" ? a[0].localeCompare(b[0]) : b[1] - a[1]).map(([group, value]) => ({ group, value: round(value) })) };
+  return { metric, period, groupBy, asOf: now, ordersInPeriod: selected.length, basis: groupBy === "product" ? "Order creation date; captured net merchandise allocated after discounts and current refunds; excludes shipping and tax" : "Order creation date; captured net revenue after current refunds, excluding retained tax; cancellation and refund counts use order status", rows: [...groups].sort((a, b) => groupBy === "day" ? a[0].localeCompare(b[0]) : b[1] - a[1]).map(([group, value]) => ({ group, value: round(value) })) };
 }

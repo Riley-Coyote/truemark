@@ -205,7 +205,7 @@ export function TodayFigures({ orders, now }: { orders: Order[] | undefined; now
 
       <p className="cc-day-note">
         {LIVE ? "" : `Sample data through ${formatDate(TODAY_ISO)}. `}Today is compared with {WEEKDAYS[weekAgo.getUTCDay()]}{" "}
-        {weekAgo.getUTCDate()} {MONTHS[weekAgo.getUTCMonth()].slice(0, 3)} up to this hour; cancelled orders are left out.
+        {weekAgo.getUTCDate()} {MONTHS[weekAgo.getUTCMonth()].slice(0, 3)} up to this hour. Captured payments, current refunds deducted, retained tax excluded.
       </p>
     </section>
   );
