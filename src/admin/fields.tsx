@@ -84,7 +84,7 @@ export function TextField({
   mono?: boolean;
   /** A narrower field for short values: a percent, a price, a code, a date. */
   size?: "short" | "medium";
-  type?: "text" | "date";
+  type?: "text" | "date" | "datetime-local";
   inputMode?: HTMLAttributes<HTMLInputElement>["inputMode"];
   min?: string;
   placeholder?: string;

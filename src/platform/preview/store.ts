@@ -1,3 +1,4 @@
+import { previewLots, previewProducts, previewOrders, savePreviewProduct, reservePreviewOrder, advancePreviewInventory, previewInventory } from "./inventory";
 /**
  * The preview's stand-in for the backend. Every call is async, so screens are
  * built with loading and error states from the start; swapping this module for
@@ -5,7 +6,6 @@
  * Changes made in the preview persist in this browser's localStorage only.
  */
 import { useCallback, useEffect, useState } from "react";
-import { assetUrl } from "../../assetUrl";
 import { products, previewCategories } from "../../data";
 import { emit } from "./events";
 import { notices } from "./notifications";
@@ -22,7 +22,6 @@ import type {
   ApplicationStatus,
   Buyer,
   Discount,
-  Lot,
   LotStatus,
   Order,
   OrderDraft,
@@ -56,8 +55,9 @@ type OrderUpdate = Pick<Order, "status" | "events" | "payment"> & { shipping?: O
 
 const allOrders = (): Order[] => {
   const updates = read<Record<string, OrderUpdate>>(KEYS.orderUpdates, {});
-  return [...read<Order[]>(KEYS.orders, []), ...seed.orders].map((o) =>
-    updates[o.id] ? { ...o, ...updates[o.id], shipping: { ...o.shipping, ...updates[o.id].shipping } } : o,
+  const current=previewOrders();
+  return [...current,...read<Order[]>(KEYS.orders, []).filter(o=>!current.some(n=>n.id===o.id)), ...seed.orders].map((o) =>
+    !current.some(n=>n.id===o.id) && updates[o.id] ? { ...o, ...updates[o.id], shipping: { ...o.shipping, ...updates[o.id].shipping } } : o,
   );
 };
 const allReferrals = (): Referral[] => {
@@ -74,13 +74,7 @@ const allApplications = (): Application[] => {
   const added = read<Application[]>(`${KEYS.applications}-added`, []);
   return [...added, ...seed.applications].map((a) => ({ ...a, ...overrides[a.id] }));
 };
-const allLots = (): Lot[] => {
-  const overrides = read<Record<string, Partial<Lot>>>(KEYS.lots, {});
-  return seed.lots.map((l) => withCertificate({ ...l, ...overrides[l.lot] }));
-};
-/** A released lot's PDF ships with the site (public/certificates), as live Storage holds it. */
-const withCertificate = (lot: Lot): Lot =>
-  lot.status === "released" && lot.coaPath ? { ...lot, coaUrl: assetUrl(`certificates/${lot.coaPath}`) } : lot;
+const allLots = previewLots;
 const allBuyers = (): Buyer[] => {
   const added = read<Buyer[]>(KEYS.buyers, []);
   const addresses = read<Record<string, Address[]>>(KEYS.addresses, {});
@@ -166,9 +160,9 @@ export const store = {
   },
 
   catalog: {
-    products: (_includeInactive = false): Promise<Product[]> => wait(products.map((product) => ({ ...product, stock: null }))),
+    products: (includeInactive = false): Promise<Product[]> => wait(previewProducts().filter(p=>includeInactive || p.active!==false)),
     categories: (): Promise<Category[]> => wait(previewCategories()),
-    saveProduct: async (_product: Product, _expectedStock?: number | null): Promise<Product> => { throw new Error("Saving works in the live platform."); },
+    saveProduct: (product: Product, _expectedStock?: number | null): Promise<Product> => savePreviewProduct(product),
     saveCategory: async (_category: Category): Promise<Category> => { throw new Error("Saving works in the live platform."); },
     uploadPhoto: async (_productId: string, _file: File): Promise<string> => { throw new Error("Saving works in the live platform."); },
     shippingMethods: (): Promise<ShippingMethod[]> => wait(seed.shippingMethods),
@@ -182,7 +176,7 @@ export const store = {
     place: async (buyerId: string, draft: OrderDraft): Promise<Order> => {
       const { method, lines, subtotal, discount, discountAmount, insurance, insuranceApplied, total, partner, base, commission } = quote(draft);
       const placed = read<Order[]>(KEYS.orders, []);
-      const number = 10421 + seed.orders.length + placed.length;
+      const number = 10421 + seed.orders.length + placed.length + previewOrders().length;
       const now = worldNow();
       const order: Order = {
         id: `o-${number}`,
@@ -201,7 +195,7 @@ export const store = {
         total,
         events: [{ status: "placed", at: now }],
       };
-      write(KEYS.orders, [order, ...placed]);
+      reservePreviewOrder(order);
 
       const buyer = allBuyers().find((b) => b.id === buyerId);
       notices.add({
@@ -271,6 +265,7 @@ export const store = {
       // Marking an order paid captures its payment; every later step carries that forward.
       const payment = status === "paid" ? "captured" : order.payment;
       updates[order.id] = { status, events: [...order.events, { status, at, note: extra.note }], shipping, payment };
+      advancePreviewInventory({ ...order, ...updates[order.id], shipping });
       write(KEYS.orderUpdates, updates);
       const step =
         status === "packed"
@@ -294,10 +289,9 @@ export const store = {
     list: () => wait(allLots()),
     get: (lot: string) => wait(allLots().find((l) => l.lot === lot.trim().toUpperCase()) ?? null),
     setStatus: (lot: string, status: LotStatus) => {
-      const overrides = read<Record<string, Partial<Lot>>>(KEYS.lots, {});
-      overrides[lot] = { ...overrides[lot], status, ...(status === "released" ? { releasedAt: worldNow() } : {}) };
-      write(KEYS.lots, overrides);
-      return wait(allLots().find((l) => l.lot === lot)!);
+      const l=allLots().find(l=>l.lot===lot)!;
+      return previewInventory.save({id:l.id,version:l.version,productId:l.productId,number:l.number ?? lot,expectedUnits:l.expectedUnits ?? 0,
+        status:status==="released" ? "active" : status==="testing" ? "quarantine" : status,reason:"Lot status changed"});
     },
   },
 

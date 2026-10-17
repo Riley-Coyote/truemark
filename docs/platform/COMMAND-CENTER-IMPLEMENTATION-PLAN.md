@@ -1,5 +1,8 @@
 # Command Center implementation plan
 
+> 17 October update: Mason's brief settles FIFO by actual receipt, automatic testing release on saving a matching passing certificate, and editable lot quantities with history. The inventory implementation is now locally verified; [workflow and production rollout](LOT-INVENTORY-WORKFLOW.md) supersede the inventory discovery questions and proposed manual approval distinctions below. Hosted migration/acceptance remains outstanding.
+
+
 Working plan · 16 October 2026 · Based on the client call, Riley’s subsequent clarifications, and inspection of the current local source.
 
 This document plans implementation; it does not record implementation approval, completed changes, or verified production operation. Existing capabilities below were checked in source and migrations. Hosted configuration, deployed migration versions, carrier credentials, printer behavior, and real delivery were not tested for this plan. The public Studio remains a sample-data demonstration; the authenticated connected workspace is a separate surface.

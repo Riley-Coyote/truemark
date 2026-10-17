@@ -1,3 +1,4 @@
+import { allocatedLines } from "../../../platform/inventory";
 import { LIVE } from "../../../platform/mode";
 import { paymentLabel as paymentStatusLabel } from "../../../admin/metrics";
 import { useId, useState } from "react";
@@ -68,7 +69,7 @@ export function OrderTable({ orders, label }: { orders: Order[]; label: string }
             </span>
             <span role="cell" className="c-items">
               <span className="tm-acct-names">
-                {order.lines.map((line) => {
+                {allocatedLines(order.lines).map((line) => {
                   const product = productFor(line.productId);
                   return (
                     <span key={line.productId} style={product ? tone(product) : undefined}>
@@ -258,10 +259,10 @@ export function OrderDetail() {
           </h2>
         </div>
         <ul className="tm-acct-lines">
-          {found.lines.map((line) => {
+          {allocatedLines(found.lines).map((line) => {
             const product = productFor(line.productId);
             const record = lots.data?.find((l) => l.lot === line.lot);
-            const certificate = lots.data
+            const certificate = line.allocations?.[0]?.certificateUrl ? "Published" : lots.data
               ? record?.status === "released" || record?.status === "archived"
                 ? "Published"
                 : "Pending"
@@ -278,7 +279,7 @@ export function OrderDetail() {
                     <span className="tm-acct-line-cert">
                       <Link
                         className="tm-acct-lotlink"
-                        to={`/verify?lot=${encodeURIComponent(line.lot)}`}
+                        to={line.allocations?.[0]?.certificateUrl ?? `/verify?lot=${encodeURIComponent(line.lot)}`}
                         aria-label={`Certificate for lot ${line.lot}${certificate ? `, ${certificate.toLowerCase()}` : ""}`}
                       >
                         Certificate

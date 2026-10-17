@@ -67,7 +67,7 @@ test('reads map RLS-scoped rows, decimals, children and unknown inventory', asyn
   const session = await f.adapter.store.session.get();
   assert.equal(session?.status, 'pending');
   assert.equal(session?.addresses.length, 1);
-  assert.deepEqual((await f.adapter.store.orders.listForBuyer('buyer-id'))[0].lines, [{ productId: 'compound', quantity: 2, unitPrice: 50, lot: 'LOT' }]);
+  assert.deepEqual((await f.adapter.store.orders.listForBuyer('buyer-id'))[0].lines, [{ id: undefined, allocations: [], productId: 'compound', quantity: 2, unitPrice: 50, lot: 'LOT' }]);
   assert.equal((await f.adapter.store.orders.get('TM-10500'))?.total, 114);
   assert.equal((await f.adapter.products())[0].price, 50);
   assert.equal((await f.adapter.store.catalog.shippingMethods())[0].price, 24);
@@ -318,7 +318,7 @@ test('lot status uses the guarded team RPC, maps saved status and keeps non-publ
   for (const status of ['testing', 'archived'] as const) {
     f.setRpc({ lot: 'LOT', product_id: 'compound', status, units: null, results: [{ label: 'Purity', method: 'HPLC', value: '99.31', unit: '%' }] });
     const saved = await f.adapter.store.lots.setStatus('LOT', status);
-    assert.equal(saved.status, status); assert.equal(saved.units, null); assert.deepEqual(saved.results, []);
+    assert.equal(saved.status, status); assert.equal(saved.units, null); assert.deepEqual(saved.results, [{ label: 'Purity', method: 'HPLC', value: '99.31', unit: '%' }]);
     assert.deepEqual(f.calls.at(-1)?.args, { lot: 'LOT', status }); assert.equal(f.calls.at(-1)?.name, 'set_lot_status');
   }
   assert.equal(f.changes(), 2);
@@ -353,9 +353,9 @@ test('mark-read uses the scoped RPC and accepts existing and Round 12 notice kin
   assert.equal(f.calls.some(c => ['insert', 'update'].includes(c.type)), false);
 });
 
-test('four realtime tables feed refresh and existing events, dedupe inserts and unsubscribe on identity changes', async () => {
+test('inventory and order realtime tables feed refresh and existing events, dedupe inserts and unsubscribe on identity changes', async () => {
   const f = fixture(); f.adapter.startRealtime('user-id');
-  assert.deepEqual([...f.handlers.keys()], ['orders', 'order_events', 'referrals', 'notifications']);
+  assert.deepEqual([...f.handlers.keys()], ['orders', 'order_events', 'referrals', 'notifications', 'products', 'lots', 'order_lot_allocations', 'inventory_events']);
   const oldHandler = f.handlers.get('referrals')!;
   oldHandler({ eventType: 'INSERT', new: referral }); oldHandler({ eventType: 'INSERT', new: referral });
   assert.equal(f.events.length, 1);

@@ -30,13 +30,13 @@ export function createContentAdapter(client: SupabaseClient, rows: Rows, rpc: RP
   }
   async function upload(bucket: keyof typeof uploadRules, path: string, file: File) {
     validateUpload(bucket, file);
-    const { error } = await client.storage.from(bucket).upload(path, file, { upsert: bucket === "certificates", contentType: file.type, cacheControl: "60" });
+    const { error } = await client.storage.from(bucket).upload(path, file, { upsert: false, contentType: file.type, cacheControl: "60" });
     if (error) throw new Error(error.message);
     return path;
   }
   async function certificatePath(id: string, file: File) {
     if (!/^[A-Za-z0-9_-]+$/.test(id)) throw new Error("This lot number cannot be used as a certificate filename.");
-    return upload("certificates", `${id}.pdf`, file);
+    return upload("certificates", `${id}-${crypto.randomUUID()}.pdf`, file);
   }
   return {
     library: async () => (await rows("lots", "*", { status: "released" })).map(lot)

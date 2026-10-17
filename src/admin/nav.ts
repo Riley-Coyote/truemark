@@ -1,5 +1,5 @@
 import { LIVE } from "../platform/mode";
-import { Activity, BarChart3, BookOpen, Boxes, Building2, ChartNoAxesCombined, ClipboardCheck, Coins, FlaskConical, Gauge, Handshake, HeartHandshake, Inbox, LayoutDashboard, Mail, Megaphone, NotebookTabs, PackageSearch, Receipt, SearchCheck, Settings, ShieldCheck, TicketPercent, Truck, Unplug, UsersRound } from "lucide-react";
+import { Activity, BarChart3, BookOpen, Boxes, Building2, ChartNoAxesCombined, ClipboardCheck, Coins, Gauge, Handshake, HeartHandshake, Inbox, LayoutDashboard, Mail, Megaphone, NotebookTabs, PackageSearch, Receipt, SearchCheck, Settings, ShieldCheck, TicketPercent, Truck, Unplug, UsersRound } from "lucide-react";
 import type { NavGroup, NavItem } from "../app-kit";
 
 export const HOME = "/admin";
@@ -27,7 +27,6 @@ export const navGroups: NavGroup[] = [
   {
     label: "Catalog",
     items: [
-      { to: `${HOME}/lots`, label: "Lots & certificates", icon: FlaskConical },
       { to: `${HOME}/journal`, label: "Journal", icon: BookOpen },
       { to: `${HOME}/products`, label: "Products & inventory", icon: Boxes },
       { to: `${HOME}/restock`, label: "Restock planning", icon: PackageSearch },
@@ -75,7 +74,7 @@ const pages: Record<string, PageInfo> = {
   orders: { title: "Orders", search: { placeholder: "Search orders", label: "Search orders by number, buyer, institution, lot or code", mode: "filter" } },
   inbox: { title: "Inbox", search: null },
   messages: { title: LIVE ? "Sent messages" : "Email & SMS", search: null },
-  lots: { title: "Lots & certificates", search: { placeholder: "Search lots", label: "Search lots by lot number or compound", mode: "filter" } },
+  lots: { title: "Products & inventory", search: { placeholder: "Search lots", label: "Search lots by lot number or compound", mode: "filter" } },
   journal: { title: "Journal", search: { placeholder: "Search articles", label: "Search articles by title, slug or topic", mode: "filter" } },
   products: { title: "Products & inventory", search: { placeholder: "Search products", label: "Search products by compound, size, category or lot", mode: "filter" } },
   discounts: { title: "Discount codes", search: { placeholder: "Search codes", label: "Search discount codes by code or partner", mode: "filter" } },

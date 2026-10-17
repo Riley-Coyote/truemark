@@ -2,6 +2,10 @@
 
 Snapshot prepared 16 October 2026. Read the implementation plan for file-level evidence. Do not mistake an interactive demo, passing local tests or an active function for a verified production workflow.
 
+## Local inventory update — 17 October 2026
+
+Mason confirmed FIFO by actual receipt and automatic testing release when the matching passing certificate is saved. The unified product/lot workspace and underlying allocation, returns and history behavior are implemented and verified locally. Production migration, data reconciliation and hosted acceptance remain outstanding. See [inventory workflow](../platform/LOT-INVENTORY-WORKFLOW.md) and the latest continuation notes; these supersede the inventory next-step questions in the original snapshot below.
+
 ## Evidence gathered for this handoff
 
 - Private local HEAD: `7c7dbc4` on `claude/brand-elevation`, with uncommitted work present. Never publish this branch wholesale.
@@ -39,7 +43,7 @@ The owner may authorize all future changes directly. Prior text requiring Riley 
 
 Use [Working with Mason](WORKING_WITH_MASON.md) to introduce these one at a time when needed; check [continuation notes](SESSION_NOTES.md) first for answers already recorded. This is Codex's backlog, not a first-session questionnaire.
 
-1. How does Mason choose between two eligible lots, and how much physical stock belongs to each lot?
+1. FIFO by actual first receipt is settled. Confirm actual quantities and missing receipt/testing records when reconciling production stock.
 2. Does the carrier collect packages or does staff drop them off? Codex investigates which real ShipStation/carrier event proves shipment.
 3. Which business email addresses should send replies? Is Gmail the actual mailbox or a forwarding destination? Must replies sent in Gmail also appear in TrueMark?
 4. For an example sale and an example inventory batch, which costs should the profit view subtract? Which are estimates? Are future order quantities assumed or already placed?

@@ -1,3 +1,4 @@
+import { OrderInventory } from "./OrderInventory";
 import { LIVE } from "../platform/mode";
 import { live } from "../platform/live/runtime";
 import { StoredEmail } from "./SentMessages";
@@ -5,7 +6,7 @@ import { PaymentSection } from "./PaymentSection";
 import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import {
   Button,
   Dot,
@@ -308,6 +309,7 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
       {LIVE && <PaymentSection order={o} />}
       {LIVE && <ShipmentSection shipment={shipment.data} packed={o.status === "packed"} />}
 
+      <OrderInventory order={o} onSaved={order.reload} />
       <Section title="Lines">
         <ul className="cc-lines">
           {o.lines.map((line) => {
@@ -319,16 +321,7 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
                   <span className="cc-line-name">
                     {product?.name ?? line.productId} <span className="kit-quiet">{product?.size}</span>
                   </span>
-                  <Link
-                    className="cc-lot-link"
-                    to={`/verify?lot=${encodeURIComponent(line.lot)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`Public record for lot ${line.lot}, opens in a new tab`}
-                  >
-                    <span className="kit-mono">{line.lot}</span>
-                    <ArrowUpRight aria-hidden="true" strokeWidth={1.6} />
-                  </Link>
+
                 </div>
                 <span className="cc-line-qty kit-num">
                   {line.quantity} × {formatMoney(line.unitPrice)}

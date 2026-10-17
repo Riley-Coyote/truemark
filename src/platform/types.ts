@@ -80,15 +80,20 @@ export type OrderStatus = "placed" | "paid" | "packed" | "shipped" | "delivered"
 export type PaymentStatus = "pending" | "authorized" | "captured" | "partially_refunded" | "refunded" | "failed";
 
 export type OrderLine = {
+  id?: string;
   productId: string;
   quantity: number;
   unitPrice: Money;
   lot: string;
+  allocations?: LotAllocation[];
 };
+
+export type LotAllocation = { id: string; lotId: string; lot: string; quantity: number; state: "reserved" | "fulfilled" | "released"; certificatePath?: string; certificateUrl?: string; returnedUnits?: number };
 
 export type OrderEvent = { status: OrderStatus; at: string; note?: string };
 
 export type Order = {
+  inventoryIssue?: string;
   id: string;
   number: string;
   buyerId: string;
@@ -133,6 +138,15 @@ export type LotResult = { label: string; method: string; value: string; unit: st
  * BPC-157 example on a real first-batch identifier. Live never fabricates results.
  */
 export type Lot = {
+  id?: string;
+  number?: string;
+  version?: number;
+  testingStatus?: "pending" | "passed" | "failed";
+  holdReason?: string;
+  expectedUnits?: number;
+  receivedUnits?: number;
+  reservedUnits?: number;
+  expectedAt?: string;
   lot: string;
   productId: string;
   status: LotStatus;
