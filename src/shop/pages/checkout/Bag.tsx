@@ -325,7 +325,8 @@ export function DiscountRow({ discount, amount }: { discount: Discount | null; a
 
 /* ---------- Bag drawer ---------- */
 
-/** Keep focus with the bag: quantity after adding, Remove (or the empty link) after removing. */
+/** Keep focus with the bag: quantity after adding (its field with a mouse and keyboard; its + on a touch screen, where a
+ *  field taking focus raises the keyboard unasked), Remove (or the empty link) after removing. */
 function useBagFocus(length: number) {
   const list = useRef<HTMLUListElement>(null);
   const fallback = useRef<HTMLAnchorElement>(null);
@@ -336,7 +337,8 @@ function useBagFocus(length: number) {
     pending.current = null;
     if ("added" in action) {
       const line = Array.from(list.current?.children ?? []).find((element) => (element as HTMLElement).dataset.productId === action.added);
-      line?.querySelector<HTMLInputElement>(".tm-quantity input")?.focus();
+      const fine = window.matchMedia?.("(pointer: fine)").matches ?? true;
+      line?.querySelector<HTMLElement>(fine ? ".tm-quantity input" : ".tm-quantity button:last-child")?.focus();
       return;
     }
     const buttons = list.current?.querySelectorAll<HTMLButtonElement>(".tm-remove");

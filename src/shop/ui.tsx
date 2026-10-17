@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Minus, Plus } from "lucide-react";
@@ -145,6 +145,11 @@ export function ProofFigures({ storage = true }: { storage?: boolean }) {
   );
 }
 
+/**
+ * A count from 1 to 99, stepped or typed. While it is typed in, the field shows what was typed, even nothing, so a
+ * number can be cleared and typed afresh (put back to 1 at once, a cleared field and a typed 5 made 15); each whole
+ * number is taken as it is typed, and leaving the field shows the count again.
+ */
 export function Quantity({
   value,
   onChange,
@@ -154,13 +159,18 @@ export function Quantity({
   onChange: (n: number) => void;
   label: string;
 }) {
+  const [typed, setTyped] = useState<string | null>(null);
+  const step = (n: number) => {
+    setTyped(null);
+    onChange(n);
+  };
   return (
     <div className="tm-quantity">
       <button
         type="button"
         aria-label={`Decrease ${label.toLowerCase()}`}
         disabled={value <= 1}
-        onClick={() => onChange(value - 1)}
+        onClick={() => step(value - 1)}
       >
         <Minus size={14} strokeWidth={1.8} />
       </button>
@@ -169,15 +179,20 @@ export function Quantity({
         min={1}
         max={99}
         inputMode="numeric"
-        value={value}
+        value={typed ?? value}
         aria-label={label}
-        onChange={(e) => onChange(Math.max(1, Math.min(99, Number(e.target.value) || 1)))}
+        onChange={(e) => {
+          setTyped(e.target.value);
+          const n = Number(e.target.value);
+          if (Number.isInteger(n) && n >= 1) onChange(Math.min(99, n));
+        }}
+        onBlur={() => setTyped(null)}
       />
       <button
         type="button"
         aria-label={`Increase ${label.toLowerCase()}`}
         disabled={value >= 99}
-        onClick={() => onChange(value + 1)}
+        onClick={() => step(value + 1)}
       >
         <Plus size={14} strokeWidth={1.8} />
       </button>

@@ -596,6 +596,23 @@
     white-space: nowrap;
   }
 }
+/* A short sheet (the keyboard up while a quantity is typed, or a small phone) has no room to keep the summary pinned:
+   it covered the very line being changed. There the bag scrolls as one, its summary after its lines. */
+@media (max-width: 760px) {
+  .brand-refinement .modal-backdrop:has(.tm-bag) {
+    container-type: size;
+  }
+  @container (max-height: 560px) {
+    .brand-refinement .side-modal .modal-panel:has(> .tm-bag) {
+      grid-template-rows: auto max-content auto;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    .tm-bag-body {
+      overflow: visible;
+    }
+  }
+}
 .tm-bag-empty {
   grid-column: 1 / -1;
   grid-row: 2;
