@@ -1,5 +1,7 @@
 # Command Center implementation plan
 
+> Retention update, 17 October: Mason approved customer/product drill-down, shared history, notes, reminders, drafts and outcomes, with no universal reorder timeframe. He deferred choosing an email provider and asked implementation to continue. The workflow is locally implemented and checked; [retention behavior and rollout](CUSTOMER-RETENTION.md) supersede the retention discovery questions below. Live collection still requires migration/deployment.
+
 > 17 October update: Mason's brief settles FIFO by actual receipt, automatic testing release on saving a matching passing certificate, and editable lot quantities with history. The inventory implementation is now locally verified; [workflow and production rollout](LOT-INVENTORY-WORKFLOW.md) supersede the inventory discovery questions and proposed manual approval distinctions below. Hosted migration/acceptance remains outstanding.
 
 
@@ -25,7 +27,7 @@ The highest-priority workflows are fulfilling orders and receiving/releasing inv
 | Release authority | Authorized staff can release batches; certificate upload alone does not bypass quarantine. | Working assumption accepted by Riley |
 | Communications | One interface for contact-page messages and chatbot logs, with replies sent inside it using the appropriate business email identity. Remove review moderation and public review submission. Owner-only by default with configurable staff grants. | Clarified by Riley; Gmail routing is tentative |
 | Profit | Show current revenue/profit performance and projections informed by inventory and orders. | Core direction explicit; interpreting Riley’s “live review” as live revenue/performance, with exact projection questions still open |
-| Retention | Make individual customers and product purchasing patterns actionable. Exact reorder and outreach rules are open. | Direction explicit; details unsettled |
+| Retention | Customer/product history, observed gaps, manual follow-ups and outcomes. No fixed reorder timeframe; provider deferred. | Approved by Mason; locally implemented |
 
 **2. What already exists and what remains**
 
@@ -40,7 +42,7 @@ The highest-priority workflows are fulfilling orders and receiving/releasing inv
 | Journal | Article creation/editing, covers, drafts, publication, and live content adapter. | Verify publication in a separate customer session and refresh behavior. | Only usability gaps found during that verification; no basis for rebuilding the editor. |
 | Communications | Contact inbox; handled/new status; email/SMS delivery log; stored assistant threads/messages; owner/staff team accounts. | Assemble these sources in one workspace and consistently enforce permissions. | Unified search/detail UI, in-app replies from authorized business identities, configurable staff access, and synchronized reply history. Confirm Gmail mailbox/alias/routing details. |
 | Profit | Recorded-sales model with SKU costs or margin assumptions, shipping, fees, commissions, ad spend, overhead, and CSV. | Make cost assumptions clear and reusable; decide whether to persist them centrally. | Inventory sell-through profit scenario and any missing packaging/discount assumptions. |
-| Retention | Customer identities and order links, repeat rate, recorded LTV, cohorts, observed reorder gaps, inactivity threshold, export. | Improve drill-down and connect selected audiences to existing marketing tools if approved. | Product-specific reorder views and selectable cohort history; exact rules require definition. |
+| Retention | Customer/product purchase history, observed gaps, 6/12/24-month comparisons, versioned activity, reminders, drafts and exports. | Deploy and verify shared history with owner/staff access controls. | Manual work is approved; live delivery/provider choice is deferred. |
 | Marketing | Shared consent, campaigns, schedules, event flows including winback, and a simulated delivery outbox are documented and implemented. | Reuse these for retention follow-up; real delivery requires its own provider connection and verification. | No separate campaign engine is needed for this plan. |
 | Risk / forecasts / reports | Risk signals and local review notes; forecasts and goals; reports, CSV, and local saved definitions. | Clarify terminology and agreed rules. | Only the changes the client specifies; no detailed redesign request was settled. |
 
@@ -129,13 +131,11 @@ Build the inventory view on reconciled sellable stock. Estimate merchandise reve
 
 Proposed acceptance: a small inventory fixture can be calculated by hand and matches the view; changing price, discount, packaging, or fees updates the estimate; missing costs and held stock are handled explicitly; recorded-sales totals remain unchanged.
 
-Retention already identifies individual customers. Its current cohort display uses months 0–5, and its inactivity threshold applies across customer purchases. Improve visibility and drill-down before rebuilding the analysis.
+Retention now supports product filtering, individual customer history, monthly comparisons with 6/12/24 columns and customer drill-down, and editable notes, contacts/replies, reminders and unsent drafts. Customer and activity exports retain useful evidence for later analysis. Three distinct purchase times are required before comparing the current gap with earlier gaps. The old universal inactivity threshold is removed from this screen; no product-use assumptions or reasons for non-return are inferred.
 
-Proposed extension: filter by product, inspect the people behind each cohort, choose the history window, show last purchase and repeat purchases, and optionally set a business-defined expected reorder interval per product. Treat intervals as business assumptions or observed purchasing behavior, not medical-use instructions. Do not infer a reason for non-return from a missing order.
+Mason approved follow-up tracking and deferred provider selection. Private history defaults to owner access, with explicit staff grants and versioned edits. Database capture covers known purchases, refunds, consent, matched contact forms and authenticated customer chat. Drafts and simulated delivery are not contacts; later purchases are observed outcomes, not causal attribution. Real sending and provider engagement events remain future integration work.
 
-If follow-up is approved, connect selected customers to the existing consent-aware marketing system. Product-specific retention automation is not established merely because a generic winback flow exists. Marketing’s current shared transport is simulated; real sending requires its own verified connection.
-
-Proposed acceptance: an owner can choose a product, identify customers who have/have not reordered, open their records, and prepare an eligible audience. Suppressed/nonconsenting recipients remain excluded. The system does not send an automatic campaign merely because the new view was opened.
+Local acceptance passed: choose a product, identify first/repeat purchasers, open the customer, save and complete a reminder, preserve a draft without sending, log a contact, inspect history and drill into a monthly group. See [retention verification and deployment](CUSTOMER-RETENTION.md). Hosted acceptance remains outstanding; existing marketing automations are not activated by this work.
 
 **7. Smaller sections and deferred work**
 
@@ -175,7 +175,7 @@ Inventory and communications can be developed as separate workstreams after thei
 | How are corrected certificates retained? | Owner + engineering | Before replacing evidence associated with orders | Preserve original lot associations; agree replacement/version history behavior. |
 | Which current-performance and projection questions must the financial view answer? | Client directly, with Codex translating into requirements | Before final profit acceptance | Demonstrate actual sales/profit, potential profit in current stock, and time-based sales scenarios separately. Clarify costs and assumptions using concrete examples rather than asking Riley to specify financial models. |
 | Shared or personal planning assumptions? | Owner + Codex | Before persisting profit settings | Shared owner-controlled costs are a proposed improvement; current planning assumptions are device-local. |
-| Product reorder windows, history range, and manual versus automatic outreach? | Client | Before retention automation | Customer/product drill-down first; campaign rules remain open. |
+| Future automated outreach and provider choice | Client + Codex | Before live delivery | No universal interval; six months is an analysis milestone. Manual notes/reminders/drafts are approved and built. Provider selection is deferred. |
 | Risk rules and forecast terminology? | Client | Before those refinements | Preserve existing foundation; no speculative blocking or forecasting redesign. |
 | Barcode project timing and scope? | Client + Codex | Later | Future job; not required for current manual workflows. |
 

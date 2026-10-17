@@ -193,6 +193,8 @@ function CustomerDrawer({
         </div>
       </dl>
 
+      <Button onClick={() => navigate(`${HOME}/retention?customer=${encodeURIComponent(row.id)}`)}>Activity & follow-ups</Button>
+
       <Section title="Account">
         <Facts
           items={[

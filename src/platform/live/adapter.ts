@@ -15,6 +15,7 @@ import { createPayments } from "./payments";
 import { createConnections } from "./connections";
 import { createPrograms } from "./programs";
 import { createShipping } from "./shipping";
+import { createRetention } from "./retention";
 import type { AccountOptions } from "./accounts";
 import type { Profile } from "../accounts";
 
@@ -242,7 +243,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
     if (!id) return;
     const current = epoch;
     channel = client.channel(`tm-live-platform:${id}`);
-    for (const table of ["orders", "order_events", "referrals", "notifications", "products", "lots", "order_lot_allocations", "inventory_events"]) {
+    for (const table of ["orders", "order_events", "referrals", "notifications", "products", "lots", "order_lot_allocations", "inventory_events", "retention_records", "retention_events", "retention_staff_access", "marketing_contacts"]) {
       channel.on("postgres_changes", { event: "*", schema: "public", table }, (payload) => {
         if (current !== epoch) return;
         changed();
@@ -267,6 +268,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
     channel.subscribe((status) => { if (status === "SUBSCRIBED") changed(); });
   }
   return { store, auth, owner, team, notices, programs: createPrograms(rows, rpc, changed), startRealtime, stopRealtime, partnerApplications: accounts.applications,
+    retention: createRetention(rows, rpc, changed),
     shipping: createShipping(client, rows, rpc, changed),
     messages: createMessages(rows, rpc, changed),
     payments: createPayments(client, rows, rpc, changed),

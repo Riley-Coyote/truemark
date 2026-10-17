@@ -1,0 +1,44 @@
+.retention-intro { display:flex; justify-content:space-between; align-items:center; gap:2rem; padding:1.6rem 1.8rem; border:1px solid var(--kit-line); border-radius:var(--kit-radius,12px); background:color-mix(in srgb,var(--kit-ink) 4%,transparent); }
+.retention-intro h2 { font-size:clamp(1.5rem,2.4vw,2.2rem); margin:.5rem 0; letter-spacing:-.04em; }
+.retention-intro p,.retention-history small { color:var(--kit-ink-2); }
+.retention-history { min-width:190px; display:grid; gap:.3rem; }
+.retention-history strong { font-size:2rem; letter-spacing:-.04em; }
+.retention-history small { max-width:240px; line-height:1.6; }
+.retention-filters { align-items:end; }
+.retention-filters input,.retention-filters select { max-width:100%; }
+.retention-groups { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:.6rem; margin:1rem 0; }
+.retention-groups button { text-align:left; border:1px solid var(--kit-line); border-radius:8px; padding:1rem; background:transparent; color:inherit; cursor:pointer; display:grid; gap:.5rem; }
+.retention-groups button strong { font-size:1.65rem; }
+.retention-groups button[aria-pressed=true],.retention-tabs button[aria-pressed=true] { background:color-mix(in srgb,var(--kit-ink) 12%,transparent); border-color:var(--kit-ink); }
+.retention-groups button:disabled { opacity:.5; cursor:default; }
+.retention-cell { color:inherit; background:transparent; border:0; cursor:pointer; padding:.5rem; text-decoration:underline; text-underline-offset:4px; }
+.retention-actions,.retention-tabs { display:flex; flex-wrap:wrap; gap:.5rem; margin:.8rem 0; }
+.retention-customer-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
+.retention-customer-stats div { display:grid; gap:.5rem; }
+.retention-customer-stats span { color:var(--kit-ink-2); font-size:.75rem; }
+.retention-customer-stats strong { font-size:1.15rem; }
+.retention-product,.retention-event { padding:1rem 0; border-bottom:1px solid var(--kit-line); }
+.retention-product h3,.retention-event h3,.retention-form h3 { font-size:.95rem; margin:0 0 .5rem; }
+.retention-product p,.retention-event p { margin:.4rem 0; line-height:1.6; }
+.retention-record-head { display:flex; gap:1rem; flex-wrap:wrap; justify-content:space-between; align-items:center; }
+.retention-pill { display:inline-block; border:1px solid var(--kit-line); border-radius:4px; padding:.25rem .5rem; font-size:.75rem; }
+.retention-form { display:grid; gap:1rem; padding:1rem; margin:1rem 0; border:1px solid var(--kit-line); border-radius:8px; }
+.retention-form .bi-field { width:100%; }
+.retention-form input,.retention-form select,.retention-form textarea { width:100%; box-sizing:border-box; }
+.retention-form textarea { color:inherit; background:var(--kit-field); border:1px solid var(--kit-line); border-radius:4px; padding:.7rem; font:inherit; resize:vertical; }
+.retention-text { white-space:pre-wrap; overflow-wrap:anywhere; }
+.retention-attention { font-weight:600; }
+.retention-access { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:.5rem 0; }
+.retention-page button:focus-visible { outline:2px solid var(--kit-ink); outline-offset:3px; }
+@media(max-width:900px) { .retention-groups { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:600px) { .retention-intro { flex-direction:column; align-items:stretch; padding:1.1rem; gap:1rem; } .retention-history { border-top:1px solid var(--kit-line); padding-top:1rem; } .retention-groups { grid-template-columns:repeat(2,minmax(0,1fr)); } .retention-groups button { padding:.8rem; } .retention-customer-stats { grid-template-columns:1fr 1fr; } .retention-filters .bi-field { width:100%; } }
+
+.retention-page .bi-table td,.retention-page .bi-table .bi-cell-note { white-space:normal; overflow:visible; text-overflow:clip; overflow-wrap:anywhere; }
+
+@media(max-width:600px) {
+ .retention-intro h2 { font-size:1.4rem; }
+ .retention-intro > div:first-child > p { display:none; }
+ .retention-history { grid-template-columns:auto 1fr; align-items:center; gap:.4rem .8rem; }
+ .retention-history small { grid-column:1 / -1; max-width:none; }
+ .retention-history strong { font-size:1.6rem; }
+}

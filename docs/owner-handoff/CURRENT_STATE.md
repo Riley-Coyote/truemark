@@ -2,6 +2,10 @@
 
 Snapshot prepared 16 October 2026. Read the implementation plan for file-level evidence. Do not mistake an interactive demo, passing local tests or an active function for a verified production workflow.
 
+## Local retention update — 17 October 2026
+
+Mason approved the retention workspace and deferred email-provider selection. Product/customer drill-down, observed purchase gaps without a fixed reorder deadline, 6/12/24-month comparisons, editable notes/contact logs/reminders/unsent drafts, activity history and exports are implemented locally. Private history defaults to owner access with configurable staff grants. Local SQL and browser checks passed; live collection needs the pending database migration and frontend deployment. See [retention workflow and rollout](../platform/CUSTOMER-RETENTION.md). No provider is activated.
+
 ## Local inventory update — 17 October 2026
 
 Mason confirmed FIFO by actual receipt and automatic testing release when the matching passing certificate is saved. The unified product/lot workspace and underlying allocation, returns and history behavior are implemented and verified locally. Production migration, data reconciliation and hosted acceptance remain outstanding. See [inventory workflow](../platform/LOT-INVENTORY-WORKFLOW.md) and the latest continuation notes; these supersede the inventory next-step questions in the original snapshot below.
@@ -32,7 +36,7 @@ Riley reports that Mason has accepted both the GitHub collaborator and Supabase 
 | Lot allocation | Product-level stock and one lot field per order line | Exhaust older eligible lot then next; a single product quantity may span multiple lots. Example: order 5, old lot has 2, next has 10 → allocate 2 + 3. Preserve commercial line totals with child lot allocations. Ordering field and starting lot quantities need confirmation. |
 | Communications | Contact inbox, sent-message records, persisted chatbot threads | Remove Review Moderation tab/public review workflow. One inbox for contact messages and chat logs, in-app replies from authorized business addresses. Owner-only by default; configurable staff grants. Gmail routing/reply sync still undecided. Current mailto reply is insufficient. |
 | Financial view | Recorded-sales calculations and local planning assumptions | Current sales/profit plus potential profit from sellable inventory and explicit assumptions. Clarify cost inclusion with concrete examples. A stock sell-through scenario is not a prediction of sales timing. |
-| Retention | Cohorts, customer records, inactivity/winback foundations | Clear customer/product drill-down and longer/selectable history. Product reorder rules and actual campaign delivery remain decisions/integration work. |
+| Retention | Locally implemented product/customer drill-down, observed gaps, monthly comparisons, history, notes, reminders, drafts and exports | Deploy and verify shared history. Provider choice/delivery is deferred; no universal reorder interval. See the local update above. |
 | Risk/forecasts | Existing dashboard sections | Client questioned high-frequency risk signal and some forecasting language. No replacement rules agreed. |
 
 Barcode scanning is deferred future work. Do not add it as a required packing step. Full accounting software is outside the requested scope. The client needs ordinary employees to operate the interface manually; owner conversations with Codex are for development and management, not a prerequisite for fulfilment.

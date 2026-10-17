@@ -27,6 +27,7 @@ import type { BusinessData, DateWindow } from "./model";
 
 const DataContext = createContext<BusinessData | null>(null);
 const PlanningScope = createContext("");
+export const usePlanningScope = () => useContext(PlanningScope);
 export function BusinessProvider({
   children,
   fixture,
