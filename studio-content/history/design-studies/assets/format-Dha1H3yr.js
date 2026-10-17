@@ -1,0 +1,11 @@
+import{h as a}from"./index-EHMSjotl.js";/**
+ * @license lucide-react v0.468.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const d=a("ArrowDownRight",[["path",{d:"m7 7 10 10",key:"1fmybs"}],["path",{d:"M17 7v10H7",key:"6fjiku"}]]);/**
+ * @license lucide-react v0.468.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const g=a("LayoutDashboard",[["rect",{width:"7",height:"9",x:"3",y:"3",rx:"1",key:"10lvy0"}],["rect",{width:"7",height:"5",x:"14",y:"3",rx:"1",key:"16une8"}],["rect",{width:"7",height:"9",x:"14",y:"12",rx:"1",key:"1hutg5"}],["rect",{width:"7",height:"5",x:"3",y:"16",rx:"1",key:"ldoo1y"}]]),i=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];function u(e){const t=new Date(e);return`${t.getUTCDate()} ${i[t.getUTCMonth()]} ${t.getUTCFullYear()}`}function y(e){const t=new Date(e);return`${t.getUTCDate()} ${i[t.getUTCMonth()]}`}function x(e){const t=new Date(e),n=String(t.getUTCHours()).padStart(2,"0"),r=String(t.getUTCMinutes()).padStart(2,"0");return`${u(e)}, ${n}:${r} UTC`}const c=new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}),o=new Intl.NumberFormat("en-US",{maximumFractionDigits:0}),f=new Intl.NumberFormat("en-US",{minimumFractionDigits:1,maximumFractionDigits:1}),$=e=>c.format(e);function D(e){const t=c.format(e),n=t.lastIndexOf(".");return n===-1?[t,""]:[t.slice(0,n),t.slice(n)]}const m=e=>o.format(e);function w(e){if(e===0)return"$0";if(Math.abs(e)<1e3)return`$${o.format(e)}`;const t=e/1e3;return`$${Number.isInteger(t)?t:t.toFixed(1)}k`}const s="−";function l(e,t){if(t===0)return{text:e===0?"0.0%":"New",direction:e===0?"flat":"up"};const n=(e-t)/t*100,r=Math.round(n*10)/10;return r===0?{text:"0.0%",direction:"flat"}:{text:`${r>0?"+":s}${f.format(Math.abs(r))}%`,direction:r>0?"up":"down"}}function M(e,t){const n=e-t;return n===0?{text:"0",direction:"flat"}:{text:`${n>0?"+":s}${o.format(Math.abs(n))}`,direction:n>0?"up":"down"}}const U=(e,t,n=`${t}s`)=>`${m(e)} ${e===1?t:n}`;export{d as A,g as L,y as a,$ as b,u as c,m as d,l as e,x as f,M as g,w as h,U as p,D as s};

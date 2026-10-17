@@ -1,0 +1,1 @@
+import{j as s}from"./client-CNJUigLn.js";function a(){return s.jsxs(s.Fragment,{children:[s.jsx("span",{className:"tm-brand-dot","aria-hidden":"true"}),s.jsx("span",{className:"sr-only",children:"."})]})}export{a as B};

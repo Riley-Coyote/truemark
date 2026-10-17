@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en"><head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script><meta charset="UTF-8"/>
+<script data-tm-history-storage="lab">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("lab");</script>
+<meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="robots" content="noindex"/><title>TrueMark — Landing exploration</title>  <script type="module" crossorigin src="/truemark/studio/history/lab/assets/preview-BY24bCEA.js"></script>
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/lab/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/lab/assets/index-D8OvW5uD.js">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/lab/assets/settings-CYqHfECD.js">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/lab/assets/x-NUSPwN3P.js">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/lab/assets/chevron-right-BWMkKZZh.js">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/lab/assets/plus-D8_oE_rj.js">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/lab/assets/file-text-BItsD7y_.js">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/lab/assets/check-CQaRGuam.js">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/lab/assets/arrow-left-Cc7YXc5F.js">
+  <link rel="stylesheet" crossorigin href="/truemark/studio/history/lab/assets/preview-BG96bEGQ.css">
+  <link rel="stylesheet" crossorigin href="/truemark/studio/history/lab/assets/latin-500-CRny8J5Q.css">
+</head><body><div id="root"></div></body></html>

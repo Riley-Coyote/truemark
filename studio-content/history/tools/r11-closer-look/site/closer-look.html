@@ -1,0 +1,943 @@
+
+<script data-tm-history-storage="tools">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("tools");</script>
+<title>The Closer Look</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..600&family=Inter:wght@300..600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  /* Layout: one reading column of about 66 characters; photographs break out to the full width; the five shots run as a numbered shot list; the panel's notes fold away at the end. */
+  --floor:#08080B;
+  --raise:#111116;
+  --ink:rgba(241,240,248,.93);
+  --ink-2:rgba(241,240,248,.72);
+  --ink-3:rgba(241,240,248,.55);
+  --rule:rgba(255,255,255,.10);
+  --frame:rgba(255,255,255,.08);
+  --signal:#B9A8F2;
+  --display:"Inter Tight","Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --t-xs:.75rem;
+  --t-sm:.875rem;
+  --t-md:1.0625rem;
+  --t-lg:1.3125rem;
+  --t-xl:clamp(1.55rem,1.2rem + 1.2vw,1.95rem);
+  --t-hero:clamp(2.75rem,1.6rem + 5vw,4.5rem);
+  --measure:41rem;
+  --wide:72rem;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --floor:#FAF8F5; --raise:#F1EEF4;
+    --ink:rgba(23,21,33,.94); --ink-2:rgba(23,21,33,.75); --ink-3:rgba(23,21,33,.63);
+    --rule:rgba(23,21,33,.12); --frame:rgba(23,21,33,.10); --signal:#5A42B8;
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --floor:#FAF8F5; --raise:#F1EEF4;
+  --ink:rgba(23,21,33,.94); --ink-2:rgba(23,21,33,.75); --ink-3:rgba(23,21,33,.63);
+  --rule:rgba(23,21,33,.12); --frame:rgba(23,21,33,.10); --signal:#5A42B8;
+  color-scheme:light;
+}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--floor);color:var(--ink);font-family:var(--body);font-size:var(--t-md);line-height:1.62;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.page{max-width:var(--wide);margin-inline:auto;padding-inline:20px;padding-block:56px 112px}
+
+/* masthead */
+.mast{display:grid;gap:18px;padding-block:8px 44px}
+.eyebrow{font-family:var(--mono);font-size:var(--t-xs);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin:0}
+h1{font-family:var(--display);font-weight:340;font-size:var(--t-hero);line-height:1;letter-spacing:-.028em;margin:0;text-wrap:balance}
+.lede{font-size:var(--t-lg);line-height:1.5;color:var(--ink-2);max-width:37rem;margin:0;font-weight:360}
+.byline{font-size:var(--t-sm);color:var(--ink-3);margin:0;max-width:var(--measure)}
+.toc{display:flex;flex-wrap:wrap;gap:8px 20px;margin:6px 0 0;padding:0;list-style:none;font-family:var(--mono);font-size:var(--t-xs);letter-spacing:.06em;text-transform:uppercase}
+.toc a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--rule);padding-bottom:2px}
+.toc a:hover{color:var(--ink);border-bottom-color:var(--ink-3)}
+.toc a:focus-visible{outline:none;color:var(--ink);border-bottom-color:var(--ink-2)}
+
+/* sections and text */
+section{border-top:1px solid var(--rule);padding-block:56px;display:grid;gap:22px}
+section > *{min-width:0}
+h2{font-family:var(--display);font-weight:420;font-size:var(--t-xl);line-height:1.18;letter-spacing:-.012em;margin:0;text-wrap:balance}
+h3{font-family:var(--display);font-weight:470;font-size:var(--t-lg);line-height:1.3;letter-spacing:-.005em;margin:0;text-wrap:balance}
+p,ul,ol{margin:0;max-width:var(--measure)}
+ul,ol{padding-left:1.2em;display:grid;gap:10px}
+li::marker{color:var(--ink-3)}
+strong{font-weight:560;color:var(--ink)}
+.dim{color:var(--ink-2)}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--ink-3);text-underline-offset:3px;text-decoration-thickness:1px;border-radius:2px}
+a:hover{text-decoration-color:var(--ink)}
+a:focus-visible{outline:none;box-shadow:0 0 0 1px var(--ink-2)}
+code{font-family:var(--mono);font-size:.85em;color:var(--ink)}
+.lot{font-family:var(--mono);font-size:.9em;letter-spacing:.01em;white-space:nowrap}
+
+/* the calls */
+.calls{background:var(--raise);border:1px solid var(--rule);border-radius:12px;padding:clamp(18px,3vw,30px);display:grid;gap:20px;max-width:47rem}
+.label{font-family:var(--mono);font-weight:500;font-size:var(--t-xs);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin:0}
+.calls ol{list-style:none;padding:0;counter-reset:call;display:grid;gap:26px;max-width:none}
+.calls li{counter-increment:call;display:grid;grid-template-columns:1.75rem minmax(0,1fr);gap:0 10px}
+.calls li::before{content:counter(call);font-family:var(--mono);font-size:var(--t-sm);color:var(--ink-3);padding-top:.2em}
+.call{display:grid;gap:10px;min-width:0}
+.call p{max-width:none}
+.opts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 16px;margin:0}
+.opts dt{font-family:var(--mono);font-size:var(--t-xs);text-transform:uppercase;letter-spacing:.07em;color:var(--ink-2);padding-top:.36em;white-space:nowrap}
+.opts dd{margin:0;color:var(--ink-2)}
+.lean{color:var(--ink);font-size:var(--t-md);line-height:1.55}
+.lean::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--signal);margin-right:9px;vertical-align:.08em}
+@media (max-width:560px){.opts{grid-template-columns:minmax(0,1fr);gap:2px}.opts dd{margin-bottom:8px}}
+
+/* figures */
+figure{margin:0;display:grid;gap:10px;min-width:0}
+figure img{display:block;width:100%;max-width:100%;height:auto;border-radius:6px;box-shadow:0 0 0 1px var(--frame);background:var(--raise)}
+figcaption{font-size:var(--t-sm);color:var(--ink-2);max-width:var(--measure);line-height:1.5}
+.grid{display:grid;gap:12px;min-width:0}
+.grid > *{min-width:0}
+.g-hero{grid-template-columns:1.682fr .486fr;align-items:end}
+.g-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g-8{grid-template-columns:repeat(8,minmax(0,1fr));gap:8px}
+.g-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g-cert{grid-template-columns:.773fr 1.511fr;align-items:end}
+.g-evid{grid-template-columns:.85fr 1.6fr;align-items:start;gap:22px}
+.cell{display:grid;gap:6px;min-width:0}
+.cell span{font-family:var(--mono);font-size:var(--t-xs);color:var(--ink-3);letter-spacing:.04em;line-height:1.35}
+.narrow{max-width:54rem}
+.stack{display:grid;gap:14px;min-width:0}
+@media (max-width:720px){
+  .g-hero{grid-template-columns:minmax(0,1fr)}
+  .g-hero .phone{max-width:230px}
+  .g-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g-8{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .g-2,.g-cert,.g-evid{grid-template-columns:minmax(0,1fr)}
+  .g-cert .cert{max-width:360px}
+}
+
+/* keep and leave */
+.kl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;max-width:62rem}
+.kl > div{display:grid;gap:12px;align-content:start;min-width:0}
+@media (max-width:720px){.kl{grid-template-columns:minmax(0,1fr)}}
+
+/* the shot list */
+.shot{display:grid;gap:16px;padding-top:34px;border-top:1px solid var(--rule)}
+.shot-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px}
+.shot-no{font-family:var(--mono);font-size:var(--t-xs);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.principles{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 26px;max-width:46rem}
+.principles li{display:grid;gap:3px;border-top:1px solid var(--rule);padding-top:10px;min-width:0}
+.principles b{font-family:var(--mono);font-weight:500;font-size:var(--t-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.principles span{font-size:var(--t-sm);color:var(--ink-2)}
+@media (max-width:560px){.principles{grid-template-columns:minmax(0,1fr)}}
+
+/* tables */
+.table-wrap{overflow-x:auto;max-width:54rem;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:var(--t-sm);line-height:1.5}
+th,td{text-align:left;vertical-align:top;padding:12px 18px 12px 0;border-bottom:1px solid var(--rule)}
+th{font-family:var(--mono);font-weight:500;font-size:var(--t-xs);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+td{color:var(--ink-2)}
+td:first-child{color:var(--ink);width:40%}
+.conf td:last-child{min-width:7.5rem}
+.conf td:first-child{width:32%}
+.conf td:nth-child(2){width:14%;padding-right:12px;font-family:var(--mono);font-size:var(--t-xs);letter-spacing:.05em;text-transform:uppercase;color:var(--ink);padding-top:.95em}
+
+/* steps */
+.steps{list-style:none;padding:0;counter-reset:step;display:grid;gap:18px}
+.steps li{counter-increment:step;display:grid;grid-template-columns:1.75rem minmax(0,1fr);gap:0 10px}
+.steps li::before{content:counter(step);font-family:var(--mono);font-size:var(--t-sm);color:var(--ink-3);padding-top:.15em}
+.steps li > span{min-width:0}
+
+/* the panel's report */
+.report{display:grid;gap:30px;max-width:47rem}
+.report > div{display:grid;gap:12px;min-width:0}
+.facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:7px 18px;font-size:var(--t-sm);margin:0}
+.facts dt{font-family:var(--mono);font-size:var(--t-xs);text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);padding-top:.22em}
+.facts dd{margin:0;color:var(--ink-2)}
+@media (max-width:560px){.facts{grid-template-columns:minmax(0,1fr);gap:2px}.facts dd{margin-bottom:8px}}
+.verdict{font-family:var(--display);font-size:var(--t-lg);line-height:1.45;font-weight:380;max-width:none}
+.tag{font-style:normal;font-family:var(--mono);font-size:.72rem;color:var(--ink-3);letter-spacing:.03em;white-space:nowrap}
+.tensions{display:grid;gap:26px}
+.tension{display:grid;gap:8px;padding-left:16px;border-left:1px solid var(--rule)}
+.tension h4{font-family:var(--display);font-size:var(--t-md);font-weight:480;margin:0}
+.tension p{font-size:var(--t-sm);color:var(--ink-2)}
+.tension p strong{color:var(--ink)}
+.members{display:grid;max-width:54rem}
+details{border-top:1px solid var(--rule)}
+details:last-child{border-bottom:1px solid var(--rule)}
+summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 10px;margin-inline:-10px;border:1px solid transparent;border-radius:8px}
+summary::-webkit-details-marker{display:none}
+summary:hover{background:var(--raise)}
+summary:focus-visible{outline:none;border-color:var(--ink-3)}
+summary .who{font-family:var(--display);font-size:var(--t-md);font-weight:480}
+summary .st{font-family:var(--mono);font-size:var(--t-xs);letter-spacing:.08em;color:var(--ink-3);white-space:nowrap}
+summary .st::after{content:"  +"}
+details[open] summary .st::after{content:"  \2212"}
+.notes{display:grid;gap:12px;padding:4px 0 28px;font-size:var(--t-sm);color:var(--ink-2);line-height:1.6}
+.notes > *{min-width:0}
+.notes h4{font-family:var(--mono);font-weight:500;font-size:var(--t-xs);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin:14px 0 0}
+.notes h5{font-family:var(--display);font-size:var(--t-md);font-weight:480;color:var(--ink);margin:6px 0 0}
+.notes p,.notes ul,.notes ol{max-width:none}
+.notes ul,.notes ol{gap:6px}
+.notes li > ul,.notes li > ol{margin-top:6px}
+.notes code{font-size:.8em;overflow-wrap:anywhere}
+
+.foot{border-top:1px solid var(--rule);padding-top:28px;font-size:var(--t-sm);color:var(--ink-3);display:grid;gap:8px}
+.foot p{max-width:none}
+</style>
+
+<main class="page">
+  <header class="mast"><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+    <p class="eyebrow">TrueMark landing · sequence plan · 11 Oct 2026</p>
+    <h1>The Closer Look</h1>
+    <p class="lede">Motion 4’s story, filmed in our real room. This is how the scroll sequence at the top of the landing page could work. Nothing here is built yet.</p>
+    <p class="byline">Claude, with a four-person review panel: an interactive director, an iPhone performance engineer, a product art director, and a lead who speaks for buyers and accessibility.</p>
+    <nav aria-label="Sections">
+      <ul class="toc">
+        <li><a href="#short">In short</a></li>
+        <li><a href="#motion-4">Motion 4</a></li>
+        <li><a href="#sequence">Five shots</a></li>
+        <li><a href="#after">The rest of the page</a></li>
+        <li><a href="#moves">How it moves</a></li>
+        <li><a href="#cut">What I cut</a></li>
+        <li><a href="#bpc">Why BPC-157</a></li>
+        <li><a href="#client">Client questions</a></li>
+        <li><a href="#prove">Proving it</a></li>
+        <li><a href="#panel">The panel</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section id="short" aria-labelledby="short-h">
+    <h2 id="short-h">In short</h2>
+    <p>Keep Motion 4’s story and replace its set with our photographs. The camera starts in the pedestal room you approved, with five vials on desktop and three on phone. Your thumb moves it in on one vial: BPC-157, moved to the centre pedestal.</p>
+    <p>When the photo runs out of detail, the label switches to a sharp copy drawn from the client’s own label file, in the same place and at the same size. The camera keeps going into the printed lot number. That number carries you onto the lot’s certificate from KMD Analytical, and tapping it opens the lot’s record. Then the camera pulls back past where it started, and the class cards rise out of the room.</p>
+    <p>From the first frame to the cards takes about five phone screens. Scrolling stays normal the whole way, with nothing snapping and nothing taking over. Before building the rest, I’d prove the push on a real iPhone.</p>
+
+    <div class="calls" role="group" aria-labelledby="calls-h">
+      <p class="label" id="calls-h">Three calls for you</p>
+      <ol>
+        <li>
+          <div class="call">
+            <p><strong>How the label hands over to the certificate.</strong></p>
+            <dl class="opts">
+              <dt>Held number</dt>
+              <dd>The lot number stays sharp and still while the vial goes soft and the certificate comes into focus behind it. It keeps the one continuous camera from the Oct 8 plan.</dd>
+              <dt>Hard cut</dt>
+              <dd>The camera pushes into the printed number until it fills the screen, then cuts to the same number on the certificate. Two companies printing one number is the whole promise, and a cut looks the same at 30 frames a second.</dd>
+            </dl>
+            <p class="lean">My lean: the held number. The first test will have both behind a switch, so you can feel them on your phone.</p>
+          </div>
+        </li>
+        <li>
+          <div class="call">
+            <p><strong>Move BPC-157 to the centre pedestal.</strong> It swaps places with NAD+ in the hero line-up. From the centre, the push goes straight in on desktop and on phone. From the right, a phone push turns into a pan.</p>
+            <p class="lean">My lean: swap them. With NAD+ in the centre, its certificate would come on screen, and the lab’s photo there shows a brown vial with a navy cap.</p>
+          </div>
+        </li>
+        <li>
+          <div class="call">
+            <p><strong>The lift and turn you asked for on Oct 8.</strong> Our vial pictures have their labels drawn flat across the front, so a turn may look fake. One overlay test settles it. The lift is easier: it needs a soft shadow built by hand, which the close-up needs anyway.</p>
+            <p class="lean">My lean: a small lift, and the turn only if the test passes. If it fails, the focus travels across the label and the vial stays still.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="motion-4" aria-labelledby="m4-h">
+    <h2 id="m4-h">Motion 4: what to keep, what to leave</h2>
+    <p>Codex’s study, recorded chapter by chapter at desktop and phone sizes.</p>
+    <figure>
+      <div class="grid g-4">
+        <div class="cell"><img src="img/m4-d-1.jpg" width="720" height="450" alt="Motion 4 opening: five vials on computer-drawn plinths, headline One vial. The whole story."><span>Opening</span></div>
+        <div class="cell"><img src="img/m4-d-2.jpg" width="720" height="450" alt="Motion 4 approach: the vials lift and the camera moves toward Retatrutide."><span>Approach</span></div>
+        <div class="cell"><img src="img/m4-d-3.jpg" width="720" height="450" alt="Motion 4 label chapter: a close Retatrutide vial with coloured markers and a white card."><span>Label · identity</span></div>
+        <div class="cell"><img src="img/m4-d-4.jpg" width="720" height="450" alt="Motion 4 label chapter on traceability, with a white card."><span>Label · traceability</span></div>
+        <div class="cell"><img src="img/m4-d-5.jpg" width="720" height="450" alt="Motion 4 connection chapter: Scan the code. Match the lot. with a white lookup form."><span>Connection</span></div>
+        <div class="cell"><img src="img/m4-d-6.jpg" width="720" height="450" alt="Motion 4 record chapter: the lot number and results on a white card."><span>Record</span></div>
+        <div class="cell"><img src="img/m4-d-7.jpg" width="720" height="450" alt="Motion 4 certificate chapter: the KMD certificate beside findings tabs."><span>Certificate</span></div>
+        <div class="cell"><img src="img/m4-d-8.jpg" width="720" height="450" alt="Motion 4 finale: three large cropped vials on a blank background."><span>Finale</span></div>
+      </div>
+      <figcaption>Motion 4 · Luminous studio at 1440 × 900.</figcaption>
+    </figure>
+    <figure>
+      <div class="grid g-8">
+        <img src="img/m4-p-1.jpg" width="300" height="649" loading="lazy" alt="Motion 4 on a phone: opening.">
+        <img src="img/m4-p-2.jpg" width="300" height="649" loading="lazy" alt="Motion 4 on a phone: approach.">
+        <img src="img/m4-p-3.jpg" width="300" height="649" loading="lazy" alt="Motion 4 on a phone: label, identity.">
+        <img src="img/m4-p-4.jpg" width="300" height="649" loading="lazy" alt="Motion 4 on a phone: label, traceability.">
+        <img src="img/m4-p-5.jpg" width="300" height="649" loading="lazy" alt="Motion 4 on a phone: connection.">
+        <img src="img/m4-p-6.jpg" width="300" height="649" loading="lazy" alt="Motion 4 on a phone: record.">
+        <img src="img/m4-p-7.jpg" width="300" height="649" loading="lazy" alt="Motion 4 on a phone: certificate.">
+        <img src="img/m4-p-8.jpg" width="300" height="649" loading="lazy" alt="Motion 4 on a phone: finale.">
+      </div>
+      <figcaption>The same eight chapters on a 390-point phone.</figcaption>
+    </figure>
+
+    <div class="kl">
+      <div>
+        <h3>Keep</h3>
+        <ul>
+          <li>The story order: the vial, its label, its lot number, its certificate. It tells the brand’s own idea, lot-level traceability, in four steps.</li>
+          <li>One idea per screen, at a calm pace.</li>
+          <li>Soft, bright, even light.</li>
+          <li>The label treated as something worth reading.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Leave</h3>
+        <ul>
+          <li>The set. Its plinths and backdrop are drawn by computer, and beside our photographed room they read as a render.</li>
+          <li>Flat vials that always face the camera and float when they lift.</li>
+          <li>A soft label at the moment it asks you to read it.</li>
+          <li>White app cards after the label, and coloured markers that mean nothing.</li>
+          <li>Text colliding on two chapters.</li>
+          <li>Guided scrolling. One swipe plays a fixed move, so you can’t scrub, and it fights an iPhone’s momentum.</li>
+          <li>On phone, the outer vials are cut off, cards cover the vial, and the certificate shrinks to a thumbnail.</li>
+          <li>A finale that leads nowhere.</li>
+        </ul>
+      </div>
+    </div>
+
+    <figure>
+      <div class="grid g-2">
+        <div class="cell"><img src="img/set-m4.jpg" width="893" height="260" loading="lazy" alt="Motion 4's computer-drawn plinths with flat vial pictures."><span>Motion 4’s set</span></div>
+        <div class="cell"><img src="img/set-room.jpg" width="893" height="260" loading="lazy" alt="Our photographed lilac pedestal room with five vials and their lot labels."><span>Our room</span></div>
+      </div>
+    </figure>
+    <div class="grid g-evid">
+      <figure>
+        <img src="img/label-softness.jpg" width="520" height="420" loading="lazy" alt="Motion 4's label close-up at full size: soft print on the Retatrutide label.">
+        <figcaption>Motion 4’s label at full size, soft at the moment it asks to be read.</figcaption>
+      </figure>
+      <figure>
+        <div class="stack">
+          <img src="img/collision-record.jpg" width="1040" height="120" loading="lazy" alt="Motion 4 record chapter: a heading cut off behind a card.">
+          <img src="img/collision-certificate.jpg" width="960" height="130" loading="lazy" alt="Motion 4 certificate chapter: a heading overlapping a label.">
+        </div>
+        <figcaption>Text collisions on the record and certificate chapters.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="sequence" aria-labelledby="seq-h">
+    <h2 id="seq-h">The sequence, in five shots</h2>
+    <p>One room, one light, one vial. Each shot is closer to the same vial than the one before it.</p>
+
+    <article class="shot" aria-labelledby="s1">
+      <div class="shot-head"><span class="shot-no">Shot 1</span><h3 id="s1">The room</h3></div>
+      <p>The hero as it is today: five vials on desktop, three on phone, with the client’s headline and buttons. The only change is BPC-157 moving to the centre pedestal. The camera starts moving on the first scroll, so the room comes alive right away.</p>
+      <figure>
+        <div class="grid g-hero">
+          <img src="img/hero-desktop.jpg" width="1600" height="951" loading="lazy" alt="The pedestal hero on desktop: five vials on lilac pedestals with lot and HPLC labels, and the headline True research. True precision. Verified.">
+          <img class="phone" src="img/hero-phone.jpg" width="600" height="1234" loading="lazy" alt="The pedestal hero on a phone: three vials, Semax, NAD+ and BPC-157.">
+        </div>
+        <figcaption>The pedestal hero on the current build. BPC-157 stands on the right today.</figcaption>
+      </figure>
+    </article>
+
+    <article class="shot" aria-labelledby="s2">
+      <div class="shot-head"><span class="shot-no">Shot 2</span><h3 id="s2">The push</h3></div>
+      <p>The camera moves straight in on BPC-157 while the other vials fall out of focus and mist drifts past the lens. Your thumb drives it, at the speed you scroll. This move is already built: it plays today when you tap a vial. The scroll version keeps the push and stays in this room.</p>
+      <figure>
+        <div class="grid g-4">
+          <img src="img/flight-1.jpg" width="960" height="571" loading="lazy" alt="Frame 1: the hero room with five vials.">
+          <img src="img/flight-2.jpg" width="960" height="571" loading="lazy" alt="Frame 2: the camera pushes in on BPC-157 and the other vials blur.">
+          <img src="img/flight-3.jpg" width="960" height="571" loading="lazy" alt="Frame 3: BPC-157 alone on a single pedestal in a differently lit room.">
+          <img src="img/flight-4.jpg" width="960" height="571" loading="lazy" alt="Frame 4: the BPC-157 product page with price and Add to cart.">
+        </div>
+        <figcaption>Today’s tap-a-vial move: the room, the push, the switch to the single-pedestal photo, the product page. The scroll story uses the first two.</figcaption>
+      </figure>
+    </article>
+
+    <article class="shot" aria-labelledby="s3">
+      <div class="shot-head"><span class="shot-no">Shot 3</span><h3 id="s3">The label</h3></div>
+      <p>About three times closer, the photo runs out of detail. At that size the label switches to a sharp copy drawn from the client’s own label file, so the change can’t be seen. On the way in it passes the QR code, which opens the Verify page. Every label’s code goes to that same page, so the lot number is what ties this vial to its report. The camera keeps going into it: <span class="lot">TM-BPC10-2609-01</span>.</p>
+      <figure>
+        <img src="img/label-print-vs-unrolled.jpg" width="1400" height="472" loading="lazy" alt="Left: a sharp label corner drawn from the client's print file, lot TM-RET10-2609-01. Right: the same corner taken from our BPC-157 photo, blurry.">
+        <figcaption>Left, a label drawn from the client’s print file. Right, the same corner taken from our BPC-157 photo. The photo is already soft at this size. The file stays sharp at any size.</figcaption>
+      </figure>
+      <figure class="narrow">
+        <img src="img/air-label-phone.jpg" width="1230" height="609" loading="lazy" alt="Four phone frames reading a sharp Retatrutide label: the vial, the name, the lot number, the QR code.">
+        <figcaption>A sharp label read already worked on a phone in the Shape of Air test, with Retatrutide.</figcaption>
+      </figure>
+    </article>
+
+    <article class="shot" aria-labelledby="s4">
+      <div class="shot-head"><span class="shot-no">Shot 4</span><h3 id="s4">The lot, then the certificate</h3></div>
+      <p>The lot number carries you from the vial to the certificate KMD Analytical issued for that lot: 99.51% purity by HPLC, analysed on 1 October 2026. The certificate appears whole and unmarked, held in front of the softened room. The lot number is real text, and tapping it opens that lot’s record. A link opens <a href="https://kmdanalytical.com/coa/TB-20260924-VKKT-01" target="_blank" rel="noopener">the certificate on KMD’s own site</a>.</p>
+      <figure>
+        <div class="grid g-cert">
+          <img class="cert" src="img/bpc-certificate.jpg" width="1100" height="1423" loading="lazy" alt="KMD Analytical certificate of analysis for BPC-157 lot TM-BPC10-2609-01: purity 99.51%, content 12.46 mg, retention time 6.657 minutes.">
+          <img src="img/air-cert-phone.jpg" width="920" height="609" loading="lazy" alt="Three phone frames: a certificate held in front of the misty room, coming into focus, then close on its lot field.">
+        </div>
+        <figcaption>Left, certificate TB-20260924-VKKT-01 for lot <span class="lot">TM-BPC10-2609-01</span>. Right, a certificate held in front of the room in the Shape of Air test.</figcaption>
+      </figure>
+    </article>
+
+    <article class="shot" aria-labelledby="s5">
+      <div class="shot-head"><span class="shot-no">Shot 5</span><h3 id="s5">Pull back, into the cards</h3></div>
+      <p>The camera pulls back past where it started, so the room ends up larger than the first frame. The four principles land as words, exactly as the live page sets them. Then the floor of the room runs into Organized by compound class and the eight cards.</p>
+      <ul class="principles" aria-label="The four principles, as the live page sets them">
+        <li><b>Research use only</b><span>Supplied for laboratory research applications.</span></li>
+        <li><b>Not for human use</b><span>Not for human or veterinary administration.</span></li>
+        <li><b>Independently tested</b><span>Every lot tested on receipt at a contracted laboratory.</span></li>
+        <li><b>Cold chain</b><span>Temperature-controlled storage, and transit when applicable.</span></li>
+      </ul>
+      <figure class="narrow">
+        <img src="img/live-cards.jpg" width="1200" height="713" loading="lazy" alt="The live page's compound class section: a pedestal picture, then cards for metabolic peptides, peptide fragments, copper peptides and secretagogue peptides.">
+        <figcaption>The live page’s class cards, which come straight after the sequence.</figcaption>
+      </figure>
+    </article>
+  </section>
+
+  <section id="after" aria-labelledby="after-h">
+    <h2 id="after-h">The rest of the page</h2>
+    <p>Everything else from the live page follows in the room’s light, with no dark band. No copy is removed; every piece lands somewhere.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Live page today</th><th scope="col">New page</th></tr></thead>
+        <tbody>
+          <tr><td>Hero, a row of seven vials</td><td>The pedestal room you approved, which opens the sequence.</td></tr>
+          <tr><td>The four principles</td><td>Word for word at the end of the sequence.</td></tr>
+          <tr><td>Organized by compound class, and the eight class cards</td><td>Straight after the sequence.</td></tr>
+          <tr><td>Every vial has a paper trail, the BPC-157 lot timeline</td><td>Below the cards. It’s about time passing, so it sits outside a shot about getting closer.</td></tr>
+          <tr><td>Read the certificate, the dark band</td><td>Its certificate card becomes shot 4. Its lot lookup and its words move, unchanged, to the paper trail section.</td></tr>
+          <tr><td>Laboratory and institutional buyers</td><td>Unchanged, after the paper trail.</td></tr>
+          <tr><td>Common questions</td><td>Unchanged.</td></tr>
+          <tr><td>Footer</td><td>Unchanged.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="moves" aria-labelledby="moves-h">
+    <h2 id="moves-h">How it moves</h2>
+    <ul>
+      <li><strong>Your thumb drives it.</strong> Scrolling stays normal from top to bottom. Nothing snaps and nothing takes over, so an iPhone’s momentum works as usual.</li>
+      <li><strong>Pauses are built in.</strong> At each shot the picture holds still while the page keeps moving under your thumb, which gives time to read.</li>
+      <li><strong>Always a way out.</strong> The header, View catalog, a Skip to the collection link and a thin progress line stay in view. Today a phone reaches the cards after about three screens; with the sequence it takes about five.</li>
+      <li><strong>A Motion switch.</strong> A visible on and off control. It also closes a gap on the page today: the hero’s mist keeps moving with no way to pause it, and WCAG 2.2.2 asks for one.</li>
+      <li><strong>Reduced motion.</strong> People who turn motion off get the same story as still frames, with the same words.</li>
+      <li><strong>Screen readers</strong> hear the story once, as text, with a heading for each shot.</li>
+      <li><strong>Taps work when the page is still.</strong> A tap during momentum only stops the scroll. So the lot number opens its own page, and Back returns to the same frame.</li>
+      <li><strong>Good at 30 frames a second.</strong> iPhones in Low Power Mode hold web pages to 30, so every move has to read well there too.</li>
+      <li><strong>Light to load.</strong> It builds on the existing camera move, uses blur prepared ahead of time, and leaves out Motion 4’s 3D engine, which adds 134 KB for about ten shapes.</li>
+    </ul>
+  </section>
+
+  <section id="cut" aria-labelledby="cut-h">
+    <h2 id="cut-h">What I cut, and why</h2>
+    <ul>
+      <li><strong>The shine sliding across the glass.</strong> You called it “really cheap” on Oct 7.</li>
+      <li><strong>The label peeling off the vial.</strong> It looks like relabelling, which is exactly what lot tracing exists to rule out.</li>
+      <li><strong>The switch to the single-pedestal photos in the middle of the scroll.</strong> They show a different room: one window, pink light on the right, a higher horizon. A one-second tap hides that, but a scroll can stop on any frame. The tap-a-vial move keeps the switch, as you asked on Oct 7.</li>
+      <li><strong>Parallax layers cut from the photo.</strong> Their edges stretch and give the photo away.</li>
+      <li><strong>The lot timeline and a separate record screen inside the sequence.</strong> They stop the camera. The timeline moves below the cards, and the certificate already carries the record.</li>
+      <li><strong>Typing inside the scene.</strong> An iPhone keyboard would jolt the camera, so the lot lookup sits below.</li>
+      <li><strong>Guided scrolling.</strong> It fights an iPhone’s momentum.</li>
+    </ul>
+    <figure>
+      <img src="img/plates-wide.jpg" width="1800" height="540" loading="lazy" alt="Eight room photos: the hero's five-pedestal room top left, lit evenly from two windows, and seven single-pedestal photos with one window and pink light on the right.">
+      <figcaption>Top left, the hero’s room. The other seven, the single-pedestal photos.</figcaption>
+    </figure>
+  </section>
+
+  <section id="bpc" aria-labelledby="bpc-h">
+    <h2 id="bpc-h">Why BPC-157</h2>
+    <ul>
+      <li>It is already the site’s example lot, in the paper trail, the lookup and the certificate card: lot <span class="lot">TM-BPC10-2609-01</span>, certificate TB-20260924-VKKT-01, 99.51% by HPLC.</li>
+      <li>Its label can be redrawn sharp from the client’s label file in the brand kit, <code>build_175.py</code>, which I read and never run. The first test checks that it lines up with the photo.</li>
+      <li>From the centre pedestal, the push goes straight in on every screen.</li>
+      <li><strong>Not Retatrutide</strong>, Motion 4’s choice. The FDA named it in warning letters sent on 24 August 2026 to five peptide sellers, and the letters judged each site by its overall impression; a research-use-only label didn’t protect them (<a href="https://www.afslaw.com/perspectives/alerts/ruo-ined-five-peptide-vendors-learn-research-use-only-not-legal-strategy" target="_blank" rel="noopener">a law firm’s summary</a>). It shouldn’t be the face of the page’s most-watched moment.</li>
+      <li><strong>Not NAD+</strong>, today’s centre vial. The lab’s photo of its tested sample shows a brown vial with a navy cap, far from our clear vial with a white cap.</li>
+    </ul>
+  </section>
+
+  <section id="client" aria-labelledby="client-h">
+    <h2 id="client-h">Questions for the client</h2>
+    <p>None of these stop the build. They need answers before the certificate shot goes live.</p>
+    <ol>
+      <li><strong>Which cap colour ships?</strong> The lab’s photo of the tested BPC-157 sample shows a blue cap. Our vial pictures show white caps.</li>
+      <li><strong>The testing claims.</strong> The page says the certificate covers endotoxin and sterility, and lists HPLC · MS. KMD’s certificate says sterility and endotoxin were not assessed, and identity was checked by retention time and UV. On Oct 7 you ruled this is the client’s to settle. The new sequence puts the two side by side, so it’s worth asking now.</li>
+      <li><strong>The appearance row.</strong> The certificate’s specification reads “White lyophilized powder”, the result reads “Clear, colorless”, and the row is marked Conforms.</li>
+      <li><strong>Tesamorelin in the hero.</strong> The same FDA letters named it.</li>
+      <li><strong>Showing the certificate.</strong> It says it may not be reproduced except in full. Is a camera move across it, ending on the whole page, acceptable?</li>
+      <li><strong>The original label files.</strong> The brand kit’s 04_Vial_Labels folder is missing. Nice to have.</li>
+    </ol>
+  </section>
+
+  <section id="prove" aria-labelledby="prove-h">
+    <h2 id="prove-h">Proving it first</h2>
+    <ol class="steps">
+      <li><span><strong>The label test.</strong> About an hour, with no browser. Redraw BPC-157’s label from the client’s file and lay it over the vial photo, flat and wrapped. It settles the featured vial, the sharp label and the turn.</span></li>
+      <li><span><strong>The first slice</strong>, on the pedestal-hero build: the room, the push, the label and the lot number. Both hand-off versions sit behind a switch, and a version with real depth sits beside the plain zoom.</span></li>
+      <li><span><strong>A real iPhone.</strong> The Mac’s simulator can’t judge smoothness. The bar: no more than one frame in twenty late, no stall over 50 milliseconds when shots change, and no reloads in twenty runs. Getting the build onto your phone needs your OK to share the dev server on your Wi-Fi, or a private build.</span></li>
+      <li><span><strong>Then the rest:</strong> the certificate, the pull-back, the cards and the page below them.</span></li>
+    </ol>
+  </section>
+
+  <section id="panel" aria-labelledby="panel-h">
+    <h2 id="panel-h">The review panel</h2>
+    <p>Four specialists read the draft plan and the project files on their own, then answered each other’s strongest claims. This is their report, followed by each member’s notes.</p>
+    <div class="report">
+      <dl class="facts">
+        <dt>Question</dt><dd>“take it from a visual study to a premium polished and viually astunning interactive sequence for the page. could you take a look and think through how you could make it bette?”</dd>
+        <dt>Council (4)</dt><dd>Interactive Director · iPhone Performance Engineer · Product Art Director · Buyer &amp; Accessibility Lead</dd>
+        <dt>Rounds</dt><dd>Independent, then cross-examination</dd>
+        <dt>Mode</dt><dd>Expert panel, Deep</dd>
+      </dl>
+
+      <div>
+        <p class="label">Verdict</p>
+        <p class="verdict">Keep Motion 4’s story and film it in our real room with normal scrolling: one push into a centred BPC-157, its label redrawn from the client’s file, the lot number carrying you to its certificate, then a pull-back into the cards. Prove the push on an iPhone first.</p>
+      </div>
+
+      <div>
+        <p class="label">Consensus</p>
+        <ul>
+          <li><strong>Normal scrolling the whole way.</strong> No hijacking and no snapping. Pauses live in how scroll maps to the picture, and any typing happens outside the scene. <em class="tag">all four · held under challenge</em></li>
+          <li><strong>Cut the shine, the switch to the single-pedestal photos, flat parallax layers and the label unroll.</strong> <em class="tag">the unroll’s author conceded</em></li>
+          <li><strong>The lot number is the hinge.</strong> It should be real, tappable text. The QR code can’t play that part, because every label’s code opens the same Verify page. <em class="tag">held</em></li>
+          <li><strong>The label comes from the client’s own file, never an enlarged photo.</strong> <em class="tag">held · retired the Retatrutide fallback</em></li>
+          <li><strong>About five phone screens</strong>, with the lot timeline and the separate record moved out of the sequence. <em class="tag">unchallenged</em></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="label">What moved in cross-examination</p>
+        <ul>
+          <li><strong>Interactive Director</strong> sharpened: from a hard cut to a lot number held still through two focus pulls, moved by the <strong>Art Director</strong>’s round-one idea and the Oct 8 “one continuous camera”.</li>
+          <li><strong>Product Art Director</strong> sharpened the opposite way: from hidden swaps to one honest hard cut, moved by the <strong>Director</strong>’s round-one argument. The label generator also retired their Retatrutide pick.</li>
+          <li><strong>Performance Engineer</strong> dropped the unroll after the <strong>Art Director</strong>’s “a label leaving its vial shows relabelling”, and lowered their confidence to Medium.</li>
+          <li><strong>Challenge that landed:</strong> the <strong>Buyer Lead</strong> to the <strong>Director</strong> and <strong>Art Director</strong> on featuring Retatrutide, citing the FDA letters and the label generator. Both dropped it.</li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="label">Key tensions</p>
+        <div class="tensions">
+        <div class="tension">
+          <h4>One continuous camera, or an honest cut</h4>
+          <p><strong>Interactive Director:</strong> hold the lot number still while the background changes inside focus pulls. When a thumb controls the timing, a cut fired at a set scroll point looks like a glitch.</p>
+          <p><strong>Art Director and Engineer:</strong> one hard cut pretends nothing, reads the same at 30 frames a second, and no one can stop halfway through it. The certificate sets the number in another typeface over two lines, so the match holds position and height while the letter shapes differ.</p>
+          <p><strong>In cross-examination</strong> the Director and the Art Director swapped sides, which suggests both versions have real merit.</p>
+          <p><strong>Resolution:</strong> a question of feel. Build both behind a switch in the first slice and let Riley choose on his phone. Lean: the held number as live, tappable text, with the background change hidden at the bottom of a full defocus and a small dead zone so it can’t flicker.</p>
+        </div>
+      <div class="tension">
+        <h4>Real depth, or an honest zoom</h4>
+        <p><strong>Engineer and Director:</strong> project the photo onto the room’s measured shapes so the floor and mist gain real depth. A slow, scrubbed zoom on a still can look like pinch-zooming a photo.</p>
+        <p><strong>Art Director:</strong> moving the camera uncovers about 100 pixels of wall the photo never saw, and the generated room has no single exact camera. Mostly zoom, with a little camera movement.</p>
+        <p><strong>In cross-examination</strong> the Engineer conceded the gaps, about 13 points at twice the size, and named the zoom as the fallback.</p>
+        <p><strong>Resolution:</strong> zoom by default. Try the projection in the slice, compare the two unlabelled on an iPhone, and step frame by frame along the pedestal edges.</p>
+      </div>
+      <div class="tension">
+        <h4>The turn</h4>
+        <p><strong>Director and Engineer:</strong> a small spin, 20 degrees or less, of the rebuilt label under the photo’s own light. On a real spinning vial the shading stays still and only the print slides.</p>
+        <p><strong>Art Director:</strong> the photographed labels are drawn flat across the front. A real label this size would wrap about 210 degrees, so any turn either jumps or slides print across glass, which reads as CG.</p>
+        <p><strong>Resolution:</strong> the overlay test settles it by wrapping the rebuilt label on a cylinder over the photo. If it fails, the focus moves across the label instead.</p>
+      </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="label">Blind spots</p>
+        <ul>
+          <li><strong>Whose words.</strong> Motion 4’s chapter lines were written by Codex, not the client. The sequence needs the client’s copy or lines they approve.</li>
+          <li><strong>The page’s overall impression.</strong> The FDA letters judged whole sites. Beyond which vial to feature, nobody weighed how a cinematic treatment of one compound adds to that impression.</li>
+          <li><strong>Tapping a vial during the story.</strong> The tap-a-vial move and the scroll story drive the same camera. Nobody said what a tap does mid-push.</li>
+          <li><strong>Android.</strong> Every performance claim was made for iPhone.</li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="label">Confidence map</p>
+        <p class="dim">The members’ own ratings, gathered. Self-rated, not measured.</p>
+        <div class="table-wrap">
+          <table class="conf">
+            <thead><tr><th scope="col">Aspect</th><th scope="col">Confidence</th><th scope="col">Signal</th></tr></thead>
+            <tbody>
+              <tr><td>Normal scrolling, no snapping</td><td>High</td><td>All four agreed, and it held under challenge</td></tr>
+              <tr><td>What to cut</td><td>High</td><td>All four; the unroll’s author conceded</td></tr>
+              <tr><td>BPC-157 with a rebuilt label</td><td>Medium</td><td>Rests on the untested overlay</td></tr>
+              <tr><td>The hand-off, held or cut</td><td>Medium</td><td>Two members swapped sides</td></tr>
+              <tr><td>Real depth or plain zoom</td><td>Low</td><td>Narrowed, still untested</td></tr>
+              <tr><td>The turn</td><td>Low</td><td>The Art Director expects it to fail</td></tr>
+              <tr><td>iPhone smoothness</td><td>Medium</td><td>Arithmetic, no device measurements</td></tr>
+              <tr><td>Compliance staging</td><td>Medium</td><td>Rests on a law firm’s summary and the client’s answers</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <p class="label">Recommended next steps</p>
+        <ol class="steps">
+          <li><span><strong>The label overlay test.</strong> Redraw BPC-157’s label from <code>build_175.py</code>, read and never run, and lay it over the cutout, flat and wrapped on a cylinder. It decides the vial, the label shot and the turn.</span></li>
+          <li><span><strong>The first slice on landing-v4:</strong> room, push, label and lot number, BPC-157 centred, both hand-off versions behind a switch, and the zoom with the projection as a second option.</span></li>
+          <li><span><strong>A real iPhone run</strong> against the bar, once Riley OKs sharing the dev server on his network.</span></li>
+          <li><span><strong>Send the client questions</strong> in parallel.</span></li>
+          <li><span><strong>Then the rest:</strong> the certificate, the pull-back, the cards and the page below.</span></li>
+        </ol>
+      </div>
+
+      <div>
+        <p class="label">Each member’s notes</p>
+        <div class="members">
+          <details>
+            <summary><span class="who">Interactive Director</span><span class="st">SHARPENED</span></summary>
+            <div class="notes">
+              <h4>Round one</h4>
+<p><strong>First Watch</strong> The opening works. The photographed room is the best first frame this project has had. Attention drops at beat 3, because that's where the camera stops. From the label on, the draft is Motion 4's slide deck in new clothes: four reading slides over a blurred room. It's also too long for its own budget. Motion 4 needed 9 screen-heights for 6 chapters (PRODUCTION.md), and this draft fits 8 beats into 7.</p>
+<p><strong>Shot-by-Shot Notes</strong></p>
+<ul><li><strong>Hero:</strong> the camera has to move on the very first scroll. If it doesn't, a phone visitor sees a still photo and then an ordinary page.
+</li><li><strong>Push:</strong> keep the existing zoom and focus pull.
+<ul><li>Cut the "specular light sweep". Riley already rejected the shine across the vials as "really cheap" (LANDING.md, round 4).
+</li><li>Cut the layered parallax. Its rubbery edges give the photo away. Mist drifting across the lens gives the same depth without that risk.
+</li><li>On the phone, let the moving camera stir the mist. Today touch never does (FloorMist.tsx).
+</li></ul>
+</li><li><strong>Hand-off:</strong> the existing camera move has a rule, "Nothing dissolves, ever" (flight.ts). If the background photo must change, swap it while the room is fully blurred, costing no scroll, or don't swap it.
+</li><li><strong>Label:</strong> drop the unroll. It's a packaging-mockup cliché, and it peels the number off the vial, which is the opposite of the message. Do what Riley asked for on Oct 8 instead: the vial turns slightly toward its lot number while the focus sharpens from soft to print-crisp.
+</li><li><strong>Release:</strong> Riley's Oct 8 phrase was "pull back past the start". Don't return to the hero framing he has already seen. Pull further back, and let the floor run into the cards.
+</li></ul>
+<p><strong>The Signature Moment</strong> A match cut on the lot number:</p>
+<ol><li>Push in on TM-BPC10-2609-01 on the glass until it fills the screen.
+</li><li>Cut hard to the same number in the certificate's "Client batch / lot" field. Both certificates I opened print it there; it wraps onto two lines, so frame the part they share.
+</li><li>Pull back across the sheet, lit by the window, to its big purity figure.
+</li></ol>
+<p>Two different companies printed the same number, and that one cut is the whole brand promise. It has to be a real cut that fires at a set scroll point, with a small dead zone so it can't flicker. A crossfade that stops halfway is just a double exposure. It also works with motion turned off, as two stills side by side.</p>
+<p><strong>What to Cut</strong></p>
+<ul><li>The timeline beat. It's about time, not getting closer, so it moves below the cards.
+</li><li>The separate record beat. It repeats the certificate's numbers.
+</li><li>The lot lookup inside the pinned scene. On iPhone the keyboard fights a pinned screen.
+</li><li>Four of the five label callouts, plus the dissolve, the light sweep and the parallax.
+</li></ul>
+<p>That leaves five shots in about 5 screen-heights.</p>
+<p><strong>iPhone navigation</strong></p>
+<ul><li>Normal scrolling: no hijacking and no snapping.
+</li><li>Reading pauses are stretches where the camera nearly stops.
+</li><li>Jumps cut straight to the destination instead of gliding through everything. That's an idea Riley kept from the "Shape of Air" round.
+</li><li>"Skip to the collection" plus a thin progress line. No chapter rail.
+</li></ul>
+<p><strong>Risks to "indistinguishable from photography"</strong></p>
+<ul><li>The BPC-157 flat label is an enlarged copy unwrapped from a product photo. I opened it: the QR code is smeared. Only Retatrutide has the client's real print file. Either get the client's missing label folder or feature Retatrutide.
+</li><li>The vial photos on the certificates show coloured caps (blue for BPC-157), while the hero vials have white caps. Never zoom in on that photo.
+</li></ul>
+<p><strong>Where I expect pushback</strong></p>
+<ul><li><strong>Art Director:</strong> will call the turn the riskiest move. Agreed, and the cut doesn't depend on it.
+</li><li><strong>Performance Engineer:</strong> may accept a still phone. I'd drop desktop extras first.
+</li><li><strong>Buyer Lead:</strong> may want the sequence opt-in. The hero buttons and the skip link already let shoppers bypass it.
+</li></ul>
+<p><strong>Recommendation:</strong> One camera move with one cut: room, push, turn and sharpen, match cut on the lot number, certificate, then pull back past the start into the cards.</p>
+<p><strong>Confidence:</strong> High on structure, cuts and the signature moment, which I checked against the real certificates, label files and Riley's logged decisions. Medium on whether the turn will pass as a photograph. Low on iPhone frame budgets; I defer there.</p>
+<p>Checked: <code>docs/handoff/LANDING.md</code>, <code>landing-v4/src/brand/flight.ts</code>, <code>tools/landing/r10/stills/BRIEF.md</code>, <code>tools/landing/r10/stills/lib/tex/label-bpc-157-10-mg.png</code>, <code>docs/client-documents/certificates/TB-20260924-VKKT-01.pdf</code></p>
+<p><strong>Claims</strong></p>
+<ol><li>The draft's flaw is structural: the camera stops at the label, so beats 3–6 become slides, and 8 beats can't fit in 7 screen-heights.
+</li><li>The signature moment is a hard cut from the label's lot number to the same number on the certificate, fired at a set scroll point, never a scrubbed crossfade.
+</li><li>Cutting the timeline, the separate record, the in-scene lookup, the light sweep, the parallax and the dissolve leaves five shots in about 5 screen-heights that say more.
+</li><li>BPC-157 can't carry the signature today, because its flat label is a smeared copy from a photo; get the client's label files or feature Retatrutide.
+</li><li>On iPhone: normal scrolling with near-still reading pauses, no snapping or hijacking, jumps that cut, and the scrolling camera stirring the mist.
+</li></ol>
+              <h4>Cross-examination</h4>
+<p><strong>Strongest point from another member:</strong> The Art Director's idea: the lot number holds still on screen while what's behind it changes, with each change hidden inside a focus pull. On Oct 8 Riley asked for "one continuous camera… moving in on one vial and into its proof" (LANDING.md). My hard cut breaks that camera. And when the visitor's thumb controls the timing, a cut that fires at a set scroll point looks like a glitch, not an edit. The new facts make the still number even stronger. The brand kit can rebuild the label sharp at any size. And every QR code opens the same link, so the printed number is the only thing on the glass tied to one lot. We must never present the QR as this lot's key.</p>
+<p><strong>Challenges:</strong></p>
+<ol><li><strong>Art Director:</strong> "depth should come only from focus fall-off and mist." That works for today's one-second click move, which only enlarges flat layers (flight.ts). Once it's tied to scroll, a visitor can hold it mid-move, and a slow zoom on a still looks like pinch-zooming a photo. The Performance Engineer's fix gives real depth without inventing pixels: lay the photo over the room's measured camera and pedestal shapes (scenes.ts). One rule makes it hold: the camera only moves along the photo's own line of sight to the chosen vial, so the vial is always seen from the angle it was shot at. To settle it, show Riley both versions on an iPhone with the same scroll, unlabelled, and let him pick. Then step frame by frame along the edges of the neighbouring vials to look for gaps.
+</li><li><strong>Buyer Lead:</strong> asking the client "before beat 6 is built." On Oct 7 Riley ruled on these exact contradictions and called them "not ours to resolve" (LANDING.md, lines 81–88). How we stage them is ours to fix. The certificate beat shows only what that sheet prints: lot, purity, lab and date. Drop the draft's "findings rows marked as you scroll", and leave the testing copy where it already is.
+</li></ol>
+<p><strong>Concessions:</strong> I withdraw the hard cut. "Cut the parallax" was too broad, because it lumped real measured depth in with flat sliding layers. The brand kit retires my fallback of featuring Retatrutide. All five hero lots tested at 99% or above, so the shot can pick any vial.</p>
+<p><strong>Position:</strong> SHARPENED. Same story order:</p>
+<ul><li>the room;
+</li><li>the push into one vial;
+</li><li>the lot number held still through two focus pulls (photo, then rebuilt label, then certificate);
+</li><li>a pull back past the starting frame into the cards.
+</li></ul>
+<p>It runs about 5 phone screens, and tapping the held number opens that lot's record (the Buyer Lead's idea). Tie the photo push to scroll with plain CSS. Since Safari 26.4, Safari runs scroll-linked CSS animation off the page's main thread. Whether that also keeps it smooth in Low Power Mode is unchecked. The depth effect and the mist only run when the phone isn't in that mode. I haven't measured whether the photo has spare room beyond the opening frame. If it doesn't, open slightly zoomed in, or "past the start" hits the photo's edge.</p>
+<p><strong>Confidence:</strong> Medium-high on the structure, up from round 1, because Riley's own words, the assets and the other members now point the same way. Medium on the depth effect until the blind test. Low Power Mode behaviour is unchecked.</p>
+<p>Checked: <code>docs/handoff/LANDING.md</code>, <code>landing-v4/src/brand/flight.ts</code>, <code>landing-v4/src/brand/opening-media.ts</code>, <code>landing-v4/src/platform/certificate-manifest.json</code>. Source: <a href="https://webkit.org/blog/17862/webkit-features-for-safari-26-4/" target="_blank" rel="noopener">WebKit Features for Safari 26.4</a></p>
+            </div>
+          </details>
+          <details>
+            <summary><span class="who">iPhone Performance Engineer</span><span class="st">SHARPENED</span></summary>
+            <div class="notes">
+              <h4>Round one</h4>
+<p><strong>What I checked:</strong> <code>flight.ts</code>, <code>Rooms.tsx</code>, the mist code in <code>fog/</code>, Motion 4's <code>preview.tsx</code> and <code>scroll-controller.ts</code>, the asset manifest, the client's label generator, the evidence images, and this project's own iOS notes. Nothing has been timed on a real iPhone, so every budget below is arithmetic.</p>
+<p><strong>Budget</strong></p>
+<ul><li><strong>The label hits a hard limit.</strong> The vial cutouts are 578×1112 pixels. On an iPhone screen (3 pixels per point), that is full sharpness at a vial about 371 pt tall, 44% of the screen. Anything bigger is upscaled, which is the blur in <code>label-softness-100pct.jpg</code>.
+</li><li><strong>The draft's hand-off is the memory peak.</strong> One 4K phone plate takes 33 MB once decoded. At the hand-off the draft holds the sharp hero plate, the single-pedestal plate, full-size blur copies and parallax layers. That is roughly 150–200 MB, often held twice, and it's how a tab silently reloads on a 4 GB iPhone. My build below peaks near 55 MB. It gets there by keeping full resolution only for the one pedestal in focus and storing blur at quarter size, since blurred pixels hold no detail.
+</li><li><strong>Three.js can go.</strong> It costs 134 KB gzipped, and this scene is about ten shapes.
+</li></ul>
+<p><strong>Frame Path &amp; Scroll Model</strong></p>
+<ul><li><strong>The existing camera push uses live blur.</strong> It animates CSS <code>filter: blur</code> and a masked <code>backdrop-filter</code>. That is fine for a 960 ms click. Tied to every scroll frame, it is where I expect the first dropped frames.
+</li><li><strong>Motion 4 takes over touch scrolling.</strong> It blocks native touch scrolling (<code>touchmove</code>, <code>passive:false</code>, <code>preventDefault</code>), which kills iPhone momentum. It also smooths progress, so the scene lags the finger by up to about 110 ms. On iPhone the scene should follow the finger 1:1. Smoothing belongs only to notched mouse wheels.
+</li><li><strong>The pinned stage needs a fixed height.</strong> Size it in <code>lvh</code> and never use <code>innerHeight</code> or <code>dvh</code> for progress. Then Safari's toolbar collapsing mid-scroll moves nothing.
+</li><li><strong>No scroll-snap on iPhone.</strong> Build the rests into the scroll-to-camera mapping as holds. Let each beat's text scroll in the normal page over the pinned room. It stays smooth even when JavaScript stalls, and VoiceOver, Find and anchor links land in the right places.
+</li></ul>
+<p><strong>iPhone Failure Modes</strong></p>
+<ul><li><strong>Low Power Mode.</strong> It caps page rendering at 30 fps by design (WebKit). "60 fps" only holds outside it, so every move must still read well at 30.
+</li><li><strong>The lot lookup inside the pinned room.</strong> Focusing a field makes iOS scroll the page and leave it there, per this project's own notes, so the camera would jump. Put inputs after the pin.
+</li><li><strong>The phone mist.</strong> The hero already runs a live mist simulation on phones at 0.6 pixels per point. Scaled up 4× by the push it turns blocky, and a second WebGL canvas would compete with it for the graphics chip.
+</li><li><strong>Switching apps.</strong> Coming back can lose the WebGL canvas and leave a black hole. Keep a still image underneath.
+</li><li><strong>Stalls on the first scroll.</strong> Shader compiles, large texture uploads, and phones that only fetch the sharp plate once a product page opens. Load all of it while the hero sits still.
+</li><li><strong>Colour shift.</strong> Lilac is where colour-space mismatches show. Compare the page image and the canvas pixel by pixel at the hand-off, on a real phone.
+</li></ul>
+<p><strong>What I'd Build It With</strong></p>
+<ul><li><strong>One WebGL2 canvas.</strong> Project the photo onto the room's measured geometry, which already exists in <code>fog/scenes.ts</code> (floor, wall, pedestal cylinders).
+</li><li><strong>Frame 0 is the photograph.</strong> At the hero framing that render matches the photo pixel for pixel.
+</li><li><strong>Real depth during the push.</strong> As the camera moves in, it gets true depth where this shallow room has it: the floor and the mist. The pedestals stand about 4.7–5 camera heights away and the wall only about 5.5. Focus blur by depth comes almost free, and the mist is redrawn from the moving camera.
+</li><li><strong>A straight-line camera.</strong> It moves straight toward the vial, with no pan, orbit or lift, so the flat vial cutouts never look flat.
+</li><li><strong>The label becomes vector.</strong> Stop the push at full sharpness. The label then peels off the glass as vector art from the client's own generator (<code>build_175.py</code>, which prints TM-BPC10-2609-01). The unroll is how the label escapes the photo's resolution limit.
+</li><li><strong>All text in the page</strong>, not the canvas.
+</li><li><strong>Cut</strong> the dissolve to a different plate (a hidden cut plus a mid-scroll load), the light sweep (reflections barely move in a straight push), and snapping.
+</li></ul>
+<p><strong>Where I expect disagreement.</strong> The Director may want guided passages or camera arcs. On iPhone, anything that fights momentum feels broken, and an arc shows the vials are flat. The Art Director may want the single-pedestal plate's light and 4K everywhere. In the close-up the background is out of focus, so resolution only pays where the focus is.</p>
+<p><strong>Recommendation:</strong> Build hero → push → label as one slice and prove it on a real iPhone 12 and an iPhone SE before building beats 4–7. The bar: no more than 1 frame in 20 over 16.7 ms, no single frame over 50 ms at beat changes, and no reloads in 20 runs. The simulator uses the Mac's graphics chip, so it can't answer this.</p>
+<p><strong>Confidence:</strong> High on iOS behaviour and asset limits, which I checked in the code, the manifest and WebKit's bug tracker. Medium on the memory budgets and on how much depth the projection adds, because both are arithmetic, not device measurements. Low on taste.</p>
+<p><strong>Claims</strong></p>
+<ol><li>The label can't be read sharp from the photo past a vial about 371 pt tall on an iPhone, because the cutouts are 578×1112. The push must stop there and hand the label to the client's vector art.
+</li><li>On iPhone: 1:1 native scroll, no snapping, no touch blocking, rests built into the mapping and text scrolling in the page. Low Power Mode caps anything drawn by JavaScript or WebGL at 30 fps, so only in-page text stays smooth everywhere.
+</li><li>Projecting the photo onto the geometry in <code>fog/scenes.ts</code> matches the photo pixel for pixel at the start and gives real depth on the floor. Flat cut-out layers get the floor wrong.
+</li><li>Cut the dissolve into the single-pedestal plate. It is a different generated room, and it forces a 33 MB load mid-scroll at the memory peak.
+</li><li>The existing push's live blur and the low-resolution mist can't be tied to scroll as they are. Pre-bake the blur (or compute it from depth) and redraw the mist from the moving camera, or the first dropped frames will land on the hero push.
+</li></ol>
+<p>Key files: <code>landing-v4/src/brand/flight.ts</code>, <code>landing-v4/src/brand/fog/scenes.ts</code>, <code>design-lab/motion/preview.tsx</code>, <code>docs/client-documents/brand-kit/10_Source_Files/build_175.py</code>. Sources: <a href="https://bugs.webkit.org/show_bug.cgi?id=215745" target="_blank" rel="noopener">WebKit bug 215745: 30 fps in Low Power Mode</a> · <a href="https://developer.chrome.com/docs/css-ui/scroll-driven-animations" target="_blank" rel="noopener">Chrome docs: scroll-driven animations</a></p>
+              <h4>Cross-examination</h4>
+<p><strong>Strongest point from another member:</strong> The Art Director's line, "a label leaving its vial shows relabelling." This brand's promise is that this label belongs to this lot. My unroll acted out the very fraud buyers fear, so it's out and the label stays on the glass.</p>
+<p><strong>Challenges:</strong></p>
+<ol><li><strong>The Director's "turn and sharpen."</strong> The turn only passes if the vial spins on its own axis. When a cylinder spins under fixed light, its shading and highlights stay still on screen and only the print slides.
+<ul><li>So the spin can be the client's label art (rebuilt from <code>build_175.py</code>) wrapped back on under the photo's own lighting. That's a cheap flat effect, and the glass stays the photograph.
+</li><li>No 3D glass and no tilt. Keep it to 20° or less. By my measurement the NAD+ label already covers about ±70° of the glass, so a wider turn shows bare glass the photo never had.
+</li><li>Test: lay the rebuilt label at 0° over the cutout. Any ghosting in the print kills it.
+</li></ul>
+</li><li><strong>The Art Director's "can't go past about 3×."</strong> That's true of the photo, not of the label.
+<ul><li>Rebuilt from the label art, the label stays sharp. I read the image file's header: the QR inside the template is 1100 px square.
+</li><li>So the camera can keep going into the printed lot number. The cap and glass edges soften, as they would in a real close-up's focus.
+</li><li>Test on an iPhone 12: does it read as focus or as enlargement?
+</li></ul>
+</li></ol>
+<p><strong>Concessions:</strong></p>
+<ul><li>The unroll was wrong.
+</li><li>"No pan" was too broad. Only sideways camera travel shows that the vial cutouts are flat.
+</li><li>My projection of the photo onto the room is exact only at the first frame.
+<ul><li>By arithmetic, the side pedestals uncover wall the photo never saw, about 13 pt at 2×. That wall needs filling in.
+</li><li><code>scenes.ts</code> admits the generated room has no single exact camera. If the floor slides on a phone, the Art Director's no-depth push is the fallback.
+</li></ul>
+</li><li>I missed how the Buyer's lot tap behaves on iPhone. A tap during momentum just stops the scroll, so it only works at rest. It should open a page, with the camera set only by scroll position, so swipe-back returns to the same frame.
+</li></ul>
+<p><strong>Position:</strong> SHARPENED. Build one slice and prove it on a real iPhone 12 and an SE first:</p>
+<ol><li>Push into the vial.
+</li><li>Small spin on the rebuilt label.
+</li><li>Into the printed lot number.
+</li><li>The Director's hard cut to the certificate's lot. A cut looks the same at Low Power Mode's 30 fps.
+</li><li>Pull back past the start. On a phone this could reveal the two vials the phone hero hides: the tall photo's pedestals sit at a steady 1.07× the wide room's. Whether the two photos line up is untested.
+</li></ol>
+<p><strong>Confidence:</strong> Medium, down from High. The iPhone behaviour and the spin's physics hold. But the plan now depends on whether the rebuilt label matches the photographed one, and I haven't checked that.</p>
+<p>Checked: <code>docs/client-documents/brand-kit/10_Source_Files/build_175.py</code> and <code>qr_embed.json</code>, <code>landing-v4/src/brand/fog/scenes.ts</code>, <code>design-photography/01-product-vials/01-corrected-lids-2026-10-01/nad-plus-500-mg--3235708c.png</code></p>
+            </div>
+          </details>
+          <details>
+            <summary><span class="who">Product Art Director</span><span class="st">SHARPENED</span></summary>
+            <div class="notes">
+              <h4>Round one</h4>
+<p><strong>Frame Truth</strong> A push on the real photo holds up to about 3× and no further. The vial cutouts are 578×1112 pixels (I checked). On an iPhone that means the vial can be at most about 370 pt tall, and at that size the lot number printed on its label is about 6 pt type. Nobody can read the label from the photograph at any size it will hold. Go past 3× and the image either goes soft or suddenly gets sharper when the source changes, and both look fake.</p>
+<p>Cut the parallax layers. They turn an honest zoom into a cardboard diorama. Cut the light sweep too: a highlight sliding over a label that doesn't turn is the classic tell of a flat image faking 3D. The hero's own code already has the rule "nothing travels across the glass." Depth should come only from focus fall-off and mist passing the lens.</p>
+<p>On iPhone, momentum scrolling can stop anywhere. So every position a reader can stop on has to be a finished frame. Keep the crossfades short in scroll distance and hidden inside a defocus, so the page never rests on a double exposure.</p>
+<p><strong>Light &amp; Plate Continuity</strong> The single-pedestal plates the draft hands off to are a different room. hero-16x9.png and p34 have one window at upper left, a pink light at right and a higher horizon. The hero has two windows and cool, even light. Mist can hide the cut, but people still remember the room they saw a moment earlier.</p>
+<ul><li><strong>Stay on the 4K hero plate.</strong> Make a sharper patch of the featured pedestal from that same plate.
+</li><li><strong>Use the centre pedestal for the featured vial.</strong> Then the push goes straight in on both desktop and phone. On the phone plate the right-hand pedestal can't be centred until about 2.5×, so a push into it turns into a pan.
+</li><li><strong>Hand-build the featured vial's shadow and glass.</strong> The CSS shadow under each vial, and glass that still shows the catalog's white background, pass at hero size but not at 3×.
+</li><li><strong>Keep the certificate out of the set.</strong> It can't stand in a set where the vials are as tall as their pedestals. Hold it in front of the lens with the room out of focus.
+</li></ul>
+<p><strong>The Label Problem</strong> Only one label exists at print quality: Retatrutide, 3600×1544, from the brand PDF. BPC-157's flat label was unwrapped from the product image. I opened it: soft, warped lines of text, a smeared QR code. Enlarging it would mean making up pixels on the client's label. So either feature Retatrutide (its lot number holds at about 35 pt on iPhone) or get the kit's missing 04_Vial_Labels folder before building the label beat. One caveat outside my lane: Retatrutide is the most legally sensitive compound in the line to make the face of the story.</p>
+<p>Kill the unroll. A label coming off its vial is a picture of relabelling, which is the fraud lot traceability exists to stop. Instead, make the lot number the one thing that never moves on screen. It stays fixed through label, then record, then the certificate's own "Client batch / lot" field, while the sources change underneath it at the bottom of each focus pull. At that point a 578-px photo and a sharp vector look the same.</p>
+<p>Two more facts to protect:</p>
+<ul><li>Every QR code holds the same bit.ly link to /verify. Never animate "scan the QR, reach this lot."
+</li><li>The lab's sample photos on the certificates show a blue cap (BPC-157) and an amber cap (Retatrutide). The renders have white caps. Don't enlarge that photo, and ask the client which cap ships.
+</li></ul>
+<p><strong>Asset Plan</strong></p>
+<ul><li><strong>Ask the client for:</strong> the label masters, and which cap colour ships.
+</li><li><strong>Make:</strong> the sharper pedestal patch (desktop and phone), and a glass and shadow pass for the featured vial.
+</li><li><strong>Already have:</strong> the Retatrutide master and a 3× label band made from it, the vector certificates, and the cutouts (use them only for the hero and the push).
+</li><li><strong>Drop:</strong> the single-pedestal plates, the BPC-157 unwrap, the light sweep.
+</li></ul>
+<p><strong>Disagreement:</strong> The Interactive Director will defend one continuous camera. I'd still say continuity belongs to the light, the room and the lot number, because the material breaks at 3×. The Performance Engineer and I should agree on one rule: full resolution only where the focus is. Anything out of focus can ship at quarter size.</p>
+<p><strong>Recommendation:</strong> Push on the real plate up to its ~3× limit. Then let a lot number that stays still carry the story, with sources changing during focus pulls, each one sharp at its own size. Decide which label is featured before building anything past the push.</p>
+<p><strong>Confidence:</strong> High on the asset facts, because I opened and measured the files. Medium on the staging. Low on iPhone scroll mechanics and conversion.</p>
+<p>Files checked: <code>tools/landing/r10/labels-extract/p-001.png</code>, <code>tools/landing/r10/anatomy-test1/tex/label-bpc-157-10-mg.png</code>, <code>tools/hf/hero-16x9.png</code>, <code>landing-v4/public/media/open-crisp.jpg</code>, <code>landing-v4/public/certificates/TM-BPC10-2609-01.pdf</code>, <code>landing-air/public/air/vials/retatrutide-10-mg-label-3x.webp</code>, <code>docs/handoff/LANDING.md</code> (lines 661–663), <code>docs/handoff/DECISIONS.md</code> (lines 35–40)</p>
+<p><strong>Claims</strong></p>
+<ol><li>The push on the real photo can't go past about 3× because the cutouts are 578×1112, and at that size the printed lot is about 6 pt, so no label reading can come from the photograph.
+</li><li>The draft's hand-off plates are a different generated room (one window, pink light, higher horizon), so the close beats must stay on the 4K hero plate.
+</li><li>Only Retatrutide has a print-quality label (BPC-157's unwrap is soft, warped and has a smeared QR), so feature Retatrutide unless the client sends the label masters.
+</li><li>Cut the unroll, because a label leaving its vial shows relabelling; a lot number held still on screen while sources change during focus pulls carries the story honestly.
+</li><li>Parallax layers and a sliding highlight give away a single still photo, so depth should come only from focus fall-off and mist in front of the lens.
+</li></ol>
+              <h4>Cross-examination</h4>
+<p><strong>Strongest point from another member:</strong> The Interactive Director's single hard cut on the lot number. In round 1 I planned to swap image sources inside several focus pulls. Their cut is better. A cut that's openly a cut doesn't pretend to be anything, and an iPhone can't come to rest halfway through one. A hidden swap can be caught every time it happens. One correction from the certificates themselves: they set the lot in a different typeface and break it over two lines ("TM-BPC10-2609-" / "01"). So the cut can hold the number's position and letter height, but the letter shapes won't match.</p>
+<p><strong>Challenges:</strong></p>
+<ol><li>Interactive Director, "push, turn and sharpen" (Riley's Oct 8 wish, and his Blender test already read as CG). The label in our photographs isn't wrapped round the glass. On the NAD+ and BPC-157 cutouts, the whole label (lot, QR code, product column) lies flat across the front with nothing squeezed at the edges. But the label is about 0.8 of the vial's width tall. At the kit's real size of 1.75 × 0.75 in, it would wrap about 210° round the vial and put the lot out of sight round the side. So a real turn can't start from our photo without a visible jump. A turn that keeps the label flat makes the print slide over the glass, and that reads as CG the same way the shine Riley rejected did. <strong>Test:</strong> wrap the build_175 label round a cylinder as wide as the cutout and lay it over the photo. If the lot lands where the photo shows it, I'm wrong.
+</li><li>Performance Engineer, the projection "matches the photo pixel for pixel at the start". Any projection matches at the start; the test is the end of the move. Using the camera numbers in scenes.ts, physically moving the camera in until the centre vial is 3× larger reveals about 100 pixels of wall (in the 2,560-pixel desktop photo) on each side of the pedestal that the photo never captured. The file also says the generated room "doesn't agree on one exact camera". <strong>Test:</strong> render the full move and look at the pedestal's edges. My expectation is that it needs a clean wall plate, and that most of the push should be a zoom with only a little camera movement.
+</li></ol>
+<p><strong>Concessions:</strong> The label build script (build_175.py) disproves my claim that only Retatrutide has a sharp label. Looking by eye, the photographed label matches the script's layout block for block and lies flat, so lining a rebuilt label up with the photo should be close to a single horizontal stretch. I'd now feature BPC-157, moved to the centre pedestal, not NAD+. NAD+'s certificate shows the lab's actual sample in brown glass with a navy cap, and the climax would put that on screen. BPC-157's sample is clear glass with a blue cap, where ours is white.</p>
+<p><strong>Position:</strong> SHARPENED. Push into a centred BPC-157, mostly by zoom. Bring in the rebuilt, lined-up label at about 3×, and show its parts with focus shifts instead of a turn. Then make one cut on the lot number into the certificate, once the client confirms which cap actually ships.</p>
+<p><strong>Confidence:</strong> High on the label shape and the certificate photos. I opened them all, but I read positions by eye, not with a measuring tool. Medium on the 100-pixel figure, which is arithmetic, not a render. Unchanged from round 1.</p>
+<p>Checked: <code>design-photography/01-product-vials/01-corrected-lids-2026-10-01/nad-plus-500-mg--3235708c.png</code>, <code>…/bpc-157-10-mg--784b4003.png</code>; <code>landing-v4/public/certificates/TM-NAD500-2609-01.pdf</code>, <code>…/TM-BPC10-2609-01.pdf</code>; <code>landing-v4/src/brand/fog/scenes.ts</code>; <code>docs/client-documents/brand-kit/10_Source_Files/build_175.py</code></p>
+            </div>
+          </details>
+          <details>
+            <summary><span class="who">Buyer &amp; Accessibility Lead</span><span class="st">SHARPENED</span></summary>
+            <div class="notes">
+              <h4>Round one</h4>
+<p><strong>Who's Visiting</strong></p>
+<ul><li><strong>Repeat buyer</strong> (most of the revenue): wants one product in one tap. Today they use the header, "View catalog", or a tap on a hero vial, which already flies into that product's page with the price and Add to cart. All three have to stay live through the story.
+</li><li><strong>First-time skeptic</strong>: wants proof the testing is real. The story is built for them.
+</li><li><strong>Institutional or QA buyer</strong>: reads certificate fine print for a living.
+</li></ul>
+<p><strong>Path Walkthrough</strong></p>
+<ul><li>A repeat buyer who scrolls goes from about 3 screens to about 8 before reaching the cards. That's my estimate from the live screenshots. It's only tolerable if nothing makes them work for it. Rests should be plateaus in how scroll maps to the picture: the page keeps moving at the finger's pace while the picture holds. No snap points, and no "settles" that move the page after the finger lifts. Cap the phone story at about 5 screens: fold the hand-off into the approach and the thread into the record. Drop the sideways label pan on phone, because a label rebuilt from the vector art fits 390 px.
+</li><li>Going back from a product page must land on the cards. Beats must not write to browser history, and the story's height should be reserved before images load.
+</li><li>Don't put a typing field inside the pinned stage. On iPhone the keyboard resizes the screen and can scrub the camera. Make the lifted lot number the action instead: real, copyable text, and tapping it opens that lot's record. Typed lookup stays at /verify, where "Verify a lot" already goes.
+</li></ul>
+<p><strong>Content &amp; Compliance Integrity</strong></p>
+<ul><li><strong>The climax puts a contradiction on stage.</strong> The lookup copy being moved into the story says the certificate covers "endotoxin, sterility" (HomeSections.tsx:361). The paper trail says "HPLC · MS" (:61). The KMD certificate's own fine print says "no assessment was made of sterility, endotoxin…" and gives identity by "RT + UV". I read the Retatrutide certificate itself; for BPC-157 I only checked its manifest entry, which lists just purity, identity, retention time and content. The draft asks visitors to read that certificate, rack-focused to sharp, two beats after those claims. The client chose to keep the claims on Oct 6, but this staging exposes them in a new way. Ask the client before beat 6 is built; don't rewrite anything.
+</li><li><strong>Moving the principles onto the label loses words.</strong> The label prints "NOT FOR HUMAN CONSUMPTION"; the page says "Not for human or veterinary administration" (:410). Set all four principle sentences word for word, as real text, in the release beat. Viewers and skippers both pass through it.
+</li><li>The shared QR code opens Verify; it doesn't identify the lot (PRODUCTION.md). The label beat mustn't suggest it does.
+</li></ul>
+<p><strong>Accessibility Audit</strong></p>
+<ul><li>The hero's looping room has no pause control. It only stops for reduced motion, when it's off-screen, or during a camera move (Rooms.tsx). That fails WCAG 2.2.2, which is Level A. The draft adds a full-frame push, parallax at several depths and mist crossing the lens. That's the classic trigger for motion sickness, and it hits everyone who never turned on Reduce Motion. One visible Motion control fixes both problems.
+</li><li>Screen readers: tell the story once as text, with a heading per beat. Hide the lot number's animated copies, or it gets read five times. Give the certificate findings as text.
+</li><li>Keyboard: focusing something scrolls to its beat, and nothing is focusable while it's invisible. Tap targets are at least 24 px. Keep the skip control clear of the "Ask TrueMark" pill and Safari's toolbar.
+</li><li>Contrast: dark ink on lilac passes easily (about 9:1, my estimate). Hairline callouts need 3:1, measured at the brightest moment of the light sweep.
+</li><li>What to measure: beats reached, skip use, time to first catalogue action (returning vs new visitors), phone visitors reaching the cards, lot taps, add-to-cart. If returning buyers are slower to the catalogue in week one, the story is in the way.
+</li></ul>
+<p><strong>Recommendation:</strong> Build it as an explanation laid over a page that works without it. That means plateau rests, about 5 phone screens, and the header, skip and Motion control staying visible. Keep the principles word for word, and put the certificate contradiction to the client before it becomes the climax.</p>
+<p><strong>Pushback I expect:</strong> The Interactive Director will want snaps or guided passages so every composition lands. I'd hold my position: Motion 4's guided mode was never tested on a real iPhone (VERIFICATION.md), and Awwwards gives usability 30% of the score. The Art Director will want tonal type straight on the photo. That's fine if the contrast is measured.</p>
+<p><strong>Confidence:</strong> High on content and accessibility, which I checked in the source and on the certificate. Medium on conversion: the screen counts are estimates and I have no traffic data. Low on visual craft and iOS rendering, where I defer to the others.</p>
+<p><strong>Claims</strong></p>
+<ol><li>The certificate beat would show the contradiction openly. The moved copy claims "endotoxin, sterility" and "HPLC · MS", while KMD's fine print says neither sterility nor endotoxin was assessed and identity was by RT + UV, so the client should be asked before beat 6 is built.
+</li><li>The four principles must survive word for word, as text, in the release beat. Mapping them onto the label drops "or veterinary administration", and anything that exists only inside a skippable story disappears for everyone who skips.
+</li><li>Rests must be plateaus, not snaps, settles or guided passages, and the phone story about 5 screens. Anything that moves the page after the finger lifts takes control from the visitor, and repeat buyers would otherwise scroll about 8 screens to the cards.
+</li><li>The award-level move is letting the lifted lot number become the action (tap it, and that lot's record opens) with no typing field in the pinned stage. A spectacle that is also the product's real function sticks with buyers, and the iPhone keyboard can scrub the camera.
+</li><li>A visible Motion control is required, not optional. The hero loop already fails WCAG 2.2.2 at Level A, and the draft adds the push, parallax and lens-mist combination that makes people who never set Reduce Motion feel sick.
+</li></ol>
+<p>Checked: <code>landing-v4/src/brand/HomeSections.tsx</code>, <code>Rooms.tsx</code>, <code>MistOpening.tsx</code>; <code>design-lab/motion/assets/retatrutide-coa.jpg</code>; <code>src/platform/certificate-manifest.json</code>; <code>design-lab/motion/PRODUCTION.md</code>; <code>design-lab/motion/VERIFICATION.md</code>. Source: <a href="https://www.awwwards.com/sites/the-new-company" target="_blank" rel="noopener">Awwwards listing showing Design 40% / Usability 30% / Creativity 20% / Content 10%</a></p>
+              <h4>Cross-examination</h4>
+<p><strong>Strongest point from another member:</strong> The Product Art Director's claim 4 is that a label peeling off its vial reads as relabelling. Relabelling is what a sceptical peptide buyer already suspects, and I missed it. I've moved from "drop the sideways pan on phone" to "cut the unroll on every screen."</p>
+<p><strong>Challenges:</strong></p>
+<ol><li>"Feature Retatrutide unless the client sends the label masters" (Art Director; the Interactive Director's claim 4 says the same). The reason for it is gone: the kit's <code>build_175.py</code> builds every label as vector art with its real lot number. Whether a rebuilt label matches the photo is still unchecked. The bigger problem is that featuring Retatrutide makes it the face of the page's most-watched moment. The FDA named it in warning letters sent on 24 Aug 2026 to five peptide sellers (it also named tesamorelin, which is already in the room). A law firm's reading is that those letters judged intent by the whole site, not by the research-use label. To settle it, rebuild the BPC-157 label from the kit and lay it over its cutout. If it lines up, the client picks the featured vial on business grounds, not because one label happens to be sharper.
+</li><li>"A hard cut from the label's lot number to the same number on the certificate" (Interactive Director). The numbers do match: TM-RET10-2609-01 is in KMD's lot field. But the cut invites a comparison the vials fail. On all three certificates I opened, the photo of the tested sample shows a coloured cap: orange for Retatrutide, blue for BPC-157, navy on amber glass for NAD+. Every cutout in the room has a white cap and clear glass. KMD's fine print also says the certificate "may not be reproduced except in full," so the cut has to open onto the whole page, with nothing marked on it. To settle it, show the client both photos side by side before the certificate beat is built. Also leave a small dead zone at the cut point, so a thumb resting there can't make the frame flicker.
+</li></ol>
+<p><strong>Concessions:</strong> In round 1 I read the Retatrutide certificate and missed two things a QA buyer will catch. One is the cap mismatch. The other is in the first results row, on all three certificates: the spec says "White lyophilized powder," the result says "Clear, colorless," and the row is marked "Conforms." The draft's plan to mark findings rows as you scroll would highlight that row first.</p>
+<p><strong>Position:</strong> SHARPENED. The direction is the same: tell the story over a page that works without it. Rests hold the picture while the page keeps scrolling, about 5 screens on phone, with a visible Motion control and the lot number as tappable text. What's narrower now: cut the unroll, let the client choose the featured vial, and show the certificate whole and unmarked. Before the certificate beat is built, put three things to the client: the testing claims, that first results row and the packaging mismatch.</p>
+<p><strong>Confidence:</strong> High on the documents, unchanged, because I opened three certificate PDFs and three cutouts. The FDA point rests on a law firm's summary; I didn't read the letters themselves. Medium on whether phone visitors notice a cap that small.</p>
+<p>Checked: <code>docs/client-documents/certificates/TB-20260924-TRNF-01.pdf</code>, <code>…/TB-20260924-VKKT-01.pdf</code>, <code>…/TB-20260924-6WQZ-01.pdf</code>, the matching cutouts in <code>landing-v4/public/images/cutouts/</code>, and <code>landing-v4/src/platform/certificate-manifest.json</code> (all five hero lots are ≥99%). The label QR code's short link redirects to truemarkbiolabs.com/verify. KMD's page for the Retatrutide certificate loads. Source: <a href="https://www.afslaw.com/perspectives/alerts/ruo-ined-five-peptide-vendors-learn-research-use-only-not-legal-strategy" target="_blank" rel="noopener">AFS Law, "RUO-ined: Five Peptide Vendors Learn That 'Research Use Only' Is Not a Legal Strategy"</a></p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p>Sources: <a href="https://www.afslaw.com/perspectives/alerts/ruo-ined-five-peptide-vendors-learn-research-use-only-not-legal-strategy" target="_blank" rel="noopener">AFS Law on the FDA’s August 2026 letters</a> · <a href="https://kmdanalytical.com/coa/TB-20260924-VKKT-01" target="_blank" rel="noopener">KMD Analytical, certificate TB-20260924-VKKT-01</a> · the landing log, <code>docs/handoff/LANDING.md</code> · Motion 4’s source, <code>design-lab/motion/</code>.</p>
+    <p>Stills from the local builds, 11 October 2026. Prepared by Claude for Riley.</p>
+  </footer>
+</main>

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+<meta charset="utf-8" />
+<script data-tm-history-storage="tools">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("tools");</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>TrueMark BioLabs</title>
+<link rel="preload" href="fonts/poppins-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="fonts/texgyreheros-regular.woff" as="font" type="font/woff" crossorigin />
+<link rel="stylesheet" href="flight.css" />
+</head>
+<body>
+  <div class="chrome">
+    <div class="tm-notice"><div class="tm-notice-inner"><p>Research use only · Not for human consumption</p></div></div>
+    <header class="tm-header">
+      <div class="tm-header-inner">
+        <a class="tm-logo" href="./" data-home aria-label="TrueMark BioLabs home"><img src="/truemark/studio/history/tools/board/images/brand/kit/lockup-black.svg" alt="" width="152" height="37" /></a>
+        <nav class="tm-nav" aria-label="Main navigation">
+          <a href="#" data-inert>Products</a><a href="#" data-inert>Verify</a><a href="#" data-inert>Quality</a><a href="#" data-inert>Handling</a><a href="#" data-inert>About</a><a href="#" data-inert>Research Blog</a><a href="#" data-inert>Contact</a>
+        </nav>
+        <div class="tm-tools">
+          <a href="#" class="tm-hide-small" data-inert>Search</a>
+          <a href="#" class="tm-hide-small" data-inert>Account</a>
+          <button type="button" class="tm-cart" aria-live="polite">Cart (<span data-cart-count>0</span>)</button>
+        </div>
+      </div>
+    </header>
+  </div>
+
+  <main class="views" id="views">
+    <section class="view home" id="home" aria-labelledby="home-title" data-shape="wide">
+      <div class="home-copy">
+        <div class="home-head" data-copy="head">
+          <p class="pill-eyebrow"><span class="tm-brand-dot" aria-hidden="true"></span>Lot-level traceability</p>
+          <h1 id="home-title" class="home-title"><span>True research.</span><span>True precision.</span></h1>
+        </div>
+        <div class="home-aside" data-copy="aside">
+          <p class="home-lead">Research compounds supplied as lyophilized powder, independently tested on receipt, quarantined until release, and traceable from the vial in your hand back to the source batch.</p>
+          <div class="home-actions">
+            <a class="tm-button tm-button-primary" href="#" data-inert>View catalog</a>
+            <a class="tm-button tm-button-outline" href="#" data-inert>Verify a lot</a>
+          </div>
+        </div>
+      </div>
+      <div class="plate home-plate" id="home-plate">
+        <img class="room" data-room-still alt="" aria-hidden="true" draggable="false" />
+        <video class="room" data-room-video muted loop playsinline preload="auto" aria-hidden="true"></video>
+        <!-- the collection's vials are seated here by flight.js -->
+      </div>
+    </section>
+
+    <article class="view product" id="product" aria-labelledby="product-title" hidden>
+      <div class="product-ground" data-ground></div>
+      <section class="ptop">
+        <div class="pscene" id="pscene">
+          <div class="plate product-plate" id="product-plate">
+            <div class="proom" data-proom>
+              <img class="room" data-room-still alt="" aria-hidden="true" draggable="false" />
+              <video class="room" data-room-video muted loop playsinline preload="auto" aria-hidden="true"></video>
+            </div>
+            <figure class="vial pvial" id="pvial">
+              <span class="vial-shadow" aria-hidden="true"></span>
+              <span class="vial-cast" data-cast="home" aria-hidden="true"></span>
+              <span class="vial-cast" data-cast="room" aria-hidden="true"></span>
+              <div class="pglass" data-glass style="position:absolute;inset:0"><!-- one cut-out per product, by flight.js --></div>
+            </figure>
+          </div>
+          <div class="pfade" data-fade aria-hidden="true"></div>
+        </div>
+        <a class="pback rise" href="./" data-home data-rise="0">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          The collection
+        </a>
+        <div class="ppanel" id="ppanel">
+          <p class="tm-eyebrow ptone rise" data-rise="1" data-f="className"></p>
+          <h1 class="pname rise" id="product-title" tabindex="-1" data-rise="2"><span data-f="name"></span><span class="psize" data-f="size"></span></h1>
+          <div class="pproof rise" data-rise="3">
+            <dl class="precord">
+              <div><dt>Lot</dt><dd class="tm-mono" data-f="lot"></dd></div>
+              <div><dt>HPLC purity</dt><dd class="tm-mono"><span data-f="purity"></span><small>this lot</small></dd></div>
+            </dl>
+            <a class="tm-textlink" href="#certificate" data-f-cert>Read this lot’s certificate
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </div>
+          <div class="pbuy rise" data-rise="4">
+            <p class="pprice"><strong data-f="priceText"></strong><span>per vial</span></p>
+            <!-- Live platform: a signed-out visitor sees "Sign in to order" (a link to /access) in place of this row. -->
+            <div class="pbuy-row">
+              <div class="tm-quantity">
+                <button type="button" data-qty="-1" aria-label="Decrease quantity"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7h8" stroke-linecap="round"/></svg></button>
+                <input type="number" min="1" max="99" value="1" inputmode="numeric" aria-label="Quantity" data-qty-input />
+                <button type="button" data-qty="1" aria-label="Increase quantity"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7h8M7 3v8" stroke-linecap="round"/></svg></button>
+              </div>
+              <button type="button" class="tm-button tm-button-primary" data-add>Add to cart</button>
+            </div>
+          </div>
+          <p class="pnotice rise" data-rise="5" data-f="researchUseNote"></p>
+          <dl class="pspec rise" data-rise="6" data-f-spec></dl>
+        </div>
+      </section>
+
+      <div class="pmore" id="pmore"><!-- details, certificate, standard, related: by flight.js --></div>
+    </article>
+  </main>
+
+  <div class="study" id="study" role="group" aria-label="Study controls">
+    <button type="button" data-speed="1" aria-pressed="true">1×</button>
+    <button type="button" data-speed="4" aria-pressed="false">¼×</button>
+  </div>
+
+  <script type="module" src="flight.js"></script>
+</body>
+</html>

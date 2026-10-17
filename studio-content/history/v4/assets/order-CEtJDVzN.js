@@ -1,0 +1,1 @@
+import{bf as s,bg as e,bh as a,bi as i,bj as o}from"./shop-CdsQxJFf.js";const r=s.find(d=>d.id===e),t=i.find(d=>d.id===o),p={lines:[{productId:"bpc-157-10-mg",quantity:2},{productId:"ghk-cu-100-mg",quantity:1}],address:r.addresses[0],shipping:a[0].id,discountCode:t.code,via:"link"};export{r as a,t as b,p as d};

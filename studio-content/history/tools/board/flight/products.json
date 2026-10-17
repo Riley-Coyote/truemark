@@ -1,0 +1,256 @@
+{
+  "about": "The opening's five vials, left to right, read from landing-v2/src (data.ts, shop/catalog.ts, platform/certificate-manifest.json, shop/pages/Product.tsx, shop/ui.tsx) by tools/extract-data.mjs.",
+  "collection": [
+    "ghk-cu-100-mg",
+    "semax-10-mg",
+    "nad-500-mg",
+    "bpc-157-10-mg",
+    "tesamorelin-10-mg"
+  ],
+  "lab": {
+    "name": "KMD Analytical",
+    "company": "KMD Group LLC",
+    "description": "an independent third-party analytical testing laboratory",
+    "method": "HPLC-DAD",
+    "verifyPage": "https://kmdanalytical.com/verify"
+  },
+  "puritySpec": "95",
+  "purityMinimum": "95.0",
+  "researchUseNote": "Research use only. Not for human or veterinary administration. Supplied to verified research organizations for laboratory research applications.",
+  "buyNotes": [
+    "10 mL vial · Type I glass",
+    "Shipped with temperature control when applicable",
+    "Certificate of analysis for every lot"
+  ],
+  "traceability": [
+    [
+      "Tested on receipt",
+      "Every lot is sampled and sent to a contracted laboratory for HPLC purity and MS identity testing before release."
+    ],
+    [
+      "Quarantined until release",
+      "Lots are held in temperature-controlled quarantine and released only after the Certificate of Analysis is approved."
+    ],
+    [
+      "Traceable to source batch",
+      "The printed lot number and QR code on each vial resolve to the CoA and the full testing record for that batch."
+    ],
+    [
+      "Cold chain to your door",
+      "Stored at −20 °C and shipped with temperature control when applicable."
+    ]
+  ],
+  "proofFigures": [
+    {
+      "label": "Purity specification",
+      "figure": "≥95",
+      "unit": "%",
+      "text": "Measured by HPLC on every lot before it is released."
+    },
+    {
+      "label": "Identity",
+      "figure": "MS",
+      "unit": "",
+      "text": "Confirmed by mass spectrometry, lot by lot."
+    },
+    {
+      "label": "Storage",
+      "figure": "−20",
+      "unit": "°C",
+      "text": "Held cold, then shipped with temperature control when applicable."
+    },
+    {
+      "label": "Release",
+      "figure": "0",
+      "unit": "",
+      "text": "Lots released without an approved certificate."
+    }
+  ],
+  "products": [
+    {
+      "id": "ghk-cu-100-mg",
+      "name": "GHK-Cu",
+      "size": "100 mg",
+      "category": "copper-peptides",
+      "className": "Copper peptides",
+      "price": 40,
+      "priceText": "$40.00",
+      "color": "#CC3358",
+      "colorInk": "#7C1830",
+      "form": "Lyophilized powder",
+      "lot": "TM-GHK100-2609-01",
+      "tag": null,
+      "cutout": "/truemark/studio/images/cutouts/ghk-cu-100-mg.webp",
+      "cutoutSmall": "/truemark/studio/images/cutouts/ghk-cu-100-mg-sm.webp",
+      "description": "GHK-Cu, supplied as a lyophilized powder for laboratory research. Every vial is traceable to its lot and released with a certificate of analysis.",
+      "spec": {
+        "form": "Lyophilized powder",
+        "storage": "−20 °C, protected from light"
+      },
+      "certificate": {
+        "number": "TB-20260924-7MJZ-01",
+        "pdf": "certificates/TM-GHK100-2609-01.pdf",
+        "lab": "KMD Analytical",
+        "sampleReceived": "24 Sep 2026",
+        "analyzed": "01 Oct 2026",
+        "issued": "01 Oct 2026",
+        "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-7MJZ-01",
+        "purity": "99.99",
+        "identity": "Conforms",
+        "identityMethod": "HPLC (RT + UV vs. reference)",
+        "content": "120.50 mg",
+        "contentPerVial": true,
+        "claimText": "120.5% of the 100 mg label claim"
+      }
+    },
+    {
+      "id": "semax-10-mg",
+      "name": "Semax",
+      "size": "10 mg",
+      "category": "neuropeptides",
+      "className": "Neuropeptides",
+      "price": 40,
+      "priceText": "$40.00",
+      "color": "#4E762E",
+      "colorInk": "#2D4817",
+      "form": "Lyophilized powder",
+      "lot": "TM-SMX10-2609-01",
+      "tag": null,
+      "cutout": "/truemark/studio/images/cutouts/semax-10-mg.webp",
+      "cutoutSmall": "/truemark/studio/images/cutouts/semax-10-mg-sm.webp",
+      "description": "Semax, supplied as a lyophilized powder for laboratory research. Every vial is traceable to its lot and released with a certificate of analysis.",
+      "spec": {
+        "form": "Lyophilized powder",
+        "storage": "−20 °C, protected from light"
+      },
+      "certificate": {
+        "number": "TB-20260924-K6BB-01",
+        "pdf": "certificates/TM-SMX10-2609-01.pdf",
+        "lab": "KMD Analytical",
+        "sampleReceived": "24 Sep 2026",
+        "analyzed": "01 Oct 2026",
+        "issued": "01 Oct 2026",
+        "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-K6BB-01",
+        "purity": "99.78",
+        "identity": "Conforms",
+        "identityMethod": "HPLC (RT + UV vs. reference)",
+        "content": "10.09 mg",
+        "contentPerVial": true,
+        "claimText": "100.9% of the 10 mg label claim"
+      }
+    },
+    {
+      "id": "nad-500-mg",
+      "name": "NAD+",
+      "size": "500 mg",
+      "category": "coenzymes-cofactors",
+      "className": "Coenzymes & cofactors",
+      "price": 55,
+      "priceText": "$55.00",
+      "color": "#B97102",
+      "colorInk": "#6C4200",
+      "form": "Lyophilized powder",
+      "lot": "TM-NAD500-2609-01",
+      "tag": null,
+      "cutout": "/truemark/studio/images/cutouts/nad-plus-500-mg.webp",
+      "cutoutSmall": "/truemark/studio/images/cutouts/nad-plus-500-mg-sm.webp",
+      "description": "NAD+, supplied as a lyophilized powder for laboratory research. Every vial is traceable to its lot and released with a certificate of analysis.",
+      "spec": {
+        "form": "Lyophilized powder",
+        "storage": "−20 °C, protected from light"
+      },
+      "certificate": {
+        "number": "TB-20260924-6WQZ-01",
+        "pdf": "certificates/TM-NAD500-2609-01.pdf",
+        "lab": "KMD Analytical",
+        "sampleReceived": "24 Sep 2026",
+        "analyzed": "01 Oct 2026",
+        "issued": "01 Oct 2026",
+        "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-6WQZ-01",
+        "purity": "99.77",
+        "identity": "Conforms",
+        "identityMethod": "HPLC (RT + UV vs. reference)",
+        "content": "522.09 mg",
+        "contentPerVial": true,
+        "claimText": "104.4% of the 500 mg label claim"
+      }
+    },
+    {
+      "id": "bpc-157-10-mg",
+      "name": "BPC-157",
+      "size": "10 mg",
+      "category": "peptide-fragments",
+      "className": "Peptide fragments",
+      "price": 40,
+      "priceText": "$40.00",
+      "color": "#058F93",
+      "colorInk": "#005658",
+      "form": "Lyophilized powder",
+      "lot": "TM-BPC10-2609-01",
+      "tag": "Best seller",
+      "cutout": "/truemark/studio/images/cutouts/bpc-157-10-mg.webp",
+      "cutoutSmall": "/truemark/studio/images/cutouts/bpc-157-10-mg-sm.webp",
+      "description": "BPC-157, supplied as a lyophilized powder for laboratory research. Every vial is traceable to its lot and released with a certificate of analysis.",
+      "spec": {
+        "form": "Lyophilized powder",
+        "storage": "−20 °C, protected from light",
+        "descriptor": "Pentadecapeptide",
+        "cas": "137525-51-0",
+        "formula": "C62H98N16O22",
+        "weight": "1419.53 g/mol",
+        "sequence": "GEPPPGKPADDAGLV"
+      },
+      "certificate": {
+        "number": "TB-20260924-VKKT-01",
+        "pdf": "certificates/TM-BPC10-2609-01.pdf",
+        "lab": "KMD Analytical",
+        "sampleReceived": "24 Sep 2026",
+        "analyzed": "01 Oct 2026",
+        "issued": "01 Oct 2026",
+        "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-VKKT-01",
+        "purity": "99.51",
+        "identity": "Conforms",
+        "identityMethod": "HPLC (RT + UV vs. reference)",
+        "content": "12.46 mg",
+        "contentPerVial": true,
+        "claimText": "124.6% of the 10 mg label claim"
+      }
+    },
+    {
+      "id": "tesamorelin-10-mg",
+      "name": "Tesamorelin",
+      "size": "10 mg",
+      "category": "secretagogue-peptides",
+      "className": "Secretagogue peptides",
+      "price": 75,
+      "priceText": "$75.00",
+      "color": "#0273D0",
+      "colorInk": "#00437A",
+      "form": "Lyophilized powder",
+      "lot": "TM-TES10-2609-01",
+      "tag": null,
+      "cutout": "/truemark/studio/images/cutouts/tesamorelin-10-mg.webp",
+      "cutoutSmall": "/truemark/studio/images/cutouts/tesamorelin-10-mg-sm.webp",
+      "description": "Tesamorelin, supplied as a lyophilized powder for laboratory research. Every vial is traceable to its lot and released with a certificate of analysis.",
+      "spec": {
+        "form": "Lyophilized powder",
+        "storage": "−20 °C, protected from light"
+      },
+      "certificate": {
+        "number": "TB-20260924-8CPW-01",
+        "pdf": "certificates/TM-TES10-2609-01.pdf",
+        "lab": "KMD Analytical",
+        "sampleReceived": "24 Sep 2026",
+        "analyzed": "01 Oct 2026",
+        "issued": "01 Oct 2026",
+        "verifyUrl": "https://kmdanalytical.com/coa/TB-20260924-8CPW-01",
+        "purity": "99.35",
+        "identity": "Conforms",
+        "identityMethod": "HPLC (RT + UV vs. reference)",
+        "content": "10.95 mg",
+        "contentPerVial": true,
+        "claimText": "109.5% of the 10 mg label claim"
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+Your order was delivered.
+
+Delivered
+
+Monday 5 October
+
+Order TM-10500 · 1 vial
+
+Move vials to −20 °C promptly, check seals, and verify each lot number against its CoA.
+
+Certificates for your lots:
+
+BPC-157 10 mg
+
+FIXTURE_LOT
+Certificate published
+
+View your order
+
+https://fixture.test/live/#/account/orders/order-fixture
+
+The certificate for each lot you receive is kept in your account.
+
+You receive this because you placed an order with your TrueMark research account.
+
+For research use only. Not for human consumption.
+
+TrueMark BioLabs

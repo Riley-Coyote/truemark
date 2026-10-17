@@ -1,0 +1,1 @@
+import{j as r}from"./client-CNJUigLn.js";import{a as s}from"./assetUrl-5csJ5rj6.js";function i({variant:a="black"}){return r.jsx("img",{className:"brand-logo",src:s(`images/brand/kit/lockup-${a}.svg`),alt:"TrueMark BioLabs",width:"164",height:"40"})}export{i as B};

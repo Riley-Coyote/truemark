@@ -1,0 +1,157 @@
+{
+  "synthetic": true,
+  "email": [
+    {
+      "template": "buyer.order_confirmed",
+      "subject": "Order confirmed · TM-10500",
+      "file": "buyer.order_confirmed.html",
+      "textFile": "buyer.order_confirmed.txt"
+    },
+    {
+      "template": "buyer.order_shipped",
+      "subject": "Your order has shipped · TM-10500",
+      "file": "buyer.order_shipped.html",
+      "textFile": "buyer.order_shipped.txt"
+    },
+    {
+      "template": "buyer.order_delivered",
+      "subject": "Delivered — certificates for your lots · TM-10500",
+      "file": "buyer.order_delivered.html",
+      "textFile": "buyer.order_delivered.txt"
+    },
+    {
+      "template": "buyer.order_cancelled",
+      "subject": "Order cancelled · TM-10500",
+      "file": "buyer.order_cancelled.html",
+      "textFile": "buyer.order_cancelled.txt"
+    },
+    {
+      "template": "buyer.order_refunded",
+      "subject": "Refund issued · TM-10500",
+      "file": "buyer.order_refunded.html",
+      "textFile": "buyer.order_refunded.txt"
+    },
+    {
+      "template": "buyer.payment_failed",
+      "subject": "Payment didn't go through · TM-10500",
+      "file": "buyer.payment_failed.html",
+      "textFile": "buyer.payment_failed.txt"
+    },
+    {
+      "template": "buyer.account_approved",
+      "subject": "Your research account is approved",
+      "file": "buyer.account_approved.html",
+      "textFile": "buyer.account_approved.txt"
+    },
+    {
+      "template": "buyer.account_declined",
+      "subject": "About your research account application",
+      "file": "buyer.account_declined.html",
+      "textFile": "buyer.account_declined.txt"
+    },
+    {
+      "template": "partner.new_order",
+      "subject": "You earned $12.00 on order TM-10500",
+      "file": "partner.new_order.html",
+      "textFile": "partner.new_order.txt"
+    },
+    {
+      "template": "partner.commission_approved",
+      "subject": "Commission approved: $12.00",
+      "file": "partner.commission_approved.html",
+      "textFile": "partner.commission_approved.txt"
+    },
+    {
+      "template": "partner.payout_sent",
+      "subject": "Payout sent: $12.00 for September 2026",
+      "file": "partner.payout_sent.html",
+      "textFile": "partner.payout_sent.txt"
+    },
+    {
+      "template": "partner.weekly",
+      "subject": "Your week: 1 order, $12.00 earned",
+      "file": "partner.weekly.html",
+      "textFile": "partner.weekly.txt"
+    },
+    {
+      "template": "partner.milestone",
+      "subject": "You reached first referred order",
+      "file": "partner.milestone.html",
+      "textFile": "partner.milestone.txt"
+    },
+    {
+      "template": "partner.welcome",
+      "subject": "Welcome to the TrueMark partner program",
+      "file": "partner.welcome.html",
+      "textFile": "partner.welcome.txt"
+    },
+    {
+      "template": "team.new_order",
+      "subject": "New order TM-10500 · $126.00",
+      "file": "team.new_order.html",
+      "textFile": "team.new_order.txt"
+    },
+    {
+      "template": "team.application",
+      "subject": "New research application · Fixture Lab",
+      "file": "team.application.html",
+      "textFile": "team.application.txt"
+    },
+    {
+      "template": "team.contact",
+      "subject": "General support: message from Fixture Sender",
+      "file": "team.contact.html",
+      "textFile": "team.contact.txt"
+    },
+    {
+      "template": "team.system_alert",
+      "subject": "Needs attention: You reached first referred order",
+      "file": "team.system_alert.html",
+      "textFile": "team.system_alert.txt"
+    },
+    {
+      "template": "confirm-signup",
+      "subject": "Confirm your email for TrueMark",
+      "file": "confirm-signup.html"
+    },
+    {
+      "template": "reset-password",
+      "subject": "Reset your TrueMark password",
+      "file": "reset-password.html"
+    }
+  ],
+  "sms": [
+    {
+      "template": "buyer.order_shipped_sms",
+      "text": "TrueMark: Order TM-10500 has shipped. UPS FIXTURE_TRACK. Track it: https://fixture.test/live/#/track/TM-10500 Reply STOP to opt out."
+    },
+    {
+      "template": "buyer.order_delivered_sms",
+      "text": "TrueMark: Order TM-10500 was delivered. Certificates for your lots are in your account. Reply STOP to opt out."
+    },
+    {
+      "template": "partner.new_order_sms",
+      "text": "TrueMark: New order TM-10500 through your code. You earned $12.00, pending until delivered. Details in your partner portal. Reply STOP to opt out."
+    },
+    {
+      "template": "partner.commission_approved_sms",
+      "text": "TrueMark: Commission approved: $12.00 on order TM-10500. Paid with your next payout. Reply STOP to opt out."
+    },
+    {
+      "template": "partner.payout_sent_sms",
+      "text": "TrueMark: Payout sent: $12.00. Details in your partner portal. Reply STOP to opt out."
+    },
+    {
+      "template": "partner.milestone_sms",
+      "text": "TrueMark: You reached first referred order. Thank you! Reply STOP to opt out."
+    },
+    {
+      "template": "partner.weekly_sms",
+      "text": "TrueMark: Your week: 1 order, $12.00 earned, 1 click. Reply STOP to opt out."
+    },
+    {
+      "template": "team.new_order_sms",
+      "text": "TrueMark: new order TM-10500 · $126.00 · Fixture Lab · via FIXTURE"
+    }
+  ]
+}

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+<meta charset="utf-8">
+<script data-tm-history-storage="tools">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("tools");</script>
+
+<title>The home page, planned</title>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-300.woff2) format("woff2");font-weight:300;font-display:block}
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-400.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-500.woff2) format("woff2");font-weight:500;font-display:block}
+@font-face{font-family:"Heros";src:url(/truemark/studio/history/tools/plan-1011/assets/heros-400.woff) format("woff");font-weight:400;font-display:block}
+@font-face{font-family:"Heros";src:url(/truemark/studio/history/tools/plan-1011/assets/heros-700.woff) format("woff");font-weight:700;font-display:block}
+body{margin:0}
+a{color:#241a4a}a:hover{color:#4a3f6b}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 3082px; overflow: hidden; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #241a4a; background: #f6f4fa">
+<div style="position: absolute; left: 66px; top: 64px; "><p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6f6786">TrueMark · the home page, planned · 11 Oct 2026</p></div>
+<div style="position: absolute; left: 66px; top: 96px; "><h1 style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 68px; line-height: 1.02; letter-spacing: -0.04em; color: #241a4a">One room.<br>Focus means knowing.</h1></div>
+<div style="position: absolute; left: 860px; top: 104px; "><p style="margin: 0; width: 514px; font-size: 17px; line-height: 1.6; color: #241a4a">The page is one misty room, seen by one camera that only ever moves closer.</p><p style="margin: 14px 0 0; width: 514px; font-size: 15px; line-height: 1.6; color: #4a3f6b">Mist and blur mean something is on its way; focus means we know it. Whatever comes into focus has a record behind it: a label, a lot, a certificate, and at the end, your own vial.</p></div>
+<div style="position: absolute; left: 66px; top: 352px; width: 1308px; height: 406px; border-top: 1px solid rgba(36, 26, 74, 0.22)">
+<div style="position: absolute; left: 0; top: 26px; width: 430px">
+<p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.12em; color: #6f6786">01</p>
+<h2 style="margin: 10px 0 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 34px; line-height: 1.08; letter-spacing: -0.025em; color: #241a4a">The room</h2>
+<p style="margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: #4a3f6b">Your Oct 7 opening, kept: the vials on their pedestals in the mist, each plinth carrying its lot and HPLC figure. Five on desktop, three on a phone.</p>
+<p style="margin: 14px 0 0; font-size: 12px; line-height: 1.5; color: #6f6786">A1 · desktop and phone</p>
+</div>
+<div style="position: absolute; left: 0; top: 372px; width: 430px; display: flex; gap: 10px; align-items: baseline">
+<span style="font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786; white-space: nowrap">Then<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -1px; margin-left: 6px"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg></span>
+<p style="margin: 0; font-size: 13px; line-height: 1.45; color: #241a4a">Scrolling starts the sequence: the middle vial lifts off its pedestal toward you.</p>
+</div>
+<img src="/truemark/studio/history/tools/plan-1011/thumbs/A1-room-desktop.jpg" alt="The room, desktop." style="position: absolute; left: 514px; top: 26px; width: 560px; height: 350px; border-radius: 10px; box-shadow: 0 1px 2px rgba(36, 26, 74, 0.08), 0 18px 40px -18px rgba(36, 26, 74, 0.28)">
+<img src="/truemark/studio/history/tools/plan-1011/thumbs/A1-room-phone.jpg" alt="The room, phone." style="position: absolute; left: 1148px; top: 26px; width: 160px; height: 346px; border-radius: 16px; box-shadow: 0 1px 2px rgba(36, 26, 74, 0.08), 0 18px 40px -18px rgba(36, 26, 74, 0.28)">
+</div><div style="position: absolute; left: 66px; top: 798px; width: 1308px; height: 406px; border-top: 1px solid rgba(36, 26, 74, 0.22)">
+<div style="position: absolute; left: 0; top: 26px; width: 430px">
+<p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.12em; color: #6f6786">02</p>
+<h2 style="margin: 10px 0 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 34px; line-height: 1.08; letter-spacing: -0.025em; color: #241a4a">A closer look</h2>
+<p style="margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: #4a3f6b">Codex’s Motion 04 in our own room, built by the other chat. BPC-157 lifts off its pedestal and comes to you, and its label is read in three steps. Then come Verify, the record and the lab’s full certificate, and a short ending with the room whole again. The camera only leans; no deep zoom.</p>
+<p style="margin: 14px 0 0; font-size: 12px; line-height: 1.5; color: #6f6786">A3 to A5 the label’s three details · desktop and phone · A2’s push is out</p>
+</div>
+<div style="position: absolute; left: 0; top: 372px; width: 430px; display: flex; gap: 10px; align-items: baseline">
+<span style="font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786; white-space: nowrap">Then<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -1px; margin-left: 6px"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg></span>
+<p style="margin: 0; font-size: 13px; line-height: 1.45; color: #241a4a">The ending’s floor rises into the mist colour the catalog starts in.</p>
+</div>
+<img src="/truemark/studio/history/tools/plan-1011/thumbs/A4-detail-lot-desktop.jpg" alt="A closer look, desktop." style="position: absolute; left: 514px; top: 26px; width: 560px; height: 350px; border-radius: 10px; box-shadow: 0 1px 2px rgba(36, 26, 74, 0.08), 0 18px 40px -18px rgba(36, 26, 74, 0.28)">
+<img src="/truemark/studio/history/tools/plan-1011/thumbs/A4-detail-lot-phone.jpg" alt="A closer look, phone." style="position: absolute; left: 1148px; top: 26px; width: 160px; height: 346px; border-radius: 16px; box-shadow: 0 1px 2px rgba(36, 26, 74, 0.08), 0 18px 40px -18px rgba(36, 26, 74, 0.28)">
+</div><div style="position: absolute; left: 66px; top: 1244px; width: 1308px; height: 406px; border-top: 1px solid rgba(36, 26, 74, 0.22)">
+<div style="position: absolute; left: 0; top: 26px; width: 430px">
+<p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.12em; color: #6f6786">03</p>
+<h2 style="margin: 10px 0 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 34px; line-height: 1.08; letter-spacing: -0.025em; color: #241a4a">The catalog</h2>
+<p style="margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: #4a3f6b">Organized by compound class takes the place of today’s Verified row: eight classes set on the room’s own wall, softened, each with one of its vials.</p>
+<p style="margin: 14px 0 0; font-size: 12px; line-height: 1.5; color: #6f6786">B1 · desktop and phone</p>
+</div>
+<div style="position: absolute; left: 0; top: 372px; width: 430px; display: flex; gap: 10px; align-items: baseline">
+<span style="font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786; white-space: nowrap">Then<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -1px; margin-left: 6px"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg></span>
+<p style="margin: 0; font-size: 13px; line-height: 1.45; color: #241a4a">From eight classes down to one plinth: the next scene sets a single vial down.</p>
+</div>
+<img src="/truemark/studio/history/tools/plan-1011/thumbs/B1-catalog-desktop.jpg" alt="The catalog, desktop." style="position: absolute; left: 514px; top: 26px; width: 560px; height: 350px; border-radius: 10px; box-shadow: 0 1px 2px rgba(36, 26, 74, 0.08), 0 18px 40px -18px rgba(36, 26, 74, 0.28)">
+<img src="/truemark/studio/history/tools/plan-1011/thumbs/B1-catalog-phone.jpg" alt="The catalog, phone." style="position: absolute; left: 1148px; top: 26px; width: 160px; height: 346px; border-radius: 16px; box-shadow: 0 1px 2px rgba(36, 26, 74, 0.08), 0 18px 40px -18px rgba(36, 26, 74, 0.28)">
+</div><div style="position: absolute; left: 66px; top: 1690px; width: 1308px; height: 406px; border-top: 1px solid rgba(36, 26, 74, 0.22)">
+<div style="position: absolute; left: 0; top: 26px; width: 430px">
+<p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.12em; color: #6f6786">04</p>
+<h2 style="margin: 10px 0 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 34px; line-height: 1.08; letter-spacing: -0.025em; color: #241a4a">Verified · the paper trail</h2>
+<p style="margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: #4a3f6b">Verified and the paper trail become one scene. One pedestal; the seven tested lots take turns on it. Nothing slides: focus pulls through a breath of mist while the lot number rolls, the figures and trace change, and the path lights up again.</p>
+<p style="margin: 14px 0 0; font-size: 12px; line-height: 1.5; color: #6f6786">C1 · desktop and phone · C2 the change, frame by frame</p>
+</div>
+<div style="position: absolute; left: 0; top: 372px; width: 430px; display: flex; gap: 10px; align-items: baseline">
+<span style="font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786; white-space: nowrap">Then<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -1px; margin-left: 6px"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg></span>
+<p style="margin: 0; font-size: 13px; line-height: 1.45; color: #241a4a">The shelf ends at a plinth by the window, its vial still in the mist.</p>
+</div>
+<img src="/truemark/studio/history/tools/plan-1011/thumbs/C1-trail-desktop.jpg" alt="Verified · the paper trail, desktop." style="position: absolute; left: 514px; top: 26px; width: 560px; height: 350px; border-radius: 10px; box-shadow: 0 1px 2px rgba(36, 26, 74, 0.08), 0 18px 40px -18px rgba(36, 26, 74, 0.28)">
+<img src="/truemark/studio/history/tools/plan-1011/thumbs/C1-trail-phone.jpg" alt="Verified · the paper trail, phone." style="position: absolute; left: 1148px; top: 26px; width: 160px; height: 346px; border-radius: 16px; box-shadow: 0 1px 2px rgba(36, 26, 74, 0.08), 0 18px 40px -18px rgba(36, 26, 74, 0.28)">
+</div><div style="position: absolute; left: 66px; top: 2136px; width: 1308px; height: 406px; border-top: 1px solid rgba(36, 26, 74, 0.22)">
+<div style="position: absolute; left: 0; top: 26px; width: 430px">
+<p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.12em; color: #6f6786">05</p>
+<h2 style="margin: 10px 0 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 34px; line-height: 1.08; letter-spacing: -0.025em; color: #241a4a">Your vial</h2>
+<p style="margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: #4a3f6b">The lot lookup moves into the room. The field is the plinth’s plaque, and the vial above it waits in the mist. Type the number and that lot’s vial comes into focus; then the Verify page opens on it, just as the site does today, certificate and PDF included. On a phone the plinth sits just above the keyboard, so you see it happen.</p>
+<p style="margin: 14px 0 0; font-size: 12px; line-height: 1.5; color: #6f6786">D1 at rest · D2 the lookup, frame by frame, and typing on a phone · D3 what opens: the live Verify page · D4 no record</p>
+</div>
+<div style="position: absolute; left: 0; top: 372px; width: 430px; display: flex; gap: 10px; align-items: baseline">
+<span style="font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786; white-space: nowrap">Then<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -1px; margin-left: 6px"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></svg></span>
+<p style="margin: 0; font-size: 13px; line-height: 1.45; color: #241a4a">The room ends here; the page carries on in paper.</p>
+</div>
+<img src="/truemark/studio/history/tools/plan-1011/thumbs/D1-lookup-desktop.jpg" alt="Your vial, desktop." style="position: absolute; left: 514px; top: 26px; width: 560px; height: 350px; border-radius: 10px; box-shadow: 0 1px 2px rgba(36, 26, 74, 0.08), 0 18px 40px -18px rgba(36, 26, 74, 0.28)">
+<img src="/truemark/studio/history/tools/plan-1011/thumbs/D2-lookup-typing-phone.jpg" alt="Your vial, phone." style="position: absolute; left: 1148px; top: 26px; width: 160px; height: 346px; border-radius: 16px; box-shadow: 0 1px 2px rgba(36, 26, 74, 0.08), 0 18px 40px -18px rgba(36, 26, 74, 0.28)">
+</div>
+<div style="position: absolute; left: 66px; top: 2582px; width: 1308px; border-top: 1px solid rgba(36, 26, 74, 0.22); padding-top: 26px; display: flex; gap: 0">
+<div style="width: 514px"><p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.12em; color: #6f6786">06</p>
+<h2 style="margin: 10px 0 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 34px; letter-spacing: -0.025em; color: #241a4a">The rest, as it is</h2></div>
+<p style="margin: 34px 0 0; font-size: 15px; line-height: 1.6; color: #4a3f6b">Who we supply, Questions and the footer stay as they are now.</p>
+</div>
+<div style="position: absolute; left: 66px; top: 2732px; width: 1308px; box-sizing: border-box; padding: 34px 40px 38px; border-radius: 16px; background: #fdfdfe; border: 1px solid rgba(36, 26, 74, 0.11)">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<h2 style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 30px; letter-spacing: -0.02em; color: #241a4a">Your calls, where they stand</h2>
+<p style="margin: 0; font-size: 13px; color: #6f6786">Sketches only: made from the real room photographs, vial pictures and the lab’s numbers. Nothing here touches the site.</p>
+</div>
+<div style="margin-top: 26px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 32px"><div style="border-top: 1px solid rgba(36, 26, 74, 0.22); padding-top: 14px"><p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-size: 17px; letter-spacing: -0.01em; color: #241a4a">The look of the room</p><p style="margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: #4a3f6b"><span style="font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786; margin-right: 8px">Decided</span>Keep the mist all the way down. What I’d add: let it drift slowly, let it carry you from one section into the next, and let it clear wherever focus lands.</p></div><div style="border-top: 1px solid rgba(36, 26, 74, 0.22); padding-top: 14px"><p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-size: 17px; letter-spacing: -0.01em; color: #241a4a">What a lookup opens</p><p style="margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: #4a3f6b"><span style="font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786; margin-right: 8px">Decided</span>The live Verify page, as the site does today: the certificate, its PDF download, and Verify with KMD Analytical.</p></div><div style="border-top: 1px solid rgba(36, 26, 74, 0.22); padding-top: 14px"><p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-size: 17px; letter-spacing: -0.01em; color: #241a4a">The label’s details</p><p style="margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: #4a3f6b"><span style="font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786; margin-right: 8px">Answered</span>Yes: they’re Motion 04’s middle chapter. The other chat is building that sequence in our room, and its label step may borrow A3’s close-up.</p></div><div style="border-top: 1px solid rgba(36, 26, 74, 0.22); padding-top: 14px"><p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-size: 17px; letter-spacing: -0.01em; color: #241a4a">Two builds, one page</p><p style="margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: #4a3f6b"><span style="font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786; margin-right: 8px">Lined up</span>The other chat builds the opening; I build 03 to 05 on its work, with the paper trail kept light so the full certificate isn’t shown twice. Waiting on your go.</p></div></div>
+</div>
+</div>
+</x-dc>
+
+</body>
+</html>

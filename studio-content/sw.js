@@ -1,0 +1,6 @@
+const BASE="/truemark/studio/",VERSION="e86e918ca64ce47e";
+self.addEventListener('install',e=>e.waitUntil(self.skipWaiting()));
+self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
+let mapping;
+function map(){return mapping||(mapping=fetch(BASE+'asset-map.json?v='+VERSION,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Map unavailable');return r.json()}).then(v=>v.mapping||v.assets||v.map||v))}
+self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(u.origin!==self.location.origin||!u.pathname.startsWith(BASE)||!['GET','HEAD'].includes(event.request.method))return;if(event.request.mode==='navigate'||event.request.destination==='document'||u.pathname.endsWith('.html')||u.pathname===BASE){event.respondWith(fetch(event.request,{cache:'no-store'}));return;}const key='/'+u.pathname.slice(BASE.length);event.respondWith(map().then(m=>{const dest=m[key]||m[decodeURIComponent(key)];if(!dest)return fetch(event.request);const target=new URL(typeof dest==='string'?dest:dest.url,self.location.origin);if(!target.pathname.startsWith(BASE))target.pathname=BASE+target.pathname.replace(/^\//,'');return fetch(target,{method:event.request.method,headers:event.request.headers,credentials:'same-origin',cache:'force-cache'})}).catch(()=>fetch(event.request)));});

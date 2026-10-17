@@ -17,7 +17,7 @@ Start with the relevant running screen and its components. Reuse tokens, typogra
 | Editable Command Center design lab | `design-lab/command/` |
 | Product imagery already used by the application | `public/`, and imported assets referenced by the relevant component |
 
-Original brand documents, editable Studio and historical photography are separate delivery items. Missing archives do not authorize recreating client labels or replacing approved artwork. Historical palettes and prototype briefs are context, not current instructions.
+The editable Studio, its curated photography and published brand assets are included: see [STUDIO.md](STUDIO.md). Broader original archives remain separate delivery items. Missing archives do not authorize recreating client labels or replacing approved artwork. Historical palettes and prototype briefs are context, not current instructions.
 
 ## Make daily work obvious
 

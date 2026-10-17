@@ -1,0 +1,13 @@
+Your payment didn't go through.
+
+Complete payment to keep order TM-10500.
+
+Complete payment
+
+https://fixture.test/live/#/checkout/pay/order-fixture
+
+You receive this because you placed an order with your TrueMark research account.
+
+For research use only. Not for human consumption.
+
+TrueMark BioLabs

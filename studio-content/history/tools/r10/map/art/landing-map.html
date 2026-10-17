@@ -1,0 +1,992 @@
+
+<script data-tm-history-storage="tools">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("tools");</script>
+<title>TrueMark Landing Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Poppins:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; the sketches break wider than the text. Every sketch is drawn at the real window size, then scaled down. */
+:root {
+  --bg: #f6f4f9;
+  --surface: #ffffff;
+  --ink: #1b1626;
+  --muted: #625b70;
+  --faint: #8d869a;
+  --line: rgba(27, 22, 38, 0.11);
+  --plan: #4a3a8a;
+  --plan-soft: rgba(74, 58, 138, 0.09);
+  --fix: #a2463e;
+  --fix-soft: rgba(162, 70, 62, 0.09);
+  --wall: #d6cde7;
+  --floor: #e2d8ef;
+  --display: "Inter Tight", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --body: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --site-display: "Poppins", "Helvetica Neue", Arial, sans-serif;
+  --site-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --shadow: 0 1px 2px rgba(27, 22, 38, 0.06), 0 8px 28px rgba(27, 22, 38, 0.07);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f0d13; --surface: #17141d; --ink: #ece8f3; --muted: #a8a1b6; --faint: #7f788d;
+    --line: rgba(255, 255, 255, 0.09); --plan: #b9a8ea; --plan-soft: rgba(185, 168, 234, 0.1);
+    --fix: #e3958b; --fix-soft: rgba(227, 149, 139, 0.1);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f0d13; --surface: #17141d; --ink: #ece8f3; --muted: #a8a1b6; --faint: #7f788d;
+  --line: rgba(255, 255, 255, 0.09); --plan: #b9a8ea; --plan-soft: rgba(185, 168, 234, 0.1);
+  --fix: #e3958b; --fix-soft: rgba(227, 149, 139, 0.1);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+.page { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 56px 96px; }
+.measure { max-width: 680px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 500; letter-spacing: -0.015em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 5.2vw, 3.6rem); line-height: 1.04; letter-spacing: -0.03em; }
+h2 { font-size: clamp(1.45rem, 2.6vw, 1.9rem); line-height: 1.15; }
+h3 { font-size: 1.12rem; line-height: 1.3; letter-spacing: -0.005em; }
+p { margin: 0; text-wrap: pretty; }
+.eyebrow { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lead { font-size: 1.12rem; color: var(--muted); line-height: 1.55; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+section { padding-block: 64px 8px; border-top: 1px solid var(--line); margin-top: 56px; }
+section > header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.num { font-family: var(--mono); font-size: 0.75rem; color: var(--plan); letter-spacing: 0.06em; }
+.mono { font-family: var(--mono); font-size: 0.86em; font-variant-numeric: tabular-nums; }
+
+/* the agreement */
+.asks { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 36px; }
+.ask { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
+.ask b { font-family: var(--display); font-weight: 500; font-size: 1rem; }
+.ask span { color: var(--muted); font-size: 0.92rem; line-height: 1.5; }
+
+/* figures */
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+figcaption { font-size: 0.86rem; color: var(--muted); line-height: 1.45; }
+figcaption b { color: var(--ink); font-weight: 500; }
+.shot { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.tag { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; width: fit-content; }
+.tag.fix { color: var(--fix); background: var(--fix-soft); }
+.tag.plan { color: var(--plan); background: var(--plan-soft); }
+.tag.keep { color: var(--muted); background: var(--line); }
+
+.why { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 26px; }
+.why div { border-left: 2px solid var(--fix); padding: 2px 0 2px 14px; display: flex; flex-direction: column; gap: 4px; }
+.why div.ok { border-left-color: var(--plan); }
+.why b { font-weight: 500; font-family: var(--display); }
+.why span { color: var(--muted); font-size: 0.92rem; line-height: 1.5; }
+
+/* rules */
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0 32px; margin-top: 8px; }
+.rule { display: grid; grid-template-columns: 34px 1fr; gap: 4px 10px; padding-block: 16px; border-bottom: 1px solid var(--line); }
+.rule .k { font-family: var(--mono); font-size: 0.78rem; color: var(--plan); padding-top: 3px; }
+.rule b { font-family: var(--display); font-weight: 500; font-size: 1.04rem; line-height: 1.35; }
+.rule p { grid-column: 2; color: var(--muted); font-size: 0.94rem; line-height: 1.55; }
+
+/* the explorer */
+.explorer { margin-top: 36px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 16px; box-shadow: var(--shadow); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.controls button { font: 500 0.82rem/1 var(--body); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s; }
+.controls button:hover { border-color: var(--faint); }
+.controls button:focus-visible, .seg button:focus-visible, input:focus-visible { outline: 2px solid var(--plan); outline-offset: 2px; }
+.controls button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.controls button .mono { opacity: 0.7; margin-left: 4px; }
+.sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 24px; }
+.sliders label { display: grid; grid-template-columns: 64px 1fr 62px; align-items: center; gap: 10px; font-size: 0.84rem; color: var(--muted); }
+.sliders output { font-family: var(--mono); font-size: 0.82rem; color: var(--ink); text-align: right; }
+input[type="range"] { width: 100%; accent-color: var(--plan); }
+.opts { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; font-size: 0.86rem; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
+.seg button { font: 500 0.8rem/1 var(--body); background: transparent; border: 0; color: var(--muted); padding: 7px 11px; border-radius: 999px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--plan-soft); color: var(--plan); }
+.check { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+.stagewrap { display: flex; justify-content: center; align-items: flex-start; min-height: 200px; background: repeating-linear-gradient(45deg, transparent 0 9px, var(--line) 9px 10px); border-radius: 12px; padding: 18px; overflow: hidden; }
+.readout { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 0.86rem; color: var(--muted); }
+.readout b { color: var(--ink); font-weight: 500; font-family: var(--mono); font-size: 0.82rem; }
+
+/* artboards */
+.boards { display: flex; flex-wrap: wrap; gap: 26px 22px; align-items: flex-end; margin-top: 8px; }
+.boards figure { flex: 0 0 auto; }
+.frame { position: relative; overflow: hidden; border-radius: 9px; box-shadow: var(--shadow); outline: 1px solid var(--line); background: #e2d8ef; }
+.frame > .board { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+
+/* the site, sketched at true size (always the site's own light colours) */
+.board { overflow: hidden; background: #e2d8ef; font-family: var(--site-body); color: #1d1733; }
+.board .notice { position: absolute; left: 0; right: 0; top: 0; height: 26px; background: #2b2150; color: #ece6fb; font: 600 9.5px/26px var(--site-body); letter-spacing: 0.16em; text-align: center; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
+.board .nav { position: absolute; left: 0; right: 0; top: 26px; height: 66px; background: #fbfaff; border-bottom: 1px solid rgba(29, 23, 51, 0.08); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; gap: 20px; }
+.board .nav .logo { font: 600 17px/1 var(--site-display); letter-spacing: 0.04em; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.board .nav .logo i { width: 22px; height: 22px; border-radius: 4px; background: #1d1733; display: inline-block; }
+.board .nav .links { display: flex; gap: 22px; font-size: 14px; color: #3a3352; white-space: nowrap; }
+.board .nav .menu { width: 22px; height: 14px; border-top: 2px solid #1d1733; border-bottom: 2px solid #1d1733; position: relative; }
+.board .nav .menu::after { content: ""; position: absolute; left: 0; right: 0; top: 4px; border-top: 2px solid #1d1733; }
+.board .wallx { position: absolute; left: 0; right: 0; }
+.board .roomclip { position: absolute; left: 0; right: 0; overflow: hidden; }
+.board .roomclip img.room { position: absolute; display: block; max-width: none; }
+.board .vial { position: absolute; display: block; max-width: none; filter: drop-shadow(0 2px 2px rgba(60, 40, 90, 0.18)); }
+.board .mist { position: absolute; pointer-events: none; }
+.board .box { position: absolute; border: 2px dashed #4a3a8a; border-radius: 6px; background: rgba(74, 58, 138, 0.06); }
+.board .box span { position: absolute; left: 8px; top: -26px; font: 600 13px/1 var(--mono); color: #4a3a8a; background: #fbfaff; padding: 5px 7px; border-radius: 4px; white-space: nowrap; }
+.board .words { position: absolute; display: flex; gap: 6%; }
+.board .words .col { display: flex; flex-direction: column; min-width: 0; }
+.board .chip { display: inline-flex; align-items: center; gap: 8px; width: fit-content; background: rgba(255, 255, 255, 0.75); border-radius: 999px; padding: 6px 12px; font: 600 10px/1 var(--site-body); letter-spacing: 0.14em; text-transform: uppercase; color: #3a3352; }
+.board .chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #6b2fa8; }
+.board .h { font-family: var(--site-display); font-weight: 400; line-height: 1.02; letter-spacing: -0.035em; color: #1f1740; margin: 0; }
+.board .h em { font-style: normal; color: #6b2fa8; }
+.board .lp { color: #3a3352; line-height: 1.5; margin: 0; }
+.board .ctas { display: flex; gap: 10px; flex-wrap: wrap; }
+.board .ctas span { border-radius: 999px; padding: 0.8em 1.4em; font: 600 1em/1 var(--site-body); white-space: nowrap; }
+.board .ctas .a { background: #221a45; color: #fff; }
+.board .ctas .b { border: 1px solid rgba(34, 26, 69, 0.3); color: #221a45; background: rgba(255, 255, 255, 0.5); }
+.board .claim { font: 600 10px/1 var(--site-body); letter-spacing: 0.14em; text-transform: uppercase; color: #4c4466; }
+.board .cards { position: absolute; left: 0; right: 0; }
+.board .cards .ce { font: 600 10px/1 var(--site-body); letter-spacing: 0.16em; text-transform: uppercase; color: #4c4466; }
+.board .cards .ch { font-family: var(--site-display); font-weight: 400; letter-spacing: -0.03em; line-height: 1.05; color: #1f1740; margin: 10px 0 0; }
+.board .cards .grid { display: grid; gap: 14px; margin-top: 22px; }
+.board .cards .card { background: #ffffff; border-radius: 16px; padding: 18px 18px 22px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 2px rgba(29, 23, 51, 0.05); min-width: 0; }
+.board .cards .card small { font: 600 9.5px/1 var(--site-body); letter-spacing: 0.15em; color: #6d6585; }
+.board .cards .card b { font: 400 19px/1.15 var(--site-display); letter-spacing: -0.02em; color: #1f1740; }
+.board .fold { position: absolute; left: 0; right: 0; bottom: 0; height: 0; }
+
+/* the end of the page, sketched */
+.board .endq { position: absolute; left: 0; right: 0; top: 92px; }
+.board .endq .qh { font-family: var(--site-display); font-weight: 400; letter-spacing: -0.03em; line-height: 1.05; color: #1f1740; margin: 0; }
+.board .endq ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.board .endq li { display: flex; justify-content: space-between; gap: 18px; border-top: 1px solid rgba(31, 23, 64, 0.14); padding: 14px 0; color: #2a2340; }
+.board .endq li::after { content: "+"; color: #6d6585; }
+.board .footer { position: absolute; left: 0; right: 0; bottom: 0; color: #2a2340; }
+.board .footer .ftag { font-family: var(--site-display); font-weight: 400; letter-spacing: -0.02em; line-height: 1.12; color: #1f1740; }
+.board .footer .ftag span { color: #6d6585; }
+.board .footer .cols { display: grid; gap: 18px 28px; }
+.board .footer .cols b { display: block; font: 600 9.5px/1 var(--site-body); letter-spacing: 0.16em; text-transform: uppercase; color: #6d6585; margin-bottom: 10px; }
+.board .footer .cols span { display: block; font-size: 13px; line-height: 1.9; }
+.board .footer .legal { font-size: 11px; line-height: 1.5; color: #5d5476; }
+.tod { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
+.tod img { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid var(--line); }
+.endpair { display: flex; flex-wrap: wrap; gap: 26px 22px; align-items: flex-end; margin-top: 26px; }
+@media (max-width: 720px) { .tod { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* the page, top to bottom */
+.flow { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+.step { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 14px 28px; padding-block: 24px; border-bottom: 1px solid var(--line); align-items: start; }
+.step .now { display: flex; flex-direction: column; gap: 8px; }
+.step .plan { display: flex; flex-direction: column; gap: 8px; }
+.step .plan p { color: var(--muted); font-size: 0.95rem; }
+.step .plan p b { color: var(--ink); font-weight: 500; }
+.lotmock { margin-top: 6px; }
+.keepbox { margin-top: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+.keepbox p { color: var(--muted); font-size: 0.95rem; }
+
+/* gallery */
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 8px; }
+.gallery figure img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); display: block; }
+.gallery figure.tall img { object-position: 50% 70%; }
+
+/* decisions */
+.calls { display: flex; flex-direction: column; gap: 18px; margin-top: 8px; }
+.call { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.call .q { display: grid; grid-template-columns: 30px 1fr; gap: 10px; }
+.call .q .k { font-family: var(--mono); font-size: 0.8rem; color: var(--plan); padding-top: 4px; }
+.call .options { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-end; }
+.pick { border-left: 2px solid var(--plan); padding-left: 14px; color: var(--muted); font-size: 0.95rem; }
+.pick b { color: var(--plan); font-weight: 500; }
+
+.steps { counter-reset: s; list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 0; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 10px; padding-block: 14px; border-bottom: 1px solid var(--line); color: var(--muted); }
+.steps li::before { content: counter(s, decimal-leading-zero); font-family: var(--mono); font-size: 0.78rem; color: var(--plan); padding-top: 3px; }
+.steps li b { color: var(--ink); font-weight: 500; }
+.foot { margin-top: 48px; font-size: 0.82rem; color: var(--faint); }
+
+@media (max-width: 720px) {
+  .pair { grid-template-columns: 1fr; }
+  .step { grid-template-columns: 1fr; }
+  .page { padding-block: 36px 72px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main class="page">
+  <div class="stack measure">
+    <span class="eyebrow">TrueMark · the landing, before I build more · 8 Oct</span>
+    <h1>One room. Five vials. Every screen.</h1>
+    <p class="lead">The plan for the landing before I build any more. It covers how the pedestal scene is framed at every window size, what sits right under it, and how the whole page stays inside that one room. Three calls at the end are yours.</p>
+  </div>
+
+  <div class="asks" role="list" aria-label="What you asked for">
+    <div class="ask" role="listitem"><b>The pedestal scene is the hero</b><span>With the mist, and the camera move into a product when you click a vial.</span></div>
+    <div class="ask" role="listitem"><b>All five vials, always</b><span>On any desktop or tablet window, like the published site's pedestal photo.</span></div>
+    <div class="ask" role="listitem"><b>The white cards right below it</b><span>The eight class cards from the published site, then the rest of the page.</span></div>
+    <div class="ask" role="listitem"><b>One room, no spotlight</b><span>The black studio goes. Every section lives in the hero's lilac room.</span></div>
+  </div>
+
+  <section aria-labelledby="s1">
+    <header><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+      <span class="num">01 · what went wrong</span>
+      <h2 id="s1">Your window got the phone photo</h2>
+    </header>
+    <div class="pair">
+      <figure>
+        <img class="shot" src="img/s-pane-new.jpg" alt="The new hero in a 1196 by 1306 window: three large vials on pedestals, the outer two missing." loading="eager">
+        <figcaption><span class="tag fix">now</span><br><b>The new version in your preview pane</b>, 1196 × 1306. Three vials; the outer two are gone.</figcaption>
+      </figure>
+      <figure>
+        <img class="shot" src="img/s-pane-published.jpg" alt="The published site at the same window size: the photo of all five vials on pedestals, full width, with the white class cards beneath it." loading="eager">
+        <figcaption><span class="tag keep">published</span><br><b>The published site, same window.</b> All five, full width, cards right under it.</figcaption>
+      </figure>
+    </div>
+    <div class="measure" style="margin-top:22px">
+      <p>I wrote a rule that swaps to the phone photo whenever a window is less than 1.1 times as wide as it is tall. Your pane is 1196 × 1306, so it got the phone photo. Any desktop window close to square does the same, and so does an iPad held upright. That rule goes.</p>
+    </div>
+    <div class="why">
+      <div><b>The hero swaps photos</b><span>Resize the window and it jumps between the five-vial and three-vial pictures.</span></div>
+      <div><b>Five different lights</b><span>Misty room, a rose sky behind the cards, a black studio, a blue dawn, then white. Each one is a different place.</span></div>
+      <div><b>Some of them change fast</b><span>A few of those light changes happen over a short stretch of scroll, so they read as jumps.</span></div>
+      <div class="ok"><b>Scrolling itself is smooth</b><span>I measured both versions: over 99% of frames arrive on time. The jank is the page changing under you, not stutter.</span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="s2">
+    <header>
+      <span class="num">02 · the hero</span>
+      <h2 id="s2">Five rules for the pedestal scene</h2>
+      <p class="lead measure">The published site already does the important part: the photo runs the full width and keeps its shape, so nothing falls off the sides. The plan keeps that, adds the mist and the full-screen feel on wide screens, and never swaps photos.</p>
+    </header>
+    <div class="rules">
+      <div class="rule"><span class="k">R1</span><b>The room runs the full width. All five vials on any window 600&nbsp;px or wider.</b><p>The five vials and their labels sit in one box, and that box always fits inside the window with a margin.</p></div>
+      <div class="rule"><span class="k">R2</span><b>The room keeps its own shape.</b><p>On a laptop or a wide monitor it fills the first screen, trimming a little floor if it must, never a vial. On a tall window it keeps its natural height, and the cards come up beneath it, as on the published site.</p></div>
+      <div class="rule"><span class="k">R3</span><b>The words sit on the room's wall.</b><p>When the wall in the photo is too short for them (an upright iPad), the same wall carries on above the photo, blended so there's no edge.</p></div>
+      <div class="rule"><span class="k">R4</span><b>One photo from the first frame.</b><p>No swapping when the window changes. Reload or resize and it is the same room, reframed.</p></div>
+      <div class="rule"><span class="k">R5</span><b>The floor runs into the cards.</b><p>The mist and the floor colour carry straight on under the class cards. There's no line where the hero ends.</p></div>
+      <div class="rule"><span class="k">R6</span><b>Phones under 600&nbsp;px get their own framing.</b><p>Five small vials or three big ones. That one's your call, below.</p></div>
+    </div>
+
+    <div class="explorer" id="explorer">
+      <div class="controls" role="group" aria-label="Window size presets" id="presets"></div>
+      <div class="sliders">
+        <label for="w">Width <input type="range" id="w" min="360" max="2560" step="2" value="1196"> <output id="wo" for="w">1196</output></label>
+        <label for="h">Height <input type="range" id="h" min="560" max="1440" step="2" value="1306"> <output id="ho" for="h">1306</output></label>
+      </div>
+      <div class="opts">
+        <span>Phones: <span class="seg" role="group" aria-label="Phone framing"><button type="button" data-phone="five" aria-pressed="true">five small</button><button type="button" data-phone="three" aria-pressed="false">three big</button></span></span>
+        <label class="check" for="showbox"><input type="checkbox" id="showbox" checked> Show the box the vials live in</label>
+      </div>
+      <div class="stagewrap" id="stage" aria-live="polite"></div>
+      <div class="readout" id="readout"></div>
+    </div>
+    <p class="foot">Drawn with the build's own photo (the crisp, graded room) and the real vial positions from the code. The words and cards are sketched at true size; the real page will match these proportions.</p>
+  </section>
+
+  <section aria-labelledby="s3">
+    <header>
+      <span class="num">03 · common windows</span>
+      <h2 id="s3">The hero at the sizes people use</h2>
+      <p class="lead measure">Each frame is the first screen, drawn at its real size and scaled down. Wide windows get the full-screen room. Tall ones get the room at its own shape, with the cards beginning underneath.</p>
+    </header>
+    <div class="boards" id="boards"></div>
+  </section>
+
+  <section aria-labelledby="s4">
+    <header>
+      <span class="num">04 · the page, top to bottom</span>
+      <h2 id="s4">Everything stays in the room</h2>
+      <p class="lead measure">The order stays as it is now. What changes is the light: every section sits on the room's own wall and floor colours, taken from the photo, and the dark section turns into the same room seen closer.</p>
+    </header>
+    <div class="flow">
+      <div class="step">
+        <figure class="now"><img class="shot" src="img/t-new-0.jpg" alt="The current hero: the misty pedestal room with five vials."><figcaption><span class="tag keep">now</span></figcaption></figure>
+        <div class="plan"><h3>Hero, the room</h3><p><b>Same room, framed by the rules above.</b> The mist stays. Click a vial and the camera still moves into its product page.</p></div>
+      </div>
+      <div class="step">
+        <figure class="now"><img class="shot" src="img/t-new-1.jpg" alt="The class cards, currently on a rose and purple sky."><figcaption><span class="tag fix">now: rose sky</span></figcaption></figure>
+        <div class="plan"><h3>The eight class cards</h3><p><b>The cards restored today, on the room's floor colour,</b> starting right where the mist ends. No sky behind them.</p></div>
+      </div>
+      <div class="step">
+        <figure class="now"><img class="shot" src="img/t-new-2.jpg" alt="The current lot number section: a black studio with one vial on a glossy black pedestal under a spotlight."><figcaption><span class="tag fix">now: the spotlight studio</span></figcaption></figure>
+        <div class="plan">
+          <h3>Lot number, in the room</h3>
+          <p><b>The same room, seen closer:</b> one lilac pedestal by the window with the real BPC-157 vial on it. The lot search and the certificate sit on the open wall beside it. Same words, same certificate, daylight.</p>
+          <figure class="lotmock"><div class="frame" id="lotmock"></div><figcaption>Sketch: the existing single-pedestal photo of this room, the vial placed on it, the card in its current place. Phones use the upright photo of the same pedestal.</figcaption></figure>
+        </div>
+      </div>
+      <div class="step">
+        <figure class="now"><img class="shot" src="img/t-new-3.jpg" alt="The paper trail timeline, currently on a dark blue dawn."><figcaption><span class="tag fix">now: blue dawn</span></figcaption></figure>
+        <div class="plan"><h3>Paper trail</h3><p><b>The same timeline on the room's wall colour.</b> Received, quarantined, sampled, tested, released, shipped, in the same light as everything above it.</p></div>
+      </div>
+      <div class="step">
+        <figure class="now"><img class="shot" src="img/t-new-4.jpg" alt="Who we supply and common questions."><figcaption><span class="tag keep">now</span></figcaption></figure>
+        <div class="plan"><h3>Who we supply, questions, footer</h3><p><b>Words unchanged.</b> They sit on the room's palest floor colour, and the footer closes the page.</p></div>
+      </div>
+    </div>
+    <div class="keepbox">
+      <h3>Stays exactly as it is</h3>
+      <p>Every word and claim. The eight cards. Clicking a vial into its product page, and the product pages themselves. The mist. The labels on each pedestal. Today's crisper room colour. Today's speed work: phones now load about 2.7&nbsp;MB instead of 13.9&nbsp;MB, and the first picture shows in about 1.3 seconds in our phone test.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="s5">
+    <header>
+      <span class="num">05 · photos of this room</span>
+      <h2 id="s5">We already have the room from every angle we need</h2>
+      <p class="lead measure">All of these are the same lilac room, the same pedestals and the same window light. So the lot number section can use one of them, and nothing new has to be invented.</p>
+    </header>
+    <div class="gallery">
+      <figure><img src="img/g-w2.jpg" alt="The five empty pedestals, wide, windows on both sides."><figcaption><span class="tag plan">hero</span><br>The room you see now, the vials placed on it.</figcaption></figure>
+      <figure><img src="img/g-16x9.jpg" alt="One pedestal on the right, window light falling from the left."><figcaption><span class="tag plan">lot number · my pick</span><br>One pedestal, open wall on the left for the certificate.</figcaption></figure>
+      <figure class="tall"><img src="img/g-p34.jpg" alt="One pedestal in an upright frame."><figcaption><span class="tag plan">lot number · phones</span><br>The same pedestal, upright.</figcaption></figure>
+      <figure><img src="img/g-21x9.jpg" alt="One pedestal in a very wide frame."><figcaption><span class="tag keep">spare</span><br>Very wide. Good for ultra-wide monitors.</figcaption></figure>
+      <figure><img src="img/g-p30.jpg" alt="A larger single pedestal, lower right."><figcaption><span class="tag keep">spare</span><br>Closer on one pedestal.</figcaption></figure>
+      <figure><img src="img/g-center.jpg" alt="One pedestal, centred, square frame."><figcaption><span class="tag keep">spare</span><br>Centred, square.</figcaption></figure>
+      <figure><img src="img/g-trio.jpg" alt="Three vials on three pedestals."><figcaption><span class="tag keep">spare</span><br>Three vials. Busy behind a certificate.</figcaption></figure>
+      <figure><img src="img/g-collection.jpg" alt="The published site's photo of five vials on pedestals."><figcaption><span class="tag keep">published site</span><br>The original pedestal photo.</figcaption></figure>
+      <figure><img src="img/g-night.jpg" alt="The black pedestal under a spotlight."><figcaption><span class="tag fix">retire</span><br>The spotlight studio.</figcaption></figure>
+    </div>
+  </section>
+
+  <section aria-labelledby="s5b">
+    <header>
+      <span class="num">06 · the evening ending</span>
+      <h2 id="s5b">If the light warmed toward evening</h2>
+      <p class="lead measure">The same room photo, from daylight to early evening. On the page the light would change so slowly you'd never catch it happening: daylight at the top, late afternoon by the lot number, golden by the questions, early evening at the footer. No dark section, no spotlight.</p>
+    </header>
+    <div class="tod">
+      <figure><img src="img/room-day.jpg" alt="The room in daylight."><figcaption><b>Hero</b> · daylight</figcaption></figure>
+      <figure><img src="img/room-late.jpg" alt="The room in late afternoon light, the window light warming."><figcaption><b>Lot number</b> · late afternoon</figcaption></figure>
+      <figure><img src="img/room-golden.jpg" alt="The room at golden hour, warm light through the window."><figcaption><b>Questions</b> · golden hour</figcaption></figure>
+      <figure><img src="img/room-evening.jpg" alt="The room in early evening, the walls in deeper mauve."><figcaption><b>Footer</b> · early evening</figcaption></figure>
+    </div>
+    <div class="endpair" id="endboards"></div>
+    <p class="foot">A quick grade of the real photo, to show the direction. For the build I'd make a properly relit photo of the room, so the low sun falls the way real evening light does, and warm the vials with it.</p>
+  </section>
+
+  <section aria-labelledby="s6">
+    <header>
+      <span class="num">07 · your calls</span>
+      <h2 id="s6">Three things I need from you</h2>
+    </header>
+    <div class="calls">
+      <div class="call">
+        <div class="q"><span class="k">C1</span><div class="stack" style="gap:6px"><h3>Phones: five small vials, or three big ones?</h3><p style="color:var(--muted)">Both use the same room. Five keeps the whole collection on every screen. Three shows each vial almost twice as large, but the outer two only appear further down.</p></div></div>
+        <div class="options" id="phoneopts"></div>
+        <p class="pick"><b>My pick: five.</b> It's the same room and the same five everywhere, which is the whole idea. Each vial still opens its product page, with a tap area sized for a thumb.</p>
+      </div>
+      <div class="call">
+        <div class="q"><span class="k">C2</span><div class="stack" style="gap:6px"><h3>Lot number room: a photo we have, or a new one?</h3><p style="color:var(--muted)">The single-pedestal photo above is already this room. The other route is to make a new picture from the hero photo itself, the camera moved in on the middle pedestal.</p></div></div>
+        <p class="pick"><b>My pick: the photo we have.</b> Its wall, floor, pedestal and window light match, and its open wall on the left is exactly where the certificate goes. If it doesn't hold up at full size, I'll make the new one.</p>
+      </div>
+      <div class="call">
+        <div class="q"><span class="k">C3</span><div class="stack" style="gap:6px"><h3>The light: daylight all the way down?</h3><p style="color:var(--muted)">Daylight everywhere is what you asked for. The only other version I'd consider: the same room's light warms a little toward early evening by the footer. No dark section, no spotlight, just the afternoon passing.</p></div></div>
+        <p class="pick"><b>My pick: daylight all the way down.</b> The warmer ending is in section 06, if you miss the sunset.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="s7">
+    <header>
+      <span class="num">08 · then</span>
+      <h2 id="s7">How I'd build it, once you agree</h2>
+    </header>
+    <ol class="steps">
+      <li><span><b>Bring today's work together:</b> the restored cards, the crisper room and the speed work, in one copy.</span></li>
+      <li><span><b>Rebuild the hero framing</b> to the rules above, with the phone choice you make. Delete the photo swap.</span></li>
+      <li><span><b>Put the whole page in the room:</b> remove the dark section and the sky, set every section on the room's colours, and move the lot number onto the single-pedestal photo with the mist.</span></li>
+      <li><span><b>Check every window</b> from 360 to 2560 wide, your preview pane included, in Chrome, Safari and Firefox. Count the vials at each size and film the scroll next to the published site.</span></li>
+      <li><span><b>Show you the result</b> side by side with the published site, before anything goes live.</span></li>
+    </ol>
+    <p class="foot">Measured on 8 October in Chrome on this Mac: the new version and the published site at 1196 × 1306, 768 × 1024 and 1440 × 900. Scroll smoothness: two runs per version, 1440 × 900.</p>
+  </section>
+</main>
+
+<script>
+(() => {
+  const ROOM = { w: 2560, h: 1430, src: "img/room.jpg", band: 0.84 };
+  const SEATS = [
+    { v: "ghk", x: 0.2424, y: 0.71, h: 0.1792 },
+    { v: "semax", x: 0.3682, y: 0.6452, h: 0.1792 },
+    { v: "nad", x: 0.4978, y: 0.5986, h: 0.1792 },
+    { v: "bpc", x: 0.6296, y: 0.6558, h: 0.1792 },
+    { v: "tesa", x: 0.7576, y: 0.7268, h: 0.1792 },
+  ];
+  const TALL = { w: 1080, h: 1934, src: "img/room-tall.jpg", focusY: 0.62 };
+  const TALL_SEATS = [
+    { v: "semax", x: 0.168, y: 0.6083, h: 0.1417 },
+    { v: "nad", x: 0.4963, y: 0.5714, h: 0.1417 },
+    { v: "bpc", x: 0.8306, y: 0.6166, h: 0.1417 },
+  ];
+  const VIAL_ASPECT = 218 / 420;
+  /* The box the five vials and their pedestal labels live in, as fractions of the room photo. */
+  const BOX = { x0: 0.2, x1: 0.8, y0: 0.394, y1: 0.8 };
+  const BOX_PHONE = { x0: 0.196, x1: 0.804, y0: 0.394, y1: 0.752 };
+  const KEEP_FLOOR = 0.86; /* trim no higher than this: under the labels, with a little floor for the mist */
+  const WALL_TOP = "linear-gradient(90deg, #e4dbed 0%, #d6cde7 30%, #d3cae4 50%, #d8d0ea 75%, #ddd5ec 100%)";
+  const FLOOR = "#e2d8ef";
+  const CLASSES = ["Metabolic peptides", "Peptide fragments", "Copper peptides", "Secretagogue peptides", "Mitochondrial peptides", "Coenzymes & cofactors", "Neuropeptides", "Melanocortin analogs"];
+  const LINKS = ["Products", "Verify", "Quality", "Handling", "About", "Research Blog", "Contact"];
+  const clamp = (lo, v, hi) => Math.max(lo, Math.min(v, hi));
+  const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
+  const px = (n) => Math.round(n) + "px";
+
+  function chrome(board, W) {
+    board.append(el("div", "notice", "Research use only · not for human consumption"));
+    const nav = el("div", "nav");
+    nav.style.padding = W < 600 ? "0 18px" : W < 1000 ? "0 28px" : "0 40px";
+    nav.append(el("div", "logo", "<i></i>TRUEMARK"));
+    if (W >= 1000) nav.append(el("div", "links", LINKS.map((l) => `<span>${l}</span>`).join("")));
+    else nav.append(el("div", "menu"));
+    board.append(nav);
+    return 92;
+  }
+
+  function words(W, H, phone) {
+    const w = el("div", "words");
+    const two = W >= 1000;
+    const pad = W < 600 ? 20 : W < 1000 ? 32 : Math.round(clamp(40, W * 0.045, 120));
+    const hs = phone ? clamp(35.6, Math.min(0.09 * W, 0.07 * H), 63.75) : clamp(37.5, Math.min(0.05 * W, 0.076 * H), 71.25);
+    const ls = phone ? 15 : clamp(15, Math.min(0.012 * W, 0.023 * H), 18.75);
+    const left = el("div", "col");
+    left.style.gap = px(hs * 0.32);
+    left.append(el("span", "chip", "Lot-level traceability"));
+    const h = el("h1", "h", "True research.<br>True precision.<br>Verified<em>.</em>");
+    h.style.fontSize = px(hs);
+    left.append(h);
+    const right = el("div", "col");
+    right.style.gap = px(ls * 1.1);
+    const p = el("p", "lp", "Research compounds supplied as lyophilized powder, independently tested on receipt, quarantined until release, and traceable from the vial in your hand back to the source batch.");
+    p.style.fontSize = px(ls);
+    right.append(p);
+    const c = el("div", "ctas", "<span class='a'>View catalog</span><span class='b'>Verify a lot</span>");
+    c.style.fontSize = px(phone ? 13 : ls * 0.82);
+    right.append(c);
+    right.append(el("span", "claim", "Every lot shown tested ≥99% by HPLC"));
+    w.style.left = px(pad);
+    w.style.right = px(pad);
+    if (two) {
+      w.style.flexDirection = "row";
+      w.style.justifyContent = "space-between";
+      w.style.alignItems = "flex-start";
+      left.style.flex = "0 1 auto";
+      right.style.flex = "0 0 " + px(clamp(300, W * 0.3, 470));
+      right.style.paddingTop = px(hs * 0.9);
+    } else {
+      w.style.flexDirection = "column";
+      w.style.gap = px(hs * 0.45);
+      p.style.maxWidth = "34em";
+    }
+    w.append(left, right);
+    return { node: w, pad };
+  }
+
+  function cards(board, top, W) {
+    const pad = W < 600 ? 20 : W < 1000 ? 32 : Math.round(clamp(40, W * 0.045, 120));
+    const sec = el("div", "cards");
+    sec.style.top = px(top);
+    sec.style.padding = `${px(W < 600 ? 34 : 56)} ${px(pad)} 0`;
+    sec.append(el("div", "ce", "Catalog"));
+    const ch = el("h2", "ch", "Organized by compound class");
+    ch.style.fontSize = px(W < 600 ? 28 : clamp(30, W * 0.028, 46));
+    sec.append(ch);
+    const g = el("div", "grid");
+    const cols = W >= 1000 ? 4 : 2;
+    g.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+    CLASSES.forEach((c, i) => {
+      const card = el("div", "card", `<small>CLASS 0${i + 1}</small><b>${c}</b>`);
+      card.style.minHeight = px(W < 600 ? 120 : 150);
+      g.append(card);
+    });
+    sec.append(g);
+    board.append(sec);
+  }
+
+  function vial(seat, left, top, s, roomH) {
+    const vh = seat.h * roomH * s;
+    const vw = vh * VIAL_ASPECT;
+    const img = el("img", "vial");
+    img.src = `img/v-${seat.v}.webp`;
+    img.alt = "";
+    img.style.width = px(vw);
+    img.style.height = px(vh);
+    img.style.left = (left - vw / 2) + "px";
+    img.style.top = (top - vh) + "px";
+    return { img, vh };
+  }
+
+  /* The plan's framing for any window W × H. Returns the board and what it measured. */
+  function boardFor(W, H, opts) {
+    const phone = W < 600;
+    const board = el("div", "board");
+    board.style.width = px(W);
+    board.style.height = px(H);
+    const host = opts.host;
+    host.append(board);
+    const header = chrome(board, W);
+    if (phone && opts.phone === "three") return threeUp(board, W, H, header, opts);
+
+    const wd = words(W, H, phone);
+    board.append(wd.node);
+    const wordsH = wd.node.offsetHeight;
+    const topPad = clamp(20, H * 0.035, 48);
+    const gap = clamp(18, H * 0.022, 34);
+    const box = phone ? BOX_PHONE : BOX;
+    let s = phone ? (0.96 * W) / ((box.x1 - box.x0) * ROOM.w) : W / (ROOM.band * ROOM.w);
+    const avail = H - header;
+    let extra, cropTop, cropBottom, natural, heroH, sideFill = false;
+    for (let pass = 0; pass < 40; pass++) {
+      natural = ROOM.h * s;
+      const need = topPad + wordsH + gap - box.y0 * natural; /* wall the words need above the vials, beyond the photo's own */
+      extra = Math.max(0, need);
+      const maxCropTop = Math.max(0, -need);
+      const maxCropBottom = (1 - KEEP_FLOOR) * natural;
+      let over = extra + natural - avail;
+      cropBottom = clamp(0, over, maxCropBottom);
+      over -= cropBottom;
+      cropTop = clamp(0, over, maxCropTop);
+      over -= cropTop;
+      if (over <= 0.5) break;
+      s *= 0.985; /* a very short, wide window: the room steps back */
+    }
+    heroH = extra + natural - cropTop - cropBottom;
+    const roomW = ROOM.w * s;
+    if (roomW < W - 1) sideFill = true;
+
+    /* the wall carries on above the photo when the words need it */
+    if (extra > 0) {
+      const wall = el("div", "wallx");
+      wall.style.top = px(header);
+      wall.style.height = px(extra + 4);
+      wall.style.background = WALL_TOP;
+      board.insertBefore(wall, wd.node);
+    }
+    const clip = el("div", "roomclip");
+    clip.style.top = px(header + extra);
+    clip.style.height = px(heroH - extra);
+    if (sideFill) clip.style.background = FLOOR;
+    const img = el("img", "room");
+    img.src = ROOM.src;
+    img.alt = "";
+    const roomLeft = W / 2 - roomW / 2;
+    img.style.width = roomW + "px";
+    img.style.height = natural + "px";
+    img.style.left = roomLeft + "px";
+    img.style.top = -cropTop + "px";
+    if (extra > 0) {
+      img.style.webkitMaskImage = img.style.maskImage = "linear-gradient(to bottom, transparent 0, #000 9%)";
+    }
+    clip.append(img);
+    /* the mist on the floor, low and soft */
+    const mist = el("div", "mist");
+    mist.style.left = "0";
+    mist.style.right = "0";
+    mist.style.top = (0.68 * natural - cropTop) + "px";
+    mist.style.height = (0.34 * natural) + "px";
+    mist.style.background = "radial-gradient(120% 70% at 50% 85%, rgba(248,244,255,0.78), rgba(240,234,250,0.35) 55%, transparent 80%)";
+    clip.append(mist);
+    let vialH = 0;
+    SEATS.forEach((seat) => {
+      const v = vial(seat, roomLeft + seat.x * roomW, -cropTop + seat.y * natural, s, ROOM.h);
+      vialH = v.vh;
+      clip.append(v.img);
+    });
+    if (opts.box) {
+      const b = el("div", "box");
+      b.style.left = (roomLeft + box.x0 * roomW) + "px";
+      b.style.width = ((box.x1 - box.x0) * roomW) + "px";
+      b.style.top = (-cropTop + box.y0 * natural) + "px";
+      b.style.height = ((box.y1 - box.y0) * natural) + "px";
+      b.append(el("span", null, "all five, always"));
+      clip.append(b);
+    }
+    /* the floor carries on into the cards */
+    const fade = el("div", "mist");
+    fade.style.left = "0";
+    fade.style.right = "0";
+    fade.style.bottom = "0";
+    fade.style.height = Math.min(90, heroH * 0.12) + "px";
+    fade.style.background = `linear-gradient(to bottom, transparent, ${FLOOR})`;
+    clip.append(fade);
+    board.insertBefore(clip, wd.node);
+    wd.node.style.top = px(header + topPad);
+    const cardsTop = header + heroH;
+    if (cardsTop < H) cards(board, cardsTop, W);
+    return {
+      board, five: 5, vialH, heroH, roomH: natural, cardsTop, extra, cropBottom, cropTop, sideFill,
+      cardsVisible: Math.max(0, H - cardsTop), phone,
+    };
+  }
+
+  /* The other phone option: the upright photo, the middle three, full screen (as built today). */
+  function threeUp(board, W, H, header, opts) {
+    const avail = H - header;
+    const s = Math.max(W / TALL.w, avail / TALL.h);
+    const rw = TALL.w * s, rh = TALL.h * s;
+    const left = (W - rw) / 2;
+    const top = clamp(avail - rh, avail / 2 - TALL.focusY * rh + 0.12 * avail, 0);
+    const clip = el("div", "roomclip");
+    clip.style.top = px(header);
+    clip.style.height = px(avail);
+    const img = el("img", "room");
+    img.src = TALL.src;
+    img.alt = "";
+    Object.assign(img.style, { width: rw + "px", height: rh + "px", left: left + "px", top: top + "px" });
+    clip.append(img);
+    let vialH = 0;
+    TALL_SEATS.forEach((seat) => {
+      const v = vial(seat, left + seat.x * rw, top + seat.y * rh, s, TALL.h);
+      vialH = v.vh;
+      clip.append(v.img);
+    });
+    board.append(clip);
+    const wd = words(W, H, true);
+    board.append(wd.node);
+    const kids = [...wd.node.children];
+    wd.node.style.top = px(header + 22);
+    kids[1].style.position = "absolute";
+    kids[1].style.left = "0";
+    kids[1].style.right = "0";
+    kids[1].style.top = px(avail - 22 - kids[1].offsetHeight - 26);
+    return { board, five: 3, vialH, heroH: avail, roomH: rh, cardsTop: H, cardsVisible: 0, phone: true, three: true };
+  }
+
+  function mount(frame, W, H, opts, maxW, maxH) {
+    frame.innerHTML = "";
+    const k = Math.min(maxW / W, maxH / H);
+    frame.style.width = px(W * k);
+    frame.style.height = px(H * k);
+    const r = boardFor(W, H, { ...opts, host: frame });
+    r.board.style.transform = `scale(${k})`;
+    return r;
+  }
+
+  const describe = (W, H, r) => {
+    if (r.three) return `${W} × ${H} · three vials · ${Math.round(r.vialH)} px tall · full-screen photo`;
+    const bits = [`${W} × ${H}`, `all five`, `vials ${Math.round(r.vialH)} px tall`];
+    if (r.cardsVisible > 40) bits.push(`cards start ${Math.round(r.cardsVisible)} px above the fold`);
+    else bits.push("room fills the first screen");
+    return bits.join(" · ");
+  };
+
+  /* explorer */
+  const PRESETS = [
+    ["Your pane", 1196, 1306], ["Laptop", 1440, 900], ["Small laptop", 1280, 800], ["Big monitor", 1920, 1080],
+    ["Ultra-wide", 2560, 1080], ["iPad, flat", 1024, 768], ["iPad, upright", 768, 1024], ["Half a screen", 720, 900], ["Phone", 390, 844],
+  ];
+  const state = { W: 1196, H: 1306, phone: "five", box: true };
+  const stage = document.getElementById("stage");
+  const readout = document.getElementById("readout");
+  const wIn = document.getElementById("w"), hIn = document.getElementById("h");
+  const wo = document.getElementById("wo"), ho = document.getElementById("ho");
+  const presets = document.getElementById("presets");
+  PRESETS.forEach(([name, W, H]) => {
+    const b = el("button", null, `${name}<span class="mono">${W}×${H}</span>`);
+    b.type = "button";
+    b.dataset.w = W;
+    b.dataset.h = H;
+    b.addEventListener("click", () => { state.W = W; state.H = H; draw(); });
+    presets.append(b);
+  });
+  wIn.addEventListener("input", () => { state.W = +wIn.value; draw(); });
+  hIn.addEventListener("input", () => { state.H = +hIn.value; draw(); });
+  document.querySelectorAll("[data-phone]").forEach((b) => b.addEventListener("click", () => {
+    state.phone = b.dataset.phone;
+    document.querySelectorAll("[data-phone]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    draw();
+  }));
+  document.getElementById("showbox").addEventListener("change", (e) => { state.box = e.target.checked; draw(); });
+
+  function draw() {
+    wIn.value = state.W; hIn.value = state.H; wo.textContent = state.W; ho.textContent = state.H;
+    presets.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.w === state.W && +b.dataset.h === state.H)));
+    const avW = Math.max(240, stage.clientWidth - 36);
+    const frame = el("div", "frame");
+    stage.innerHTML = "";
+    stage.append(frame);
+    const r = mount(frame, state.W, state.H, { phone: state.phone, box: state.box }, avW, Math.min(720, window.innerHeight * 0.72));
+    const items = [
+      ["Window", `${state.W} × ${state.H}`],
+      ["Vials in view", r.three ? "3 of 5" : "5 of 5"],
+      ["Vial height", `${Math.round(r.vialH)} px`],
+      ["Room height", `${Math.round(r.heroH)} px`],
+    ];
+    if (!r.three) items.push(["Cards", r.cardsVisible > 40 ? `in the first screen (${Math.round(r.cardsVisible)} px)` : "just below the fold"]);
+    if (r.extra > 1) items.push(["Wall above photo", `${Math.round(r.extra)} px`]);
+    readout.innerHTML = items.map(([k, v]) => `<span>${k} <b>${v}</b></span>`).join("");
+  }
+
+  /* artboards */
+  function boards() {
+    const host = document.getElementById("boards");
+    host.innerHTML = "";
+    const list = [[1920, 1080, "Big monitor"], [1440, 900, "Laptop"], [1280, 800, "Small laptop"], [1196, 1306, "Your preview pane"], [1024, 768, "iPad, flat"], [768, 1024, "iPad, upright"]];
+    const pg = document.querySelector(".page"), cs = getComputedStyle(pg);
+    const colW = pg.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const target = colW < 700 ? colW - 4 : Math.min(340, (colW - 44) / 3);
+    list.forEach(([W, H, name]) => {
+      const fig = el("figure");
+      const frame = el("div", "frame");
+      fig.append(frame);
+      host.append(fig);
+      const r = mount(frame, W, H, { phone: "five", box: false }, target, target * 1.18);
+      fig.style.width = frame.style.width;
+      fig.append(el("figcaption", null, `<b>${name}</b><br><span class="mono">${describe(W, H, r)}</span>`));
+    });
+    const ph = document.getElementById("phoneopts");
+    ph.innerHTML = "";
+    [["five", "Five small"], ["three", "Three big"]].forEach(([mode, name]) => {
+      const fig = el("figure");
+      const frame = el("div", "frame");
+      fig.append(frame);
+      ph.append(fig);
+      const r = mount(frame, 390, 844, { phone: mode, box: false }, 210, 455);
+      fig.style.width = frame.style.width;
+      fig.append(el("figcaption", null, `<b>${name}</b><br><span class="mono">${mode === "five" ? "5 of 5" : "3 of 5"} · vials ${Math.round(r.vialH)} px</span>`));
+    });
+  }
+
+  /* the lot number section, in the room */
+  function lotMock() {
+    const frame = document.getElementById("lotmock");
+    const W = 1440, H = 810;
+    const colW = frame.parentElement.clientWidth;
+    const k = colW / W;
+    frame.style.width = px(W * k);
+    frame.style.height = px(H * k);
+    frame.innerHTML = "";
+    const b = el("div", "board");
+    Object.assign(b.style, { width: W + "px", height: H + "px", transform: `scale(${k})` });
+    const room = el("img", "room");
+    room.src = "img/lot-room.jpg";
+    room.alt = "";
+    Object.assign(room.style, { position: "absolute", left: "0", top: "0", width: W + "px", height: H + "px", maxWidth: "none" });
+    b.append(room);
+    const vh = 0.3 * H, vw = vh * VIAL_ASPECT;
+    const v = el("img", "vial");
+    v.src = "img/v-bpc.webp";
+    v.alt = "";
+    Object.assign(v.style, { width: vw + "px", height: vh + "px", left: (0.64 * W - vw / 2) + "px", top: (0.476 * H - vh) + "px" });
+    b.append(v);
+    const mist = el("div", "mist");
+    Object.assign(mist.style, { left: "0", right: "0", top: (0.72 * H) + "px", height: (0.3 * H) + "px", background: "radial-gradient(90% 70% at 60% 80%, rgba(248,244,255,0.7), transparent 75%)" });
+    b.append(mist);
+    const words = el("div");
+    Object.assign(words.style, { position: "absolute", left: "96px", top: "70px", width: "520px", display: "flex", flexDirection: "column", gap: "16px" });
+    words.innerHTML = `<span class="claim">One lot, end to end</span>
+      <h2 class="h" style="font-size:52px">Enter a lot number.<br><span style="color:#5d5476">Read the certificate.</span></h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.82);border:1px solid rgba(34,26,69,.16);border-radius:999px;padding:6px 6px 6px 22px;width:430px;font-size:16px;color:#221a45">TM-BPC10-2609-01<span style="background:#221a45;color:#fff;border-radius:999px;padding:12px 20px;font-weight:600;font-size:15px">Look up</span></div>`;
+    b.append(words);
+    const card = el("div");
+    Object.assign(card.style, { position: "absolute", left: "96px", top: "372px", width: "440px", background: "#fff", borderRadius: "22px", padding: "26px 30px", boxShadow: "0 18px 50px rgba(60,40,110,.16)", fontSize: "15px", color: "#2a2340" });
+    const rows = [["Lot", "TM-BPC10-2609-01"], ["Compound", "BPC-157 · 10 mg"], ["Testing laboratory", "KMD Analytical"], ["Purity (HPLC)", "99.51%"], ["Identity", "Conforms"], ["Test date", "01 Oct 2026"]];
+    card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><span style="font:400 22px/1.2 var(--site-display);color:#1f1740">Certificate of Analysis</span><span style="font:600 10px/1 var(--site-body);letter-spacing:.14em;color:#2f6b4f;background:#e4f1ea;border-radius:999px;padding:7px 10px">APPROVED</span></div>` +
+      rows.map(([a, c]) => `<div style="display:flex;justify-content:space-between;border-top:1px solid rgba(34,26,69,.1);padding:10px 0"><span style="color:#5d5476">${a}</span><span>${c}</span></div>`).join("");
+    b.append(card);
+    frame.append(b);
+  }
+
+  /* the end of the page: the questions, the room once more, the footer; in daylight or warming */
+  const TIMES = {
+    day: { room: "img/room-day.jpg", page: "#ebe4f4", floor: "#e2d8ef", vial: "none" },
+    golden: { room: "img/room-golden.jpg", page: "#ecdde4", floor: "#e0c1ce", vial: "sepia(0.2) saturate(1.12) brightness(0.9) hue-rotate(-6deg)" },
+  };
+  function endBoard(W, H, tod, host) {
+    const T = TIMES[tod];
+    const phone = W < 600;
+    const board = el("div", "board");
+    board.style.width = px(W);
+    board.style.height = px(H);
+    board.style.background = T.page;
+    host.append(board);
+    chrome(board, W);
+    const pad = phone ? 20 : W < 1000 ? 32 : Math.round(clamp(40, W * 0.045, 120));
+    const q = el("div", "endq");
+    q.style.padding = `${px(phone ? 26 : 40)} ${px(pad)} 0`;
+    q.style.display = "grid";
+    q.style.gridTemplateColumns = phone ? "1fr" : "minmax(0, 0.8fr) minmax(0, 1.2fr)";
+    q.style.gap = phone ? "16px" : "48px";
+    const qh = el("h2", "qh", "Common questions");
+    qh.style.fontSize = px(phone ? 28 : 40);
+    const ul = el("ul");
+    ["Why does the material arrive as a dry powder?", "Why doesn't the vial weight match the certificate?", "How is the material stored, and what changes once it's in solution?"].slice(0, phone ? 2 : 3)
+      .forEach((t) => ul.append(el("li", null, `<span>${t}</span>`)));
+    ul.style.fontSize = px(phone ? 14 : 15);
+    q.append(qh, ul);
+    board.append(q);
+    /* the room once more: the full width, the band where the five stand */
+    const box = phone ? BOX_PHONE : BOX;
+    const s = phone ? (0.96 * W) / ((box.x1 - box.x0) * ROOM.w) : W / (ROOM.band * ROOM.w);
+    const natural = ROOM.h * s, roomW = ROOM.w * s;
+    const footerH = phone ? 300 : 230;
+    /* the room fills what the questions and the footer leave, the five near its middle */
+    const top = 92 + q.offsetHeight + (phone ? 4 : 8);
+    const shown = Math.max(0.3 * natural, H - footerH - top + (phone ? 70 : 64));
+    const mid = (box.y0 + 0.74) / 2 * natural;
+    const cropTop = clamp(0, mid - shown * 0.5, natural - shown);
+    const clip = el("div", "roomclip");
+    clip.style.top = px(top);
+    clip.style.height = px(shown);
+    const img = el("img", "room");
+    img.src = T.room;
+    img.alt = "";
+    const left = W / 2 - roomW / 2;
+    Object.assign(img.style, { width: roomW + "px", height: natural + "px", left: left + "px", top: -cropTop + "px" });
+    img.style.webkitMaskImage = img.style.maskImage = "linear-gradient(to bottom, transparent 0, #000 18%, #000 70%, transparent 100%)";
+    clip.append(img);
+    SEATS.forEach((seat) => {
+      const v = vial(seat, left + seat.x * roomW, -cropTop + seat.y * natural, s, ROOM.h);
+      v.img.style.filter = T.vial === "none" ? "" : T.vial + " drop-shadow(0 2px 2px rgba(60,40,90,.18))";
+      clip.append(v.img);
+    });
+    board.append(clip);
+    const f = el("div", "footer");
+    f.style.padding = `0 ${px(pad)} ${px(phone ? 22 : 30)}`;
+    f.style.background = `linear-gradient(to bottom, transparent, ${T.floor} 34%)`;
+    f.style.paddingTop = px(phone ? 60 : 50);
+    const row = el("div");
+    row.style.display = "grid";
+    row.style.gridTemplateColumns = phone ? "1fr" : "minmax(0, 0.9fr) minmax(0, 2fr)";
+    row.style.gap = phone ? "18px" : "40px";
+    const tg = el("div", "ftag", "Research compounds supplied for laboratory use,<br><span>with lot-level traceability.</span>");
+    tg.style.fontSize = px(phone ? 17 : 20);
+    const cols = el("div", "cols");
+    cols.style.gridTemplateColumns = `repeat(${phone ? 2 : 4}, minmax(0, 1fr))`;
+    [["Catalog", ["All compounds", "Peptide fragments", "Neuropeptides"]], ["Verification", ["Lot lookup", "Testing standards", "Reading a CoA"]], ["Handling", ["Storage", "Shipping and cold chain"]], ["Company", ["About", "Quality", "Contact"]]]
+      .forEach(([h, items]) => cols.append(el("div", null, `<b>${h}</b>` + items.map((i) => `<span>${i}</span>`).join(""))));
+    row.append(tg, cols);
+    f.append(row);
+    if (!phone) f.append(el("p", "legal", "Research use only. Not for human or veterinary use."));
+    board.append(f);
+    return board;
+  }
+  function endBoards() {
+    const host = document.getElementById("endboards");
+    if (!host) return;
+    host.innerHTML = "";
+    const pg = document.querySelector(".page"), cs = getComputedStyle(pg);
+    const colW = pg.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const deskW = colW < 700 ? colW - 4 : Math.floor((colW - 22) / 2);
+    [["day", 1440, 900, "Desktop, daylight"], ["golden", 1440, 900, "Desktop, warming"], ["day", 390, 844, "Phone, daylight"], ["golden", 390, 844, "Phone, warming"]].forEach(([tod, W, H, name]) => {
+      const fig = el("figure");
+      const frame = el("div", "frame");
+      fig.append(frame);
+      host.append(fig);
+      const target = W < 600 ? Math.min(190, colW - 4) : deskW;
+      const k = Math.min(target / W, (W < 600 ? 412 : 9999) / H);
+      frame.style.width = px(W * k);
+      frame.style.height = px(H * k);
+      const b = endBoard(W, H, tod, frame);
+      b.style.transform = `scale(${k})`;
+      fig.style.width = frame.style.width;
+      fig.append(el("figcaption", null, `<b>${name}</b><br><span class="mono">the end of the page</span>`));
+    });
+  }
+
+  let raf = 0;
+  const all = () => { draw(); boards(); lotMock(); endBoards(); };
+  const later = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(all); };
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(all);
+  all();
+  window.addEventListener("resize", later);
+})();
+</script>

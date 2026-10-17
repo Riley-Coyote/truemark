@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+<meta charset="utf-8">
+<script data-tm-history-storage="tools">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("tools");</script>
+
+<title>Verified and the paper trail, phone</title>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-300.woff2) format("woff2");font-weight:300;font-display:block}
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-400.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-500.woff2) format("woff2");font-weight:500;font-display:block}
+@font-face{font-family:"Heros";src:url(/truemark/studio/history/tools/plan-1011/assets/heros-400.woff) format("woff");font-weight:400;font-display:block}
+@font-face{font-family:"Heros";src:url(/truemark/studio/history/tools/plan-1011/assets/heros-700.woff) format("woff");font-weight:700;font-display:block}
+body{margin:0}
+a{color:#241a4a}a:hover{color:#4a3f6b}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 2060px; overflow: hidden; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #241a4a; background: #ece8f4">
+<img src="/truemark/studio/history/tools/plan-1011/bake/c1-paper-phone.jpg" alt="" style="position: absolute; left: 0; top: 0; width: 390px; height: 2060px; display: block">
+<img src="/truemark/studio/history/tools/plan-1011/bake/c1-stage-phone.webp" alt="BPC-157 on a lilac pedestal in the misty room." style="position: absolute; left: 0; top: 262px; width: 390px; height: 500px; display: block">
+<header style="position: absolute; left: 0; top: 0; width: 390px; height: 60px; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; background: rgba(253, 253, 254, 0.92); border-bottom: 1px solid rgba(36, 26, 74, 0.11)">
+<img src="/truemark/studio/history/tools/plan-1011/assets/lockup-black.svg" alt="TrueMark BioLabs" style="width: 112px; height: 27px; display: block">
+<div style="display: flex; align-items: center; gap: 18px; font-size: 14px; color: #4a3f6b"><a href="#" style="text-decoration: none; color: #4a3f6b">Cart (0)</a><button type="button" aria-label="Menu" style="border: 0; background: none; padding: 0; color: #241a4a; display: flex"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg></button></div>
+</header>
+<div style="position: absolute; left: 20px; top: 92px; "><h2 style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 56px; line-height: 1; letter-spacing: -0.04em; color: #241a4a">Verified<span style="color: #8a2a9e">.</span></h2></div>
+<div style="position: absolute; left: 20px; top: 168px; "><p style="margin: 0; width: 350px; font-size: 13.5px; line-height: 1.55; color: #4a3f6b">Every vial carries a printed lot, and every lot its own certificate. Each lot moves through the same path before it is released, and the record stays open for anyone to read.</p></div>
+<div style="position: absolute; left: 0; top: 722px; width: 390px; height: 130px; overflow: hidden">
+<ol aria-label="Seven tested lots" style="margin: 0; padding: 0; display: flex; position: absolute; left: -50px; top: 8px"><li style="list-style: none; width: 70px; flex: 0 0 70px; text-align: center">
+<button type="button" aria-pressed="false" aria-label="Semaglutide 20 mg" style="border: 0; background: none; padding: 0; display: block; margin: 0 auto"><img src="/truemark/studio/history/tools/plan-1011/cutouts/semaglutide-20-mg-sm.webp" alt="" style="display: block; height: 78px; width: auto; margin: 0 auto; opacity: 0.7; transform: translateY(0px)"></button>
+<span style="display: block; margin-top: 8px; font-size: 10.5px; color: #6f6786">Semaglutide</span>
+
+</li><li style="list-style: none; width: 70px; flex: 0 0 70px; text-align: center">
+<button type="button" aria-pressed="false" aria-label="GHK-Cu 100 mg" style="border: 0; background: none; padding: 0; display: block; margin: 0 auto"><img src="/truemark/studio/history/tools/plan-1011/cutouts/ghk-cu-100-mg-sm.webp" alt="" style="display: block; height: 78px; width: auto; margin: 0 auto; opacity: 0.7; transform: translateY(0px)"></button>
+<span style="display: block; margin-top: 8px; font-size: 10.5px; color: #6f6786">GHK-Cu</span>
+
+</li><li style="list-style: none; width: 70px; flex: 0 0 70px; text-align: center">
+<button type="button" aria-pressed="false" aria-label="NAD+ 500 mg" style="border: 0; background: none; padding: 0; display: block; margin: 0 auto"><img src="/truemark/studio/history/tools/plan-1011/cutouts/nad-plus-500-mg-sm.webp" alt="" style="display: block; height: 78px; width: auto; margin: 0 auto; opacity: 0.7; transform: translateY(0px)"></button>
+<span style="display: block; margin-top: 8px; font-size: 10.5px; color: #6f6786">NAD+</span>
+
+</li><li style="list-style: none; width: 70px; flex: 0 0 70px; text-align: center">
+<button type="button" aria-pressed="true" aria-label="BPC-157 10 mg" style="border: 0; background: none; padding: 0; display: block; margin: 0 auto"><img src="/truemark/studio/history/tools/plan-1011/cutouts/bpc-157-10-mg-sm.webp" alt="" style="display: block; height: 78px; width: auto; margin: 0 auto; opacity: 1; transform: translateY(-6px)"></button>
+<span style="display: block; margin-top: 8px; font-size: 10.5px; color: #241a4a">BPC-157</span>
+<span aria-hidden="true" style="display: block; width: 34px; height: 2px; margin: 6px auto 0; background: rgba(36, 26, 74, 0.11)"><span style="display: block; width: 14px; height: 2px; background: #241a4a"></span></span>
+</li><li style="list-style: none; width: 70px; flex: 0 0 70px; text-align: center">
+<button type="button" aria-pressed="false" aria-label="Semax 10 mg" style="border: 0; background: none; padding: 0; display: block; margin: 0 auto"><img src="/truemark/studio/history/tools/plan-1011/cutouts/semax-10-mg-sm.webp" alt="" style="display: block; height: 78px; width: auto; margin: 0 auto; opacity: 0.7; transform: translateY(0px)"></button>
+<span style="display: block; margin-top: 8px; font-size: 10.5px; color: #6f6786">Semax</span>
+
+</li><li style="list-style: none; width: 70px; flex: 0 0 70px; text-align: center">
+<button type="button" aria-pressed="false" aria-label="Tesamorelin 10 mg" style="border: 0; background: none; padding: 0; display: block; margin: 0 auto"><img src="/truemark/studio/history/tools/plan-1011/cutouts/tesamorelin-10-mg-sm.webp" alt="" style="display: block; height: 78px; width: auto; margin: 0 auto; opacity: 0.7; transform: translateY(0px)"></button>
+<span style="display: block; margin-top: 8px; font-size: 10.5px; color: #6f6786">Tesamorelin</span>
+
+</li><li style="list-style: none; width: 70px; flex: 0 0 70px; text-align: center">
+<button type="button" aria-pressed="false" aria-label="Retatrutide 10 mg" style="border: 0; background: none; padding: 0; display: block; margin: 0 auto"><img src="/truemark/studio/history/tools/plan-1011/cutouts/retatrutide-10-mg-sm.webp" alt="" style="display: block; height: 78px; width: auto; margin: 0 auto; opacity: 0.7; transform: translateY(0px)"></button>
+<span style="display: block; margin-top: 8px; font-size: 10.5px; color: #6f6786">Retatrutide</span>
+
+</li></ol>
+</div>
+<div style="position: absolute; left: 20px; top: 860px; width: 350px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><p style="margin: 0; font-size: 12.5px; color: #6f6786">Swipe the shelf to read each one.</p><span style="font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 10px; letter-spacing: 0.1em; color: #6f6786">04 / 07</span></div>
+<div style="margin-top: 34px"><p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #6f6786">One lot, end to end</p></div>
+<p style="margin: 12px 0 0; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 28px; line-height: 1.05; letter-spacing: 0.01em; color: #241a4a">TM-BPC10-2609-01</p>
+<p style="margin: 6px 0 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 16px; color: #4a3f6b">BPC-157 · 10 mg · Lyophilized powder</p>
+<div style="margin-top: 24px"><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px"><div style="min-width: 0">
+<p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #6f6786">Purity (HPLC)</p>
+<p style="margin: 6px 0 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 30px; line-height: 1; letter-spacing: -0.02em; color: #241a4a; white-space: nowrap">99.51<span style="font-size: 0.55em; margin-left: 2px">%</span></p>
+<p style="margin: 6px 0 0; font-size: 11.5px; line-height: 1.4; color: #6f6786">Specification ≥ 95%</p>
+</div><div style="min-width: 0">
+<p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #6f6786">Content per vial</p>
+<p style="margin: 6px 0 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 30px; line-height: 1; letter-spacing: -0.02em; color: #241a4a; white-space: nowrap">12.46<span style="font-size: 0.45em; margin-left: 4px">mg</span></p>
+<p style="margin: 6px 0 0; font-size: 11.5px; line-height: 1.4; color: #6f6786">124.6% of the 10 mg label claim</p>
+</div><div style="min-width: 0">
+<p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #6f6786">Identity</p>
+<p style="margin: 6px 0 0; font-family: Poppins, system-ui, sans-serif; font-weight: 300; font-size: 30px; line-height: 1; letter-spacing: -0.02em; color: #241a4a; white-space: nowrap">Conforms</p>
+<p style="margin: 6px 0 0; font-size: 11.5px; line-height: 1.4; color: #6f6786">RT and UV match the reference</p>
+</div></div></div>
+<div style="margin-top: 24px"><svg width="350" height="70" viewBox="0 0 350 70" role="img" aria-label="HPLC trace, one peak at 6.657 minutes" style="display: block; overflow: visible"><path d="M0.0,52.0 L1.5,52.4 L2.9,51.9 L4.4,51.7 L5.8,52.2 L7.3,52.3 L8.8,51.7 L10.2,51.8 L11.7,52.3 L13.1,52.1 L14.6,51.7 L16.0,51.9 L17.5,52.4 L19.0,52.0 L20.4,51.7 L21.9,52.1 L23.3,52.3 L24.8,51.8 L26.2,51.7 L27.7,52.3 L29.2,52.2 L30.6,51.7 L32.1,51.9 L33.5,52.4 L35.0,52.0 L36.5,51.6 L37.9,52.1 L39.4,52.3 L40.8,51.8 L42.3,51.7 L43.8,52.2 L45.2,52.2 L46.7,51.7 L48.1,51.8 L49.6,52.3 L51.0,52.1 L52.5,51.6 L54.0,52.0 L55.4,52.4 L56.9,51.9 L58.3,51.7 L59.8,52.2 L61.2,52.3 L62.7,51.7 L64.2,51.8 L65.6,52.3 L67.1,52.1 L68.5,51.6 L70.0,52.0 L71.5,52.4 L72.9,51.9 L74.4,51.7 L75.8,52.2 L77.3,52.3 L78.8,51.8 L80.2,51.8 L81.7,52.3 L83.1,52.2 L84.6,51.7 L86.0,51.9 L87.5,52.4 L89.0,52.0 L90.4,51.6 L91.9,52.1 L93.3,52.3 L94.8,51.8 L96.2,51.7 L97.7,52.3 L99.2,52.2 L100.6,51.7 L102.1,51.9 L103.5,52.3 L105.0,52.0 L106.5,51.6 L107.9,52.0 L109.4,52.3 L110.8,51.9 L112.3,51.7 L113.8,52.2 L115.2,52.3 L116.7,51.7 L118.1,51.8 L119.6,52.3 L121.0,52.1 L122.5,51.6 L124.0,52.0 L125.4,52.4 L126.9,51.9 L128.3,51.7 L129.8,52.2 L131.2,52.3 L132.7,51.8 L134.2,51.8 L135.6,52.3 L137.1,52.1 L138.5,51.7 L140.0,51.9 L141.5,52.4 L142.9,52.0 L144.4,51.6 L145.8,52.1 L147.3,52.3 L148.8,51.8 L150.2,51.7 L151.7,52.3 L153.1,52.2 L154.6,51.7 L156.0,51.9 L157.5,52.4 L159.0,52.0 L160.4,51.6 L161.9,52.1 L163.3,52.3 L164.8,51.8 L166.2,51.7 L167.7,52.2 L169.2,52.2 L170.6,51.7 L172.1,51.8 L173.5,52.3 L175.0,52.1 L176.5,51.6 L177.9,52.0 L179.4,52.4 L180.8,51.9 L182.3,51.7 L183.8,52.2 L185.2,52.3 L186.7,51.7 L188.1,51.8 L189.6,51.6 L191.0,45.5 L192.5,25.9 L194.0,8.3 L195.4,19.9 L196.9,41.4 L198.3,50.2 L199.8,52.1 L201.2,52.3 L202.7,51.8 L204.2,51.8 L205.6,52.3 L207.1,52.2 L208.5,51.7 L210.0,51.9 L211.5,52.4 L212.9,52.0 L214.4,51.6 L215.8,52.1 L217.3,52.3 L218.8,51.8 L220.2,51.7 L221.7,52.3 L223.1,52.2 L224.6,51.7 L226.0,51.9 L227.5,52.3 L229.0,52.0 L230.4,51.6 L231.9,52.0 L233.3,52.3 L234.8,51.9 L236.2,51.7 L237.7,52.2 L239.2,52.3 L240.6,51.7 L242.1,51.8 L243.5,52.3 L245.0,52.1 L246.5,51.6 L247.9,52.0 L249.4,52.4 L250.8,51.9 L252.3,51.7 L253.8,52.2 L255.2,52.3 L256.7,51.8 L258.1,51.8 L259.6,52.3 L261.0,52.2 L262.5,51.7 L264.0,51.9 L265.4,52.4 L266.9,52.0 L268.3,51.6 L269.8,52.1 L271.2,52.3 L272.7,51.8 L274.2,51.7 L275.6,52.3 L277.1,52.2 L278.5,51.7 L280.0,51.9 L281.5,52.4 L282.9,52.0 L284.4,51.6 L285.8,52.1 L287.3,52.3 L288.8,51.8 L290.2,51.7 L291.7,52.2 L293.1,52.2 L294.6,51.7 L296.0,51.8 L297.5,52.3 L299.0,52.1 L300.4,51.6 L301.9,52.0 L303.3,52.4 L304.8,51.9 L306.2,51.7 L307.7,52.2 L309.2,52.3 L310.6,51.7 L312.1,51.8 L313.5,52.3 L315.0,52.1 L316.5,51.7 L317.9,52.0 L319.4,52.4 L320.8,51.9 L322.3,51.7 L323.8,52.1 L325.2,52.3 L326.7,51.8 L328.1,51.7 L329.6,52.3 L331.0,52.2 L332.5,51.7 L334.0,51.9 L335.4,52.4 L336.9,52.0 L338.3,51.6 L339.8,52.1 L341.2,52.3 L342.7,51.8 L344.2,51.7 L345.6,52.3 L347.1,52.2 L348.5,51.7 L350.0,51.9" fill="none" stroke="#241a4a" stroke-width="1.4" stroke-linejoin="round"></path><line x1="0.0" y1="56" x2="0.0" y2="60" stroke="#6f6786" stroke-width="1"></line><text x="0.0" y="69" font-size="9" fill="#6f6786" text-anchor="start" font-family="Heros, Helvetica, Arial, sans-serif">0</text><line x1="87.5" y1="56" x2="87.5" y2="60" stroke="#6f6786" stroke-width="1"></line><text x="87.5" y="69" font-size="9" fill="#6f6786" text-anchor="middle" font-family="Heros, Helvetica, Arial, sans-serif">3</text><line x1="175.0" y1="56" x2="175.0" y2="60" stroke="#6f6786" stroke-width="1"></line><text x="175.0" y="69" font-size="9" fill="#6f6786" text-anchor="middle" font-family="Heros, Helvetica, Arial, sans-serif">6</text><line x1="262.5" y1="56" x2="262.5" y2="60" stroke="#6f6786" stroke-width="1"></line><text x="262.5" y="69" font-size="9" fill="#6f6786" text-anchor="middle" font-family="Heros, Helvetica, Arial, sans-serif">9</text><line x1="350.0" y1="56" x2="350.0" y2="60" stroke="#6f6786" stroke-width="1"></line><text x="350.0" y="69" font-size="9" fill="#6f6786" text-anchor="end" font-family="Heros, Helvetica, Arial, sans-serif">12 min</text><line x1="194.2" y1="6" x2="194.2" y2="52" stroke="#241a4a" stroke-opacity="0.25" stroke-dasharray="2 3"></line></svg></div>
+<p style="margin: 6px 0 0; font-size: 11px; line-height: 1.45; color: #6f6786">HPLC, drawn from the reported retention time: 6.657 min.</p>
+<div style="margin-top: 28px"><ol style="margin: 0; padding: 0; width: 350px"><li style="list-style: none; position: relative; height: 52px; opacity: 1">
+<span style="position: absolute; left: 0; top: 2px; font-size: 11px; color: #6f6786">Done</span><span style="position: absolute; left: 58px; top: 5px; width: 9px; height: 9px; border-radius: 999px; box-sizing: border-box; border: 1.5px solid #241a4a; background: #241a4a"></span><span aria-hidden="true" style="position: absolute; left: 62px; top: 14px; width: 1px; height: 38px; background: #241a4a"></span>
+<span style="position: absolute; left: 84px; top: 0; font-family: Poppins, system-ui, sans-serif; font-size: 14px; color: #241a4a">Received</span>
+<span style="position: absolute; left: 84px; top: 21px; font-size: 12px; color: #6f6786">Batch logged</span>
+</li><li style="list-style: none; position: relative; height: 52px; opacity: 1">
+<span style="position: absolute; left: 0; top: 2px; font-size: 11px; color: #6f6786">Done</span><span style="position: absolute; left: 58px; top: 5px; width: 9px; height: 9px; border-radius: 999px; box-sizing: border-box; border: 1.5px solid #241a4a; background: #241a4a"></span><span aria-hidden="true" style="position: absolute; left: 62px; top: 14px; width: 1px; height: 38px; background: #241a4a"></span>
+<span style="position: absolute; left: 84px; top: 0; font-family: Poppins, system-ui, sans-serif; font-size: 14px; color: #241a4a">Quarantined</span>
+<span style="position: absolute; left: 84px; top: 21px; font-size: 12px; color: #6f6786">Held at −20 °C</span>
+</li><li style="list-style: none; position: relative; height: 52px; opacity: 1">
+<span style="position: absolute; left: 0; top: 2px; font-size: 11px; color: #6f6786">Done</span><span style="position: absolute; left: 58px; top: 5px; width: 9px; height: 9px; border-radius: 999px; box-sizing: border-box; border: 1.5px solid #241a4a; background: #241a4a"></span><span aria-hidden="true" style="position: absolute; left: 62px; top: 14px; width: 1px; height: 38px; background: #241a4a"></span>
+<span style="position: absolute; left: 84px; top: 0; font-family: Poppins, system-ui, sans-serif; font-size: 14px; color: #241a4a">Sampled</span>
+<span style="position: absolute; left: 84px; top: 21px; font-size: 12px; color: #6f6786">Sent to laboratory</span>
+</li><li style="list-style: none; position: relative; height: 52px; opacity: 1">
+<span style="position: absolute; left: 0; top: 2px; font-size: 11px; color: #6f6786">01 Oct</span><span style="position: absolute; left: 58px; top: 5px; width: 9px; height: 9px; border-radius: 999px; box-sizing: border-box; border: 1.5px solid #241a4a; background: #241a4a"></span><span aria-hidden="true" style="position: absolute; left: 62px; top: 14px; width: 1px; height: 38px; background: #241a4a"></span>
+<span style="position: absolute; left: 84px; top: 0; font-family: Poppins, system-ui, sans-serif; font-size: 14px; color: #241a4a">Tested</span>
+<span style="position: absolute; left: 84px; top: 21px; font-size: 12px; color: #6f6786">HPLC · MS</span>
+</li><li style="list-style: none; position: relative; height: 52px; opacity: 1">
+<span style="position: absolute; left: 0; top: 2px; font-size: 11px; color: #6f6786">01 Oct</span><span style="position: absolute; left: 58px; top: 5px; width: 9px; height: 9px; border-radius: 999px; box-sizing: border-box; border: 1.5px solid #241a4a; background: #241a4a"></span><span aria-hidden="true" style="position: absolute; left: 62px; top: 14px; width: 1px; height: 38px; background: #241a4a"></span>
+<span style="position: absolute; left: 84px; top: 0; font-family: Poppins, system-ui, sans-serif; font-size: 14px; color: #241a4a">Released</span>
+<span style="position: absolute; left: 84px; top: 21px; font-size: 12px; color: #6f6786">Certificate published</span>
+</li><li style="list-style: none; position: relative; height: 52px; opacity: 1">
+<span style="position: absolute; left: 0; top: 2px; font-size: 11px; color: #6f6786">Now</span><span style="position: absolute; left: 58px; top: 5px; width: 9px; height: 9px; border-radius: 999px; box-sizing: border-box; border: 1.5px solid #241a4a; background: #fdfdfe"></span>
+<span style="position: absolute; left: 84px; top: 0; font-family: Poppins, system-ui, sans-serif; font-size: 14px; color: #241a4a">Shipping</span>
+<span style="position: absolute; left: 84px; top: 21px; font-size: 12px; color: #6f6786">Cold chain</span>
+</li></ol></div>
+<a href="#" style="display: inline-block; margin-top: 16px; font-size: 14px; color: #241a4a; text-decoration: none; border-bottom: 1px solid rgba(36, 26, 74, 0.22); padding-bottom: 2px">Read this lot’s certificate<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -2px; margin-left: 6px"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a>
+<div style="margin-top: 22px; display: flex; justify-content: space-between; align-items: center"><span style="font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786">Every lot shown tested ≥99% by HPLC</span><button type="button" style="border: 1px solid rgba(36, 26, 74, 0.22); background: rgba(253, 253, 254, 0.7); border-radius: 999px; padding: 6px 12px; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #241a4a">Pause</button></div>
+<div style="margin-top: 36px"><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; width: 350px"><div style="border-top: 1px solid rgba(36, 26, 74, 0.22); padding-top: 14px"><p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #241a4a">Research use only</p><p style="margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; color: #4a3f6b">Supplied for laboratory research applications.</p></div><div style="border-top: 1px solid rgba(36, 26, 74, 0.22); padding-top: 14px"><p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #241a4a">Not for human use</p><p style="margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; color: #4a3f6b">Not for human or veterinary administration.</p></div><div style="border-top: 1px solid rgba(36, 26, 74, 0.22); padding-top: 14px"><p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #241a4a">Independently tested</p><p style="margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; color: #4a3f6b">Every lot tested on receipt at a contracted laboratory.</p></div><div style="border-top: 1px solid rgba(36, 26, 74, 0.22); padding-top: 14px"><p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #241a4a">Cold chain</p><p style="margin: 8px 0 0; font-size: 12.5px; line-height: 1.5; color: #4a3f6b">Temperature-controlled storage, and transit when applicable.</p></div></div></div>
+</div>
+</div>
+</x-dc>
+
+</body>
+</html>

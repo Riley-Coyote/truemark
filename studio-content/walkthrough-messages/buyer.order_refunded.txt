@@ -1,0 +1,17 @@
+Your refund is on its way.
+
+Refunded
+
+$12.00
+
+We've refunded $12.00 to the card you paid with for order TM-10500. It appears once your bank processes it.
+
+View your order
+
+https://fixture.test/live/#/account/orders/order-fixture
+
+You receive this because you placed an order with your TrueMark research account.
+
+For research use only. Not for human consumption.
+
+TrueMark BioLabs

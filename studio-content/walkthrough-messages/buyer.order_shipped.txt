@@ -1,0 +1,37 @@
+Your order has shipped.
+
+Estimated delivery
+
+Wednesday 7 October
+
+Cold chain. Delivery times are estimates and are not guaranteed.
+
+Carrier
+
+UPS
+
+Tracking number
+
+FIXTURE_TRACK
+
+Order
+
+TM-10500
+
+Ship to
+
+Fixture Lab, Chicago, IL
+
+When applicable, vials ship in insulated packs sized to the transit time, with gel packs rated for the route.
+
+Track your order
+
+https://fixture.test/live/#/track/TM-10500
+
+Orders ship with signature on delivery.
+
+You receive this because you placed an order with your TrueMark research account.
+
+For research use only. Not for human consumption.
+
+TrueMark BioLabs

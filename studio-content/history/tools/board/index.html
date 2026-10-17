@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+<meta charset="utf-8" />
+<script data-tm-history-storage="tools">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("tools");</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Landing board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --canvas: #161618;
+    --chrome: #0e0e10;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.5);
+    --ink: rgba(255, 255, 255, 0.92);
+    --ink-2: rgba(255, 255, 255, 0.62);
+    --ink-3: rgba(255, 255, 255, 0.4);
+    --chip: rgba(255, 255, 255, 0.06);
+    --chip-on: rgba(255, 255, 255, 0.14);
+    --font: "Inter", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--canvas); color: var(--ink); font: 400 13px/1.4 var(--font); }
+  button { font: inherit; color: inherit; }
+
+  .bar { position: fixed; inset: 0 0 auto; height: 48px; z-index: 10; display: flex; align-items: center; gap: 16px; padding: 0 16px; background: var(--chrome); border-bottom: 1px solid var(--line); }
+  .bar h1 { margin: 0; font-size: 13px; font-weight: 500; white-space: nowrap; }
+  .bar .sep { width: 1px; height: 20px; background: var(--line); }
+  .group { display: flex; gap: 4px; }
+  .chip { height: 28px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--chip); cursor: pointer; white-space: nowrap; }
+  .chip:hover { background: var(--chip-on); }
+  .chip[aria-pressed="true"] { background: var(--chip-on); border-color: rgba(255, 255, 255, 0.24); }
+  .chip:focus-visible { outline: none; border-color: var(--line-strong); }
+  .spacer { flex: 1; }
+  .zoom { min-width: 52px; text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .hint { position: fixed; left: 16px; bottom: 12px; z-index: 10; color: var(--ink-3); font-size: 12px; pointer-events: none; }
+
+  .stage { position: fixed; inset: 48px 0 0; overflow: hidden; cursor: grab; touch-action: none; }
+  .stage.dragging { cursor: grabbing; }
+  .world { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+
+  .frame { position: absolute; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 40px rgba(0, 0, 0, 0.35); cursor: zoom-in; }
+  .frame img { display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; }
+  .frame.on { outline: 2px solid #6d93c9; outline-offset: 0; }
+  .overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .label { position: absolute; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
+  .label b { color: var(--ink); font-weight: 500; }
+  .version-title { position: absolute; font-size: 15px; white-space: nowrap; color: var(--ink); font-weight: 500; }
+  .version-title span { color: var(--ink-3); font-weight: 400; }
+  .mark { position: absolute; height: 0; border-top: 1px dashed rgba(109, 147, 201, 0.55); }
+  .mark-label { position: absolute; font-size: 12px; white-space: nowrap; color: var(--ink-2); transform: translate(-100%, -50%); }
+  .empty { position: fixed; inset: 48px 0 0; display: grid; place-items: center; color: var(--ink-3); }
+</style>
+</head>
+<body>
+  <header class="bar">
+    <h1>TrueMark landing · board</h1>
+    <span class="sep"></span>
+    <div class="group" role="group" aria-label="View">
+      <button class="chip" data-mode="sections" aria-pressed="true">Sections</button>
+      <button class="chip" data-mode="pages" aria-pressed="false">Whole pages</button>
+    </div>
+    <span class="sep"></span>
+    <div class="group" id="versions" role="group" aria-label="Versions"></div>
+    <div class="spacer"></div>
+    <button class="chip" id="fit">Fit all</button>
+    <span class="zoom" id="zoom">100%</span>
+  </header>
+  <main class="stage" id="stage" aria-label="Board canvas"><div class="world" id="world"></div><div class="overlay" id="overlay" aria-hidden="true"></div></main>
+  <p class="hint">Scroll to pan · pinch or ⌘ + scroll to zoom · click a frame to fit it · ← → step · F fits all</p>
+
+<script>
+const stage = document.getElementById("stage");
+const world = document.getElementById("world");
+const zoomOut = document.getElementById("zoom");
+const overlay = document.getElementById("overlay");
+const view = { x: 40, y: 40, s: 0.1 };
+const state = { mode: "sections", hidden: new Set(), frames: [], labels: [], focus: -1, manifest: null, bounds: null };
+try { Object.assign(state, JSON.parse(localStorage.getItem("board-ui") || "{}"), { hidden: new Set(JSON.parse(localStorage.getItem("board-hidden") || "[]")) }); } catch {}
+
+const PER_ROW = 5, GAP = 160, PHONE_GAP = 180, VERSION_GAP = 520, PAGE_GAP = 140;
+
+function apply() {
+  world.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.s})`;
+  zoomOut.textContent = `${Math.round(view.s * 100)}%`;
+  // Labels sit in screen space at a fixed size, above their frames; a frame too small to name shows none.
+  for (const l of state.labels) {
+    const sx = view.x + l.x * view.s, sy = view.y + l.y * view.s, sw = (l.w || 0) * view.s;
+    if (l.kind === "frame") {
+      const show = sw >= 44;
+      l.el.style.display = show ? "" : "none";
+      if (!show) continue;
+      l.el.style.left = `${sx}px`; l.el.style.top = `${sy - 19}px`; l.el.style.width = `${sw}px`;
+    } else if (l.kind === "title") {
+      l.el.style.left = `${sx}px`; l.el.style.top = `${sy - 26}px`;
+    } else {
+      l.el.style.left = `${sx - 8}px`; l.el.style.top = `${sy}px`;
+    }
+  }
+}
+
+function label(kind, x, y, w, html) {
+  const el = document.createElement("div");
+  el.className = kind === "frame" ? "label" : kind === "title" ? "version-title" : "mark-label";
+  el.innerHTML = html;
+  overlay.append(el);
+  state.labels.push({ kind, x, y, w, el });
+}
+
+function save() {
+  try {
+    localStorage.setItem("board-ui", JSON.stringify({ mode: state.mode }));
+    localStorage.setItem("board-hidden", JSON.stringify([...state.hidden]));
+  } catch {}
+}
+
+function add(tag, cls, x, y, html) {
+  const el = document.createElement(tag);
+  el.className = cls;
+  el.style.left = `${x}px`;
+  el.style.top = `${y}px`;
+  if (html) el.innerHTML = html;
+  world.append(el);
+  return el;
+}
+
+function frame(src, x, y, w, h, caption, n) {
+  const el = add("div", "frame", x, y);
+  el.style.width = `${w}px`;
+  el.style.height = `${h}px`;
+  el.innerHTML = `<img src="${src}" alt="${caption}" decoding="async" />`;
+  el.tabIndex = 0;
+  label("frame", x, y, w, `${n ? `<b>${String(n).padStart(2, "0")}</b> · ` : ""}${caption} <span>· ${w} × ${h}</span>`);
+  const index = state.frames.length;
+  state.frames.push({ el, x, y, w, h });
+  el.addEventListener("click", (e) => { if (!moved) { e.stopPropagation(); focusFrame(index); } });
+  el.addEventListener("keydown", (e) => { if (e.key === "Enter") focusFrame(index); });
+  return el;
+}
+
+function layout() {
+  world.innerHTML = "";
+  overlay.innerHTML = "";
+  state.labels = [];
+  state.frames = [];
+  state.focus = -1;
+  let y = 0, maxX = 0, x0 = 0;
+  const versions = state.manifest.versions.filter((v) => !state.hidden.has(v.id));
+  for (const v of versions) {
+    if (state.mode === "sections") {
+      label("title", 0, y, 0, `${v.title} <span>· ${v.url}</span>`);
+      y += 60;
+      // Read like a page of text: bands of PER_ROW sections, each band a desktop row with its phones beneath.
+      for (let start = 0; start < v.sections.length; start += PER_ROW) {
+        const band = v.sections.slice(start, start + PER_ROW);
+        let x = 0, rowH = 0;
+        const cols = [];
+        for (const s of band) {
+          cols.push(x);
+          if (s.desktop) { frame(s.desktop.src, x, y, s.desktop.w, s.desktop.h, s.label, s.n); rowH = Math.max(rowH, s.desktop.h); }
+          x += 1440 + GAP;
+        }
+        maxX = Math.max(maxX, x - GAP);
+        y += rowH + PHONE_GAP;
+        rowH = 0;
+        band.forEach((s, i) => {
+          if (s.phone) { frame(s.phone.src, cols[i], y, s.phone.w, s.phone.h, "phone", s.n); rowH = Math.max(rowH, s.phone.h); }
+        });
+        y += rowH + PHONE_GAP * 2;
+      }
+      y += VERSION_GAP;
+    } else {
+      // Whole pages: each version's desktop and phone side by side, versions left to right.
+      const top = 60;
+      label("title", x0, 0, 0, `${v.title} <span>· ${v.url}</span>`);
+      const d = v.full.desktop, p = v.full.phone;
+      frame(d.src, x0, top, 1440, d.h, "desktop · whole page");
+      for (const s of v.sections) if (s.desktop?.top != null && s.n > 1) {
+        const m = add("div", "mark", x0 - 60, top + s.desktop.top);
+        m.style.width = "60px";
+        label("mark", x0 - 60, top + s.desktop.top, 0, `${String(s.n).padStart(2, "0")} ${s.label}`);
+      }
+      frame(p.src, x0 + 1440 + PAGE_GAP, top, 390, p.h, "phone · whole page");
+      y = Math.max(y, top + Math.max(d.h, p.h));
+      // Leave room beside the next page for its section names, which keep their size on screen.
+      x0 += 1440 + PAGE_GAP + 390 + 2800;
+      maxX = x0;
+    }
+  }
+  state.bounds = { w: maxX, h: y };
+  apply();
+}
+
+function fit(box, pad = 48) {
+  const r = stage.getBoundingClientRect();
+  const s = Math.min((r.width - pad * 2) / box.w, (r.height - pad * 2) / box.h, 2);
+  view.s = s;
+  view.x = (r.width - box.w * s) / 2 - box.x * s;
+  view.y = Math.max(pad, (r.height - box.h * s) / 2) - box.y * s;
+  apply();
+}
+const fitAll = () => { state.frames.forEach((f) => f.el.classList.remove("on")); state.focus = -1; fit({ x: state.mode === "pages" ? -420 : 0, y: 0, w: state.bounds.w + (state.mode === "pages" ? 420 : 0), h: state.bounds.h }); };
+
+function focusFrame(i) {
+  const f = state.frames[i];
+  if (!f) return;
+  state.frames.forEach((g) => g.el.classList.remove("on"));
+  f.el.classList.add("on");
+  state.focus = i;
+  const r = stage.getBoundingClientRect();
+  // Tall frames fit to width and start at their top; others fit whole.
+  if (f.h / f.w > (r.height / r.width) * 1.6) {
+    view.s = Math.min((r.width * 0.6) / f.w, 1.5);
+    view.x = (r.width - f.w * view.s) / 2 - f.x * view.s;
+    view.y = 40 - f.y * view.s;
+    apply();
+  } else fit({ x: f.x, y: f.y, w: f.w, h: f.h }, 40);
+}
+
+function zoomAt(cx, cy, factor) {
+  const s = Math.min(4, Math.max(0.02, view.s * factor));
+  const k = s / view.s;
+  view.x = cx - (cx - view.x) * k;
+  view.y = cy - (cy - view.y) * k;
+  view.s = s;
+  apply();
+}
+
+stage.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const r = stage.getBoundingClientRect();
+  if (e.ctrlKey || e.metaKey) zoomAt(e.clientX - r.left, e.clientY - r.top, Math.exp(-e.deltaY * 0.01));
+  else { view.x -= e.deltaX; view.y -= e.deltaY; apply(); }
+}, { passive: false });
+
+let drag = null, moved = false;
+stage.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y }; moved = false; });
+window.addEventListener("pointermove", (e) => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!moved && Math.hypot(dx, dy) < 4) return;
+  moved = true;
+  stage.classList.add("dragging");
+  view.x = drag.vx + dx; view.y = drag.vy + dy; apply();
+});
+window.addEventListener("pointerup", () => { drag = null; stage.classList.remove("dragging"); setTimeout(() => (moved = false), 0); });
+stage.addEventListener("dblclick", (e) => { if (e.target === stage || e.target === world) fitAll(); });
+
+window.addEventListener("keydown", (e) => {
+  if (e.target.closest?.("input, textarea")) return;
+  const r = stage.getBoundingClientRect();
+  if (e.key === "f" || e.key === "F" || e.key === "Escape") fitAll();
+  else if (e.key === "ArrowRight") focusFrame(Math.min(state.frames.length - 1, state.focus + 1));
+  else if (e.key === "ArrowLeft") focusFrame(Math.max(0, state.focus - 1));
+  else if (e.key === "=" || e.key === "+") zoomAt(r.width / 2, r.height / 2, 1.25);
+  else if (e.key === "-") zoomAt(r.width / 2, r.height / 2, 0.8);
+  else if (e.key === "1") zoomAt(r.width / 2, r.height / 2, 1 / view.s);
+});
+
+document.getElementById("fit").addEventListener("click", fitAll);
+for (const b of document.querySelectorAll("[data-mode]")) b.addEventListener("click", () => {
+  state.mode = b.dataset.mode;
+  document.querySelectorAll("[data-mode]").forEach((c) => c.setAttribute("aria-pressed", String(c === b)));
+  save(); layout(); fitAll();
+});
+
+fetch(`manifest.json?t=${Date.now()}`).then((r) => r.json()).then((m) => {
+  state.manifest = m;
+  const box = document.getElementById("versions");
+  for (const v of m.versions) {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.textContent = v.id;
+    b.title = v.title;
+    b.setAttribute("aria-pressed", String(!state.hidden.has(v.id)));
+    b.addEventListener("click", () => {
+      state.hidden.has(v.id) ? state.hidden.delete(v.id) : state.hidden.add(v.id);
+      b.setAttribute("aria-pressed", String(!state.hidden.has(v.id)));
+      save(); layout(); fitAll();
+    });
+    box.append(b);
+  }
+  document.querySelectorAll("[data-mode]").forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.mode === state.mode)));
+  layout();
+  fitAll();
+}).catch(() => { document.body.insertAdjacentHTML("beforeend", `<p class="empty">No shots yet. Run node board.mjs.</p>`); });
+window.addEventListener("resize", () => state.bounds && fitAll());
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E9284C"/><stop offset="0.3" stop-color="#B3146B"/><stop offset="0.55" stop-color="#7A2AA0"/><stop offset="0.8" stop-color="#2F1492"/><stop offset="1" stop-color="#0A2EA9"/></linearGradient>
+  <radialGradient id="gr" cx="0.06" cy="0" r="0.6"><stop offset="0" stop-color="#E9284C" stop-opacity="0.14"/><stop offset="1" stop-color="#E9284C" stop-opacity="0"/></radialGradient>
+  <radialGradient id="gb" cx="0.96" cy="0.05" r="0.65"><stop offset="0" stop-color="#0A2EA9" stop-opacity="0.15"/><stop offset="1" stop-color="#0A2EA9" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1600" height="900" fill="url(#gr)"/><rect width="1600" height="900" fill="url(#gb)"/>
+  <path d="M 0 640 C 260 500, 460 820, 760 680 S 1240 440, 1600 660 L 1600 900 L 0 900 Z" fill="url(#pg)" fill-opacity="0.10"/>
+  <path d="M 0 740 C 300 600, 540 880, 840 760 S 1280 560, 1600 760 L 1600 900 L 0 900 Z" fill="url(#pg)" fill-opacity="0.12"/>
+  <path d="M 0 700 C 320 560, 560 860, 880 730 S 1300 520, 1600 720" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="12" stroke-linecap="round"/>
+  <path d="M 0 700 C 320 560, 560 860, 880 730 S 1300 520, 1600 720" fill="none" stroke="url(#pg)" stroke-opacity="0.35" stroke-width="3"/>
+</svg>

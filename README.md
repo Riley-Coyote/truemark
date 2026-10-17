@@ -78,3 +78,7 @@ The working repository contains private client materials. Never push the develop
 its history. `npm run prepare:publish` exports only committed site paths to a local archive and
 manifest. It performs no deployment. Inspect the manifest and use the dedicated publication
 checkout to make a site-only publish commit after approval. Pages remains a manual workflow.
+
+## Studio
+
+The editable Studio and all curated content are included in this checkout. Run `npm run dev:studio` after `npm ci`. See [STUDIO.md](STUDIO.md) for preview, build and content locations. No access to Riley’s machine is required.

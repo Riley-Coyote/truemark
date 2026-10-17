@@ -13,7 +13,11 @@
     "prepare:publish": "node scripts/prepare-publish.mjs",
     "preview:messages": "tsx scripts/preview-messages.ts",
     "preview": "vite preview --host 127.0.0.1",
-    "preview:pages": "vite preview --host 127.0.0.1 --base /TrueMark/"
+    "preview:pages": "vite preview --host 127.0.0.1 --base /TrueMark/",
+    "dev:studio": "vite --config design-lab/universe/vite.config.mjs --open /design-lab/universe/index.html",
+    "build:studio": "node design-lab/universe/package.mjs",
+    "preview:studio": "node design-lab/universe/serve.mjs",
+    "test:studio": "node --test design-lab/universe/*.test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bodoni-moda": "^5.3.0",

@@ -1,0 +1,23 @@
+A research account application is waiting.
+
+Name
+
+Fixture Applicant
+
+Institution
+
+Fixture Lab
+
+Research area
+
+Analytical methods
+
+Review it
+
+https://fixture.test/live/#/admin/applications
+
+You receive this because application alerts are on for you in Settings.
+
+For research use only. Not for human consumption.
+
+TrueMark BioLabs

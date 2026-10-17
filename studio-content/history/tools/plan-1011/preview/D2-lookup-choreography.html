@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+<meta charset="utf-8">
+<script data-tm-history-storage="tools">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("tools");</script>
+
+<title>Looking up a lot, the choreography</title>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-300.woff2) format("woff2");font-weight:300;font-display:block}
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-400.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-500.woff2) format("woff2");font-weight:500;font-display:block}
+@font-face{font-family:"Heros";src:url(/truemark/studio/history/tools/plan-1011/assets/heros-400.woff) format("woff");font-weight:400;font-display:block}
+@font-face{font-family:"Heros";src:url(/truemark/studio/history/tools/plan-1011/assets/heros-700.woff) format("woff");font-weight:700;font-display:block}
+body{margin:0}
+a{color:#241a4a}a:hover{color:#4a3f6b}
+</style>
+</helmet>
+<div style="position: relative; width: 2060px; height: 700px; overflow: hidden; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #241a4a; background: #f6f4fa">
+<div aria-hidden="true" style="position: absolute; left: 52px; top: 70px; width: 1956px; height: 1px; background: rgba(36, 26, 74, 0.22)"></div>
+<div style="position: absolute; left: 52px; top: 26px; "><p style="margin: 0; font-family: Poppins, system-ui, sans-serif; font-weight: 400; font-size: 20px; letter-spacing: -0.01em; color: #241a4a">Looking up a lot, under a second <span style="color: #6f6786; font-weight: 300">· the vial never moves; knowing it brings it into focus</span></p></div>
+<div style="position: absolute; left: 52px; top: 92px; width: 372px">
+<p style="margin: 0 0 12px; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.1em; color: #241a4a">Typing</p>
+<div style="position: relative; width: 372px; height: 460px; border-radius: 14px; overflow: hidden">
+<img src="/truemark/studio/history/tools/plan-1011/bake/d2-panel-0.jpg" alt="Panel 1: Typing." style="display: block; width: 372px; height: 460px">
+<div style="position: absolute; left: 36px; top: 318px"><form role="search" aria-label="Look up a lot" style="position: relative; width: 300px; height: 58px; box-sizing: border-box; padding: 10px 66px 0 18px; border-radius: 12px; background: rgba(253, 253, 254, 0.82); border: 1px solid #4a3f6b; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 12px 32px rgba(58, 40, 104, 0.12); backdrop-filter: blur(10px)">
+<label style="display: block; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786">Lot number</label>
+<p style="margin: 3px 0 0; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.2; letter-spacing: 0.04em; white-space: nowrap"><span style="color: #241a4a">TM-SMX10-2<span style="display: inline-block; opacity: 0.45; transform: translateY(1.7px)">6</span></span><span aria-hidden="true" style="display: inline-block; width: 1.5px; height: 18px; background: #241a4a; vertical-align: -4px; margin-left: 1px"></span></p>
+<button type="submit" aria-label="Look up" style="position: absolute; right: 11px; top: 6px; width: 44px; height: 44px; border-radius: 999px; border: 0; background: #241a4a; color: #fdfdfe; display: flex; align-items: center; justify-content: center; padding: 0; transform: scale(1)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button>
+</form></div>
+<div style="position: absolute; left: 0; top: 390px; width: 372px; display: flex; justify-content: center"><p style="margin: 0; text-align: center; font-size: 10.5px; line-height: 1.4; color: #4a3f6b">The lot number is printed on the left of the label, under LOT.</p></div>
+</div>
+<p style="margin: 22px 0 0; padding-top: 14px; border-top: 1px solid rgba(36, 26, 74, 0.22); font-size: 13px; line-height: 1.5; color: #4a3f6b">The field is the plinth’s plaque. Each character inks in as it’s typed; the vial waits, out of focus.</p>
+</div><div style="position: absolute; left: 446px; top: 92px; width: 372px">
+<p style="margin: 0 0 12px; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.1em; color: #241a4a">Look up · 0 ms</p>
+<div style="position: relative; width: 372px; height: 460px; border-radius: 14px; overflow: hidden">
+<img src="/truemark/studio/history/tools/plan-1011/bake/d2-panel-1.jpg" alt="Panel 2: Look up · 0 ms." style="display: block; width: 372px; height: 460px">
+<div style="position: absolute; left: 36px; top: 318px"><form role="search" aria-label="Look up a lot" style="position: relative; width: 300px; height: 58px; box-sizing: border-box; padding: 10px 66px 0 18px; border-radius: 12px; background: rgba(253, 253, 254, 0.82); border: 1px solid #4a3f6b; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 12px 32px rgba(58, 40, 104, 0.12); backdrop-filter: blur(10px)">
+<label style="display: block; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786">Lot number</label>
+<p style="margin: 3px 0 0; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.2; letter-spacing: 0.04em; white-space: nowrap"><span style="color: #241a4a">TM-SMX10-2609-01</span></p>
+<button type="submit" aria-label="Look up" style="position: absolute; right: 11px; top: 6px; width: 44px; height: 44px; border-radius: 999px; border: 0; background: #3a2f63; color: #fdfdfe; display: flex; align-items: center; justify-content: center; padding: 0; transform: scale(0.96)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button>
+</form></div>
+<div style="position: absolute; left: 0; top: 390px; width: 372px; display: flex; justify-content: center"></div>
+</div>
+<p style="margin: 22px 0 0; padding-top: 14px; border-top: 1px solid rgba(36, 26, 74, 0.22); font-size: 13px; line-height: 1.5; color: #4a3f6b">The number is read. The button gives a little; a breath of mist rises round the plinth.</p>
+</div><div style="position: absolute; left: 840px; top: 92px; width: 372px">
+<p style="margin: 0 0 12px; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.1em; color: #241a4a">300 ms</p>
+<div style="position: relative; width: 372px; height: 460px; border-radius: 14px; overflow: hidden">
+<img src="/truemark/studio/history/tools/plan-1011/bake/d2-panel-2.jpg" alt="Panel 3: 300 ms." style="display: block; width: 372px; height: 460px">
+<div style="position: absolute; left: 36px; top: 318px"><form role="search" aria-label="Look up a lot" style="position: relative; width: 300px; height: 58px; box-sizing: border-box; padding: 10px 66px 0 18px; border-radius: 12px; background: rgba(253, 253, 254, 0.82); border: 1px solid rgba(36, 26, 74, 0.22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 12px 32px rgba(58, 40, 104, 0.12); backdrop-filter: blur(10px)">
+<label style="display: block; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786">Lot number</label>
+<p style="margin: 3px 0 0; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.2; letter-spacing: 0.04em; white-space: nowrap"><span style="color: #241a4a">TM-SMX10-2609-01</span></p>
+<button type="submit" aria-label="Look up" style="position: absolute; right: 11px; top: 6px; width: 44px; height: 44px; border-radius: 999px; border: 0; background: #241a4a; color: #fdfdfe; display: flex; align-items: center; justify-content: center; padding: 0; transform: scale(1)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button>
+</form></div>
+<div style="position: absolute; left: 0; top: 390px; width: 372px; display: flex; justify-content: center"><p style="margin: 0; text-align: center; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #4a3f6b; opacity: 0.9; white-space: nowrap">Semax ·<span style="opacity: 0"> 10 mg · HPLC 99.78%</span></p></div>
+</div>
+<p style="margin: 22px 0 0; padding-top: 14px; border-top: 1px solid rgba(36, 26, 74, 0.22); font-size: 13px; line-height: 1.5; color: #4a3f6b">The mist thins; focus starts to find the vial. Its colour comes up from grey.</p>
+</div><div style="position: absolute; left: 1234px; top: 92px; width: 372px">
+<p style="margin: 0 0 12px; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.1em; color: #241a4a">600 ms</p>
+<div style="position: relative; width: 372px; height: 460px; border-radius: 14px; overflow: hidden">
+<img src="/truemark/studio/history/tools/plan-1011/bake/d2-panel-3.jpg" alt="Panel 4: 600 ms." style="display: block; width: 372px; height: 460px">
+<div style="position: absolute; left: 36px; top: 318px"><form role="search" aria-label="Look up a lot" style="position: relative; width: 300px; height: 58px; box-sizing: border-box; padding: 10px 66px 0 18px; border-radius: 12px; background: rgba(253, 253, 254, 0.82); border: 1px solid rgba(36, 26, 74, 0.22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 12px 32px rgba(58, 40, 104, 0.12); backdrop-filter: blur(10px)">
+<label style="display: block; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786">Lot number</label>
+<p style="margin: 3px 0 0; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.2; letter-spacing: 0.04em; white-space: nowrap"><span style="color: #241a4a">TM-SMX10-2609-01</span></p>
+<button type="submit" aria-label="Look up" style="position: absolute; right: 11px; top: 6px; width: 44px; height: 44px; border-radius: 999px; border: 0; background: #241a4a; color: #fdfdfe; display: flex; align-items: center; justify-content: center; padding: 0; transform: scale(1)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button>
+</form></div>
+<div style="position: absolute; left: 0; top: 390px; width: 372px; display: flex; justify-content: center"><p style="margin: 0; text-align: center; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #4a3f6b; opacity: 0.9; white-space: nowrap">Semax · 10 mg · HPLC<span style="opacity: 0"> 99.78%</span></p></div>
+</div>
+<p style="margin: 22px 0 0; padding-top: 14px; border-top: 1px solid rgba(36, 26, 74, 0.22); font-size: 13px; line-height: 1.5; color: #4a3f6b">The label sharpens; the light takes on its green. The plaque writes its second line.</p>
+</div><div style="position: absolute; left: 1628px; top: 92px; width: 372px">
+<p style="margin: 0 0 12px; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.1em; color: #241a4a">900 ms · Open</p>
+<div style="position: relative; width: 372px; height: 460px; border-radius: 14px; overflow: hidden">
+<img src="/truemark/studio/history/tools/plan-1011/bake/d2-panel-4.jpg" alt="Panel 5: 900 ms · Open." style="display: block; width: 372px; height: 460px">
+<div style="position: absolute; left: 36px; top: 318px"><form role="search" aria-label="Look up a lot" style="position: relative; width: 300px; height: 58px; box-sizing: border-box; padding: 10px 66px 0 18px; border-radius: 12px; background: rgba(253, 253, 254, 0.82); border: 1px solid rgba(36, 26, 74, 0.22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 12px 32px rgba(58, 40, 104, 0.12); backdrop-filter: blur(10px)">
+<label style="display: block; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786">Lot number</label>
+<p style="margin: 3px 0 0; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.2; letter-spacing: 0.04em; white-space: nowrap"><span style="color: #241a4a">TM-SMX10-2609-01</span></p>
+<button type="button" aria-label="Clear the lot number" style="position: absolute; right: 11px; top: 6px; width: 44px; height: 44px; border-radius: 999px; border: 1px solid rgba(36, 26, 74, 0.22); background: rgba(253, 253, 254, 0.9); color: #4a3f6b; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12"></path><path d="M18 6 6 18"></path></svg></button>
+</form></div>
+<div style="position: absolute; left: 0; top: 390px; width: 372px; display: flex; justify-content: center"><p style="margin: 0; text-align: center; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #4a3f6b; opacity: 0.9; white-space: nowrap">Semax · 10 mg · HPLC 99.78%<span style="opacity: 0"></span></p></div>
+</div>
+<p style="margin: 22px 0 0; padding-top: 14px; border-top: 1px solid rgba(36, 26, 74, 0.22); font-size: 13px; line-height: 1.5; color: #4a3f6b">In focus. Then the Verify page opens on this lot, as it does on the site today, and the vial carries over into its card.</p>
+</div>
+</div>
+</x-dc>
+
+</body>
+</html>

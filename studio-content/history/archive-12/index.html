@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+    <meta charset="UTF-8" />
+<script data-tm-history-storage="archive-12">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("archive-12");</script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>(function(){try{if(!(/^#\/(\?|$)/.test(location.hash)))return;var d=document,h=d.head;function l(u,a){var e=d.createElement('link');e.rel='preload';e.as=a;e.href=u;e.setAttribute('fetchpriority','high');h.appendChild(e);}l(matchMedia("(max-width: 560px) and (max-aspect-ratio: 11/10)").matches?"/truemark/studio/history/archive-12/media/open-phone-crisp.jpg":"/truemark/studio/history/archive-12/media/open-crisp.jpg",'image');}catch(e){}})();</script>
+    <meta name="theme-color" content="#241A4A" />
+    <link rel="icon" href="/truemark/studio/history/archive-12/images/brand/icons/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/truemark/studio/history/archive-12/images/brand/icons/favicon_32x32.png" />
+    <link rel="apple-touch-icon" href="/truemark/studio/history/archive-12/images/brand/icons/apple-touch-icon_180x180.png" />
+    <meta name="description" content="The TrueMark platform, in design: the shop, lot verification, research accounts, the partner program and the command center." />
+    <!-- The card a link shows when it is shared. Scrapers need absolute URLs. The live builds swap in
+         the client's own card and words (vite.config.ts). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="TrueMark BioLabs" />
+    <meta property="og:title" content="The TrueMark platform — design preview" />
+    <meta property="og:description" content="The shop, lot verification, research accounts, the partner program and the command center, in TrueMark's brand. Leave notes anywhere." />
+    <meta property="og:url" content="https://riley-coyote.github.io/truemark/" />
+    <meta property="og:image" content="https://riley-coyote.github.io/truemark/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Five TrueMark vials on lilac pedestals, with the words The TrueMark platform." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://riley-coyote.github.io/truemark/og.jpg" />
+    <!-- The share card's address (og:url), as vite.config.ts keeps it. -->
+    <link rel="canonical" href="https://riley-coyote.github.io/truemark/" />
+    <title>TrueMark BioLabs</title>
+    <script type="module" crossorigin src="/truemark/studio/history/archive-12/assets/index-CyUYqSfV.js"></script>
+    <link rel="modulepreload" crossorigin href="/truemark/studio/history/archive-12/assets/core-DK6r6HIF.js">
+    <link rel="stylesheet" crossorigin href="/truemark/studio/history/archive-12/assets/core-CT37PC4s.css">
+    <link rel="modulepreload" crossorigin href="/truemark/studio/history/archive-12/assets/shop-BCU6NFG3.js">
+    <link rel="preload" as="style" crossorigin href="/truemark/studio/history/archive-12/assets/shop-BdBy6r0L.css">
+    <link rel="modulepreload" crossorigin href="/truemark/studio/history/archive-12/assets/index-DEj10hXc.js">
+    <link rel="preload" as="style" crossorigin href="/truemark/studio/history/archive-12/assets/review-CbngnnjF.css">
+    <link rel="preload" as="style" crossorigin href="/truemark/studio/history/archive-12/assets/review-CNv_6-ed.css">
+    <meta name="robots" content="noindex, nofollow">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

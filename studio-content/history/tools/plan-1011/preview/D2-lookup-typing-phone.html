@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+<meta charset="utf-8">
+<script data-tm-history-storage="tools">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("tools");</script>
+
+<title>Your vial: typing, phone</title>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-300.woff2) format("woff2");font-weight:300;font-display:block}
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-400.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-500.woff2) format("woff2");font-weight:500;font-display:block}
+@font-face{font-family:"Heros";src:url(/truemark/studio/history/tools/plan-1011/assets/heros-400.woff) format("woff");font-weight:400;font-display:block}
+@font-face{font-family:"Heros";src:url(/truemark/studio/history/tools/plan-1011/assets/heros-700.woff) format("woff");font-weight:700;font-display:block}
+body{margin:0}
+a{color:#241a4a}a:hover{color:#4a3f6b}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #241a4a; background: #ece8f4">
+<img src="/truemark/studio/history/tools/plan-1011/bake/d2-phone.jpg" alt="The plinth with the vial, out of focus, above the field." style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; display: block">
+<header style="position: absolute; left: 0; top: 0; width: 390px; height: 60px; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; background: rgba(253, 253, 254, 0.92); border-bottom: 1px solid rgba(36, 26, 74, 0.11)">
+<img src="/truemark/studio/history/tools/plan-1011/assets/lockup-black.svg" alt="TrueMark BioLabs" style="width: 112px; height: 27px; display: block">
+<div style="display: flex; align-items: center; gap: 18px; font-size: 14px; color: #4a3f6b"><a href="#" style="text-decoration: none; color: #4a3f6b">Cart (0)</a><button type="button" aria-label="Menu" style="border: 0; background: none; padding: 0; color: #241a4a; display: flex"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M4 12h16"></path><path d="M4 17h16"></path></svg></button></div>
+</header>
+<div style="position: absolute; left: 53px; top: 430px; "><form role="search" aria-label="Look up a lot" style="position: relative; width: 284px; height: 60px; box-sizing: border-box; padding: 10px 66px 0 18px; border-radius: 12px; background: rgba(253, 253, 254, 0.82); border: 1px solid #4a3f6b; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 12px 32px rgba(58, 40, 104, 0.12); backdrop-filter: blur(10px)">
+<label style="display: block; font-family: Poppins, system-ui, sans-serif; font-weight: 500; font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #6f6786">Lot number</label>
+<p style="margin: 3px 0 0; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 17px; line-height: 1.2; letter-spacing: 0.04em; white-space: nowrap"><span style="color: #241a4a">TM-SMX10-2<span style="display: inline-block; opacity: 0.45; transform: translateY(1.7px)">6</span></span><span aria-hidden="true" style="display: inline-block; width: 1.5px; height: 19px; background: #241a4a; vertical-align: -4px; margin-left: 1px"></span></p>
+<button type="submit" aria-label="Look up" style="position: absolute; right: 11px; top: 7px; width: 44px; height: 44px; border-radius: 999px; border: 0; background: #241a4a; color: #fdfdfe; display: flex; align-items: center; justify-content: center; padding: 0; transform: scale(1)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button>
+</form></div>
+<div aria-hidden="true" style="position: absolute; left: 0; bottom: 0; width: 390px; height: 336px; background: #d2d5db"><span style="position: absolute; left: 0; top: 0; width: 100%; height: 44px; border-bottom: 1px solid rgba(0, 0, 0, 0.08)"></span><span style="position: absolute; left: 10.5px; top: 58px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">q</span><span style="position: absolute; left: 48.0px; top: 58px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">w</span><span style="position: absolute; left: 85.5px; top: 58px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">e</span><span style="position: absolute; left: 123.0px; top: 58px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">r</span><span style="position: absolute; left: 160.5px; top: 58px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">t</span><span style="position: absolute; left: 198.0px; top: 58px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">y</span><span style="position: absolute; left: 235.5px; top: 58px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">u</span><span style="position: absolute; left: 273.0px; top: 58px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">i</span><span style="position: absolute; left: 310.5px; top: 58px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">o</span><span style="position: absolute; left: 348.0px; top: 58px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">p</span><span style="position: absolute; left: 29.2px; top: 112px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">a</span><span style="position: absolute; left: 66.8px; top: 112px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">s</span><span style="position: absolute; left: 104.2px; top: 112px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">d</span><span style="position: absolute; left: 141.8px; top: 112px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">f</span><span style="position: absolute; left: 179.2px; top: 112px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">g</span><span style="position: absolute; left: 216.8px; top: 112px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">h</span><span style="position: absolute; left: 254.2px; top: 112px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">j</span><span style="position: absolute; left: 291.8px; top: 112px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">k</span><span style="position: absolute; left: 329.2px; top: 112px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">l</span><span style="position: absolute; left: 66.8px; top: 166px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">z</span><span style="position: absolute; left: 104.2px; top: 166px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">x</span><span style="position: absolute; left: 141.8px; top: 166px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">c</span><span style="position: absolute; left: 179.2px; top: 166px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">v</span><span style="position: absolute; left: 216.8px; top: 166px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">b</span><span style="position: absolute; left: 254.2px; top: 166px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">n</span><span style="position: absolute; left: 291.8px; top: 166px; width: 31.5px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 21px; line-height: 42px; text-align: center; color: #1d1d1f">m</span><span style="position: absolute; left: 6px; top: 220px; width: 88px; height: 42px; border-radius: 6px; background: #aeb3be; font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 42px; text-align: center; color: #1d1d1f">123</span><span style="position: absolute; left: 100px; top: 220px; width: 190px; height: 42px; border-radius: 6px; background: #fdfdfe; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 42px; text-align: center; color: #1d1d1f">space</span><span style="position: absolute; left: 296px; top: 220px; width: 88px; height: 42px; border-radius: 6px; background: #241a4a; font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 42px; text-align: center; color: #fdfdfe">go</span></div>
+</div>
+</x-dc>
+
+</body>
+</html>

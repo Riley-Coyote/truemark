@@ -1,0 +1,39 @@
+New order TM-10500
+
+Order total
+
+$126.00
+
+Fixture Lab · via FIXTURE
+
+BPC-157 10 mg × 1
+
+$100.00
+
+Buyer
+
+Fixture Buyer
+
+Shipping
+
+Cold chain
+
+Insurance
+
+$2.00
+
+Placed
+
+Monday 5 October, 2:35 PM ET
+
+1 vial to pack cold for Chicago, IL.
+
+Open the order
+
+https://fixture.test/live/#/admin/orders?order=order-fixture
+
+You receive this because new-order alerts are on for you in Settings.
+
+For research use only. Not for human consumption.
+
+TrueMark BioLabs

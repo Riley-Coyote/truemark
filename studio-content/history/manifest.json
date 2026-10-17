@@ -1,0 +1,1481 @@
+{
+  "schemaVersion": 1,
+  "preparedAt": "2026-10-15T08:33:32.255Z",
+  "privateReview": true,
+  "summary": {
+    "capsules": 26,
+    "built": 26,
+    "failed": 0,
+    "interactiveEntries": 39,
+    "additionalBranches": 3,
+    "checkpoints": 13,
+    "usableCheckpoints": 13,
+    "toolPreviews": 36,
+    "toolSources": 37
+  },
+  "capsules": [
+    {
+      "id": "lab",
+      "title": "lab",
+      "status": "built",
+      "base": "/truemark/studio/history/lab/",
+      "revision": "f3da1c2de8124dff4f9286f63363cd6793b51595",
+      "files": 1044,
+      "bytes": 192022092,
+      "storageIsolation": {
+        "prefix": "tm-history:lab:",
+        "htmlFiles": 7,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "air",
+      "title": "The air journey",
+      "status": "built",
+      "base": "/truemark/studio/history/air/",
+      "revision": "2c322cf608df9a2c10609384f819f8b120293f73",
+      "files": 297,
+      "bytes": 98501606,
+      "storageIsolation": {
+        "prefix": "tm-history:air:",
+        "htmlFiles": 2,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "v4",
+      "title": "Pedestal hero · v4",
+      "status": "built",
+      "base": "/truemark/studio/history/v4/",
+      "revision": "e7a3765e562e7a698e21e24d04671d6458396e0f",
+      "files": 337,
+      "bytes": 120691892,
+      "storageIsolation": {
+        "prefix": "tm-history:v4:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "v3prod",
+      "title": "Misty collection · production pass",
+      "status": "built",
+      "base": "/truemark/studio/history/v3prod/",
+      "revision": "f18c605fe11f9e6a0c0dbfe92c1e2a5b00959b37",
+      "files": 337,
+      "bytes": 120690861,
+      "storageIsolation": {
+        "prefix": "tm-history:v3prod:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "v3",
+      "title": "Misty collection · v3",
+      "status": "built",
+      "base": "/truemark/studio/history/v3/",
+      "revision": "4dc611c2a4da6bc0795c600c547bdeab7e5c5a55",
+      "files": 293,
+      "bytes": 118439644,
+      "storageIsolation": {
+        "prefix": "tm-history:v3:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "v2",
+      "title": "Misty collection · v2",
+      "status": "built",
+      "base": "/truemark/studio/history/v2/",
+      "revision": "6bcf52467fb853467a5d4dc9acd4c436c9f83bba",
+      "files": 288,
+      "bytes": 103612140,
+      "storageIsolation": {
+        "prefix": "tm-history:v2:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "brand",
+      "title": "Brand elevation baseline",
+      "status": "built",
+      "base": "/truemark/studio/history/brand/",
+      "revision": "1ffc672a834184f7f5078d950b070961b2540d35",
+      "files": 276,
+      "bytes": 93723400,
+      "storageIsolation": {
+        "prefix": "tm-history:brand:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "handback",
+      "title": "October 6 handback",
+      "status": "built",
+      "base": "/truemark/studio/history/handback/",
+      "revision": "eb2bc8e795df07c3250dfda92968aba64b068986",
+      "files": 275,
+      "bytes": 93471565,
+      "storageIsolation": {
+        "prefix": "tm-history:handback:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "published",
+      "title": "October 1 publication checkpoint",
+      "status": "built",
+      "base": "/truemark/studio/history/published/",
+      "revision": "e8f4e58fd208ef94f607ecf731189c369dc4d1dd",
+      "files": 247,
+      "bytes": 80321426,
+      "storageIsolation": {
+        "prefix": "tm-history:published:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "purple",
+      "title": "Purple reference",
+      "status": "built",
+      "base": "/truemark/studio/history/purple/",
+      "revision": "f5d7d3f85baecc29057c88a1c611355cc0ba2cae",
+      "files": 244,
+      "bytes": 79243396,
+      "storageIsolation": {
+        "prefix": "tm-history:purple:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "archive-01",
+      "title": "Original prototype",
+      "status": "built",
+      "base": "/truemark/studio/history/archive-01/",
+      "revision": "0a19b808adf947c168cdcb47f231c0f17bbd0df8",
+      "files": 13,
+      "bytes": 4020294,
+      "storageIsolation": {
+        "prefix": "tm-history:archive-01:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "archive-02",
+      "title": "Typography exploration",
+      "status": "built",
+      "base": "/truemark/studio/history/archive-02/",
+      "revision": "9c61c8e4263d54e5189df4de247e29e2f554eda8",
+      "files": 26,
+      "bytes": 4308468,
+      "storageIsolation": {
+        "prefix": "tm-history:archive-02:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "archive-03",
+      "title": "Quiet modern",
+      "status": "built",
+      "base": "/truemark/studio/history/archive-03/",
+      "revision": "42c1a953d8215c1d5f29ba083e13b4550ef7cbd7",
+      "files": 26,
+      "bytes": 4309493,
+      "storageIsolation": {
+        "prefix": "tm-history:archive-03:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "archive-04",
+      "title": "Environmental studies",
+      "status": "built",
+      "base": "/truemark/studio/history/archive-04/",
+      "revision": "6ece751528ab0764e597e9b1cc31ac0bd3cb10f9",
+      "files": 32,
+      "bytes": 14230253,
+      "storageIsolation": {
+        "prefix": "tm-history:archive-04:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "archive-05",
+      "title": "Liquid experiment · superseded",
+      "status": "built",
+      "base": "/truemark/studio/history/archive-05/",
+      "revision": "08d519de32847c673e4e81663d72c290f4bfe10b",
+      "files": 32,
+      "bytes": 14119324,
+      "storageIsolation": {
+        "prefix": "tm-history:archive-05:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "archive-06",
+      "title": "Client presentation",
+      "status": "built",
+      "base": "/truemark/studio/history/archive-06/",
+      "revision": "6241f749883b0b09e716bd81cdb37bd08a902b7f",
+      "files": 33,
+      "bytes": 14132622,
+      "storageIsolation": {
+        "prefix": "tm-history:archive-06:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "archive-07",
+      "title": "September 22 presentation",
+      "status": "built",
+      "base": "/truemark/studio/history/archive-07/",
+      "revision": "7b302311bc72156ab591e0aeba14565d286afff2",
+      "files": 33,
+      "bytes": 14132763,
+      "storageIsolation": {
+        "prefix": "tm-history:archive-07:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "archive-08",
+      "title": "Client brand refinement",
+      "status": "built",
+      "base": "/truemark/studio/history/archive-08/",
+      "revision": "f39312de2b821798d09f6e65ae94f93090a35cf1",
+      "files": 62,
+      "bytes": 61677716,
+      "storageIsolation": {
+        "prefix": "tm-history:archive-08:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "archive-09",
+      "title": "Quiet renewal",
+      "status": "built",
+      "base": "/truemark/studio/history/archive-09/",
+      "revision": "5a78aed2189c80d71ef44fa8375db415fe58f4ef",
+      "files": 64,
+      "bytes": 67473774,
+      "storageIsolation": {
+        "prefix": "tm-history:archive-09:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "verify-scene",
+      "title": "The verification room",
+      "status": "built",
+      "base": "/truemark/studio/history/verify-scene/",
+      "revision": "34fa0d30ffb94f10dbdb1acd01e69a9df8382306",
+      "files": 354,
+      "bytes": 121374090,
+      "storageIsolation": {
+        "prefix": "tm-history:verify-scene:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "design-studies",
+      "title": "The business observatory",
+      "status": "built",
+      "base": "/truemark/studio/history/design-studies/",
+      "revision": "766c93ccc3cb1eb8400e5e05f48df6482661d53e",
+      "files": 247,
+      "bytes": 79284321,
+      "storageIsolation": {
+        "prefix": "tm-history:design-studies:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "landing-sections",
+      "title": "Landing · section exploration",
+      "status": "built",
+      "base": "/truemark/studio/history/landing-sections/",
+      "revision": "d1e6f5f40c8b27c40448f967190d37c8805673f2",
+      "files": 395,
+      "bytes": 122226883,
+      "storageIsolation": {
+        "prefix": "tm-history:landing-sections:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "archive-10",
+      "title": "Landing version 1 · stories",
+      "status": "built",
+      "base": "/truemark/studio/history/archive-10/",
+      "revision": "8b7f6a8f6ff33efbc2fc328a73a82baf15905f2a",
+      "files": 357,
+      "bytes": 121566684,
+      "storageIsolation": {
+        "prefix": "tm-history:archive-10:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "archive-11",
+      "title": "Landing version 2 · final",
+      "status": "built",
+      "base": "/truemark/studio/history/archive-11/",
+      "revision": "79f672fa3019cc4aed5ac7c91b251d3241e1df1c",
+      "files": 358,
+      "bytes": 120869042,
+      "storageIsolation": {
+        "prefix": "tm-history:archive-11:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "archive-12",
+      "title": "Integrated platform · October 13",
+      "status": "built",
+      "base": "/truemark/studio/history/archive-12/",
+      "revision": "8a44a4be66ffb88ee026deb6eedcd0587839a4cc",
+      "files": 357,
+      "bytes": 120983410,
+      "storageIsolation": {
+        "prefix": "tm-history:archive-12:",
+        "htmlFiles": 1,
+        "method": "preboot Storage facade"
+      }
+    },
+    {
+      "id": "collection-display",
+      "title": "Collection display · preserved experiment",
+      "status": "built",
+      "base": "/truemark/studio/history/collection-display/",
+      "revision": "9667ae63c26c18efe99de389871b604cb7b0a58c",
+      "files": 363,
+      "bytes": 121041282,
+      "storageIsolation": {
+        "prefix": "tm-history:collection-display:",
+        "htmlFiles": 2,
+        "method": "preboot Storage facade"
+      }
+    }
+  ],
+  "entries": [
+    {
+      "id": "design-air",
+      "sourceLibraryId": "air",
+      "title": "The air journey",
+      "url": "/truemark/studio/history/air/air.html",
+      "status": "built",
+      "capsule": "air",
+      "recordedRevision": "2c322cf",
+      "packagedRevision": "2c322cf608df9a2c10609384f819f8b120293f73"
+    },
+    {
+      "id": "design-v4",
+      "sourceLibraryId": "v4",
+      "title": "Pedestal hero · v4",
+      "url": "/truemark/studio/history/v4/index.html#/",
+      "status": "built",
+      "capsule": "v4",
+      "recordedRevision": "e7a3765",
+      "packagedRevision": "e7a3765e562e7a698e21e24d04671d6458396e0f"
+    },
+    {
+      "id": "design-journey",
+      "sourceLibraryId": "journey",
+      "title": "One room",
+      "url": "/truemark/studio/history/lab/journey.html",
+      "status": "built",
+      "capsule": "lab",
+      "recordedRevision": "Working lab",
+      "packagedRevision": "f3da1c2de8124dff4f9286f63363cd6793b51595"
+    },
+    {
+      "id": "design-v3prod",
+      "sourceLibraryId": "v3prod",
+      "title": "Misty collection · production pass",
+      "url": "/truemark/studio/history/v3prod/index.html#/",
+      "status": "built",
+      "capsule": "v3prod",
+      "recordedRevision": "f18c605",
+      "packagedRevision": "f18c605fe11f9e6a0c0dbfe92c1e2a5b00959b37"
+    },
+    {
+      "id": "design-v3",
+      "sourceLibraryId": "v3",
+      "title": "Misty collection · v3",
+      "url": "/truemark/studio/history/v3/index.html#/",
+      "status": "built",
+      "capsule": "v3",
+      "recordedRevision": "4dc611c",
+      "packagedRevision": "4dc611c2a4da6bc0795c600c547bdeab7e5c5a55"
+    },
+    {
+      "id": "design-v2",
+      "sourceLibraryId": "v2",
+      "title": "Misty collection · v2",
+      "url": "/truemark/studio/history/v2/index.html#/",
+      "status": "built",
+      "capsule": "v2",
+      "recordedRevision": "6bcf524",
+      "packagedRevision": "6bcf52467fb853467a5d4dc9acd4c436c9f83bba"
+    },
+    {
+      "id": "design-brand",
+      "sourceLibraryId": "brand",
+      "title": "Brand elevation baseline",
+      "url": "/truemark/studio/history/brand/index.html#/",
+      "status": "built",
+      "capsule": "brand",
+      "recordedRevision": "1ffc672",
+      "packagedRevision": "1ffc672a834184f7f5078d950b070961b2540d35"
+    },
+    {
+      "id": "design-handback",
+      "sourceLibraryId": "handback",
+      "title": "October 6 handback",
+      "url": "/truemark/studio/history/handback/index.html#/",
+      "status": "built",
+      "capsule": "handback",
+      "recordedRevision": "eb2bc8e",
+      "packagedRevision": "eb2bc8e795df07c3250dfda92968aba64b068986"
+    },
+    {
+      "id": "design-published",
+      "sourceLibraryId": "published",
+      "title": "October 1 publication checkpoint",
+      "url": "/truemark/studio/history/published/index.html#/",
+      "status": "built",
+      "capsule": "published",
+      "recordedRevision": "e8f4e58",
+      "packagedRevision": "e8f4e58fd208ef94f607ecf731189c369dc4d1dd"
+    },
+    {
+      "id": "design-purple",
+      "sourceLibraryId": "purple",
+      "title": "Purple reference",
+      "url": "/truemark/studio/history/purple/index.html#/",
+      "status": "built",
+      "capsule": "purple",
+      "recordedRevision": "f5d7d3f",
+      "packagedRevision": "f5d7d3f85baecc29057c88a1c611355cc0ba2cae"
+    },
+    {
+      "id": "design-photo-gallery",
+      "sourceLibraryId": "photo-gallery",
+      "title": "The Gallery",
+      "url": "/truemark/studio/history/lab/versions/photo.html?direction=gallery",
+      "status": "built",
+      "capsule": "lab",
+      "recordedRevision": "Preserved preset",
+      "packagedRevision": "f3da1c2de8124dff4f9286f63363cd6793b51595"
+    },
+    {
+      "id": "design-photo-portrait",
+      "sourceLibraryId": "photo-portrait",
+      "title": "The Portrait",
+      "url": "/truemark/studio/history/lab/versions/photo.html?direction=portrait",
+      "status": "built",
+      "capsule": "lab",
+      "recordedRevision": "Preserved preset",
+      "packagedRevision": "f3da1c2de8124dff4f9286f63363cd6793b51595"
+    },
+    {
+      "id": "design-photo-cinematic",
+      "sourceLibraryId": "photo-cinematic",
+      "title": "Afterlight / Motion",
+      "url": "/truemark/studio/history/lab/versions/photo.html?direction=cinematic",
+      "status": "built",
+      "capsule": "lab",
+      "recordedRevision": "Preserved preset",
+      "packagedRevision": "f3da1c2de8124dff4f9286f63363cd6793b51595"
+    },
+    {
+      "id": "design-photo-specimen",
+      "sourceLibraryId": "photo-specimen",
+      "title": "The Specimen",
+      "url": "/truemark/studio/history/lab/versions/photo.html?direction=specimen",
+      "status": "built",
+      "capsule": "lab",
+      "recordedRevision": "Preserved preset",
+      "packagedRevision": "f3da1c2de8124dff4f9286f63363cd6793b51595"
+    },
+    {
+      "id": "design-photo-afterlight",
+      "sourceLibraryId": "photo-afterlight",
+      "title": "Afterlight · original",
+      "url": "/truemark/studio/history/lab/versions/photo.html?direction=afterlight",
+      "status": "built",
+      "capsule": "lab",
+      "recordedRevision": "Preserved preset",
+      "packagedRevision": "f3da1c2de8124dff4f9286f63363cd6793b51595"
+    },
+    {
+      "id": "design-photo-index",
+      "sourceLibraryId": "photo-index",
+      "title": "The Index",
+      "url": "/truemark/studio/history/lab/versions/photo.html?direction=index",
+      "status": "built",
+      "capsule": "lab",
+      "recordedRevision": "Preserved preset",
+      "packagedRevision": "f3da1c2de8124dff4f9286f63363cd6793b51595"
+    },
+    {
+      "id": "design-motion-immersive",
+      "sourceLibraryId": "motion-immersive",
+      "title": "Motion 04 · Luminous studio",
+      "url": "/truemark/studio/history/lab/motion-preview.html?settings=%7B%22edition%22%3A+%22immersive%22%2C+%22preset%22%3A+%22lift%22%2C+%22navigation%22%3A+%22guided%22%7D",
+      "status": "built",
+      "capsule": "lab",
+      "recordedRevision": "Preserved treatment",
+      "packagedRevision": "f3da1c2de8124dff4f9286f63363cd6793b51595"
+    },
+    {
+      "id": "design-motion-living",
+      "sourceLibraryId": "motion-living",
+      "title": "Motion 03 · Living studio",
+      "url": "/truemark/studio/history/lab/motion-preview.html?settings=%7B%22edition%22%3A+%22living%22%2C+%22preset%22%3A+%22lift%22%2C+%22navigation%22%3A+%22scrub%22%7D",
+      "status": "built",
+      "capsule": "lab",
+      "recordedRevision": "Preserved treatment",
+      "packagedRevision": "f3da1c2de8124dff4f9286f63363cd6793b51595"
+    },
+    {
+      "id": "design-motion-cinematic",
+      "sourceLibraryId": "motion-cinematic",
+      "title": "Motion 02 · Light chamber",
+      "url": "/truemark/studio/history/lab/motion-preview.html?settings=%7B%22edition%22%3A+%22cinematic%22%2C+%22preset%22%3A+%22lift%22%2C+%22navigation%22%3A+%22scrub%22%7D",
+      "status": "built",
+      "capsule": "lab",
+      "recordedRevision": "Preserved treatment",
+      "packagedRevision": "f3da1c2de8124dff4f9286f63363cd6793b51595"
+    },
+    {
+      "id": "design-motion-blocking",
+      "sourceLibraryId": "motion-blocking",
+      "title": "Motion 01 · Original blocking",
+      "url": "/truemark/studio/history/lab/motion-preview.html?settings=%7B%22edition%22%3A+%22blocking%22%2C+%22preset%22%3A+%22lift%22%2C+%22navigation%22%3A+%22scrub%22%7D",
+      "status": "built",
+      "capsule": "lab",
+      "recordedRevision": "Preserved treatment",
+      "packagedRevision": "f3da1c2de8124dff4f9286f63363cd6793b51595"
+    },
+    {
+      "id": "design-alive",
+      "sourceLibraryId": "alive",
+      "title": "The living rooms",
+      "url": "/truemark/studio/history/lab/alive.html",
+      "status": "built",
+      "capsule": "lab",
+      "recordedRevision": "Working lab",
+      "packagedRevision": "f3da1c2de8124dff4f9286f63363cd6793b51595"
+    },
+    {
+      "id": "design-archive-01",
+      "sourceLibraryId": "archive-01",
+      "title": "Original prototype",
+      "url": "/truemark/studio/history/archive-01/index.html#/",
+      "status": "built",
+      "capsule": "archive-01",
+      "recordedRevision": "0a19b80",
+      "packagedRevision": "0a19b808adf947c168cdcb47f231c0f17bbd0df8"
+    },
+    {
+      "id": "design-archive-02",
+      "sourceLibraryId": "archive-02",
+      "title": "Typography exploration",
+      "url": "/truemark/studio/history/archive-02/index.html#/",
+      "status": "built",
+      "capsule": "archive-02",
+      "recordedRevision": "9c61c8e",
+      "packagedRevision": "9c61c8e4263d54e5189df4de247e29e2f554eda8"
+    },
+    {
+      "id": "design-archive-03",
+      "sourceLibraryId": "archive-03",
+      "title": "Quiet modern",
+      "url": "/truemark/studio/history/archive-03/index.html#/",
+      "status": "built",
+      "capsule": "archive-03",
+      "recordedRevision": "42c1a95",
+      "packagedRevision": "42c1a953d8215c1d5f29ba083e13b4550ef7cbd7"
+    },
+    {
+      "id": "design-archive-04",
+      "sourceLibraryId": "archive-04",
+      "title": "Environmental studies",
+      "url": "/truemark/studio/history/archive-04/index.html#/",
+      "status": "built",
+      "capsule": "archive-04",
+      "recordedRevision": "6ece751",
+      "packagedRevision": "6ece751528ab0764e597e9b1cc31ac0bd3cb10f9"
+    },
+    {
+      "id": "design-archive-05",
+      "sourceLibraryId": "archive-05",
+      "title": "Liquid experiment · superseded",
+      "url": "/truemark/studio/history/archive-05/index.html#/",
+      "status": "built",
+      "capsule": "archive-05",
+      "recordedRevision": "08d519d",
+      "packagedRevision": "08d519de32847c673e4e81663d72c290f4bfe10b"
+    },
+    {
+      "id": "design-archive-06",
+      "sourceLibraryId": "archive-06",
+      "title": "Client presentation",
+      "url": "/truemark/studio/history/archive-06/index.html#/",
+      "status": "built",
+      "capsule": "archive-06",
+      "recordedRevision": "6241f74",
+      "packagedRevision": "6241f749883b0b09e716bd81cdb37bd08a902b7f"
+    },
+    {
+      "id": "design-archive-07",
+      "sourceLibraryId": "archive-07",
+      "title": "September 22 presentation",
+      "url": "/truemark/studio/history/archive-07/index.html#/",
+      "status": "built",
+      "capsule": "archive-07",
+      "recordedRevision": "7b30231",
+      "packagedRevision": "7b302311bc72156ab591e0aeba14565d286afff2"
+    },
+    {
+      "id": "design-archive-08",
+      "sourceLibraryId": "archive-08",
+      "title": "Client brand refinement",
+      "url": "/truemark/studio/history/archive-08/index.html#/",
+      "status": "built",
+      "capsule": "archive-08",
+      "recordedRevision": "f39312d",
+      "packagedRevision": "f39312de2b821798d09f6e65ae94f93090a35cf1"
+    },
+    {
+      "id": "design-archive-09",
+      "sourceLibraryId": "archive-09",
+      "title": "Quiet renewal",
+      "url": "/truemark/studio/history/archive-09/index.html#/",
+      "status": "built",
+      "capsule": "archive-09",
+      "recordedRevision": "5a78aed",
+      "packagedRevision": "5a78aed2189c80d71ef44fa8375db415fe58f4ef"
+    },
+    {
+      "id": "design-visual-horizon",
+      "sourceLibraryId": "visual-horizon",
+      "title": "Open horizon",
+      "url": "/truemark/studio/history/archive-09/index.html#/visual-study?direction=horizon&view=context",
+      "status": "built",
+      "capsule": "archive-09",
+      "recordedRevision": "Quiet renewal archive",
+      "packagedRevision": "5a78aed2189c80d71ef44fa8375db415fe58f4ef"
+    },
+    {
+      "id": "design-visual-water",
+      "sourceLibraryId": "visual-water",
+      "title": "Living patterns",
+      "url": "/truemark/studio/history/archive-09/index.html#/visual-study?direction=water&view=context",
+      "status": "built",
+      "capsule": "archive-09",
+      "recordedRevision": "Quiet renewal archive",
+      "packagedRevision": "5a78aed2189c80d71ef44fa8375db415fe58f4ef"
+    },
+    {
+      "id": "design-visual-glass",
+      "sourceLibraryId": "visual-glass",
+      "title": "Light through glass",
+      "url": "/truemark/studio/history/archive-09/index.html#/visual-study?direction=glass&view=context",
+      "status": "built",
+      "capsule": "archive-09",
+      "recordedRevision": "Quiet renewal archive",
+      "packagedRevision": "5a78aed2189c80d71ef44fa8375db415fe58f4ef"
+    },
+    {
+      "id": "design-visual-object",
+      "sourceLibraryId": "visual-object",
+      "title": "The research object",
+      "url": "/truemark/studio/history/archive-09/index.html#/visual-study?direction=object&view=context",
+      "status": "built",
+      "capsule": "archive-09",
+      "recordedRevision": "Quiet renewal archive",
+      "packagedRevision": "5a78aed2189c80d71ef44fa8375db415fe58f4ef"
+    },
+    {
+      "id": "design-visual-morning",
+      "sourceLibraryId": "visual-morning",
+      "title": "First light · coastal",
+      "url": "/truemark/studio/history/archive-09/index.html#/visual-study?direction=morning&view=context",
+      "status": "built",
+      "capsule": "archive-09",
+      "recordedRevision": "Quiet renewal archive",
+      "packagedRevision": "5a78aed2189c80d71ef44fa8375db415fe58f4ef"
+    },
+    {
+      "id": "design-visual-tidal",
+      "sourceLibraryId": "visual-tidal",
+      "title": "Light in motion",
+      "url": "/truemark/studio/history/archive-09/index.html#/visual-study?direction=tidal&view=context",
+      "status": "built",
+      "capsule": "archive-09",
+      "recordedRevision": "Quiet renewal archive",
+      "packagedRevision": "5a78aed2189c80d71ef44fa8375db415fe58f4ef"
+    },
+    {
+      "id": "design-type-sculptural",
+      "sourceLibraryId": "type-sculptural",
+      "title": "Sculptural typography",
+      "url": "/truemark/studio/history/archive-09/index.html#/type-study?direction=sculptural&view=context",
+      "status": "built",
+      "capsule": "archive-09",
+      "recordedRevision": "Quiet renewal archive",
+      "packagedRevision": "5a78aed2189c80d71ef44fa8375db415fe58f4ef"
+    },
+    {
+      "id": "design-type-precise",
+      "sourceLibraryId": "type-precise",
+      "title": "Precise typography",
+      "url": "/truemark/studio/history/archive-09/index.html#/type-study?direction=precise&view=context",
+      "status": "built",
+      "capsule": "archive-09",
+      "recordedRevision": "Quiet renewal archive",
+      "packagedRevision": "5a78aed2189c80d71ef44fa8375db415fe58f4ef"
+    },
+    {
+      "id": "design-type-quiet",
+      "sourceLibraryId": "type-quiet",
+      "title": "Quiet modern typography",
+      "url": "/truemark/studio/history/archive-09/index.html#/type-study?direction=quiet&view=context",
+      "status": "built",
+      "capsule": "archive-09",
+      "recordedRevision": "Quiet renewal archive",
+      "packagedRevision": "5a78aed2189c80d71ef44fa8375db415fe58f4ef"
+    }
+  ],
+  "additions": [
+    {
+      "id": "verify-scene",
+      "title": "The verification room",
+      "route": "/verify",
+      "kind": "branch",
+      "url": "/truemark/studio/history/verify-scene/index.html#/verify",
+      "status": "built",
+      "revision": "34fa0d30ffb94f10dbdb1acd01e69a9df8382306"
+    },
+    {
+      "id": "design-studies",
+      "title": "The business observatory",
+      "route": "/design-studies",
+      "kind": "branch",
+      "url": "/truemark/studio/history/design-studies/index.html#/design-studies",
+      "status": "built",
+      "revision": "766c93ccc3cb1eb8400e5e05f48df6482661d53e"
+    },
+    {
+      "id": "landing-sections",
+      "title": "Landing · section exploration",
+      "route": "/",
+      "kind": "branch",
+      "url": "/truemark/studio/history/landing-sections/index.html#/",
+      "status": "built",
+      "revision": "d1e6f5f40c8b27c40448f967190d37c8805673f2"
+    },
+    {
+      "id": "archive-10",
+      "title": "Landing version 1 · stories",
+      "route": "/",
+      "tag": "archive/10-landing-v1-stories",
+      "kind": "checkpoint",
+      "url": "/truemark/studio/history/archive-10/index.html#/",
+      "status": "built",
+      "revision": "8b7f6a8f6ff33efbc2fc328a73a82baf15905f2a"
+    },
+    {
+      "id": "archive-11",
+      "title": "Landing version 2 · final",
+      "route": "/",
+      "tag": "archive/11-landing-v2-final",
+      "kind": "checkpoint",
+      "url": "/truemark/studio/history/archive-11/index.html#/",
+      "status": "built",
+      "revision": "79f672fa3019cc4aed5ac7c91b251d3241e1df1c"
+    },
+    {
+      "id": "archive-12",
+      "title": "Integrated platform · October 13",
+      "route": "/",
+      "tag": "archive/12-site-final",
+      "kind": "checkpoint",
+      "url": "/truemark/studio/history/archive-12/index.html#/",
+      "status": "built",
+      "revision": "8a44a4be66ffb88ee026deb6eedcd0587839a4cc"
+    },
+    {
+      "id": "collection-display",
+      "title": "Collection display · preserved experiment",
+      "route": "/",
+      "tag": "archive/collection-display-backup-2026-10-14",
+      "kind": "checkpoint",
+      "url": "/truemark/studio/history/collection-display/design-lab/client-walkthrough/landing.html",
+      "status": "built",
+      "revision": "9667ae63c26c18efe99de389871b604cb7b0a58c"
+    }
+  ],
+  "checkpoints": [
+    {
+      "tag": "archive/01-original-prototype",
+      "title": "Original prototype",
+      "capsule": "archive-01",
+      "url": "/truemark/studio/history/archive-01/index.html#/",
+      "status": "built",
+      "revision": "0a19b808adf947c168cdcb47f231c0f17bbd0df8"
+    },
+    {
+      "tag": "archive/02-typography-study",
+      "title": "Typography exploration",
+      "capsule": "archive-02",
+      "url": "/truemark/studio/history/archive-02/index.html#/",
+      "status": "built",
+      "revision": "9c61c8e4263d54e5189df4de247e29e2f554eda8"
+    },
+    {
+      "tag": "archive/03-quiet-modern",
+      "title": "Quiet modern",
+      "capsule": "archive-03",
+      "url": "/truemark/studio/history/archive-03/index.html#/",
+      "status": "built",
+      "revision": "42c1a953d8215c1d5f29ba083e13b4550ef7cbd7"
+    },
+    {
+      "tag": "archive/04-environmental-studies",
+      "title": "Environmental studies",
+      "capsule": "archive-04",
+      "url": "/truemark/studio/history/archive-04/index.html#/",
+      "status": "built",
+      "revision": "6ece751528ab0764e597e9b1cc31ac0bd3cb10f9"
+    },
+    {
+      "tag": "archive/05-liquid-experiment",
+      "title": "Liquid experiment · superseded",
+      "capsule": "archive-05",
+      "url": "/truemark/studio/history/archive-05/index.html#/",
+      "status": "built",
+      "revision": "08d519de32847c673e4e81663d72c290f4bfe10b"
+    },
+    {
+      "tag": "archive/06-client-presentation",
+      "title": "Client presentation",
+      "capsule": "archive-06",
+      "url": "/truemark/studio/history/archive-06/index.html#/",
+      "status": "built",
+      "revision": "6241f749883b0b09e716bd81cdb37bd08a902b7f"
+    },
+    {
+      "tag": "archive/07-pages-september-22",
+      "title": "September 22 presentation",
+      "capsule": "archive-07",
+      "url": "/truemark/studio/history/archive-07/index.html#/",
+      "status": "built",
+      "revision": "7b302311bc72156ab591e0aeba14565d286afff2"
+    },
+    {
+      "tag": "archive/08-client-brand-refinement",
+      "title": "Client brand refinement",
+      "capsule": "archive-08",
+      "url": "/truemark/studio/history/archive-08/index.html#/",
+      "status": "built",
+      "revision": "f39312de2b821798d09f6e65ae94f93090a35cf1"
+    },
+    {
+      "tag": "archive/09-quiet-renewal",
+      "title": "Quiet renewal",
+      "capsule": "archive-09",
+      "url": "/truemark/studio/history/archive-09/index.html#/",
+      "status": "built",
+      "revision": "5a78aed2189c80d71ef44fa8375db415fe58f4ef"
+    },
+    {
+      "tag": "archive/10-landing-v1-stories",
+      "title": "Landing version 1 · stories",
+      "capsule": "archive-10",
+      "url": "/truemark/studio/history/archive-10/index.html#/",
+      "status": "built",
+      "revision": "8b7f6a8f6ff33efbc2fc328a73a82baf15905f2a"
+    },
+    {
+      "tag": "archive/11-landing-v2-final",
+      "title": "Landing version 2 · final",
+      "capsule": "archive-11",
+      "url": "/truemark/studio/history/archive-11/index.html#/",
+      "status": "built",
+      "revision": "79f672fa3019cc4aed5ac7c91b251d3241e1df1c"
+    },
+    {
+      "tag": "archive/12-site-final",
+      "title": "Integrated platform · October 13",
+      "capsule": "archive-12",
+      "url": "/truemark/studio/history/archive-12/index.html#/",
+      "status": "built",
+      "revision": "8a44a4be66ffb88ee026deb6eedcd0587839a4cc"
+    },
+    {
+      "tag": "archive/collection-display-backup-2026-10-14",
+      "title": "Collection display · preserved experiment",
+      "capsule": "collection-display",
+      "url": "/truemark/studio/history/collection-display/design-lab/client-walkthrough/landing.html",
+      "status": "built",
+      "revision": "9667ae63c26c18efe99de389871b604cb7b0a58c"
+    }
+  ],
+  "tools": [
+    {
+      "id": "tool-67b40195f799",
+      "title": "Anatomy of a Vial · test 1 · desktop",
+      "group": "Camera & motion tools",
+      "source": "board/anatomy/desktop.html",
+      "url": "/truemark/studio/history/tools/board/anatomy/desktop.html",
+      "status": "built",
+      "kind": "interactive",
+      "availability": "available",
+      "packagedUrl": "/truemark/studio/history/tools/board/anatomy/desktop.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved interactive design tool."
+    },
+    {
+      "id": "tool-9179b8b581c0",
+      "title": "Anatomy of a Vial · test 1",
+      "group": "Camera & motion tools",
+      "source": "board/anatomy/index.html",
+      "url": "/truemark/studio/history/tools/board/anatomy/index.html",
+      "status": "built",
+      "kind": "interactive",
+      "availability": "available",
+      "packagedUrl": "/truemark/studio/history/tools/board/anatomy/index.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved interactive design tool."
+    },
+    {
+      "id": "tool-c8f46b1336f9",
+      "title": "TrueMark BioLabs",
+      "group": "Camera & motion tools",
+      "source": "board/flight/index.html",
+      "url": "/truemark/studio/history/tools/board/flight/index.html",
+      "status": "built",
+      "kind": "interactive",
+      "availability": "available",
+      "packagedUrl": "/truemark/studio/history/tools/board/flight/index.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved interactive design tool."
+    },
+    {
+      "id": "tool-6465fc6ab281",
+      "title": "Floor mist study",
+      "group": "Camera & motion tools",
+      "source": "board/fog/index.html",
+      "url": "/truemark/studio/history/tools/board/fog/index.html",
+      "status": "built",
+      "kind": "interactive",
+      "availability": "available",
+      "packagedUrl": "/truemark/studio/history/tools/board/fog/index.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved interactive design tool."
+    },
+    {
+      "id": "tool-576ea3bc7d0b",
+      "title": "Landing board",
+      "group": "Camera & motion tools",
+      "source": "board/index.html",
+      "url": "/truemark/studio/history/tools/board/index.html",
+      "status": "built",
+      "kind": "interactive",
+      "availability": "available",
+      "packagedUrl": "/truemark/studio/history/tools/board/index.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved interactive design tool."
+    },
+    {
+      "id": "tool-81ce3ba7d7d8",
+      "title": "The room, desktop",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/A1-room-desktop.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/A1-room-desktop.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/A1-room-desktop.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-a1cf4011e886",
+      "title": "The room, phone",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/A1-room-phone.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/A1-room-phone.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/A1-room-phone.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-3c9a6e80cc63",
+      "title": "The push, desktop",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/A2-push-desktop.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/A2-push-desktop.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/A2-push-desktop.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-a720573c20c7",
+      "title": "The push, phone",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/A2-push-phone.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/A2-push-phone.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/A2-push-phone.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-f3c64058c760",
+      "title": "Detail 1: Compound and amount, desktop",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/A3-detail-name-desktop.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/A3-detail-name-desktop.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/A3-detail-name-desktop.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-ae272e6180a9",
+      "title": "Detail 1: Compound and amount, phone",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/A3-detail-name-phone.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/A3-detail-name-phone.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/A3-detail-name-phone.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-5c792be14b24",
+      "title": "Detail 2: Lot number, desktop",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/A4-detail-lot-desktop.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/A4-detail-lot-desktop.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/A4-detail-lot-desktop.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-c8c09ff01da3",
+      "title": "Detail 2: Lot number, phone",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/A4-detail-lot-phone.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/A4-detail-lot-phone.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/A4-detail-lot-phone.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-858687e6069e",
+      "title": "Detail 3: QR code, desktop",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/A5-detail-code-desktop.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/A5-detail-code-desktop.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/A5-detail-code-desktop.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-303bb4e01dc8",
+      "title": "Detail 3: QR code, phone",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/A5-detail-code-phone.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/A5-detail-code-phone.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/A5-detail-code-phone.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-6b9e27b207f5",
+      "title": "Organized by compound class, desktop",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/B1-catalog-desktop.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/B1-catalog-desktop.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/B1-catalog-desktop.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-a0c95134f19a",
+      "title": "Organized by compound class, phone",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/B1-catalog-phone.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/B1-catalog-phone.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/B1-catalog-phone.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-ba11084714a9",
+      "title": "Verified and the paper trail, desktop",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/C1-trail-desktop.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/C1-trail-desktop.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/C1-trail-desktop.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-821f4178e91c",
+      "title": "Verified and the paper trail, phone",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/C1-trail-phone.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/C1-trail-phone.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/C1-trail-phone.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-f7d7f2b0e716",
+      "title": "Changing lots, the choreography",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/C2-swap-choreography.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/C2-swap-choreography.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/C2-swap-choreography.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-efc4f19bf3d3",
+      "title": "Your vial: the lookup at rest, desktop",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/D1-lookup-desktop.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/D1-lookup-desktop.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/D1-lookup-desktop.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-da4b0631916e",
+      "title": "Your vial: the lookup at rest, phone",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/D1-lookup-phone.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/D1-lookup-phone.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/D1-lookup-phone.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-676b1f96e508",
+      "title": "Looking up a lot, the choreography",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/D2-lookup-choreography.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/D2-lookup-choreography.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/D2-lookup-choreography.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-48da3831aa63",
+      "title": "Your vial: typing, phone",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/D2-lookup-typing-phone.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/D2-lookup-typing-phone.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/D2-lookup-typing-phone.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-e0843732257c",
+      "title": "Your vial: found, the live Verify page, desktop",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/D3-lookup-found-desktop.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/D3-lookup-found-desktop.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/D3-lookup-found-desktop.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-be5e29bcac91",
+      "title": "Your vial: found, the live Verify page, phone",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/D3-lookup-found-phone.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/D3-lookup-found-phone.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/D3-lookup-found-phone.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-739713bdabf1",
+      "title": "Your vial: read down to the PDF, desktop",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/D3-lookup-read-desktop.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/D3-lookup-read-desktop.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/D3-lookup-read-desktop.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-9591c75c1397",
+      "title": "Your vial: read down to the PDF, phone",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/D3-lookup-read-phone.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/D3-lookup-read-phone.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/D3-lookup-read-phone.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-b9ad8cfe58fc",
+      "title": "Your vial: no record, desktop",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/D4-lookup-miss-desktop.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/D4-lookup-miss-desktop.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/D4-lookup-miss-desktop.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-b3b7732390dc",
+      "title": "The home page, planned",
+      "group": "Scene planning",
+      "source": "plan-1011/preview/Main.html",
+      "url": "/truemark/studio/history/tools/plan-1011/preview/Main.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/plan-1011/preview/Main.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved scene composition; recovered local artwork is linked relatively and the unavailable editor-only bootstrap is removed."
+    },
+    {
+      "id": "tool-cd28392b49eb",
+      "title": "TrueMark Landing Map",
+      "group": "Landing maps",
+      "source": "r10/map/art/_local.html",
+      "url": "/truemark/studio/history/tools/r10/map/art/_local.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/r10/map/art/_local.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved static design board."
+    },
+    {
+      "id": "tool-da0ac4552e8d",
+      "title": "TrueMark Landing Map",
+      "group": "Landing maps",
+      "source": "r10/map/art/landing-map.html",
+      "url": "/truemark/studio/history/tools/r10/map/art/landing-map.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/r10/map/art/landing-map.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved static design board."
+    },
+    {
+      "id": "tool-cb8cc33740ce",
+      "title": "The Closer Look",
+      "group": "Storyboards",
+      "source": "r10/stills/board/storyboard.html",
+      "url": "/truemark/studio/history/tools/r10/stills/board/storyboard.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/r10/stills/board/storyboard.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved static design board."
+    },
+    {
+      "id": "tool-76e50a861eed",
+      "title": "The Closer Look",
+      "group": "Closer look development",
+      "source": "r11-closer-look/site/closer-look.html",
+      "url": "/truemark/studio/history/tools/r11-closer-look/site/closer-look.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/r11-closer-look/site/closer-look.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved static design board."
+    },
+    {
+      "id": "tool-30e81241a760",
+      "title": "The Closer Look",
+      "group": "Closer look development",
+      "source": "r11-closer-look/site/template.html",
+      "url": "/truemark/studio/history/tools/r11-closer-look/site/template.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/r11-closer-look/site/template.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved static design board."
+    },
+    {
+      "id": "tool-5b1cb3397009",
+      "title": "Label render template",
+      "group": "Label source studies",
+      "source": "r12-sequence/label/label.html",
+      "url": null,
+      "status": "source-checkpoint",
+      "kind": "source-template",
+      "availability": "source-only",
+      "packagedUrl": null,
+      "captureUrl": "/truemark/studio/history/tools/r12-sequence/label/preview-flat.jpg",
+      "packageStatus": "source-checkpoint",
+      "note": "An empty rendering template used by the label-fit workflow; its preserved flat preview is available as an image."
+    },
+    {
+      "id": "tool-45c239831c89",
+      "title": "Closer look map",
+      "group": "Motion story maps",
+      "source": "r13-motion4/closer-look-map.html",
+      "url": "/truemark/studio/history/tools/r13-motion4/closer-look-map.html",
+      "status": "built",
+      "kind": "static-study",
+      "availability": "source-only",
+      "packagedUrl": "/truemark/studio/history/tools/r13-motion4/closer-look-map.html",
+      "captureUrl": null,
+      "packageStatus": "built",
+      "note": "Preserved static design board."
+    }
+  ],
+  "backupInventory": {
+    "fileCount": 11,
+    "uniqueContentCount": 11,
+    "bytes": 198093350,
+    "contentCopied": false
+  },
+  "limits": [
+    "Compiled private design archives; historical product, copy and illustrative data remain historical.",
+    "No payment, authentication, email or database acceptance is implied by these frontend capsules.",
+    "The branch observatory and verification room are distinct explorations outside the original 54-record library.",
+    "Backups were counted and checksum-deduplicated only; no backup content was copied."
+  ]
+}

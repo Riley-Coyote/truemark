@@ -1,0 +1,44 @@
+{
+  "private": false,
+  "fixtureOnly": true,
+  "accessControlRequired": false,
+  "remoteAccessEnabled": true,
+  "preparedAt": "2026-10-15T08:54:53.149Z",
+  "counts": {
+    "photography": 289,
+    "photoGroups": {
+      "01-product-vials": 84,
+      "02-product-scenes": 20,
+      "03-cold-storage": 20,
+      "04-studio-backgrounds": 55,
+      "05-macros-and-materials": 31,
+      "06-coastal-and-water": 4,
+      "07-render-studies": 75
+    },
+    "photoStatus": {
+      "corrected": 26,
+      "study": 210,
+      "historical": 53
+    },
+    "designs": 54,
+    "designKinds": {
+      "live": 39,
+      "capture": 6,
+      "concept": 9
+    },
+    "explorations": 15,
+    "films": 6,
+    "brandAssets": 39,
+    "checkpoints": 13,
+    "tools": 37
+  },
+  "excluded": [
+    "source conversations",
+    "credentials",
+    ".env",
+    "private-coverage.json",
+    "COVERAGE.md",
+    "raw recovery archive"
+  ],
+  "copiedAssets": 452
+}

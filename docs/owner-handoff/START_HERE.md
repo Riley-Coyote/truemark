@@ -35,7 +35,7 @@ This is one platform with several connected surfaces. The map describes scope an
 | Command Center | Orders/shipping, stock/products/lots, content, customers, communications, analytics, reports, settings and operational readiness | `src/admin/`, the implementation plan and [coverage map](../platform/COMMAND-CENTER-COVERAGE.md) |
 | Customer programs and marketing | Rewards/memberships, consent, campaign/flow foundations and retention follow-up | [Connected programs](../platform/CONNECTED-PROGRAMS.md); test outbox is distinct from real delivery |
 | Backend and services | Supabase data, identity, files and server functions; payment, shipping, email and storefront-assistant integrations | `supabase/`, `src/platform/live/`, CURRENT_STATE.md and ACCESS.md |
-| Studio and optional Ghost app | Studio presents designs with sample data; Ghost is an optional native assistant project | ACCESS.md lists separate source/assets delivery. Neither replaces the operational platform or is required to work with Codex. |
+| Studio and optional Ghost app | Studio presents designs with sample data; Ghost is an optional native assistant project | [STUDIO.md](../../STUDIO.md) covers the delivered Studio source and content. Optional Ghost source remains separate; neither replaces the operational platform. |
 
 Preserve approved design and research-use language. Follow the current decision log over historical prototype-only descriptions. The Command Center plan is the latest operational scope; it does not silently authorize rebuilding the storefront or every historical concept. Full accounting replacement and barcode scanning are outside the current required work.
 
@@ -45,7 +45,7 @@ The public repository is currently [Riley-Coyote/truemark](https://github.com/Ri
 
 The local private development branch contains additional material and history that must not be pushed wholesale to the public repository. `node scripts/prepare-owner-handoff.mjs` produces a fresh source snapshot from selected current files, including these instructions and the editable current Command Center lab. It includes a file-hash manifest and no Git history, credentials, installed dependencies or automatic deployment workflow. Review and import that snapshot on a branch of the shared repository; ownership transfer can happen later. Its source metadata distinguishes local HEAD from the public main commit; it is not a claim that every local file is already published.
 
-The snapshot is a working storefront/platform source delivery, **not an archive of every historical design asset**. The editable Studio source, original photography library, native Ghost source and historical design reconstruction remain separate transfer items listed in ACCESS.md. Preserve the published Studio release assets before changing repository ownership or release URLs.
+The repository also includes the editable Studio and the entire curated public Studio content package. See [STUDIO.md](../../STUDIO.md) to run it without Riley’s machine. Historical previews are compiled snapshots; the broader private recovery archive and native Ghost source remain separate items in ACCESS.md. Preserve the published release assets before changing repository ownership or release URLs.
 
 ## Completion means independence
 

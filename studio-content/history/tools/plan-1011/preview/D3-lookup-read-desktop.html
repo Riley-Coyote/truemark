@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+<meta charset="utf-8">
+<script data-tm-history-storage="tools">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("tools");</script>
+
+<title>Your vial: read down to the PDF, desktop</title>
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-300.woff2) format("woff2");font-weight:300;font-display:block}
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-400.woff2) format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"Poppins";src:url(/truemark/studio/history/tools/plan-1011/assets/poppins-500.woff2) format("woff2");font-weight:500;font-display:block}
+@font-face{font-family:"Heros";src:url(/truemark/studio/history/tools/plan-1011/assets/heros-400.woff) format("woff");font-weight:400;font-display:block}
+@font-face{font-family:"Heros";src:url(/truemark/studio/history/tools/plan-1011/assets/heros-700.woff) format("woff");font-weight:700;font-display:block}
+body{margin:0}
+a{color:#241a4a}a:hover{color:#4a3f6b}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 900px; overflow: hidden; font-family: Heros, 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #241a4a; background: #fdfdfe">
+<img src="/truemark/studio/history/tools/plan-1011/live/verify-desktop-read.jpg" alt="Further down the live Verify page: the vial stays beside the certificate's dates, how to read it, and the Download the certificate PDF button." style="position: absolute; left: 0; top: 0; width: 1440px; height: 900px; display: block">
+</div>
+</x-dc>
+
+</body>
+</html>

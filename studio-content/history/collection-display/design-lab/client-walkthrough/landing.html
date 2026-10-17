@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+  <meta charset="utf-8">
+<script data-tm-history-storage="collection-display">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("collection-display");</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>(function(){try{if(!(/^#\/(\?|$)/.test(location.hash)))return;var d=document,h=d.head;function l(u,a){var e=d.createElement('link');e.rel='preload';e.as=a;e.href=u;e.setAttribute('fetchpriority','high');h.appendChild(e);}l(matchMedia("(max-width: 560px) and (max-aspect-ratio: 11/10)").matches?"/truemark/studio/history/collection-display/media/open-phone-crisp.jpg":"/truemark/studio/history/collection-display/media/open-crisp.jpg",'image');}catch(e){}})();</script>
+  <meta name="robots" content="noindex, nofollow">
+  <title>TrueMark · A continuous room</title>
+  <link rel="icon" href="/truemark/studio/history/collection-display/images/brand/icons/favicon_32x32.png">
+  
+  <script type="module" crossorigin src="/truemark/studio/history/collection-display/assets/collection-CrHTG8RB.js"></script>
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/collection-display/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/collection-display/assets/core-CsE7T8d1.js">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/collection-display/assets/live-client-Io3J3EE7.js">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/collection-display/assets/shop-0mkYDX9M.js">
+  <link rel="stylesheet" crossorigin href="/truemark/studio/history/collection-display/assets/core-DzvMk3H3.css">
+  <link rel="stylesheet" crossorigin href="/truemark/studio/history/collection-display/assets/shop-CBFF79wB.css">
+  <link rel="stylesheet" crossorigin href="/truemark/studio/history/collection-display/assets/collection-TxZRGVm0.css">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/collection-display/assets/shop-0mkYDX9M.js">
+  <link rel="preload" as="style" crossorigin href="/truemark/studio/history/collection-display/assets/shop-CBFF79wB.css">
+  <link rel="modulepreload" crossorigin href="/truemark/studio/history/collection-display/assets/index-7y0X-Hg9.js">
+  <link rel="preload" as="style" crossorigin href="/truemark/studio/history/collection-display/assets/review-CbngnnjF.css">
+  <link rel="preload" as="style" crossorigin href="/truemark/studio/history/collection-display/assets/review-CNv_6-ed.css">
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+  <header class="lab-bar">
+    <a class="lab-back" href="/truemark/studio/history/collection-display/index.html#/" aria-label="Back to client walkthrough">← <span>Walkthrough</span></a>
+    <span class="lab-title">A continuous room <small>Landing study · local only</small></span>
+    <label class="sr" for="direction">Design direction</label>
+    <select id="direction"><option value="collection">Collection display</option><optgroup label="Earlier studies · not selected"><option value="studio">Studio portraits · rejected</option><option value="open">Open collection</option><option value="material">Material gallery</option></optgroup><option value="custom" disabled>Custom direction</option></select>
+    <button id="before" aria-pressed="false">Compare original</button>
+    <button id="tune" aria-haspopup="dialog">Adjust design</button>
+    <button id="focus" aria-label="Hide lab controls">↗</button>
+  </header>
+  <nav class="lab-nav" aria-label="Preview controls">
+    <div class="chapter-jumps" aria-label="Jump to a section"><button data-jump="hero">Hero</button><button data-jump="passage">The transition</button><button data-jump="classes">Compound classes</button></div>
+    <span id="state" role="status">Loading the local storefront…</span>
+    <label for="viewport">Viewport</label><select id="viewport"><option value="fit">Available width</option><option value="1440">1440 px desktop</option><option value="390">390 px phone</option></select>
+  </nav>
+  <main id="preview"><iframe id="landing-frame" title="TrueMark landing design prototype"></iframe></main>
+  <button id="show-controls" hidden>Show design controls ↙</button>
+  <p id="fatal" role="alert" hidden></p>
+  <dialog id="settings" aria-labelledby="settings-title">
+    <header class="dialog-head"><div><small>TrueMark / Landing continuity</small><h1 id="settings-title">The collection, in one room.</h1></div><button id="close-settings" aria-label="Close design controls">✕</button></header>
+    <p class="intro">A single display beside the eight-class index. Select a class, then explore its compounds in the same photographic setting. The hero’s room carries through the scroll transition.</p>
+    <div class="control-grid">
+      <div><label for="passage">Scroll transition</label><select id="passage"><option value="dolly">Move through the room</option><option value="soft">Gentle passage</option></select></div>
+      <div><label for="cards">Collection layout</label><select id="cards"><option value="collection">Single display & class index</option><optgroup label="Earlier studies"><option value="studio">Studio portraits · rejected</option><option value="open">Open collection</option><option value="material">Material gallery</option></optgroup></select></div>
+    </div>
+    <label for="scrub">Preview the passage <output id="scrub-value">0%</output></label><input id="scrub" type="range" min="0" max="100" step="1" value="0">
+    <label for="depth">Camera travel <output id="depth-value"></output></label><input id="depth" type="range" min="1.6" max="3.2" step="0.1">
+    <label for="mist">Mist carried into the catalog <output id="mist-value"></output></label><input id="mist" type="range" min="0" max="70" step="5">
+    <label for="size">Vial scale <output id="size-value"></output></label><input id="size" type="range" min="85" max="115" step="5">
+    <label class="check"><input id="still" type="checkbox"> Still preview (also respects your system’s reduced-motion setting)</label>
+    <details class="source-notes"><summary>Design notes & earlier studies</summary><p><b>Collection display:</b> eight classes remain visible as an index. One large, shared photographic display replaces the repeated tiled rooms. Selecting a class changes the featured vial; compound selectors and catalog links remain explicit. On a phone, the display opens under the selected class.</p><p>The supplied product images and labels are unchanged. The single-plinth room is an existing local photograph, feathered into the continuous background.</p><p><b>Earlier studies:</b> Studio portraits was rejected by Riley. Open collection and Material gallery were never selected. They remain available only for comparison and for restoring earlier saved variations.</p><button id="restore-previous" hidden>Restore previous working settings</button><p>This remains a local experiment. No direction has been integrated into the storefront.</p></details>
+    <form id="save-form"><label for="variation-name">Save a variation</label><div class="save-row"><input id="variation-name" required maxlength="80" placeholder="Name this direction"><button>Save</button></div></form>
+    <div id="saved" aria-label="Saved design variations"></div>
+    <div class="actions"><button id="reset">Reset design</button><button id="export">Export settings</button></div>
+    <details id="brief-details"><summary>Design brief</summary><textarea id="brief" rows="9" readonly aria-label="Landing design brief"></textarea><button id="copy">Copy brief</button></details>
+    <p id="feedback" role="status" aria-live="polite"></p><p class="fine">Saved only in this browser at this local address. Export a portable copy to keep your choice elsewhere.</p>
+  </dialog>
+</body>
+</html>

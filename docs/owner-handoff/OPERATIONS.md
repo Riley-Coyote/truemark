@@ -64,6 +64,6 @@ Current function names: `assistant`, `messages`, `payments`, `shipping`, `upload
 
 ## Independent daily work
 
-The client tells Codex what they want, reviews examples and authorizes changes/releases. Codex edits, runs checks, presents the preview and records decisions. No installed Riley-specific skill or continuing access to Riley's computer is required for the storefront/platform source. The native Ghost app is optional; the archived Studio and original asset library have separate delivery/rebuild requirements in ACCESS.md.
+The client tells Codex what they want, reviews examples and authorizes changes/releases. Codex edits, runs checks, presents the preview and records decisions. No installed Riley-specific skill or continuing access to Riley's computer is required for the storefront/platform source. The editable Studio and curated collection also run from this checkout: see [STUDIO.md](../../STUDIO.md). The native Ghost app and broader original recovery archive remain optional separate deliveries in ACCESS.md.
 
 References: [Codex browser](https://learn.chatgpt.com/docs/browser), [Codex voice](https://learn.chatgpt.com/docs/features/voice). These features can vary by account/version; verify availability during setup.

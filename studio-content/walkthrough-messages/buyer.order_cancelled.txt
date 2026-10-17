@@ -1,0 +1,13 @@
+Your order is cancelled.
+
+Order TM-10500 won't ship. We've refunded $12.00 to the card you paid with. It appears once your bank processes it.
+
+Shop again
+
+https://fixture.test/live/#/products
+
+You receive this because you placed an order with your TrueMark research account.
+
+For research use only. Not for human consumption.
+
+TrueMark BioLabs

@@ -13,6 +13,7 @@ const selected = [
   'docs/platform/COMMAND-CENTER-IMPLEMENTATION-PLAN.md', 'docs/platform/SHIPPING-WORKFLOW-UPDATE.md',
   'docs/platform/COMMAND-CENTER-COVERAGE.md', 'docs/platform/CONNECTED-PROGRAMS.md',
   'docs/handoff/DECISIONS.md', 'design-lab/command',
+  'design-lab/universe', 'design-lab/client-walkthrough', 'studio-content', 'STUDIO.md', '.gitattributes',
   '.env.example', 'index.html', 'package.json', 'package-lock.json', 'tsconfig.json', 'vite.config.ts',
 ];
 const excluded = new Set(['.git', '.temp', 'node_modules', 'dist', '.DS_Store', '__MACOSX']);
@@ -56,7 +57,7 @@ writeFileSync(join(destination, 'HANDOFF-MANIFEST.json'), JSON.stringify({
   sourceBranch: git('branch', '--show-current'),
   sourceState: 'Current filesystem snapshot; may include uncommitted selected files. No Git history included.',
   supabaseProject: 'gydihnfzmuqmbnykaihg',
-  omitted: ['Git history', 'credentials and local machine state', 'automatic deployment workflows', 'original photography/client documents', 'editable archived Studio', 'native Ghost', 'other historical design labs'],
+  omitted: ['Git history', 'credentials and local machine state', 'automatic deployment workflows', 'original archives beyond the curated Studio', 'native Ghost', 'other historical design labs'],
   files,
 }, null, 2) + '\n');
 console.log(JSON.stringify({ destination, files: files.length, bytes: files.reduce((sum, file) => sum + file.bytes, 0), deployed: false }, null, 2));

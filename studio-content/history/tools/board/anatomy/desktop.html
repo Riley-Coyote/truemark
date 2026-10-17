@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+<meta charset="utf-8">
+<script data-tm-history-storage="tools">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("tools");</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anatomy of a Vial · test 1 · desktop</title>
+<link rel="stylesheet" href="anatomy.css">
+</head>
+<body>
+<div class="wide-top">
+  <h1>Anatomy of a vial <span style="color:#a39cb2">· desktop</span></h1>
+  <p>Scroll anywhere. <a class="swap" href="index.html">Phone version</a></p>
+</div>
+<main class="stage-scroll" id="scroll" data-dir="desktop/" data-vw="1600" data-vh="900">
+  <div class="sticky">
+    <div class="screen" id="phone" aria-label="Desktop preview of the landing">
+      <canvas id="film" width="1280" height="720" aria-hidden="true"></canvas>
+      <svg class="lines" id="lines" viewBox="0 0 1600 900" aria-hidden="true">
+        <circle id="dot" r="7" cx="0" cy="0" />
+        <line id="lead" x1="0" y1="0" x2="0" y2="0" />
+      </svg>
+
+      <header class="chrome">
+        <span class="logo"><i></i>TRUEMARK</span>
+        <span class="links"><span>Products</span><span>Verify</span><span>Quality</span><span>Handling</span><span>About</span><span>Contact</span></span>
+      </header>
+
+      <section class="beat hero" data-from="0" data-to="0.075">
+        <span class="chip">Lot-level traceability</span>
+        <h2>True research.<br>True precision.<br>Verified<em>.</em></h2>
+      </section>
+      <div class="beat cue" data-from="0" data-to="0.05"><span></span>Scroll to follow one vial</div>
+
+      <section class="beat low" data-from="0.13" data-to="0.24">
+        <p class="eyebrow">Retatrutide · 10 mg</p>
+        <h3>Follow one vial.</h3>
+      </section>
+
+      <section class="beat low" data-from="0.25" data-to="0.33">
+        <p class="eyebrow">One vial</p>
+        <h3>It carries its own record.</h3>
+        <p>Everything that ties it to its lab results is printed on it.</p>
+      </section>
+
+      <section class="beat low" data-from="0.345" data-to="0.43" data-lead="lot">
+        <p class="eyebrow">The lot number</p>
+        <h3 class="lot">TM-RET10-2609-01</h3>
+        <p>Printed on every vial. It ties this vial to one tested batch.</p>
+      </section>
+
+      <section class="beat low" data-from="0.47" data-to="0.56" data-lead="qr">
+        <p class="eyebrow">The QR code</p>
+        <h3>Scan it, and this lot's record opens.</h3>
+        <p>No account needed.</p>
+      </section>
+
+      <section class="beat cert" data-from="0.61" data-to="0.725">
+        <div class="card">
+          <div class="cardhead"><span>Certificate of Analysis</span><b>Approved</b></div>
+          <dl>
+            <div><dt>Lot</dt><dd>TM-RET10-2609-01</dd></div>
+            <div><dt>Testing laboratory</dt><dd>KMD Analytical</dd></div>
+            <div><dt>Purity (HPLC)</dt><dd>99.68%</dd></div>
+            <div><dt>Identity</dt><dd>Conforms</dd></div>
+            <div><dt>Content per vial</dt><dd>11.59 mg <small>115.9% of the 10 mg label claim</small></dd></div>
+            <div><dt>Test date</dt><dd>01 Oct 2026</dd></div>
+          </dl>
+          <svg class="trace" viewBox="0 0 300 64" aria-hidden="true"><path id="trace" d="" /></svg>
+          <p class="tracecap">HPLC · main peak at 7.710 min</p>
+        </div>
+      </section>
+
+
+      <section class="beat doc" data-from="0.735" data-to="0.855">
+        <p class="eyebrow">KMD Analytical · certificate TB-20260924-TRNF-01</p>
+        <h3>The source, in full.</h3>
+        <figure class="paper"><img src="coa.jpg" alt="The full Certificate of Analysis from KMD Analytical for lot TM-RET10-2609-01: chromatographic purity 99.68%, content per vial 11.59 mg, retention time 7.710 minutes." /></figure>
+        <p class="doclinks"><span>Read the full certificate</span><span>Verify with KMD Analytical ↗</span></p>
+      </section>
+
+      <section class="beat low end" data-from="0.88" data-to="1.01">
+        <h3>Look up any lot.</h3>
+        <div class="lookup"><span>TM-RET10-2609-01</span><b>Look up</b></div>
+        <a class="catalog">View catalog</a>
+      </section>
+
+      <div class="loading" id="loading">Loading the room…</div>
+    </div>
+  </div>
+</main>
+<ol id="beatlist" hidden></ol>
+<script src="anatomy.js"></script>
+</body>
+</html>

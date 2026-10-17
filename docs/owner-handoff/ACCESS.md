@@ -54,8 +54,8 @@ Keep the current public repository's history separate from Riley's private devel
 
 These are outstanding delivery items, not hidden dependencies for the storefront's normal `npm run build`:
 
-- Editable Studio: `design-lab/universe/`, its resources, and the pinned compiled release. Historical reconstruction scripts depend on older Git refs/worktrees; document or replace that dependency before claiming a full Studio rebuild works on the client's machine.
-- Original image library: `design-photography/` with INDEX/manifest/relocation maps; current website assets are already in `public/`. This library is intentionally ignored by Git. Transfer it privately as a separate asset package.
+- **Studio delivered:** editable `design-lab/universe/` and all curated release content in `studio-content/`. Follow [STUDIO.md](../../STUDIO.md). The local build uses committed historical snapshots, with no private Git refs or local servers. Original source for every historical branch is not included.
+- **Studio imagery delivered:** all 289 catalog photographs and the published brand assets are in `studio-content/`, with original URL-to-file mapping in `asset-map.json`. The broader original `design-photography/` working collection and its recovery indexes remain separate; transfer those privately if needed. Current website assets are in `public/`.
 - Client originals: approved artwork and certificates under `docs/client-documents/`, delivered privately with their provenance. Do not publish the entire private evidence archive.
 - Native Ghost: `agent/` source, resources, tests and packaging instructions, excluding build artifacts, local accounts and runtime memory. Native Codex is the recommended immediate workflow.
 
@@ -72,7 +72,8 @@ If the client wants every historical exploration, arrange a private archival del
 - [ ] Client authorizes a small change; their Codex builds, previews and commits it.
 - [ ] Deployment and rollback succeed through client-controlled accounts.
 - [ ] Domain, email, ShipStation, payments and AI provider ownership are recorded, including unresolved integrations.
-- [ ] Separate Studio/assets/Ghost deliveries are completed or explicitly deferred by the client.
+- [x] Curated Studio content and editable shell delivered in the repository; validate startup on Mason’s machine.
+- [ ] Broader original archives and optional Ghost source delivered or explicitly deferred by the client.
 - [ ] After access is proven, the owner decides whether to remove Riley's membership and rotate shared provider credentials.
 
 Official setup references: [Supabase MCP](https://supabase.com/docs/guides/ai-tools/mcp), [project transfer](https://supabase.com/docs/guides/platform/project-transfer), [organization roles](https://supabase.com/docs/guides/platform/access-control), [GitHub repository transfers](https://docs.github.com/en/repositories/creating-and-managing-repositories/transferring-a-repository), [Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp).

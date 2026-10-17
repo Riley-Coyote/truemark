@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+    <meta charset="UTF-8" />
+<script data-tm-history-storage="air">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("air");</script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ece4f6" />
+    <title>TrueMark BioLabs — The Shape of Air</title>
+    <link rel="preload" href="/truemark/studio/history/air/air/plate-phone.jpg" as="image" media="(max-aspect-ratio: 21/20)" />
+    <link rel="preload" href="/truemark/studio/history/air/air/air-phone.jpg" as="image" media="(max-aspect-ratio: 21/20)" />
+    <link rel="preload" href="/truemark/studio/history/air/air/plate-desk.jpg" as="image" media="(min-aspect-ratio: 21/20)" />
+    <link rel="preload" href="/truemark/studio/history/air/air/air-desk.jpg" as="image" media="(min-aspect-ratio: 21/20)" />
+    <link rel="preload" href="/truemark/studio/history/air/air/vials/retatrutide-10-mg.png" as="image" />
+    <script type="module" crossorigin src="/truemark/studio/history/air/assets/air-DsdWrMov.js"></script>
+    <link rel="modulepreload" crossorigin href="/truemark/studio/history/air/assets/modulepreload-polyfill-B5Qt9EMX.js">
+    <link rel="stylesheet" crossorigin href="/truemark/studio/history/air/assets/air-B82spJ4B.css">
+  </head>
+  <body>
+    <p class="air-notice">Research use only · Not for human consumption</p>
+    <header class="air-head">
+      <a href="./" aria-label="TrueMark BioLabs, home"><img src="/truemark/studio/history/air/images/brand/logo.svg" alt="TrueMark BioLabs" width="132" height="30" /></a>
+      <a class="air-link" href="./#/products">View catalog</a>
+    </header>
+
+    <div class="air-hems" aria-hidden="true"><canvas class="air-hem"></canvas><canvas class="air-hem"></canvas></div>
+    <canvas id="air" aria-hidden="true"></canvas>
+
+    <main class="air-stage">
+      <svg class="leader" aria-hidden="true"><line /><circle class="leader-at" r="3.5" /><circle class="leader-from" r="2" /></svg>
+      <section class="beat beat-hero" data-beat="-1 -0.5 0.45 0.85" aria-labelledby="hero-title">
+        <p class="eyebrow"><span class="dot" aria-hidden="true"></span>Lot-level traceability</p>
+        <h1 id="hero-title" class="title">True research.<br />True precision.<br />Verified<span class="dot" aria-hidden="true"></span></h1>
+        <div class="air-cta">
+          <a href="./#/products">View catalog</a>
+          <a href="./#/verify">Verify a lot</a>
+        </div>
+      </section>
+
+      <section class="beat caption" data-beat="1.2 1.7 2.35 2.6">
+        <p class="k">One vial, read closely</p>
+        <p class="v">Every vial carries its own record.</p>
+        <p class="note">Research compounds supplied as lyophilized powder, independently tested on receipt, quarantined until release, and traceable from the vial in your hand back to the source batch.</p>
+      </section>
+
+      <section class="beat caption" data-beat="2.8 3.05 3.5 3.75" data-mark="compound">
+        <p class="k">Compound</p>
+        <p class="v">Retatrutide, 10 mg</p>
+        <p class="note">Research peptide, supplied as lyophilized powder.</p>
+      </section>
+
+      <section class="beat caption" data-beat="3.95 4.15 4.6 4.85" data-mark="lot">
+        <p class="k">Lot</p>
+        <p class="v mono">TM-RET10-2609-01</p>
+        <p class="note">A lot number links a vial to its batch documentation.</p>
+      </section>
+
+      <section class="beat caption" data-beat="5.05 5.25 5.8 6.1" data-mark="qr">
+        <p class="k">QR code</p>
+        <p class="v">The code opens Verify.</p>
+        <p class="note">The number opens the Certificate of Analysis for that batch. No account required.</p>
+      </section>
+
+      <section class="beat trail" data-beat="7.0 7.3 9.0 9.3" aria-labelledby="trail-title">
+        <p class="eyebrow">One lot, end to end</p>
+        <h2 id="trail-title" class="trail-title">Every vial has a paper trail.<br /><span>Here&rsquo;s one.</span></h2>
+        <p class="trail-lot"><span class="mono">TM-RET10-2609-01</span> · Retatrutide · 10 mg</p>
+        <ol class="trail-rail">
+          <li style="--i: 0"><span class="when">Done</span><span class="step">Received</span><span class="what">Batch logged</span></li>
+          <li style="--i: 1"><span class="when">Done</span><span class="step">Quarantined</span><span class="what">Held at &minus;20&nbsp;&deg;C</span></li>
+          <li style="--i: 2"><span class="when">Done</span><span class="step">Sampled</span><span class="what">Sent to laboratory</span></li>
+          <li style="--i: 3"><time class="when" datetime="2026-10-01">01 Oct</time><span class="step">Tested</span><span class="what">HPLC · MS</span></li>
+          <li style="--i: 4"><time class="when" datetime="2026-10-01">01 Oct</time><span class="step">Released</span><span class="what">Certificate published</span></li>
+          <li style="--i: 5"><span class="when">Now</span><span class="step">Shipping</span><span class="what">Cold chain</span></li>
+        </ol>
+        <a class="trail-link" href="./#/verify?lot=TM-RET10-2609-01">Read this lot&rsquo;s certificate</a>
+      </section>
+
+      <section class="beat caption" data-beat="9.65 9.85 10.15 10.3">
+        <p class="k">Certificate of Analysis</p>
+        <p class="v">Here is that lot&rsquo;s certificate.</p>
+        <p class="note">Issued 01 Oct 2026 by KMD Analytical, an independent testing laboratory.</p>
+      </section>
+
+      <section class="beat caption" data-beat="10.45 10.6 10.9 11.05">
+        <p class="k">Lot</p>
+        <p class="v mono">TM-RET10-2609-01</p>
+        <p class="note">The same number printed on the vial.</p>
+      </section>
+
+      <section class="beat caption" data-beat="11.2 11.35 11.65 11.8">
+        <p class="k">Chromatographic purity</p>
+        <p class="v mono">99.68%</p>
+        <p class="note">Of total peak area, by HPLC. Specification &ge;&nbsp;95.0%.</p>
+      </section>
+
+      <section class="beat caption" data-beat="11.9 12.05 12.35 12.5">
+        <p class="k">Content per vial</p>
+        <p class="v mono">11.59 mg</p>
+        <p class="note">115.9% of the 10&nbsp;mg label claim. Specification &ge;&nbsp;90%.</p>
+      </section>
+
+      <section class="beat caption" data-beat="12.6 12.75 13.05 13.2">
+        <p class="k">Retention time</p>
+        <p class="v mono">7.710 min</p>
+        <p class="note">The main peak. Identity conforms: retention time and UV against a reference.</p>
+      </section>
+
+      <section class="beat caption" data-beat="13.4 13.55 13.9 14.1">
+        <p class="k">HPLC chromatogram &middot; 214&nbsp;nm</p>
+        <p class="v">The main peak, at 7.710 minutes.</p>
+        <p class="note">Purity is how much of the detected material is the target peptide, rather than impurities.</p>
+      </section>
+
+      <section class="beat caption" data-beat="14.55 14.75 15.3 15.45" aria-labelledby="catalog-title">
+        <p class="k">Catalog</p>
+        <h2 id="catalog-title" class="v">Organized by compound class</h2>
+        <p class="note">Eight classes, each with full specification data &mdash; CAS number, molecular formula and weight, sequence, purity and identity method, solubility and storage.</p>
+        <a class="caption-link" href="./#/products">View catalog</a>
+      </section>
+
+      <section class="beat caption" data-class="0" aria-labelledby="class-0">
+        <p class="k">Class 01 <span class="of">/ 08</span></p>
+        <h3 id="class-0" class="v">Metabolic peptides</h3>
+        <p class="note">Retatrutide · Tirzepatide · Semaglutide · Cagrilintide</p>
+        <a class="caption-link" href="./#/products?class=metabolic-peptides">View metabolic peptides</a>
+      </section>
+
+      <section class="beat caption" data-class="1" aria-labelledby="class-1">
+        <p class="k">Class 02 <span class="of">/ 08</span></p>
+        <h3 id="class-1" class="v">Peptide fragments</h3>
+        <p class="note">BPC-157 · BPC-157 / TB-500 · KPV</p>
+        <a class="caption-link" href="./#/products?class=peptide-fragments">View peptide fragments</a>
+      </section>
+
+      <section class="beat caption" data-class="2" aria-labelledby="class-2">
+        <p class="k">Class 03 <span class="of">/ 08</span></p>
+        <h3 id="class-2" class="v">Copper peptides</h3>
+        <p class="note">GHK-Cu · GLOW</p>
+        <a class="caption-link" href="./#/products?class=copper-peptides">View copper peptides</a>
+      </section>
+
+      <section class="beat caption" data-class="3" aria-labelledby="class-3">
+        <p class="k">Class 04 <span class="of">/ 08</span></p>
+        <h3 id="class-3" class="v">Secretagogue peptides</h3>
+        <p class="note">Tesamorelin · CJC (No DAC) / Ipamorelin</p>
+        <a class="caption-link" href="./#/products?class=secretagogue-peptides">View secretagogue peptides</a>
+      </section>
+
+      <section class="beat caption" data-class="4" aria-labelledby="class-4">
+        <p class="k">Class 05 <span class="of">/ 08</span></p>
+        <h3 id="class-4" class="v">Mitochondrial peptides</h3>
+        <p class="note">MOTS-C</p>
+        <a class="caption-link" href="./#/products?class=mitochondrial-peptides">View mitochondrial peptides</a>
+      </section>
+
+      <section class="beat caption" data-class="5" aria-labelledby="class-5">
+        <p class="k">Class 06 <span class="of">/ 08</span></p>
+        <h3 id="class-5" class="v">Coenzymes &amp; cofactors</h3>
+        <p class="note">NAD+</p>
+        <a class="caption-link" href="./#/products?class=coenzymes-cofactors">View coenzymes &amp; cofactors</a>
+      </section>
+
+      <section class="beat caption" data-class="6" aria-labelledby="class-6">
+        <p class="k">Class 07 <span class="of">/ 08</span></p>
+        <h3 id="class-6" class="v">Neuropeptides</h3>
+        <p class="note">Semax · Selank</p>
+        <a class="caption-link" href="./#/products?class=neuropeptides">View neuropeptides</a>
+      </section>
+
+      <section class="beat caption" data-class="7" aria-labelledby="class-7">
+        <p class="k">Class 08 <span class="of">/ 08</span></p>
+        <h3 id="class-7" class="v">Melanocortin analogs</h3>
+        <p class="note">Melanotan II</p>
+        <a class="caption-link" href="./#/products?class=melanocortin-analogs">View melanocortin analogs</a>
+      </section>
+    </main>
+
+    <div class="air-scroll" aria-hidden="true"></div>
+
+    <div class="air-flow">
+      <section class="flow" aria-labelledby="verify-title">
+        <div class="flow-head">
+          <p class="eyebrow">Verification</p>
+          <h2 id="verify-title" class="flow-title">Enter a lot number.<br /><span>Read the certificate.</span></h2>
+        </div>
+        <div class="flow-body">
+          <p class="flow-note">Every vial carries a QR code and a printed lot number. The code opens Verify; the number opens the Certificate of Analysis for that batch &mdash; purity, identity, endotoxin, sterility, testing laboratory, release date. No account required.</p>
+          <form class="lookup" role="search" data-lookup>
+            <label class="sr-only" for="lookup-lot">Lot number</label>
+            <input id="lookup-lot" name="lot" placeholder="TM-RET10-2609-01" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+            <button type="submit">Look up</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="flow" aria-labelledby="supply-title">
+        <div class="flow-head">
+          <p class="eyebrow">Who we supply</p>
+          <h2 id="supply-title" class="flow-title">Laboratory and<br />institutional buyers</h2>
+          <p class="flow-note">Accounts are opened to verified research organizations.</p>
+        </div>
+        <ul class="flow-list">
+          <li>Educational institutions</li>
+          <li>Hospitals and medical institutions</li>
+          <li>Pharmaceutical and biotech companies</li>
+          <li>Government laboratories</li>
+          <li>Private research organizations</li>
+          <li>Contract research organizations</li>
+        </ul>
+      </section>
+
+      <ul class="flow flow-trust" aria-label="Standards">
+        <li><strong>Research use only</strong><span>Supplied for laboratory research applications.</span></li>
+        <li><strong>Not for human use</strong><span>Not for human or veterinary administration.</span></li>
+        <li><strong>Independently tested</strong><span>Every lot tested on receipt at a contracted laboratory.</span></li>
+        <li><strong>Cold chain</strong><span>Temperature-controlled storage, and transit when applicable.</span></li>
+      </ul>
+
+      <section class="flow" aria-labelledby="questions-title">
+        <div class="flow-head">
+          <h2 id="questions-title" class="flow-title">Common questions</h2>
+          <p class="flow-note">Chemistry, storage, and documentation. Everything else is on the resources page.</p>
+          <a class="flow-link" href="./#/research-blog">Read the full resources hub</a>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Why does the material arrive as a dry powder?</summary>
+            <p>Lyophilization removes water from a frozen solution under vacuum, leaving a dry cake. Peptide bonds hydrolyze slowly in water and faster at room temperature; removing the water largely stops that. The dry form also stores for years at −20 °C and ships with temperature control when applicable.</p>
+          </details>
+          <details>
+            <summary>Why doesn’t the vial weight match the certificate?</summary>
+            <p>Fill weight is gross. Lyophilized peptides carry a counterion, usually acetate, plus residual water, so net peptide content typically runs 80 to 90 percent of the labeled weight. The certificate reports both figures. Compare net content, not label weight.</p>
+          </details>
+          <details>
+            <summary>How is the material stored, and what changes once it’s in solution?</summary>
+            <p>Sealed vials are held at −20 °C, protected from light. Once dissolved, hydrolysis and oxidation resume and stability is measured in weeks under refrigeration rather than years frozen. Solution stability is compound-specific and stated per product.</p>
+          </details>
+          <details>
+            <summary>What is a retest date?</summary>
+            <p>Not an expiry. It is the date by which material still in storage should be re-analyzed to confirm it meets its original specification. Correctly stored lyophilized peptides frequently pass well beyond it. Nothing becomes unusable on that date. It becomes unverified.</p>
+          </details>
+          <details>
+            <summary>What is the lot number for?</summary>
+            <p>Every vial carries a lot number, printed beside a QR code that opens the Verify page. Entering the number there returns the certificate for that specific batch. A certificate that names no lot describes no particular vial.</p>
+          </details>
+          <details>
+            <summary>What does research use only mean?</summary>
+            <p>A legal classification, not a comment on quality. These materials are supplied for in vitro laboratory work. They are not drugs, are not approved for use in humans or animals, and are not produced to pharmaceutical manufacturing standards.</p>
+          </details>
+        </div>
+      </section>
+
+      <footer class="flow-foot">
+        <div class="foot-lead">
+          <a href="./" aria-label="TrueMark BioLabs, home"><img src="/truemark/studio/history/air/images/brand/logo.svg" alt="TrueMark BioLabs" width="132" height="30" /></a>
+          <p>Research compounds supplied for laboratory use,<br /><span>with lot-level traceability.</span></p>
+        </div>
+        <nav class="foot-col" aria-label="Catalog">
+          <p class="foot-title">Catalog</p>
+          <a href="./#/products">All compounds</a>
+          <a href="./#/products?class=peptide-fragments">Peptide fragments</a>
+          <a href="./#/products?class=neuropeptides">Neuropeptides</a>
+          <a href="./#/products?class=lab-supplies">Lab supplies</a>
+        </nav>
+        <nav class="foot-col" aria-label="Verification">
+          <p class="foot-title">Verification</p>
+          <a href="./#/verify">Lot lookup</a>
+          <a href="./#/quality#specification">Testing standards</a>
+          <a href="./#/research-blog/how-to-read-a-certificate-of-analysis">Reading a CoA</a>
+        </nav>
+        <nav class="foot-col" aria-label="Handling">
+          <p class="foot-title">Handling</p>
+          <a href="./#/handling#storage">Storage</a>
+          <a href="./#/handling#shipping">Shipping and cold chain</a>
+        </nav>
+        <nav class="foot-col" aria-label="Company">
+          <p class="foot-title">Company</p>
+          <a href="./#/about">About</a>
+          <a href="./#/quality">Quality</a>
+          <a href="./#/contact">Contact</a>
+          <a href="./#/terms">Terms</a>
+          <a href="./#/privacy-policy">Privacy</a>
+          <a href="./#/refund_returns">Returns Policy</a>
+          <a href="./#/shipping-policy">Shipping Policy</a>
+        </nav>
+        <div class="foot-legal">
+          <p><strong>Research use only.</strong> All products supplied by TrueMark BioLabs are intended solely for laboratory research applications. They are <strong>not for human or veterinary use</strong> and are not intended to diagnose, treat, cure, or prevent any disease. No product listed here has been approved by the FDA for any therapeutic purpose. Nothing on this site constitutes medical advice. Purchasers are responsible for ensuring compliance with all applicable laws and regulations in their jurisdiction, and for the safe handling, storage, and disposal of these materials.</p>
+          <address>TrueMark Supply Group LLC DBA TrueMark BioLabs<br />Mailing address: 5900&nbsp;Balcones&nbsp;Drive, Suite&nbsp;#34195, Austin,&nbsp;TX&nbsp;78731</address>
+          <p>&copy; 2026 TrueMark BioLabs &middot; Research use only &middot; Not for human consumption</p>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

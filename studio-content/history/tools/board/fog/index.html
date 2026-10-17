@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head><script data-studio-bootstrap>(function(){var b="/truemark/studio/",v="e86e918ca64ce47e";if(!('serviceWorker'in navigator)||!navigator.serviceWorker.controller||new URL(navigator.serviceWorker.controller.scriptURL).searchParams.get('v')!==v){location.replace(b+'start.html?v='+v+'&next='+encodeURIComponent(location.pathname+location.search+location.hash));}})();</script>
+<meta charset="utf-8" />
+<script data-tm-history-storage="tools">(function installHistoryStorage(capsule) {
+  const prefix = "tm-history:" + capsule + ":";
+  if (window.__TM_HISTORY_STORAGE__?.prefix === prefix) return;
+  const installed = {
+    capsule,
+    prefix,
+    localStorage: false,
+    sessionStorage: false,
+  };
+  for (const name of ["localStorage", "sessionStorage"]) {
+    try {
+      const storage = window[name];
+      const keys = () => {
+        const found = [];
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key !== null && key.startsWith(prefix))
+            found.push(key.slice(prefix.length));
+        }
+        return found;
+      };
+      const getItem = (key) => storage.getItem(prefix + String(key));
+      const setItem = (key, value) =>
+        storage.setItem(prefix + String(key), String(value));
+      const removeItem = (key) => storage.removeItem(prefix + String(key));
+      const api = {
+        getItem,
+        setItem,
+        removeItem,
+        clear: () => {
+          for (const key of keys()) removeItem(key);
+        },
+        key: (index) => keys()[Number(index) >>> 0] ?? null,
+      };
+      const target = Object.create(Object.getPrototypeOf(storage));
+      let facade;
+      facade = new Proxy(target, {
+        get(_target, property) {
+          if (property === "length") return keys().length;
+          if (
+            typeof property === "string" &&
+            Object.prototype.hasOwnProperty.call(api, property)
+          )
+            return api[property];
+          if (property === Symbol.toStringTag) return "Storage";
+          if (typeof property !== "string")
+            return Reflect.get(target, property, facade);
+          const value = getItem(property);
+          return value === null ? Reflect.get(target, property, facade) : value;
+        },
+        set(_target, property, value) {
+          if (typeof property === "string") {
+            setItem(property, value);
+            return true;
+          }
+          return Reflect.set(target, property, value);
+        },
+        deleteProperty(_target, property) {
+          if (typeof property === "string") {
+            removeItem(property);
+            return true;
+          }
+          return Reflect.deleteProperty(target, property);
+        },
+        has(_target, property) {
+          return (
+            property === "length" ||
+            Object.prototype.hasOwnProperty.call(api, property) ||
+            (typeof property === "string" && getItem(property) !== null) ||
+            Reflect.has(target, property)
+          );
+        },
+        ownKeys() {
+          return keys();
+        },
+        getOwnPropertyDescriptor(_target, property) {
+          if (typeof property === "string" && getItem(property) !== null)
+            return {
+              configurable: true,
+              enumerable: true,
+              writable: true,
+              value: getItem(property),
+            };
+          return undefined;
+        },
+      });
+      Object.defineProperty(window, name, {
+        configurable: true,
+        enumerable: true,
+        get: () => facade,
+      });
+      installed[name] = true;
+    } catch {
+      /* A browser that denies Storage keeps its normal unavailable state. */
+    }
+  }
+  Object.defineProperty(window, "__TM_HISTORY_STORAGE__", {
+    configurable: true,
+    value: Object.freeze(installed),
+  });
+})("tools");</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Floor mist study</title>
+<meta name="description" content="The opening's room, its five vials, and its floor mist: A is today's fog video, B the simulated mist." />
+<link rel="icon" href="data:," />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* The misty room's floor, sampled from its first frame (mist.css). */
+    --mist-floor: #e2d9f5;
+    /* Panel: ink on the room's own paper. */
+    --panel: rgba(247, 244, 253, 0.78);
+    --panel-line: rgba(36, 28, 66, 0.12);
+    --panel-line-strong: rgba(36, 28, 66, 0.5);
+    --ink: rgba(30, 23, 56, 0.9);
+    --ink-2: rgba(30, 23, 56, 0.62);
+    --ink-3: rgba(30, 23, 56, 0.42);
+    --fill: rgba(36, 28, 66, 0.05);
+    --fill-hover: rgba(36, 28, 66, 0.09);
+    --fill-on: rgba(36, 28, 66, 0.14);
+    --font: "Inter", system-ui, -apple-system, sans-serif;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --radius: 8px;
+    --dur: 160ms;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--mist-floor); }
+  body { font: 400 12px/1.4 var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; }
+
+  /* ---------- The opening, recreated (Rooms.tsx, rooms.css, mist.css) ---------- */
+  .stage { position: fixed; inset: 0; overflow: hidden; isolation: isolate; background: var(--mist-floor); }
+  .stage::after {
+    content: ""; position: absolute; inset: auto 0 0; z-index: 4; height: 6%;
+    background: linear-gradient(to bottom, transparent, var(--mist-floor)); pointer-events: none;
+  }
+  .plate { position: absolute; z-index: 0; transform: scale(1.015); }
+  .room { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; user-select: none; }
+  /* A: today's front mist, exactly as the opening composites it. */
+  .front-mist {
+    position: absolute; z-index: 0; left: -6%; bottom: -2%; width: 112%; height: 40%;
+    object-fit: cover; pointer-events: none; opacity: 0.5; mix-blend-mode: screen;
+    -webkit-mask-image: linear-gradient(to top, transparent 0%, #000 18%, rgba(0, 0, 0, 0.85) 40%, transparent 92%);
+    mask-image: linear-gradient(to top, transparent 0%, #000 18%, rgba(0, 0, 0, 0.85) 40%, transparent 92%);
+  }
+  /* B: the simulated mist, in the same layer: over the room, under the vials. */
+  .fog { position: absolute; z-index: 0; display: block; pointer-events: none; }
+  .stage:not([data-mode="a"]) .front-mist:not(.fallback),
+  .stage[data-mode="a"] .fog,
+  .front-mist[data-off],
+  .fog[data-off] { display: none; }
+
+  .vial {
+    position: absolute; z-index: 1; margin: 0; display: block;
+    left: calc(var(--seat-x) * 100%); top: calc(var(--seat-y) * 100%); height: calc(var(--vial-h) * 100%);
+    aspect-ratio: 578 / 1112; transform: translate(-50%, -100%);
+  }
+  .vial img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; user-select: none; }
+  .vial-air {
+    position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+    -webkit-mask: var(--mask) center / 100% 100% no-repeat; mask: var(--mask) center / 100% 100% no-repeat;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0.06) 7%, transparent 11%);
+  }
+  .vial-shadow {
+    position: absolute; left: 50%; bottom: 0; width: 92%; height: 6.5%; transform: translate(-50%, 46%);
+    background: radial-gradient(closest-side, rgba(40, 24, 78, 0.5), rgba(40, 24, 78, 0.2) 55%, transparent 100%);
+    filter: blur(1.5px); mix-blend-mode: multiply;
+  }
+  .vial-cast {
+    position: absolute; left: 46%; bottom: 0; width: 150%; height: 9%; transform-origin: 0 100%;
+    transform: translate(0, 38%) skewX(-52deg);
+    background: radial-gradient(closest-side, rgba(70, 48, 120, 0.2), transparent);
+    filter: blur(9px); mix-blend-mode: multiply;
+  }
+
+  /* ---------- The tuning panel: small, quiet, hideable (H) ---------- */
+  .panel {
+    position: fixed; z-index: 10; top: var(--space-4); right: var(--space-4); width: 248px;
+    padding: var(--space-3); border: 1px solid var(--panel-line); border-radius: var(--radius);
+    background: var(--panel); -webkit-backdrop-filter: blur(14px) saturate(1.1); backdrop-filter: blur(14px) saturate(1.1);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 8px 28px rgba(40, 24, 78, 0.08);
+    display: grid; gap: var(--space-3);
+  }
+  .panel[hidden] { display: none; }
+  .head { display: flex; align-items: center; gap: var(--space-2); }
+  .title { font-weight: 500; }
+  .fps { margin-left: auto; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  button { font: inherit; color: inherit; }
+  .btn {
+    height: 26px; padding: 0 var(--space-2); border: 1px solid var(--panel-line); border-radius: 6px;
+    background: var(--fill); cursor: pointer; outline: none;
+    transition: background-color var(--dur), border-color var(--dur);
+  }
+  .btn:hover { background: var(--fill-hover); }
+  .btn:active { background: var(--fill-on); }
+  .btn:focus-visible { border-color: var(--panel-line-strong); }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-1); }
+  .seg .btn[aria-checked="true"] { background: var(--fill-on); border-color: rgba(36, 28, 66, 0.24); font-weight: 500; }
+  .sliders { display: grid; gap: var(--space-2); }
+  .sliders[aria-disabled="true"] { opacity: 0.4; }
+  .slider { display: grid; grid-template-columns: 76px 1fr 32px; align-items: center; gap: var(--space-2); }
+  .slider span { color: var(--ink-2); }
+  .slider output { text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; margin: 0; background: transparent; cursor: pointer; outline: none; }
+  input[type="range"]::-webkit-slider-runnable-track { height: 2px; border-radius: 1px; background: var(--panel-line); }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 12px; height: 12px; margin-top: -5px; border-radius: 50%;
+    background: #f7f4fd; border: 1px solid rgba(36, 28, 66, 0.3); transition: border-color var(--dur);
+  }
+  input[type="range"]:hover::-webkit-slider-thumb { border-color: rgba(36, 28, 66, 0.45); }
+  input[type="range"]:focus-visible::-webkit-slider-thumb { border-color: var(--panel-line-strong); }
+  input[type="range"]:active::-webkit-slider-thumb { background: #ebe5fa; }
+  input[type="range"]:disabled { cursor: default; }
+  .check { display: flex; align-items: center; gap: var(--space-2); color: var(--ink-2); cursor: pointer; }
+  .check input { margin: 0; accent-color: #3d3366; }
+  .note { margin: 0; color: var(--ink-3); }
+  .note:empty { display: none; }
+  .show { position: fixed; z-index: 10; top: var(--space-4); right: var(--space-4); background: var(--panel); }
+  .show[hidden] { display: none; }
+  @media (max-width: 560px) {
+    .panel { top: auto; bottom: var(--space-3); right: var(--space-3); left: var(--space-3); width: auto; }
+    .show { top: auto; bottom: var(--space-3); right: var(--space-3); }
+  }
+</style>
+</head>
+<body>
+<main class="stage" id="stage" data-mode="b" aria-label="The opening's room">
+  <div class="plate" id="plate">
+    <video class="room" id="room" muted loop playsinline autoplay preload="auto" aria-hidden="true"></video>
+    <img class="room" id="room-still" alt="" aria-hidden="true" draggable="false" hidden />
+    <video class="front-mist" id="front-mist" muted loop playsinline autoplay preload="auto" aria-hidden="true"></video>
+    <canvas class="fog" id="fog" aria-hidden="true"></canvas>
+    <div id="vials"></div>
+  </div>
+</main>
+
+<aside class="panel" id="panel" aria-label="Mist study">
+  <div class="head">
+    <span class="title">Floor mist</span>
+    <span class="fps" id="fps" aria-live="off"></span>
+    <button class="btn" id="hide" type="button" title="Hide (H)">Hide</button>
+  </div>
+  <div class="seg" role="radiogroup" aria-label="Which mist">
+    <button class="btn" type="button" role="radio" aria-checked="false" data-mode="a" title="A">A · today</button>
+    <button class="btn" type="button" role="radio" aria-checked="true" data-mode="b" title="B">B · simulated</button>
+  </div>
+  <div class="sliders" id="sliders">
+    <label class="slider"><span>Density</span><input type="range" min="0" max="2" step="0.01" value="1" data-key="density" /><output>1.00</output></label>
+    <label class="slider"><span>Drift</span><input type="range" min="0" max="3" step="0.01" value="1" data-key="drift" /><output>1.00</output></label>
+    <label class="slider"><span>Turbulence</span><input type="range" min="0" max="2" step="0.01" value="1" data-key="turbulence" /><output>1.00</output></label>
+    <label class="slider"><span>Light</span><input type="range" min="0" max="2" step="0.01" value="1" data-key="light" /><output>1.00</output></label>
+    <label class="slider"><span>Pointer</span><input type="range" min="0" max="3" step="0.01" value="1" data-key="pointer" /><output>1.00</output></label>
+  </div>
+  <label class="check"><input type="checkbox" id="still" /> Reduced motion</label>
+  <p class="note" id="note"></p>
+</aside>
+<button class="btn show" id="show" type="button" hidden title="Show (H)">Tune</button>
+
+<script type="module">
+  import { createFog, fogTop, FOG_SCENES } from './fog.js';
+
+  /* The opening's rooms and seats (Rooms.tsx), and its framing (MistOpening.tsx). */
+  const media = (name) => `../media/${name}`;
+  const ROOMS = {
+    wide: {
+      w: 2560, h: 1430, video: media('open-misty.mp4'), poster: media('open-misty.jpg'), scene: FOG_SCENES.collection,
+      seats: [
+        { x: 0.2424, y: 0.71, h: 0.1792 },
+        { x: 0.3682, y: 0.6452, h: 0.1792 },
+        { x: 0.4978, y: 0.5986, h: 0.1792 },
+        { x: 0.6296, y: 0.6558, h: 0.1792 },
+        { x: 0.7576, y: 0.7268, h: 0.1792 },
+      ],
+    },
+    tall: {
+      w: 1080, h: 1934, video: media('open-phone-misty.mp4'), poster: media('open-phone-misty.jpg'), scene: FOG_SCENES.collectionTall,
+      seats: [
+        { x: 0.168, y: 0.6083, h: 0.1417 },
+        { x: 0.4963, y: 0.5714, h: 0.1417 },
+        { x: 0.8306, y: 0.6166, h: 0.1417 },
+      ],
+    },
+  };
+  /* The five opening vials, left to right: the cutout file is the product's image name. */
+  const VIALS = [
+    { file: 'ghk-cu-100-mg', name: 'GHK-Cu, 100 mg' },
+    { file: 'semax-10-mg', name: 'Semax, 10 mg' },
+    { file: 'nad-plus-500-mg', name: 'NAD+, 500 mg' },
+    { file: 'bpc-157-10-mg', name: 'BPC-157, 10 mg' },
+    { file: 'tesamorelin-10-mg', name: 'Tesamorelin, 10 mg' },
+  ];
+  const BAND = { x0: 0.08, x1: 0.92, focusY: 0.88 };
+  const TALL_FOCUS = { x: 0.5, y: 0.62 };
+
+  function coverBox(sw, sh, room, focus) {
+    const scale = Math.max(sw / room.w, sh / room.h);
+    const width = room.w * scale, height = room.h * scale;
+    return { left: (sw - width) * focus.x, top: (sh - height) * focus.y, width, height };
+  }
+  function bandBox(sw, sh, room, band) {
+    const scale = Math.max(sw / ((band.x1 - band.x0) * room.w), sh / room.h);
+    const width = room.w * scale, height = room.h * scale;
+    return { left: sw / 2 - ((band.x0 + band.x1) / 2) * width, top: (sh - height) * band.focusY, width, height };
+  }
+
+  const $ = (id) => document.getElementById(id);
+  const stage = $('stage'), plate = $('plate'), roomVideo = $('room'), roomStill = $('room-still');
+  const frontMist = $('front-mist'), vials = $('vials'), panel = $('panel'), note = $('note');
+  let canvas = $('fog');
+  frontMist.src = media('fog.mp4');
+
+  const params = new URLSearchParams(location.search);
+  const tallQuery = matchMedia('(max-aspect-ratio: 11/10)');
+  const phoneQuery = matchMedia('(max-width: 760px)');
+  const coarseQuery = matchMedia('(pointer: coarse)');
+  const reducedQuery = matchMedia('(prefers-reduced-motion: reduce)');
+
+  const state = {
+    mode: params.get('mode') === 'a' ? 'a' : 'b',
+    still: params.has('still') ? params.get('still') !== '0' : reducedQuery.matches,
+    tall: null,
+    phone: null,
+    fallback: null,
+    tune: { density: 1, drift: 1, turbulence: 1, light: 1, pointer: 1 },
+  };
+  for (const key of Object.keys(state.tune)) {
+    const value = Number(params.get(key));
+    if (params.has(key) && Number.isFinite(value)) state.tune[key] = value;
+  }
+  let fog = null;
+
+  /* ---------- building the room ---------- */
+  function buildRoom() {
+    const room = state.tall ? ROOMS.tall : ROOMS.wide;
+    roomVideo.poster = room.poster;
+    if (!roomVideo.src.endsWith(room.video.slice(2))) roomVideo.src = room.video;
+    roomStill.src = room.poster;
+    const chosen = state.tall ? VIALS.slice(1, 4) : VIALS;
+    vials.replaceChildren(...chosen.map((vial, i) => {
+      const seat = room.seats[i];
+      const lg = `../images/cutouts/${vial.file}.webp`;
+      const figure = document.createElement('figure');
+      figure.className = 'vial';
+      figure.style.cssText = `--seat-x:${seat.x};--seat-y:${seat.y};--vial-h:${seat.h};--mask:url("${new URL(lg, location.href).href}")`;
+      figure.innerHTML = `<span class="vial-shadow" aria-hidden="true"></span><span class="vial-cast" aria-hidden="true"></span>`
+        + `<img src="${lg}" srcset="../images/cutouts/${vial.file}-sm.webp 289w, ${lg} 578w" sizes="(max-width: 760px) 30vw, 18vw" alt="${vial.name}" draggable="false" />`
+        + `<span class="vial-air" aria-hidden="true"></span>`;
+      return figure;
+    }));
+  }
+
+  /* ---------- B: the simulated mist ---------- */
+  function startFog() {
+    stopFog();
+    state.fallback = null;
+    // A fresh canvas each time: a context can't be handed back once lost or destroyed.
+    const next = document.createElement('canvas');
+    next.className = 'fog';
+    next.id = 'fog';
+    next.setAttribute('aria-hidden', 'true');
+    canvas.replaceWith(next);
+    canvas = next;
+    layout();
+    const room = state.tall ? ROOMS.tall : ROOMS.wide;
+    const lowEnd = state.phone || coarseQuery.matches || params.get('q') === 'low';
+    fog = createFog(canvas, {
+      scene: room.scene,
+      region: regionFor(room),
+      quality: lowEnd ? 'low' : 'high',
+      interactive: !lowEnd,
+      still: state.still,
+      debug: params.get('debug'),
+      ...state.tune,
+      onFallback: (reason) => {
+        state.fallback = reason;
+        fog = null;
+        render();
+      },
+    });
+    render();
+  }
+  function stopFog() {
+    fog?.destroy();
+    fog = null;
+  }
+
+  /* ---------- layout: the plate framed as the site frames it, the mist's canvas over its visible floor ---------- */
+  let lastRegion = null;
+  function regionFor(room) {
+    const sw = stage.clientWidth, sh = stage.clientHeight;
+    const box = state.tall ? coverBox(sw, sh, room, TALL_FOCUS) : bandBox(sw, sh, room, BAND);
+    const clamp = (v) => Math.min(1, Math.max(0, v));
+    const y0 = fogTop(room.scene);
+    return {
+      box,
+      x0: clamp(-box.left / box.width),
+      x1: clamp((sw - box.left) / box.width),
+      y0,
+      y1: Math.max(y0 + 0.01, clamp((sh - box.top) / box.height)),
+    };
+  }
+  function layout() {
+    const room = state.tall ? ROOMS.tall : ROOMS.wide;
+    const r = regionFor(room);
+    Object.assign(plate.style, { left: `${r.box.left}px`, top: `${r.box.top}px`, width: `${r.box.width}px`, height: `${r.box.height}px` });
+    Object.assign(canvas.style, {
+      left: `${r.x0 * 100}%`, top: `${r.y0 * 100}%`, width: `${(r.x1 - r.x0) * 100}%`, height: `${(r.y1 - r.y0) * 100}%`,
+    });
+    const region = { x0: r.x0, y0: r.y0, x1: r.x1, y1: r.y1 };
+    if (fog && JSON.stringify(region) !== JSON.stringify(lastRegion)) fog.setRegion(region);
+    lastRegion = region;
+  }
+
+  /* ---------- what shows ---------- */
+  function render() {
+    stage.dataset.mode = state.mode;
+    // Reduced motion: the room is its first frame, held still; today's opening drops the front mist.
+    roomVideo.hidden = state.still;
+    roomStill.hidden = !state.still;
+    if (state.still) roomVideo.pause(); else roomVideo.play().catch(() => {});
+    // A on a phone, or with reduced motion: the site shows no front mist (FrontMist returns null).
+    const videoMist = state.mode === 'a' || Boolean(state.fallback);
+    const showVideo = videoMist && !state.still && !state.phone;
+    frontMist.toggleAttribute('data-off', !showVideo);
+    frontMist.classList.toggle('fallback', Boolean(state.fallback) && state.mode === 'b');
+    if (showVideo) frontMist.play().catch(() => {}); else frontMist.pause();
+    canvas.toggleAttribute('data-off', state.mode !== 'b' || Boolean(state.fallback));
+    if (fog) state.mode === 'b' ? fog.resume() : fog.pause();
+    for (const b of document.querySelectorAll('.seg .btn')) b.setAttribute('aria-checked', String(b.dataset.mode === state.mode));
+    const sliders = $('sliders');
+    const off = state.mode !== 'b' || !fog;
+    sliders.setAttribute('aria-disabled', String(off));
+    for (const input of sliders.querySelectorAll('input')) input.disabled = off;
+    $('still').checked = state.still;
+    const notes = [];
+    if (state.mode === 'a' && state.phone) notes.push('On a phone the opening shows no front mist; the room carries its own.');
+    if (state.mode === 'a' && state.still) notes.push('With reduced motion the opening drops the front mist.');
+    if (state.mode === 'b' && state.fallback) notes.push(`B fell back to the video (${state.fallback}).`);
+    if (state.mode === 'b' && fog && (state.phone || coarseQuery.matches)) notes.push('Phone: ambient only, lower resolution.');
+    note.textContent = notes.join(' ');
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    render();
+  }
+  function setStill(still) {
+    state.still = still;
+    if (fog) fog.setStill(still);
+    render();
+  }
+
+  /* ---------- the pointer, as a body in the air (never on touch) ---------- */
+  addEventListener('pointermove', (event) => {
+    if (event.pointerType === 'touch' || state.mode !== 'b' || !fog) return;
+    fog.setPointer(event.clientX, event.clientY);
+  }, { passive: true });
+  document.documentElement.addEventListener('pointerleave', () => fog?.releasePointer());
+  addEventListener('blur', () => fog?.releasePointer());
+
+  /* ---------- panel ---------- */
+  for (const b of document.querySelectorAll('.seg .btn')) b.addEventListener('click', () => setMode(b.dataset.mode));
+  for (const input of document.querySelectorAll('#sliders input')) {
+    const out = input.nextElementSibling;
+    input.value = state.tune[input.dataset.key];
+    out.textContent = Number(input.value).toFixed(2);
+    input.addEventListener('input', () => {
+      const value = Number(input.value);
+      out.textContent = value.toFixed(2);
+      state.tune[input.dataset.key] = value;
+      fog?.set({ [input.dataset.key]: value });
+    });
+  }
+  $('still').addEventListener('change', (event) => setStill(event.target.checked));
+  const togglePanel = (show = panel.hidden) => {
+    panel.hidden = !show;
+    $('show').hidden = show;
+  };
+  $('hide').addEventListener('click', () => togglePanel(false));
+  $('show').addEventListener('click', () => togglePanel(true));
+  addEventListener('keydown', (event) => {
+    if (event.metaKey || event.ctrlKey || event.altKey || event.target.matches?.('input[type="range"]')) return;
+    const key = event.key.toLowerCase();
+    if (key === 'a' || key === 'b') setMode(key);
+    else if (key === 'h') togglePanel();
+    else if (key === 'r') setStill(!state.still);
+  });
+  if (params.get('panel') === '0') togglePanel(false);
+
+  /* ---------- fps, quietly ---------- */
+  let frames = 0, since = performance.now();
+  (function tick(now) {
+    frames++;
+    if (now - since >= 1000) {
+      $('fps').textContent = state.still ? 'still' : `${Math.round((frames * 1000) / (now - since))} fps`;
+      frames = 0;
+      since = now;
+    }
+    requestAnimationFrame(tick);
+  })(performance.now());
+
+  /* ---------- shape changes rebuild; resizes re-frame ---------- */
+  function shape() {
+    const tall = tallQuery.matches, phone = phoneQuery.matches;
+    if (tall === state.tall && phone === state.phone) return false;
+    state.tall = tall;
+    state.phone = phone;
+    buildRoom();
+    startFog();
+    return true;
+  }
+  new ResizeObserver(() => { if (!shape()) layout(); }).observe(stage);
+  shape();
+
+  /* For scripted checks. */
+  window.fogStudy = {
+    setMode, setStill,
+    get fog() { return fog; },
+    get state() { return { ...state }; },
+    measure(ms = 5000) {
+      return new Promise((resolve) => {
+        const times = [];
+        const t0 = performance.now();
+        (function f(now) {
+          times.push(now);
+          if (now - t0 < ms) requestAnimationFrame(f);
+          else {
+            const gaps = times.slice(1).map((t, i) => t - times[i]).sort((a, b) => a - b);
+            resolve({
+              fps: Math.round(((times.length - 1) * 1000 / (times.at(-1) - times[0])) * 10) / 10,
+              p50: Math.round(gaps[gaps.length >> 1] * 100) / 100,
+              p95: Math.round(gaps[Math.floor(gaps.length * 0.95)] * 100) / 100,
+              worst: Math.round(gaps.at(-1) * 100) / 100,
+              frames: times.length - 1,
+            });
+          }
+        })(performance.now());
+      });
+    },
+  };
+</script>
+</body>
+</html>

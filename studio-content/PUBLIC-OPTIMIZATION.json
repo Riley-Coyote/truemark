@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "sourceBytes": 3083432558,
+  "outputBytes": 609924236,
+  "savedBytes": 2473508322,
+  "sourceFiles": 8847,
+  "outputFiles": 3178,
+  "aliasedBinaryPaths": 7621,
+  "uniqueOriginalBinaries": 1997,
+  "sharedBinaries": 1997,
+  "losslessWebExports": 141,
+  "originalPNGBytes": 607547825,
+  "losslessWebPBytes": 361615246,
+  "allExportPixelsVerified": true,
+  "allExportICCVerified": true,
+  "missingAliases": 0,
+  "sourceUntouched": true,
+  "requiresStudioScopedServiceWorker": true,
+  "publicFixtureGuards": 0
+}
