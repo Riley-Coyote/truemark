@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { X } from "lucide-react";
 import { usePresence } from "./motion";
-import { SheetSkirt, useScrollLock, useSheetDrag, useSheetFocus, useSheetLeaving, useVisibleViewport, viewportBox } from "./sheet";
+import { SheetSkirt, useFieldInView, useScrollLock, useSheetDrag, useSheetFocus, useSheetLeaving, useVisibleViewport, viewportBox } from "./sheet";
 
 /** The dialogs' layer (styles.css, .modal-backdrop); their strip of paper lies one beneath. */
 const MODAL_LAYER = 100;
@@ -52,6 +52,7 @@ function ModalSheet({
   const leaving = state === "leaving";
   useScrollLock();
   useSheetFocus(panel, onClose, field, leaving);
+  useFieldInView(panel, seen?.height);
   const drag = useSheetDrag(panel, onClose, (target) => Boolean(target.closest(".modal-grab, .modal-heading h2")));
   return (
     <>

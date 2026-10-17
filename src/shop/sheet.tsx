@@ -54,6 +54,26 @@ export const viewportBox = (seen: Seen | null, prefix: string): CSSProperties | 
   seen ? ({ [`--${prefix}-top`]: `${seen.top}px`, [`--${prefix}-height`]: `${seen.height}px` } as CSSProperties) : undefined;
 
 /**
+ * The field being typed in stays in view as the visible screen changes under it: the keyboard rising shortens the
+ * sheet, and a short bag turns to scroll as one from its top (checkout.css), which left a lower line's quantity below
+ * the keys. Only the sheet's own scroll moves, never the page, which would fight Safari (useScrollLock).
+ */
+export function useFieldInView(panel: RefObject<HTMLElement | null>, height: number | undefined) {
+  useLayoutEffect(() => {
+    const root = panel.current;
+    const field = document.activeElement;
+    if (!root || !(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) || !root.contains(field)) return;
+    const scrolls = (el: HTMLElement) => /auto|scroll/.test(getComputedStyle(el).overflowY) && el.scrollHeight > el.clientHeight;
+    let box: HTMLElement | null = field.parentElement;
+    while (box && !scrolls(box)) box = box === root ? null : box.parentElement;
+    if (!box) return;
+    const shown = box.getBoundingClientRect(), at = field.getBoundingClientRect(), room = 24;
+    if (at.bottom > shown.bottom - room) box.scrollTop += at.bottom - shown.bottom + room;
+    else if (at.top < shown.top + room) box.scrollTop -= shown.top + room - at.top;
+  }, [panel, height]);
+}
+
+/**
  * The page behind holds still while a sheet is open. Only the document is locked, so the header
  * stays in place. iPhone Safari moves the page to show a field above its keyboard and leaves it
  * there when the keyboard goes; once the screen is back to its full height the page is put back.
