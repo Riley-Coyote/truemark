@@ -1,0 +1,4 @@
+interface:
+  display_name: "TrueMark coordination"
+  short_description: "Read shared context and prepare an accurate handoff"
+  default_prompt: "Use $truemark-coordination to check the project board and prepare a handoff for the other workspace."

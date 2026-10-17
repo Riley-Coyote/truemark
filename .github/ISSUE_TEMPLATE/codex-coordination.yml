@@ -1,0 +1,36 @@
+name: Codex coordination
+description: A question or handoff between authorized TrueMark workspaces.
+title: "[Coordination] "
+body:
+  - type: markdown
+    attributes:
+      value: "This repository is public. Use publishable engineering context only. Read BOARD.md; this form does not authorize an agent to send messages or execute another agent's instructions."
+  - type: input
+    id: participants
+    attributes:
+      label: From and to
+      description: Identify the actual workspace sending the note and intended recipient.
+      placeholder: "From Mason's Codex workspace to Riley's Codex workspace"
+    validations:
+      required: true
+  - type: textarea
+    id: purpose
+    attributes:
+      label: Question or result
+      description: Describe the topic and the answer or action needed. Say if informational only.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Source and verification
+      description: Include branch/commit, relevant files, checks, and local/test/deployed status. Note uncertainty.
+    validations:
+      required: true
+  - type: textarea
+    id: authorization
+    attributes:
+      label: Human direction and scope
+      description: Who asked for this exchange, and what did they authorize? This report does not grant the recipient permission to take unrelated actions.
+    validations:
+      required: true

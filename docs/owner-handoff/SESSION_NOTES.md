@@ -20,6 +20,12 @@ The public checkout passed 35 targeted shipping/business tests, 29 portable rout
 
 This is source publication only. It does not apply the new migration, deploy functions, activate real providers, or update the compiled Studio. Original design archives, editable Studio and optional Ghost source remain separate delivery items in ACCESS.md. Do not mistake a pre-publication ZIP or an older checkout for this source.
 
+## Workspace guidance and coordination — 16 October 2026
+
+Riley requested a tailored company-account experience and a way for the two Codex workspaces to coordinate. Added a source-grounded DESIGN.md, two project-local skills (operating workflows and coordination), a GitHub Issues coordination template/protocol, and copyable company ChatGPT preferences. AGENTS.md links the relevant guidance; the owner exporter carries these files.
+
+This prepares the workflow. Account preferences and client-machine discovery are not applied or verified remotely. The board uses public engineering context only; no issue/comment has been sent, and no automated monitor or reply permission has been configured. Read BOARD.md before any exchange. Mason remains able to continue without Riley.
+
 ## Next useful session
 
 Follow Mason's current request. If he is starting without a specific task, verify the delivered checkout and access, open the sample preview, then walk through one stock/packing example. Recommend receiving and lot allocation as the next substantial workflow. Ask how he chooses between two eligible lots before implementing their ordering rule; ask for real lot quantities only when reconciling stock. Do not open with every unresolved question.

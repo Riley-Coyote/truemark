@@ -18,6 +18,10 @@ Read, in order:
 
 Read these yourself; do not require Mason to read the engineering documents or answer the entire question backlog. Use [FIRST_PROMPT.md](FIRST_PROMPT.md) if he wants a short opening message. The supplied [owner AGENTS template](AGENTS.owner.md) becomes root `AGENTS.md` in the exported owner snapshot, so its instructions are discoverable from the project. Opening an older GitHub checkout does not automatically bring in unpublished handoff files.
 
+## Workspace tools
+
+[Company account setup](ACCOUNT_SETUP.md) has ready-to-paste ChatGPT preferences and the Codex setup trial. [DESIGN.md](../../DESIGN.md) records the existing UI conventions. [BOARD.md](../../BOARD.md) explains the asynchronous GitHub coordination board. Two repository skills in `.agents/skills/` support operating workflows and handoffs; they do not create new access or automatic communication.
+
 ## Project scope map
 
 This is one platform with several connected surfaces. The map describes scope and available foundations, not a statement that every integration is finished. Inspect source and live state before promising a capability.

@@ -11,6 +11,8 @@ Read [the owner handoff](docs/owner-handoff/START_HERE.md). It covers the projec
 
 The shipping correction and owner handoff are included in this source. Publishing source does not apply database migrations, deploy server functions, activate providers or rebuild the pinned Studio release. See [shipping rollout notes](docs/platform/SHIPPING-WORKFLOW-UPDATE.md) before deploying these changes.
 
+For the company account and project skills, see [account setup](docs/owner-handoff/ACCOUNT_SETUP.md). UI work follows [DESIGN.md](DESIGN.md); cross-workspace questions use the [coordination board](BOARD.md).
+
 ## Local development
 
 Use Node 22 and the lockfile:

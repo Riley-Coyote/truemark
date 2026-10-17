@@ -1,0 +1,4 @@
+interface:
+  display_name: "TrueMark workflow"
+  short_description: "Turn an operating request into a verified workflow"
+  default_prompt: "Use $truemark-workflow to turn this business request into a clear, testable change."

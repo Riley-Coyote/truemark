@@ -9,6 +9,7 @@ const stamp = new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-')
 const destination = resolve(root, 'dist/owner-handoff', stamp, 'repository');
 const selected = [
   'src', 'public', 'supabase', 'scripts', 'docs/owner-handoff',
+  '.agents/skills', '.github/ISSUE_TEMPLATE', 'DESIGN.md', 'BOARD.md',
   'docs/platform/COMMAND-CENTER-IMPLEMENTATION-PLAN.md', 'docs/platform/SHIPPING-WORKFLOW-UPDATE.md',
   'docs/platform/COMMAND-CENTER-COVERAGE.md', 'docs/platform/CONNECTED-PROGRAMS.md',
   'docs/handoff/DECISIONS.md', 'design-lab/command',
