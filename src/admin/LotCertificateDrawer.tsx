@@ -1,12 +1,14 @@
+import { savePreviewCertificate } from "../platform/preview/inventory";
+import { lotKey, lotNumber } from "../platform/inventory";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Button, Drawer } from "../app-kit";
 import { LIVE } from "../platform/mode";
 import { live } from "../platform/live/runtime";
-import { PURITY_MINIMUM, releaseProblem, releaseTemplate, resultsOf } from "../platform/certificate-records";
+import { PURITY_MINIMUM, releaseProblem, releaseTemplate, resultGroups, resultsOf } from "../platform/certificate-records";
 import type { Lot, LotRelease } from "../platform/types";
 import { productById } from "../shop/catalog";
-import { SelectField, TextField } from "./fields";
+import { SelectField, SwitchRow, TextField } from "./fields";
 import { ContentUpload } from "./ContentUpload";
 
 type Entry = { purity: string; identity: "" | "Conforms" | "Does not conform"; content: string; claim: string; ofClaim: string };
@@ -19,23 +21,27 @@ const number = /^\d+(\.\d+)?$/;
  * claim and the percentage of claim as printed, and the PDF. The gate is the database's own rule.
  */
 export function LotCertificateDrawer({ lot, onClose, onSaved }: { lot: Lot; onClose: () => void; onSaved: () => void }) {
-  const replace = lot.status === "released";
+  const replace = Boolean(lot.coaPath);
+  const existing = resultGroups(lot.results);
   const template = releaseTemplate(lot.productId, productById(lot.productId)?.name ?? lot.productId);
   const [file, setFile] = useState<File | null>(null);
-  const [testedAt, setTestedAt] = useState("");
-  const [reference, setReference] = useState("");
-  const [entries, setEntries] = useState<Entry[]>(() => template.map(() => blank));
+  const [testedAt, setTestedAt] = useState(lot.testedAt ?? "");
+  const [reference, setReference] = useState(lot.reference ?? "");
+  const [entries, setEntries] = useState<Entry[]>(() => template.map(part => {
+    const g=existing.find(g=>(g.component ?? null)===part.name);
+    return g ? {purity:g.purity?.value ?? "",identity:g.identity?.value === "Conforms" ? "Conforms" : "",content:g.content?.value ?? "",claim:g.claim?.value ?? "",ofClaim:g.ofClaim?.value ?? ""} : {...blank};
+  }));
+  const [confirmed,setConfirmed]=useState(false);
   // Results a certificate may also carry, as the form always allowed.
   const [msIdentity, setMsIdentity] = useState<"" | "Confirmed" | "Not confirmed">("");
   const [endotoxin, setEndotoxin] = useState("");
   const [sterility, setSterility] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const edit = (index: number, patch: Partial<Entry>) => setEntries((list) => list.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
   async function save(event: FormEvent) {
-    event.preventDefault(); setError(""); setMessage("");
-    if (!LIVE) { setMessage("Saving works in the live platform."); return; }
+    event.preventDefault(); setError("");
+
     if (!file) { setError("Choose the certificate PDF."); return; }
     const results = [
       ...resultsOf(template.map((part, i) => ({ ...part, ...entries[i], purity: entries[i].purity.trim(), content: entries[i].content.trim(), claim: entries[i].claim.trim(), ofClaim: entries[i].ofClaim.trim() }))),
@@ -43,16 +49,15 @@ export function LotCertificateDrawer({ lot, onClose, onSaved }: { lot: Lot; onCl
       ...(endotoxin.trim() ? [{ label: "Endotoxin", method: "LAL", value: endotoxin.trim(), unit: "EU/mg" }] : []),
       ...(sterility.trim() ? [{ label: "Sterility", method: "", value: sterility.trim(), unit: "" }] : []),
     ];
-    if (!replace) {
-      if (!testedAt || !reference.trim() || entries.some((entry) => !entry.identity || ![entry.purity, entry.content, entry.claim, entry.ofClaim].every((value) => number.test(value.trim())))) {
+    if (!testedAt || !reference.trim() || entries.some((entry) => !entry.identity || ![entry.purity, entry.content, entry.claim, entry.ofClaim].every((value) => number.test(value.trim())))) {
         setError("Enter the certificate number, the date analyzed and, for each component, HPLC purity, identity, content, label claim and % of claim as the certificate prints them."); return;
       }
-      const problem = releaseProblem(results);
-      if (problem) { setError(`${problem}. Reject out-of-spec lots from the lot record.`); return; }
-    }
+    const problem = releaseProblem(results);
+    if (problem) { setError(`${problem}. Reject out-of-spec lots from the lot record.`); return; }
+    if(!confirmed){setError("Confirm that this certificate matches this lot and the entered passing results.");return;}
     setBusy(true);
     try {
-      if (replace) await live().content.replaceCertificate(lot.lot, file);
+      if (!LIVE) await savePreviewCertificate(lotKey(lot), {results,reference:reference.trim(),testedAt},file);
       else {
         const input: LotRelease = { testedAt, reference: reference.trim(), results };
         await live().content.releaseLot(lot.lot, input, file);
@@ -61,12 +66,11 @@ export function LotCertificateDrawer({ lot, onClose, onSaved }: { lot: Lot; onCl
     } catch (failure) { setError(failure instanceof Error ? failure.message : "The certificate could not be saved."); }
     finally { setBusy(false); }
   }
-  return <Drawer title={replace ? "Replace certificate" : "Release with certificate"} eyebrow={lot.lot} onClose={() => { if (!busy) onClose(); }} footer={
-    <div className="cc-confirm-actions"><Button variant="primary" type="submit" form="cc-certificate-form" disabled={busy}>{busy ? "Saving…" : replace ? "Replace certificate" : "Release lot"}</Button><Button onClick={onClose} disabled={busy}>Cancel</Button></div>
+  return <Drawer title={replace ? "Replace certificate" : "Upload test certificate"} eyebrow={lotNumber(lot)} onClose={() => { if (!busy) onClose(); }} footer={
+    <div className="cc-confirm-actions"><Button variant="primary" type="submit" form="cc-certificate-form" disabled={busy}>{busy ? "Saving…" : replace ? "Replace certificate" : "Save certificate"}</Button><Button onClick={onClose} disabled={busy}>Cancel</Button></div>
   }>
     <form id="cc-certificate-form" onSubmit={save} className="cc-form">
       <ContentUpload bucket="certificates" file={file} onChange={setFile} onError={setError} disabled={busy} />
-      {!replace && <>
         <TextField label="Certificate number" value={reference} onChange={setReference} mono disabled={busy} />
         <TextField label="Date analyzed (UTC)" type="date" value={testedAt} onChange={setTestedAt} disabled={busy} />
         <p className="kit-note">Releases need HPLC purity of at least {PURITY_MINIMUM}% for every component and an identity that conforms. Content is recorded and shown, not gated.</p>
@@ -84,8 +88,8 @@ export function LotCertificateDrawer({ lot, onClose, onSaved }: { lot: Lot; onCl
         <SelectField label="MS identity (optional)" value={msIdentity} onChange={setMsIdentity} disabled={busy} placeholder="Choose the result" options={[{ value: "Confirmed", label: "Confirmed" }, { value: "Not confirmed", label: "Not confirmed" }]} />
         <TextField label="Endotoxin (optional)" suffix="EU/mg" value={endotoxin} onChange={setEndotoxin} disabled={busy} />
         <TextField label="Sterility (optional)" value={sterility} onChange={setSterility} disabled={busy} />
-      </>}
-      <p className="kit-note" role="status">{message || (replace ? "The release date and recorded results stay on file." : "Release makes the entered results and certificate public.")}</p>
+      <SwitchRow title="This certificate matches this lot and the results entered above" description="I checked the lot number and passing results on the PDF." checked={confirmed} onChange={busy ? undefined : setConfirmed}/>
+      <p className="kit-note">Passing results and this PDF automatically clear testing quarantine. Incoming units and other holds stay unavailable. Shipped certificate records stay on file.</p>
       {error && <p className="kit-field-error" role="alert">{error}</p>}
     </form>
   </Drawer>;

@@ -1,3 +1,4 @@
+import { availableInventory } from './lib/inventory-fixtures.mjs';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createPlatformDb } from './lib/platform-db.mjs';
@@ -5,6 +6,7 @@ import { createPlatformDb } from './lib/platform-db.mjs';
 const h = await createPlatformDb();
 const { db, rows, scalar, anon, auth, service, denied, person } = h;
 try {
+  await availableInventory(db);
   const migration = await readFile(new URL('../supabase/migrations/20261005000400_shop_access.sql', import.meta.url), 'utf8');
   assert(!/[^\x00-\x7f]/.test(migration));
   const owner = await person('owner@fixture.test', 'owner');

@@ -1,3 +1,4 @@
+import { availableInventory } from './lib/inventory-fixtures.mjs';
 /** WP-25: real migrations, fixture users, no network or hosted database. */
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -17,7 +18,7 @@ async function fixtures(x) {
   for (const id of [buyer,other]) await x.db.query("insert into buyers(id,user_id,name,email,institution,status) values ($1,$1,'Fixture buyer',$2,'Fixture lab','verified')",[id,`${id}@fixture.test`]);
   await x.db.query("insert into partners(id,user_id,name,handle,email,code,rate,status,audience) values ($1,$2,'Fixture partner','fixture','partner@fixture.test','FIXTURE10',.12,'active','Fixture')",[uid(6),partnerUser]);
   await x.db.query("insert into discounts(code,kind,percent,partner_id,active) values ('FIXTURE10','partner',10,$1,true)",[uid(6)]);
-  await x.db.exec("update products set stock=10000; update settings set free_shipping_threshold=null;");
+  await availableInventory(x.db); await x.db.exec("update settings set free_shipping_threshold=null;");
 }
 const address={institution:'Fixture lab',attention:'Fixture buyer',line1:'1 Fixture Road',city:'Austin',region:'Texas',postal:'78701',country:'United States'};
 const draft={lines:[{productId:'bpc-157-10-mg',quantity:2}],address,shipping:'cold-2day',discountCode:'FIXTURE10',via:'link'};
@@ -40,7 +41,7 @@ try {
  await fixtures(before);
  await auth(owner,"select public.set_connection_mode('payments','off',null)");
  const old=(await before.auth(buyer,'select * from public.place_order($1)',[draft]))[0], manual=await place();
- const normalizedOrder=(o)=>Object.fromEntries(Object.entries(o).filter(([k])=>!['id','created_at','tax','tax_rate','tax_region','refunded','paid_at','payment_expires_at','payment_provider','referral_via','charge_id','membership_name','membership_amount','reward_points','reward_amount','reward_earn_rate'].includes(k)));
+ const normalizedOrder=(o)=>Object.fromEntries(Object.entries(o).filter(([k])=>!['id','created_at','tax','tax_rate','tax_region','refunded','paid_at','payment_expires_at','payment_provider','referral_via','charge_id','membership_name','membership_amount','reward_points','reward_amount','reward_earn_rate','inventory_issue'].includes(k)));
  assert.deepEqual(normalizedOrder(manual),normalizedOrder(old));
  const normalizedRows=async(x,table)=> (await x.rows(`select * from ${table}`)).map((r)=>Object.fromEntries(Object.entries(r).filter(([k])=>!['id','order_id','created_at','at','source','commission_base'].includes(k)).map(([k,v])=>[k,k==='href'&&typeof v==='string'?v.replace(/00000000-[\w-]+|[0-9a-f]{8}-[0-9a-f-]{27}/g,'<id>'):v])));
  for (const table of ['order_lines','order_events','referrals','notifications']) assert.deepEqual(await normalizedRows(h,table),await normalizedRows(before,table),table);

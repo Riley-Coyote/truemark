@@ -1,8 +1,9 @@
+import { availableInventory } from './lib/inventory-fixtures.mjs';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFile, mkdtemp } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
 import { createHandler } from '../supabase/functions/shipping/server.ts';
 import type { Deps } from '../supabase/functions/shipping/server.ts';
@@ -70,7 +71,7 @@ test('ShipStation v1 request shapes, Basic auth, countries, tax and cancel with 
     customerEmail: fixtureOrder.customerEmail, billTo: { name: 'Fixture researcher', company: 'Fixture lab', street1: '1 Fixture St', street2: 'Lab 2', city: 'Test', state: 'TX', postalCode: '12345', country: 'US', phone: '+15555550123' },
     shipTo: { name: 'Fixture researcher', company: 'Fixture lab', street1: '1 Fixture St', street2: 'Lab 2', city: 'Test', state: 'TX', postalCode: '12345', country: 'US', phone: '+15555550123' },
     items: [{ sku: 'bpc-157', name: 'BPC-157 5 mg', quantity: 2, unitPrice: 50 }], amountPaid: 124, shippingAmount: 24, taxAmount: 0,
-    requestedShippingService: 'Cold two day', internalNotes: 'Lots: LOT-FIXTURE' });
+    requestedShippingService: 'Cold two day', internalNotes: 'Lots: 2 × LOT-FIXTURE' });
   assert.equal(JSON.parse(String(calls[1].init.body)).orderStatus,'cancelled');
   assert.equal(JSON.parse(String(calls[1].init.body)).taxAmount,8.25);
   for (const value of ['US','usa','United States','United States of America']) assert.equal(countryCode(value),'US');
@@ -162,6 +163,7 @@ test('off flush and webhook leave manual shipping untouched; OPTIONS is availabl
 test('label stays paid; packing then a separate carrier scan ship and deliver using real local SQL', async () => {
   const h = await createPlatformDb();
   try {
+    await availableInventory(h.db);
     const owner=await h.person('server-owner@shipping.fixture','owner');
     const buyerUser=await h.person('server-buyer@shipping.fixture');
     const buyer=await h.scalar("insert into buyers(user_id,name,email,institution,status) values ($1,'Fixture','server-buyer@shipping.fixture','Fixture lab','verified') returning id",[buyerUser]);
@@ -251,7 +253,7 @@ function frontend(mode: string, baseline = false) {
   const key = mode + baseline;
   if (!frontCache.has(key)) frontCache.set(key, (async () => {
     const temp = await mkdtemp('/private/tmp/wp26-render-');
-    const root = new URL('../', import.meta.url).pathname;
+    const root = fileURLToPath(new URL('../', import.meta.url));
     const values = new Map<string, string>();
     Object.assign(globalThis, {
       localStorage: { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => values.set(key, value), removeItem: (key: string) => values.delete(key) },

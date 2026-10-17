@@ -10,7 +10,6 @@ import { OrderToasts, OwnerBell, useNarrow } from "./alerts";
 import Applications from "./Applications";
 import Customers from "./Customers";
 import Discounts from "./Discounts";
-import Lots from "./Lots";
 import Journal from "./Journal";
 import { TODAY_ISO } from "./metrics";
 import { Missing } from "./Missing";
@@ -118,7 +117,7 @@ function CommandCenter() {
           <Route path="reviews" element={<Navigate to="/admin/inbox" replace />} />
           <Route path="inbox" element={LIVE ? <Inbox /> : <MessageWorkspace kind="inbox" />} />
           <Route path="messages" element={LIVE ? <SentMessages /> : <MessageWorkspace kind="deliveries" />} />
-          <Route path="lots" element={<Lots />} />
+          <Route path="lots" element={<Products />} />
           <Route path="journal" element={<Journal />} />
           <Route path="applications" element={<Applications />} />
           <Route path="customers" element={<Customers />} />

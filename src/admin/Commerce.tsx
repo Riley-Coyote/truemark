@@ -16,9 +16,7 @@ const messageFor = (error: unknown) => error instanceof Error ? error.message : 
 
 export function ProductEditor({ product, classes, onSaved }: { product: Product; classes: Category[]; onSaved: () => void }) {
   const [draft, setDraft] = useState(product);
-  const [expectedStock, setExpectedStock] = useState(product.stock ?? null);
   const [price, setPrice] = useState(product.price?.toFixed(2) ?? "");
-  const [stock, setStock] = useState(product.stock == null ? "" : String(product.stock));
   const [photo, setPhoto] = useState<File | null>(null);
   const [uploaded, setUploaded] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -30,13 +28,10 @@ export function ProductEditor({ product, classes, onSaved }: { product: Product;
   };
   async function save(event: FormEvent) {
     event.preventDefault();
-    if (!LIVE || busy) return;
+    if (busy) return;
     const amount = parseDollars(price, { allowZero: true });
     if (amount.value === undefined || !Number.isFinite(amount.value) || amount.value > 9999999999.99) {
       setError(amount.error ?? "Enter a valid price."); return;
-    }
-    if (stock && (!/^\d{1,9}$/.test(stock) || !Number.isSafeInteger(Number(stock)))) {
-      setError("Stock must be a whole number, zero, or blank for not tracked."); return;
     }
     if (![draft.name, draft.size, draft.category, draft.form].every((value) => value.trim())) {
       setError("Name, size, class and form are required."); return;
@@ -48,28 +43,28 @@ export function ProductEditor({ product, classes, onSaved }: { product: Product;
         image = await store.catalog.uploadPhoto(product.id, photo);
         setUploaded(image);
       }
-      const saved = await store.catalog.saveProduct({ ...draft, image, price: amount.value, stock: stock === "" ? null : Number(stock) }, expectedStock);
-      setExpectedStock(saved.stock ?? null); setDraft(saved); setPrice(saved.price!.toFixed(2)); setStock(saved.stock == null ? "" : String(saved.stock));
+      const saved = await store.catalog.saveProduct({ ...draft, image, price: amount.value, stock: product.stock ?? 0 });
+       setDraft(saved); setPrice(saved.price!.toFixed(2));
       setPhoto(null); setUploaded(undefined); setMessage("Product saved."); onSaved();
-    } catch (error) { setError(messageFor(error)); onSaved(); }
+    } catch (error) { setError(messageFor(error)); }
     finally { setBusy(false); }
   }
   return <form className="cc-commerce-form" onSubmit={save}>
-    <fieldset disabled={!LIVE || busy || classes.length === 0} className="cc-commerce-fields">
+    <fieldset disabled={busy || classes.length === 0} className="cc-commerce-fields">
       <TextField label="Name" value={draft.name} onChange={(value) => update("name", value)} />
       <div className="cc-commerce-pair">
         <TextField label="Size" value={draft.size} onChange={(value) => update("size", value)} />
         <TextField label="Price per vial" prefix="$" inputMode="decimal" value={price} onChange={setPrice} />
       </div>
       <SelectField label="Class" value={draft.category} onChange={(value) => update("category", value)} options={classes.map((category) => ({ value: category.id, label: category.name }))} />
-      <TextField label="Form" value={draft.form} onChange={(value) => update("form", value)} />
+      <TextField label="Form / variant" value={draft.form} onChange={(value) => update("form", value)} />
       <TextField label="Tag" value={draft.tag ?? ""} onChange={(value) => update("tag", value)} hint="Leave blank for no tag." />
       <SwitchRow title="Active" description="Show this product in the storefront." checked={draft.active !== false} onChange={(value) => update("active", value)} />
       <TextAreaField label="Description" value={draft.description ?? ""} onChange={(value) => update("description", value)} hint="Leave blank to use the existing product description." />
-      <TextField label="Stock" value={stock} onChange={setStock} inputMode="numeric" hint="Blank means not tracked. Zero shows Out of stock." />
+      <p className="kit-note">Stock is calculated from received, certified lots. Use Receive inventory or Adjust count to change quantities.</p>
       <div className="kit-field">
         <label className="kit-field-label" htmlFor={photoId}>Photo</label>
-        <input className="cc-commerce-file" id={photoId} type="file" accept="image/jpeg,image/png,image/webp" aria-describedby={`${photoId}-hint`} onChange={(event) => {
+        <input className="cc-commerce-file" id={photoId} type="file" accept="image/jpeg,image/png,image/webp" aria-describedby={`${photoId}-hint`} disabled={!LIVE} onChange={(event) => {
           const file = event.target.files?.[0];
           if (!file) return;
           try { catalogPhotoPath(product.id, file); setPhoto(file); setUploaded(undefined); setError(undefined); setMessage(undefined); }
@@ -80,8 +75,8 @@ export function ProductEditor({ product, classes, onSaved }: { product: Product;
       </div>
       <Button type="submit" variant="primary">{busy ? "Saving product…" : "Save product"}</Button>
     </fieldset>
-    {!classes.length && <p className="kit-note" role="alert">Classes are unavailable. <Button variant="text" onClick={onSaved}>Try again</Button></p>}
-    {!LIVE && <p className="kit-note">{previewNote}</p>}
+    {!classes.length && <p className="kit-note" role="alert">Classes are unavailable. Close and reopen this form to try again.</p>}
+    {!LIVE && <p className="kit-note">Sample preview: changes stay in this browser.</p>}
     {error && <p className="kit-field-error" role="alert">{error}</p>}
     {message && <p className="kit-note" role="status">{message}</p>}
   </form>;

@@ -1,3 +1,4 @@
+import { availableInventory } from './lib/inventory-fixtures.mjs';
 /** Real migrations and authorization roles; synthetic records, no network. */
 import assert from 'node:assert/strict';
 import { createPlatformDb } from './lib/platform-db.mjs';
@@ -6,7 +7,7 @@ const pass=name=>console.log(`PASS ${name}`);
 try {
  const owner=await person('owner@fixture.test','owner'), staff=await person('staff@fixture.test','staff'), buyer=await person('buyer@fixture.test'), other=await person('other@fixture.test');
  for(const [id,email] of [[buyer,'buyer@fixture.test'],[other,'other@fixture.test']])await db.query("insert into buyers(id,user_id,name,email,institution,status) values($1,$1,'Fixture buyer',$2,'Fixture lab','verified')",[id,email]);
- await db.exec('update products set stock=10000;');
+ await availableInventory(db);
  const settings=async()=> (await rows('select * from customer_program_settings'))[0];
  const configure=async(patch={})=>{const s={...await settings(),...patch}; for(const k of ['earn_per_dollar','points_per_dollar','min_points','max_percent'])s[k]=Number(s[k]);return (await auth(owner,'select * from set_customer_programs($1,$2)',[s,s.version]))[0];};
  const balance=()=>scalar('select coalesce(sum(points),0)::int from reward_ledger where buyer_id=$1',[buyer]);

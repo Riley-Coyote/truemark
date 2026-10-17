@@ -1,3 +1,4 @@
+import { allocatedLines } from "../../../platform/inventory";
 /**
  * Pure helpers for the research account pages. Dates are shown in UTC so a
  * record reads the same wherever it is opened.
@@ -104,6 +105,7 @@ export function latestEvent(order: Order) {
 }
 
 export type ReceivedLot = {
+  certificateUrl?: string;
   lot: string;
   productId: string;
   /** The most recent delivery of this lot to the buyer. */
@@ -117,10 +119,11 @@ export function receivedLots(orders: Order[]): ReceivedLot[] {
   for (const order of [...orders].sort(byNewest)) {
     const delivered = eventAt(order, "delivered");
     if (!delivered) continue;
-    for (const line of order.lines) {
-      const entry = map.get(line.lot);
+    for (const line of allocatedLines(order.lines)) {
+      const key = `${line.lot}:${line.allocations?.[0]?.certificateUrl ?? "legacy"}`;
+      const entry = map.get(key);
       if (!entry) {
-        map.set(line.lot, { lot: line.lot, productId: line.productId, receivedAt: delivered, orders: [{ id: order.id, number: order.number }] });
+        map.set(key, { certificateUrl:line.allocations?.[0]?.certificateUrl, lot: line.lot, productId: line.productId, receivedAt: delivered, orders: [{ id: order.id, number: order.number }] });
       } else {
         if (delivered > entry.receivedAt) entry.receivedAt = delivered;
         if (!entry.orders.some((o) => o.id === order.id)) entry.orders.push({ id: order.id, number: order.number });

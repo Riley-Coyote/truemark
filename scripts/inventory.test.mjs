@@ -1,0 +1,62 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import { build } from 'esbuild';
+import { mkdtemp } from 'node:fs/promises';
+import { fileURLToPath,pathToFileURL } from 'node:url';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+const root=fileURLToPath(new URL('../',import.meta.url)),temp=await mkdtemp(join(tmpdir(),'tm-inventory-'));
+const memory=new Map();globalThis.localStorage={getItem:k=>memory.get(k) ?? null,setItem:(k,v)=>memory.set(k,v)};
+globalThis.window=new EventTarget();
+globalThis.FileReader=class { readAsDataURL(file){file.arrayBuffer().then(bytes=>{this.result=`data:application/pdf;base64,${Buffer.from(bytes).toString('base64')}`;this.onload();});} };
+await build({stdin:{resolveDir:root,loader:'tsx',contents:`
+ export * from './src/platform/preview/inventory';
+ export * from './src/platform/inventory';
+ export {order as mapOrder} from './src/platform/live/rows';
+ export {receivedLots} from './src/shop/pages/account/lib';
+ import {createElement} from 'react';import {renderToStaticMarkup} from 'react-dom/server';import {MemoryRouter} from 'react-router-dom';
+ import {LotTable} from './src/shop/pages/account/Certificates';
+ export const renderCertificates=(entries,lots)=>renderToStaticMarkup(createElement(MemoryRouter,{},createElement(LotTable,{entries,lots,label:'Certificates'})));
+ `},outfile:join(temp,'test.mjs'),bundle:true,platform:'node',format:'esm',jsx:'automatic',loader:{'.css':'empty'},define:{'import.meta.env':JSON.stringify({VITE_PLATFORM:'preview',BASE_URL:'/',PROD:false})},banner:{js:"import {createRequire} from 'node:module';const require=createRequire(import.meta.url);"},logLevel:'silent'});
+const m=await import(pathToFileURL(join(temp,'test.mjs')));const inv=m.previewInventory;
+const productId='fixture-inventory';const values={reference:'SYNTHETIC',testedAt:'2026-09-01',results:[{label:'Purity',method:'HPLC',value:'99.5',unit:'%'},{label:'Identity',method:'Mass spectrometry',value:'Confirmed',unit:''}]};
+const pdf=new File(['%PDF synthetic test'],'fixture.pdf',{type:'application/pdf'});
+const current=id=>m.previewLots().find(l=>l.id===id);
+let first,second,shipped;
+test('preview receives partially, protects duplicate receipts, and automatically releases only passing certified lots',async()=>{
+ await m.savePreviewProduct({id:productId,name:'Synthetic inventory',size:'30 mg',color:'#7A39B1',colorInk:'#7A39B1',price:10,category:'metabolic-peptides',form:'Lyophilized powder',lot:'',active:true});
+ first=await inv.save({productId,number:'SYNTHETIC-OLD',expectedUnits:10,reason:'Test receipt'});
+ second=await inv.save({productId,number:'SYNTHETIC-NEW',expectedUnits:100,reason:'Test incoming'});
+ assert.equal(m.lotAvailable(second),0);
+ first=await inv.receive(first.id,10,'2026-09-01T12:00:00Z','first');
+ second=await inv.receive(second.id,60,'2026-09-02T12:00:00Z','partial');assert.equal(m.incomingUnits(second),40);
+ second=await inv.receive(second.id,40,'2026-09-02T12:00:00Z','remaining');await inv.receive(second.id,40,'2026-09-02T12:00:00Z','remaining');assert.equal(current(second.id).units,100);
+ await assert.rejects(m.savePreviewCertificate(first.id,{...values,results:[{...values.results[0],value:'50'},values.results[1]]},pdf),/at least/);
+ await m.savePreviewCertificate(first.id,values,pdf);assert.equal(m.lotAvailable(current(first.id)),10);assert.equal(m.lotAvailable(current(second.id)),0);
+ await m.savePreviewCertificate(second.id,values,pdf);assert.equal(m.inventoryTotals(m.previewLots().filter(l=>l.productId===productId)).available,110);
+});
+test('preview splits a priced order 10 + 5, blocks unavailable picks, and snapshots actual shipment certificates',async()=>{
+ const order={id:'test-order',number:'TEST-1',status:'placed',createdAt:'2026-09-03',lines:[{productId,quantity:15,unitPrice:10,lot:first.lot}],events:[]};
+ m.reservePreviewOrder(order);assert.deepEqual(m.previewOrders()[0].lines[0].allocations.map(a=>a.quantity),[10,5]);
+ assert.equal(m.inventoryTotals(m.previewLots().filter(l=>l.productId===productId)).available,95);
+ await inv.removeCertificate(first.id,'Test removal');assert(m.previewOrders()[0].inventoryIssue);
+ assert.throws(()=>m.advancePreviewInventory({...m.previewOrders()[0],status:'packed'}),/unavailable/);
+ await m.savePreviewCertificate(first.id,values,pdf);m.advancePreviewInventory({...m.previewOrders()[0],status:'packed'});
+ m.advancePreviewInventory({...m.previewOrders()[0],status:'shipped'});shipped=m.previewOrders()[0];const path=shipped.lines[0].allocations[0].certificatePath;
+ m.advancePreviewInventory({...shipped,status:'shipped'});assert.equal(current(first.id).units,0);assert.equal(current(second.id).units,95);
+ await inv.removeCertificate(first.id,'After shipping');assert.equal(m.previewOrders()[0].lines[0].allocations[0].certificatePath,path);
+ const id=shipped.lines[0].allocations[0].id;await inv.returnUnits(id,2,'Inspected',true,'return');await inv.returnUnits(id,2,'Inspected',true,'return');assert.equal(current(first.id).units,2);assert.equal(m.lotAvailable(current(first.id)),0);
+ await assert.rejects(inv.returnUnits(id,9,'Too many',true,'excess'),/unreturned/);
+});
+test('customer certificate history uses every shipped snapshot even after the current certificate is removed',()=>{
+ const delivered={...shipped,events:[{status:'delivered',at:'2026-09-04'}]};const entries=m.receivedLots([delivered]);assert.equal(entries.length,2);
+ const html=m.renderCertificates(entries,[]);assert.equal((html.match(/Shipped certificate/g) ?? []).length,2);assert(!html.includes('Certificate pending'));
+ const later=structuredClone(delivered);later.id='second-delivery';later.lines[0].allocations[0].certificateUrl='https://fixture.test/replacement.pdf';
+ assert.equal(m.receivedLots([delivered,later]).length,3,'Separate shipped versions stay accessible');
+});
+test('live order mapping flags invalid allocations and preserves the shipped lot and certificate version',()=>{
+ const a={id:'allocation',lot_id:'stable-id',lot_number:'ORIGINAL-LABEL',quantity:2,state:'fulfilled',certificate_path:'ORIGINAL-v1.pdf'};
+ const mapped=m.mapOrder({id:'o',status:'delivered',order_lines:[{id:'line',product_id:productId,quantity:2,lot:'old-key',unit_price:10,order_lot_allocations:[a]}]});
+ assert.equal(mapped.lines[0].allocations[0].lot,'ORIGINAL-LABEL');assert(mapped.lines[0].allocations[0].certificateUrl.endsWith('/ORIGINAL-v1.pdf'));
+ assert(m.mapOrder({status:'paid',order_lines:[{quantity:2,order_lot_allocations:[{...a,state:'reserved',lots:null}]}]}).inventoryIssue);
+});

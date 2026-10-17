@@ -15,7 +15,7 @@ export function createHandler(deps: Deps) {
   const simulator = createSimulator(deps.random, deps.fetch, `${base}/sim/resource`);
   const shipstation = createShipStation(deps.shipstationKey, deps.shipstationSecret, deps.fetch);
   async function order(id: string): Promise<ShippingOrder> {
-    const row = await db.one<Row>(`orders?id=eq.${id}&select=*,order_lines(*,products(*))&limit=1`);
+    const row = await db.one<Row>(`orders?id=eq.${id}&select=*,order_lines(*,products(*),order_lot_allocations(*))&limit=1`);
     if (!row) throw new DbError('Order not found.', 404, 'P0002');
     const [buyer, method] = await Promise.all([
       db.one<Row>(`buyers?id=eq.${row.buyer_id}&select=*&limit=1`),

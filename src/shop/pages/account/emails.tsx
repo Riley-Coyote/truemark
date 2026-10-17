@@ -1,3 +1,4 @@
+import { allocatedLines } from "../../../platform/inventory";
 /**
  * The emails a buyer receives about an order, at the three moments that matter:
  * confirmed, shipped (with tracking) and delivered (with the lots' certificates).
@@ -110,7 +111,7 @@ export function BuyerEmail({
         />
         <EmailRows
           rows={[
-            ...order.lines.map((line): [string, string] => [
+            ...allocatedLines(order.lines).map((line): [string, string] => [
               `${lineName(line.productId)} × ${line.quantity}`,
               money(line.unitPrice * line.quantity),
             ]),
@@ -156,7 +157,7 @@ export function BuyerEmail({
 
   const delivered = eventAt(order, "delivered")!;
   // The compound on the left; its lot, and where its certificate stands, on the right.
-  const lotRows = order.lines.map((line): [string, ReactNode] => {
+  const lotRows = allocatedLines(order.lines).map((line): [string, ReactNode] => {
     const record = lots?.find((l) => l.lot === line.lot);
     const published = record?.status === "released" || record?.status === "archived";
     return [

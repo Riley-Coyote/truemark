@@ -103,7 +103,7 @@ export function renderTemplate(template: string,c: TemplateData): Rendered {
   subject=`Delivered — certificates for your lots · ${number}`;preheader=`Delivered ${day}. The certificate for each lot you receive is kept in your account.`;
   heading('Your order was delivered.');figure('Delivered',day,`Order ${number} · ${plural(vials,'vial')}`);
   text('Move vials to −20 °C promptly, check seals, and verify each lot number against its CoA.');text('Certificates for your lots:');
-  rows((c.lines??[]).map(l=>[productName(l),`${l.lot}\n${c.lots?(['released','archived'].includes(c.lots.find(x=>x.lot===l.lot)?.status)?'Certificate published':'Certificate pending'):'On record'}`]));
+  rows((c.lines??[]).flatMap(l=>Array.isArray(l.order_lot_allocations) ? (l.order_lot_allocations as Row[]).filter(a=>a.state!=='released').map(a=>({...l,lot:a.lot_number,quantity:a.quantity,certificate_path:a.certificate_path})) : [l]).map(l=>[productName(l),`${l.lot}\n${l.certificate_path?'Certificate published':c.lots?(['released','archived'].includes(c.lots.find(x=>x.lot===l.lot)?.status)?'Certificate published':'Certificate pending'):'On record'}`]));
   button('View your order',link('/account/orders/'+id));note('The certificate for each lot you receive is kept in your account.');break;
  }
  case 'buyer.order_cancelled': {

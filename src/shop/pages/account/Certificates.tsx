@@ -27,7 +27,7 @@ export function LotTable({ entries, lots, label }: { entries: ReceivedLot[]; lot
           const product = productFor(entry.productId);
           const record = lots?.find((l) => l.lot === entry.lot);
           return (
-            <div role="row" className="tm-acct-tr" key={entry.lot} style={product ? tone(product) : undefined}>
+            <div role="row" className="tm-acct-tr" key={`${entry.lot}-${entry.certificateUrl ?? "legacy"}`} style={product ? tone(product) : undefined}>
               <span role="cell" className="c-product">
                 {product && <Thumb product={product} size="sm" />}
                 <span className="tm-acct-product">
@@ -41,12 +41,12 @@ export function LotTable({ entries, lots, label }: { entries: ReceivedLot[]; lot
                 {shortDate(entry.receivedAt)}
               </span>
               <span role="cell" className="c-cert">
-                {lots === undefined ? (
+                {entry.certificateUrl ? (<a className="tm-acct-link" href={entry.certificateUrl} target="_blank" rel="noreferrer">Shipped certificate <ArrowUpRight size={14}/></a>) : lots === undefined ? (
                   <span className="tm-acct-muted">Checking…</span>
                 ) : lots === null ? (
                   <span className="tm-acct-muted">Status unavailable</span>
                 ) : record?.status === "released" ? (
-                  <Link className="tm-acct-link" to={`/verify?lot=${encodeURIComponent(entry.lot)}`}>
+                  <Link className="tm-acct-link" to={entry.certificateUrl ?? `/verify?lot=${encodeURIComponent(entry.lot)}`}>
                     Read the record <ArrowUpRight size={14} strokeWidth={1.6} aria-hidden="true" />
                   </Link>
                 ) : (

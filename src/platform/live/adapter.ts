@@ -6,6 +6,7 @@ import type { Audience, Notice } from "../notifications";
 import type { PlatformEvent } from "../events";
 import type * as Preview from "../preview/store";
 import * as map from "./rows";
+import { createInventoryAdapter } from "./inventory";
 import { createContentAdapter } from "./content";
 import { createAccounts } from "./accounts";
 import { createTeam } from "./team";
@@ -53,7 +54,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
     const row = (await rows("profiles", "*", { id }))[0];
     return row ? { id: String(row.id), role: row.role as Profile["role"] } : null;
   }
-  const orderRows = (filters = {}) => rows("orders", "*, order_lines(*), order_events(*)", filters);
+  const orderRows = (filters = {}) => rows("orders", "*, order_lines(*, order_lot_allocations(*, lots(*))), order_events(*)", filters);
   async function getOrder(id: string) {
     const found = await orderRows(id.startsWith("TM-") ? { number: id } : { id });
     return found[0] ? map.order(found[0]) : null;
@@ -142,8 +143,8 @@ export function createLiveAdapter(client: SupabaseClient, options: {
       },
     },
     lots: {
-      list: async () => (await rows("lots")).map(map.lot),
-      get: async (lot) => { const row = await rpc<map.Row | null>("lot_lookup", { lot }); return row ? map.lot(row) : null; },
+      list: async () => (await rows("lots")).map(row => { const value=map.lot(row); if(value.coaPath)value.coaUrl=client.storage.from("certificates").getPublicUrl(value.coaPath).data.publicUrl;return value; }),
+      get: async (lot) => { const row = await rpc<map.Row | null>("lot_lookup", { lot }); return row ? map.lot(["released","archived"].includes(String(row.status)) ? row : {...row,results:[],reference:null,coa_path:null,coaUrl:null}) : null; },
       setStatus: async (lot, status) => {
         const saved = map.lot(await rpc<map.Row>("set_lot_status", { lot, status }));
         changed(); return saved;
@@ -241,7 +242,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
     if (!id) return;
     const current = epoch;
     channel = client.channel(`tm-live-platform:${id}`);
-    for (const table of ["orders", "order_events", "referrals", "notifications"]) {
+    for (const table of ["orders", "order_events", "referrals", "notifications", "products", "lots", "order_lot_allocations", "inventory_events"]) {
       channel.on("postgres_changes", { event: "*", schema: "public", table }, (payload) => {
         if (current !== epoch) return;
         changed();
@@ -294,6 +295,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
       return { ...priced, benefits, lines, discount, method: { ...selected, price: priced.shipping } };
     },
     showcase: async () => (await rpc<map.Row[]>("catalog_showcase")).map(map.product),
+    inventory: createInventoryAdapter(client, rpc, changed),
     products: () => store.catalog.products(),
     trackOrder: (number: string, email: string) => rpc<map.TrackedOrder | null>("track_order", { number, email }),
     uploads: {

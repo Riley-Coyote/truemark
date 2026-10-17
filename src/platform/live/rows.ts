@@ -1,3 +1,4 @@
+import { lotStage } from "../inventory";
 /** Database names stop here; the screens continue using the platform contract. */
 import type { Product, Category } from "../../data";
 import type { Application, Buyer, Discount, Lot, Order, Partner, Payout, Referral, ShippingMethod, StorefrontSettings, Visit } from "../types";
@@ -54,7 +55,10 @@ export function partner(row: Row, codes: Discount[]): Partner {
     status: row.status as Partner["status"], joinedAt: String(row.joined_at), audience: String(row.audience) };
 }
 export function order(row: Row): Order {
-  return { id: String(row.id), number: String(row.number), buyerId: String(row.buyer_id), createdAt: String(row.created_at),
+  return { inventoryIssue: ["placed","paid","packed"].includes(String(row.status)) && ((row.order_lines ?? []) as Row[]).some(line=>{
+      const allocations=(line.order_lot_allocations ?? []) as Row[];
+      return allocations.filter(a=>a.state==="reserved").reduce((n,a)=>n+Number(a.quantity),0)!==Number(line.quantity) || allocations.some(a=>a.state==="reserved" && (!a.lots || !["Available","Exhausted"].includes(lotStage(lot(a.lots as Row)))));
+    }) ? "An allocated lot needs testing, a certificate, a count correction, or a hold resolved. Review the picking list." : undefined, id: String(row.id), number: String(row.number), buyerId: String(row.buyer_id), createdAt: String(row.created_at),
     status: row.status as Order["status"], payment: row.payment as Order["payment"], address: row.address as Order["address"],
     shipping: { method: row.shipping_method_id as Order["shipping"]["method"], price: Number(row.shipping_price),
       carrier: optional(row.carrier), tracking: optional(row.tracking) }, subtotal: Number(row.subtotal),
@@ -62,17 +66,17 @@ export function order(row: Row): Order {
     discount: row.discount_code || Number(row.discount_amount) > 0 ? { code: row.discount_code ? String(row.discount_code) : "Member / rewards", amount: Number(row.discount_amount), partnerId: optional(row.discount_partner_id), source: row.discount_code ? "promotion" : "program" } : undefined,
     tax: Number(row.tax ?? 0), refunded: Number(row.refunded ?? 0), paymentExpiresAt: optional(row.payment_expires_at), paidAt: optional(row.paid_at), paymentProvider: optional(row.payment_provider),
     insurance: Number(row.insurance ?? 0), insuranceApplied: Boolean(row.insurance_applied), total: Number(row.total),
-    lines: ((row.order_lines ?? []) as Row[]).map((line) => ({ productId: String(line.product_id), quantity: Number(line.quantity), unitPrice: Number(line.unit_price), lot: String(line.lot) })),
+    lines: ((row.order_lines ?? []) as Row[]).map((line) => ({ id: optional(line.id), allocations: ((line.order_lot_allocations ?? []) as Row[]).filter(a=>a.state!=="released").map(a=>({id:String(a.id),lotId:String(a.lot_id),lot:String(a.lot_number),quantity:Number(a.quantity),state:a.state as "reserved" | "fulfilled" | "released",certificatePath:optional(a.certificate_path),certificateUrl:a.certificate_path ? `https://gydihnfzmuqmbnykaihg.supabase.co/storage/v1/object/public/certificates/${a.certificate_path}` : undefined,returnedUnits:Number(a.returned_units ?? 0)})), productId: String(line.product_id), quantity: Number(line.quantity), unitPrice: Number(line.unit_price), lot: String(line.lot) })),
     events: ((row.order_events ?? []) as Row[]).map((event) => ({ status: event.status as Order["status"], at: String(event.at), note: optional(event.note) })).sort((a, b) => a.at.localeCompare(b.at)) };
 }
 export function lot(row: Row): Lot {
-  return { lot: String(row.lot), productId: String(row.product_id ?? row.productId), status: row.status as Lot["status"],
+  return { id:optional(row.inventory_id), number:optional(row.lot_number), version:Number(row.version ?? 1), testingStatus:row.testing_status as Lot["testingStatus"], holdReason:optional(row.hold_reason), expectedUnits:Number(row.expected_units ?? 0), receivedUnits:Number(row.received_units ?? 0), reservedUnits:Number(row.reserved_units ?? 0),expectedAt:optional(row.expected_at), lot: String(row.lot), productId: String(row.product_id ?? row.productId), status: row.status as Lot["status"],
     receivedAt: optional(row.received_at) ?? null, testedAt: optional(row.tested_at ?? row.testedAt), releasedAt: optional(row.released_at ?? row.releasedAt),
-    coaPath: row.status === "released" ? optional(row.coa_path) : undefined,
+    coaPath: optional(row.coa_path),
     coaUrl: row.status === "released" ? optional(row.coaUrl) : undefined,
     rejectionNote: row.status === "rejected" ? optional(row.rejection_note) : undefined,
-    results: row.status === "released" ? (row.results ?? []) as Lot["results"] : [],
-    reference: row.status === "released" ? optional(row.reference) : undefined,
+    results: (row.results ?? []) as Lot["results"],
+    reference: optional(row.reference),
     units: row.units == null ? null : Number(row.units), sample: false };
 }
 export function referral(row: Row): Referral {

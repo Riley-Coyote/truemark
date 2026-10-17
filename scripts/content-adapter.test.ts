@@ -56,8 +56,10 @@ test('release uploads the required PDF first, then sends the exact results to th
   const f = fixture(); f.result(released);
   const result = await f.content.releaseLot('FIXTURE', release, pdf());
   assert.deepEqual(f.calls.map((call) => call.type), ['upload', 'rpc']);
-  assert.deepEqual(f.calls[0].args, { path: 'FIXTURE.pdf', type: 'application/pdf', options: { upsert: true, contentType: 'application/pdf', cacheControl: '60' } });
-  assert.deepEqual(f.calls[1], { type: 'rpc', name: 'release_lot', args: { lot: 'FIXTURE', results: release.results, reference: release.reference, tested_at: release.testedAt, coa_path: 'FIXTURE.pdf' } });
+  const path=(f.calls[0].args as {path:string}).path;
+  assert.match(path,/^FIXTURE-[a-f0-9-]{36}\.pdf$/);
+  assert.deepEqual(f.calls[0].args, { path, type: 'application/pdf', options: { upsert: false, contentType: 'application/pdf', cacheControl: '60' } });
+  assert.deepEqual(f.calls[1], { type: 'rpc', name: 'release_lot', args: { lot: 'FIXTURE', results: release.results, reference: release.reference, tested_at: release.testedAt, coa_path: path } });
   assert.equal(result.testedAt, '2026-09-29'); assert.equal(f.changes(), 1);
 });
 test('certificate replacement uses only its RPC; upload and RPC failures propagate without success events', async () => {
@@ -73,7 +75,7 @@ test('certificate replacement uses only its RPC; upload and RPC failures propaga
   failedRPC.result(released);
   await failedRPC.content.releaseLot('FIXTURE', release, pdf());
   const uploads = failedRPC.calls.filter((call) => call.type === 'upload');
-  assert.equal(uploads.length, 2); assert.deepEqual(uploads[0].args, uploads[1].args);
+  assert.equal(uploads.length, 2); assert.notEqual((uploads[0].args as {path:string}).path, (uploads[1].args as {path:string}).path);
   assert.deepEqual(failedRPC.calls.map((call) => call.type), ['upload', 'rpc', 'upload', 'rpc']);
   assert.equal(failedRPC.changes(), 1);
 });
@@ -82,7 +84,7 @@ test('reject sends the note through its RPC without a file upload and refreshes 
   const rejected = await f.content.rejectLot('FIXTURE', 'Fixture below specification');
   assert.deepEqual(f.calls, [{ type: 'rpc', name: 'reject_lot', args: { lot: 'FIXTURE', note: 'Fixture below specification' } }]);
   assert.equal(rejected.status, 'rejected'); assert.equal(rejected.rejectionNote, 'Fixture below specification');
-  assert.equal(rejected.coaUrl, undefined); assert.equal(rejected.coaPath, undefined);
+  assert.equal(rejected.coaUrl, undefined); assert.equal(rejected.coaPath, 'FIXTURE.pdf');
   assert.equal(f.changes(), 1);
   f.fail('Fixture rejection refused');
   await assert.rejects(f.content.rejectLot('FIXTURE', 'Fixture note'), /rejection refused/);

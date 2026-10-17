@@ -35,7 +35,7 @@ export async function fetchTemplateData(deps: Deps,row: Row): Promise<TemplateDa
  const one=(table: string,id: unknown)=>id?db.one<Row>(`${table}?id=eq.${encodeURIComponent(String(id))}&select=*&limit=1`):Promise.resolve(null);
  c.order=await one('orders',row.order_id??data.order_id)??undefined;
  if(c.order){const o=c.order;c.buyer=await one('buyers',o.buyer_id)??undefined;c.method=await db.one<Row>(`shipping_methods?id=eq.${encodeURIComponent(o.shipping_method_id)}&select=*&limit=1`)??undefined;
- [c.lines,c.events,c.products,c.lots]=await Promise.all([db.select<Row>(`order_lines?order_id=eq.${o.id}&select=*`),db.select<Row>(`order_events?order_id=eq.${o.id}&select=*&order=at.asc`),db.select<Row>('products?select=*'),db.select<Row>('lots?select=*')]);
+ [c.lines,c.events,c.products,c.lots]=await Promise.all([db.select<Row>(`order_lines?order_id=eq.${o.id}&select=*,order_lot_allocations(*)`),db.select<Row>(`order_events?order_id=eq.${o.id}&select=*&order=at.asc`),db.select<Row>('products?select=*'),db.select<Row>('lots?select=*')]);
  if(o.discount_partner_id)c.partner=await one('partners',o.discount_partner_id)??undefined;}
  if(data.partner_id)c.partner=await one('partners',data.partner_id)??undefined;
  if(c.partner){c.referrals=await db.select<Row>(`referrals?partner_id=eq.${c.partner.id}&select=*&order=created_at.desc`);c.discount=await db.one<Row>(`discounts?partner_id=eq.${c.partner.id}&select=*&limit=1`)??undefined;}

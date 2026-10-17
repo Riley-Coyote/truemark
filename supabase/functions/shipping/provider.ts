@@ -28,7 +28,7 @@ export function shipstationOrder(order: ShippingOrder, cancelled = false): Row {
       const product = line.products as Row;
       return { sku: line.product_id, name: `${product.name} ${product.size}`, quantity: line.quantity, unitPrice: Number(line.unit_price) };
     }), amountPaid: Number(order.total), shippingAmount: Number(order.shipping_price), taxAmount: Number(order.tax ?? 0),
-    requestedShippingService: order.methodLabel, internalNotes: `Lots: ${order.order_lines.map((line) => line.lot).join(', ')}` };
+    requestedShippingService: order.methodLabel, internalNotes: `Lots: ${order.order_lines.flatMap((line) => Array.isArray(line.order_lot_allocations) ? (line.order_lot_allocations as Row[]).filter(a=>a.state!=='released').map(a=>`${a.quantity} × ${a.lot_number}`) : [`${line.quantity} × ${line.lot}`]).join(', ')}` };
 }
 export function createShipStation(key: string, secret: string, fetcher: typeof fetch): Provider {
   async function call(url: string, init: RequestInit = {}): Promise<Row> {
