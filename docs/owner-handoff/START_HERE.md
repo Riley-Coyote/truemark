@@ -2,6 +2,8 @@
 
 Prepared 16 October 2026. This is the entry point for Mason and his Codex. The client is the decision-maker for development, database changes and releases. Riley is not an ongoing approval dependency. Older instructions assigning release approval to Riley are superseded for this handoff.
 
+**Latest consolidated handoff — 18 October:** [Products, lots, certificates and customer retention](COMMAND-CENTER-HANDOFF-2026-10-18.md) collects Mason's settled decisions, the two local implementation commits, verification, the preserved inventory brief, deferred email choice and remaining rollout work. Read it after the continuation notes when resuming this work.
+
 ## What you are taking over
 
 TrueMark has a React/TypeScript storefront and Command Center, Supabase database/Auth/storage/Edge Function code, and a published Studio that demonstrates the design using sample records. Backend code and active functions exist; this does **not** mean all real commerce providers are connected or that the client's requested operations are complete.
