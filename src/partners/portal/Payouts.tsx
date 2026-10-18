@@ -25,6 +25,7 @@ import type { Payout, Referral } from "../../platform/types";
 import { paidToDate, periodLabel, upcoming } from "../metrics";
 import { SAMPLE_TERMS, ordinal } from "../program";
 import { usePartner, useQueryParam } from "./context";
+import { MissingRecord } from "./parts";
 
 const paidOn = (payout: Payout) => (payout.paidAt ? formatDate(`${payout.paidAt}T12:00:00Z`) : "Scheduled");
 
@@ -93,7 +94,7 @@ function covered(payout: Payout, referrals: Referral[]): Referral[] {
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
-function Statement({ payout, referrals, onClose }: { payout: Payout; referrals: Referral[] | undefined; onClose: () => void }) {
+function Statement({ payout, referrals, error, onRetry, onClose }: { payout: Payout; referrals: Referral[] | undefined; error: Error | null; onRetry: () => void; onClose: () => void }) {
   const lines = referrals ? covered(payout, referrals) : undefined;
   return (
     <Drawer
@@ -104,7 +105,9 @@ function Statement({ payout, referrals, onClose }: { payout: Payout; referrals: 
       onClose={onClose}
     >
       <Section title="Referrals in this payout">
-        {!lines ? (
+        {error ? (
+          <EmptyState compact title="These referrals could not be loaded." note="Your payout total is still shown below." action={<Button onClick={onRetry}>Try again</Button>} />
+        ) : !lines ? (
           <div className="pp-list-loading" aria-label="Loading">
             <Skeleton width="84%" />
             <Skeleton width="72%" />
@@ -120,7 +123,7 @@ function Statement({ payout, referrals, onClose }: { payout: Payout; referrals: 
             ))}
           </ul>
         ) : (
-          <p className="kit-note">The referrals for this period are not in the preview’s records.</p>
+          <p className="kit-note">No matching referrals are available for this statement.</p>
         )}
       </Section>
       <Section title="Total">
@@ -158,6 +161,8 @@ export default function Payouts() {
         meta={payouts.data && <span>{plural(payouts.data.length, "payout")}</span>}
       />
 
+      {openId && payouts.data && !open && <MissingRecord kind="payout" onClear={() => setOpenId(null, { replace: true })} />}
+
       <Card className="kit-span-4 pp-figure-card" title="Next payout" meta={<SampleTag>Sample schedule</SampleTag>}>
         {!next ? (
           referrals.error ? (
@@ -192,7 +197,9 @@ export default function Payouts() {
       </Card>
 
       <Card className="kit-span-4 pp-figure-card" title="Lifetime paid">
-        {!paid ? (
+        {payouts.error ? (
+          <EmptyState compact title="Could not be loaded." action={<Button onClick={payouts.reload}>Try again</Button>} />
+        ) : !paid ? (
           <div className="pp-list-loading" aria-label="Loading">
             <Skeleton width="60%" height="1.5rem" />
             <Skeleton width="80%" />
@@ -250,7 +257,7 @@ export default function Payouts() {
         />
       </div>
 
-      {open && <Statement key={open.id} payout={open} referrals={referrals.data} onClose={() => setOpenId(null, { replace: true })} />}
+      {open && <Statement key={open.id} payout={open} referrals={referrals.data} error={referrals.error} onRetry={referrals.reload} onClose={() => setOpenId(null, { replace: true })} />}
     </div>
   );
 }

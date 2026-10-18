@@ -1836,6 +1836,12 @@ button.tm-seq-measure:focus-visible {
   right: var(--tm-margin);
   bottom: var(--tm-space-5);
 }
+/* The desk owns the lower-right corner. Keep the room's setting within reach
+   on the opposite side; portrait layouts retain their existing placement. */
+.tm.tm-mist[data-shape="wide"] .tm-seq-switch-rest {
+  left: var(--tm-margin);
+  right: auto;
+}
 .tm-seq-switch-track {
   position: relative;
   width: 1.5rem;

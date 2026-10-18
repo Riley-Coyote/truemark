@@ -295,29 +295,45 @@ type Landed = {
 const TOAST_MS = 12_000;
 
 function OrderToast({ order, onOpen, onClose }: { order: Landed; onOpen: () => void; onClose: () => void }) {
-  const [held, setHeld] = useState(false);
+  const element = useRef<HTMLElement>(null);
   const titleId = useId();
   const close = useRef(onClose);
   close.current = onClose;
 
-  // It waits while a pointer rests on it or focus is inside it.
+  // Each pause reason is independent: leaving a hovered alert must not expire
+  // its keyboard focus, and an alert in a hidden tab needs a fresh reading interval.
   useEffect(() => {
-    if (held) return;
-    const timer = window.setTimeout(() => close.current(), TOAST_MS);
-    return () => window.clearTimeout(timer);
-  }, [held]);
+    const toast = element.current;
+    if (!toast) return;
+    let timer = 0, disposed = false, touching = false;
+    let hovered = window.matchMedia("(hover: hover) and (pointer: fine)").matches && toast.matches(":hover");
+    const pause = () => window.clearTimeout(timer);
+    const resume = () => {
+      pause();
+      if (disposed || document.hidden || hovered || touching || toast.contains(document.activeElement)) return;
+      timer = window.setTimeout(() => close.current(), TOAST_MS);
+    };
+    const enter = (event: PointerEvent) => { if (event.pointerType === "mouse") { hovered = true; pause(); } };
+    const leave = () => { hovered = false; resume(); };
+    const down = () => { touching = true; pause(); };
+    const up = () => { if (touching) { touching = false; resume(); } };
+    const blur = () => queueMicrotask(resume);
+    const listeners = new AbortController();
+    const options = { signal: listeners.signal };
+    toast.addEventListener("pointerenter", enter, options);
+    toast.addEventListener("pointerleave", leave, options);
+    toast.addEventListener("pointerdown", down, options);
+    toast.addEventListener("focusin", pause, options);
+    toast.addEventListener("focusout", blur, options);
+    window.addEventListener("pointerup", up, options);
+    window.addEventListener("pointercancel", up, options);
+    document.addEventListener("visibilitychange", resume, options);
+    resume();
+    return () => { disposed = true; pause(); listeners.abort(); };
+  }, []);
 
   return (
-    <section
-      className="cc-toast"
-      aria-labelledby={titleId}
-      onMouseEnter={() => setHeld(true)}
-      onMouseLeave={() => setHeld(false)}
-      onFocus={() => setHeld(true)}
-      onBlur={(event) => {
-        if (!(event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget))) setHeld(false);
-      }}
-    >
+    <section ref={element} className="cc-toast" aria-labelledby={titleId}>
       <header className="cc-toast-head">
         <Dot tone="signal" className="cc-toast-dot" />
         <h2 id={titleId} className="cc-toast-title">

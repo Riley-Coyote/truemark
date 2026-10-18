@@ -159,6 +159,29 @@
 .tm-menu-trigger {
   display: none;
 }
+/* The same three strokes become Close, and reverse from their current position. */
+.tm-menu-mark {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+.tm-menu-mark > span {
+  position: absolute;
+  top: 9.2px;
+  left: 2px;
+  width: 16px;
+  height: 1.6px;
+  border-radius: 1px;
+  background: currentColor;
+  transition: transform var(--tm-dur-base) var(--tm-ease-enter), opacity var(--tm-dur-quick) var(--tm-ease-enter);
+}
+.tm-menu-mark > :first-child { transform: translateY(-5px); }
+.tm-menu-mark > :last-child { transform: translateY(5px); }
+.tm-menu-trigger[aria-expanded="true"] .tm-menu-mark > :first-child { transform: rotate(45deg); }
+.tm-menu-trigger[aria-expanded="true"] .tm-menu-mark > :nth-child(2) { opacity: 0; transform: scaleX(0.5); }
+.tm-menu-trigger[aria-expanded="true"] .tm-menu-mark > :last-child { transform: rotate(-45deg); }
+.tm-menu-trigger:focus-visible .tm-menu-mark > span { transition: none; }
 /* Reach: the header's small controls (and the footer's logo) take a finger's height, though they look no
    larger. Each reaches past its own box with a transparent layer, so its focus underline or ring stays where
    it was drawn. */
@@ -264,6 +287,68 @@ html[data-tm-header-light] .tm-header-inner :is(.tm-nav a, .tm-textool, .tm-icon
   -webkit-appearance: none;
   appearance: none;
 }
+.brand-refinement .search-input-wrap {
+  flex: none;
+  gap: var(--tm-space-2);
+}
+.tm-search-clear,
+.tm-search-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--tm-control-touch);
+  height: var(--tm-control-touch);
+  padding: 0;
+  border: 0;
+  border-radius: var(--tm-radius-pill);
+  background: transparent;
+  color: var(--tm-ink-2);
+  cursor: pointer;
+  transition: background-color var(--tm-dur-quick) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-enter);
+}
+.tm-search-submit {
+  background: var(--tm-ink);
+  color: var(--tm-paper);
+}
+.tm-search-clear:hover { background: var(--tm-line); }
+.tm-search-clear:active,
+.tm-search-submit:active {
+  transform: scale(0.96);
+  transition-duration: var(--tm-dur-press);
+}
+.tm-search-submit > svg,
+.tm-search-all > svg {
+  transition: transform var(--tm-dur-quick) var(--tm-ease-enter);
+}
+@media (hover: hover) and (pointer: fine) {
+  .tm-search-submit:hover { background: var(--tm-ink-hover); }
+  .tm-search-submit:hover > svg { transform: translateX(2px); }
+  .tm-search-all:hover > svg { transform: translateX(3px); }
+}
+.tm-search-clear:focus-visible,
+.tm-search-submit:focus-visible,
+.tm-search-all:focus-visible {
+  outline: 2px solid var(--tm-ink);
+  outline-offset: 3px;
+}
+.brand-refinement .tm-search-summary {
+  flex: none;
+  margin: var(--tm-space-3) 0 0;
+  color: var(--tm-ink-2);
+  font-size: var(--tm-type-ui);
+}
+.tm-search-all {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tm-space-4);
+  flex: none;
+  min-height: var(--tm-control-touch);
+  margin-top: var(--tm-space-3);
+  color: var(--tm-ink);
+  font-size: var(--tm-type-ui);
+}
 /* A dialog's Close takes a finger's size, though it looks no larger (the bag's reaches further: checkout.css). */
 .brand-refinement .modal-heading .icon-button {
   position: relative;
@@ -273,24 +358,41 @@ html[data-tm-header-light] .tm-header-inner :is(.tm-nav a, .tm-textool, .tm-icon
   position: absolute;
   inset: min(0px, calc(50% - var(--tm-reach) / 2));
 }
-/* They come and go as pages do (navigation.css): the same glide, the same time. On a wider
-   screen search is a dialog that settles in and the bag a panel from the right edge; on a phone
-   both are sheets risen from the bottom (Modal.tsx, sheet.tsx). */
+/* Small dialogs settle quickly; a full sheet has the page's glide. Dismissal is shorter,
+   and sheet.tsx follows the actual transition rather than holding an invisible panel. */
 .brand-refinement .modal-backdrop {
   --tm-sheet-ease: var(--tm-ease-glide, cubic-bezier(0.32, 0.72, 0, 1));
+  --tm-sheet-duration: var(--tm-dur-base);
+  isolation: isolate;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  animation: none;
+  transition: none;
+}
+/* Fade one fixed blur layer, instead of recalculating its blur radius every frame. */
+.brand-refinement .modal-backdrop::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background: var(--tm-scrim);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  animation: none;
-  transition:
-    background-color var(--tm-dur-slow) var(--tm-sheet-ease),
-    backdrop-filter var(--tm-dur-slow) var(--tm-sheet-ease),
-    -webkit-backdrop-filter var(--tm-dur-slow) var(--tm-sheet-ease);
+  transition: opacity var(--tm-sheet-duration) var(--tm-sheet-ease);
 }
-.brand-refinement .modal-backdrop:not([data-state="open"]) {
-  background: transparent;
-  backdrop-filter: blur(0);
-  -webkit-backdrop-filter: blur(0);
+.brand-refinement .modal-backdrop:not([data-state="open"])::before {
+  opacity: 0;
+}
+.brand-refinement .side-modal {
+  --tm-sheet-duration: var(--tm-dur-slow);
+}
+.brand-refinement .modal-backdrop[data-state="leaving"] {
+  --tm-sheet-duration: var(--tm-dur-leave);
+}
+.brand-refinement .side-modal[data-state="leaving"] {
+  --tm-sheet-duration: calc(var(--tm-dur-slow) * 2 / 3);
 }
 .brand-refinement .modal-panel {
   background: var(--tm-paper);
@@ -298,7 +400,7 @@ html[data-tm-header-light] .tm-header-inner :is(.tm-nav a, .tm-textool, .tm-icon
   box-shadow: var(--tm-shadow-float);
   outline: none;
   animation: none;
-  transition: transform var(--tm-dur-slow) var(--tm-sheet-ease), opacity var(--tm-dur-slow) var(--tm-sheet-ease);
+  transition: transform var(--tm-sheet-duration) var(--tm-sheet-ease), opacity var(--tm-sheet-duration) var(--tm-sheet-ease);
 }
 .brand-refinement .modal-backdrop:not([data-state="open"]) .modal-panel {
   opacity: 0;
@@ -320,9 +422,29 @@ html[data-tm-header-light] .tm-header-inner :is(.tm-nav a, .tm-textool, .tm-icon
 .modal-grab {
   display: none;
 }
+/* Keep the search field and recovery action in reach on a short laptop window too. */
+@media (min-width: 761px) {
+  .brand-refinement .modal-backdrop:has(.search-results) {
+    padding-block: clamp(var(--tm-space-5), 10vh, 6.25rem);
+  }
+  .brand-refinement .modal-panel:has(> .search-results) {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - clamp(var(--tm-space-7), 20vh, 12.5rem));
+    overflow: hidden;
+  }
+  .modal-panel:has(> .search-results) > .modal-heading { flex: none; }
+  .modal-panel:has(> .search-results) > .search-results {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
 @media (max-width: 760px) {
   /* The visible screen, measured (sheet.tsx); the whole screen until the first measure. */
   .brand-refinement .modal-backdrop {
+    --tm-sheet-duration: var(--tm-dur-slow);
     top: var(--tm-sheet-top, 0px);
     bottom: auto;
     height: var(--tm-sheet-height, 100dvh);
@@ -330,6 +452,14 @@ html[data-tm-header-light] .tm-header-inner :is(.tm-nav a, .tm-textool, .tm-icon
     justify-content: stretch;
     padding: 0;
     overflow: hidden;
+  }
+  .brand-refinement .modal-backdrop[data-state="leaving"] {
+    --tm-sheet-duration: calc(var(--tm-dur-slow) * 2 / 3);
+  }
+  .brand-refinement .modal-backdrop::before {
+    top: var(--tm-sheet-top, 0px);
+    bottom: auto;
+    height: var(--tm-sheet-height, 100dvh);
   }
   /* A tall sheet, a sliver of the dimmed page left above it. Its own content scrolls. */
   .brand-refinement .modal-panel,
@@ -384,14 +514,29 @@ html[data-tm-header-light] .tm-header-inner :is(.tm-nav a, .tm-textool, .tm-icon
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding-bottom: calc(var(--tm-space-5) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: var(--tm-space-3);
+  }
+  .modal-panel:has(> .search-results) > .tm-search-all {
+    margin: 0;
+    padding-block: var(--tm-space-3) calc(var(--tm-space-3) + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--tm-line);
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .tm-menu-mark > span,
+  .tm-search-clear,
+  .tm-search-submit,
+  .tm-search-submit > svg,
+  .tm-search-all > svg,
   .brand-refinement .modal-backdrop,
+  .brand-refinement .modal-backdrop::before,
   .brand-refinement .modal-panel {
     transition: none;
   }
+  .tm-search-clear:active,
+  .tm-search-submit:active,
+  .tm-search-submit:hover > svg,
+  .tm-search-all:hover > svg { transform: none; }
 }
 /* The phone menu: a panel dropped from the header, the way the command center's menu drops
    from its bar. The header stays put, the button turns to a close mark, and the page stays in

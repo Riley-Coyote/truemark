@@ -9,6 +9,7 @@ import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, Bell } from "lucide-react";
 import { Button, Dot, formatDay, formatMoney } from "../../app-kit";
 import { useNotices } from "../../platform/notifications";
+import { usePresence } from "../../shop/motion";
 import { worldNow } from "../../platform/storage";
 import { HOME } from "./nav";
 
@@ -54,6 +55,7 @@ export function AlertsBell({ partnerId }: { partnerId: string }) {
   const panelId = useId();
   const headingId = useId();
   const location = useLocation();
+  const presence = usePresence<HTMLDivElement>(open, location.pathname);
   const previousUnread = useRef(unread);
   const [rang, setRang] = useState(0);
   useBeat(open);
@@ -116,8 +118,18 @@ export function AlertsBell({ partnerId }: { partnerId: string }) {
         )}
       </button>
 
-      {open && (
-        <div ref={panel} id={panelId} className="pp-bell-panel" role="dialog" aria-labelledby={headingId} tabIndex={-1}>
+      {presence.shown && (
+        <div
+          ref={(node) => { panel.current = node; presence.exit.current = node; }}
+          id={panelId}
+          className="pp-bell-panel"
+          data-closing={presence.closing || undefined}
+          inert={!open || undefined}
+          aria-hidden={!open || undefined}
+          role="dialog"
+          aria-labelledby={headingId}
+          tabIndex={-1}
+        >
           <header className="pp-bell-head">
             <h2 id={headingId} className="kit-card-title">
               Alerts

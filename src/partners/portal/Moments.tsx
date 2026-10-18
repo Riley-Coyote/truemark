@@ -25,7 +25,15 @@ const MAX_TOASTS = 3;
 type Sale = { referralId: string; orderNumber: string; commission: number; via: "link" | "code" };
 
 function SaleToast({ sale, onClose }: { sale: Sale; onClose: () => void }) {
-  const [held, setHeld] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [hidden, setHidden] = useState(() => document.hidden);
+  const held = hovered || focused || hidden;
+  useEffect(() => {
+    const changed = () => setHidden(document.hidden);
+    document.addEventListener("visibilitychange", changed);
+    return () => document.removeEventListener("visibilitychange", changed);
+  }, []);
   const left = useRef(STAY_MS);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
@@ -44,11 +52,11 @@ function SaleToast({ sale, onClose }: { sale: Sale; onClose: () => void }) {
   return (
     <div
       className="pp-toast"
-      onPointerEnter={() => setHeld(true)}
-      onPointerLeave={() => setHeld(false)}
-      onFocus={() => setHeld(true)}
+      onPointerEnter={(event) => { if (event.pointerType !== "touch") setHovered(true); }}
+      onPointerLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHeld(false);
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false);
       }}
       onKeyDown={(event) => {
         if (event.key === "Escape") {

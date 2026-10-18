@@ -7,6 +7,7 @@ import { categories } from "../../data";
 import { ProductCard } from "../../brand/ProductCard";
 import { compoundsForBrowsing, firstOrderOffer } from "../catalog";
 import type { Compound } from "../catalog";
+import { searchCompounds } from "../search";
 import { useReveal } from "../motion";
 
 type Sort = "featured" | "price-asc" | "price-desc" | "name";
@@ -45,6 +46,7 @@ export default function Catalog() {
   const offer = useResource(() => LIVE ? store.catalog.validateCode("FIRSTLOT") : Promise.resolve(firstOrderOffer), []);
   const firstOffer = LIVE ? offer.data : firstOrderOffer;
   const root = useRef<HTMLDivElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
   useReveal(root);
   const [params, setParams] = useSearchParams();
   const requestedClass = params.get("class");
@@ -63,13 +65,7 @@ export default function Catalog() {
   }, [compoundsForBrowsing]);
 
   const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const filtered = compoundsForBrowsing.filter(
-      (c) =>
-        (active === "all" || c.lead.category === active) &&
-        (!q || `${c.name} ${c.variants.map((v) => v.size).join(" ")}`.toLowerCase().includes(q)),
-    );
-    return sortCompounds(filtered, sort);
+    return sortCompounds(searchCompounds(compoundsForBrowsing, query, active), sort);
   }, [active, query, sort, compoundsForBrowsing]);
 
   const update = (key: string, value: string | null) => {
@@ -129,11 +125,12 @@ export default function Catalog() {
           </p>
         </nav>
 
-        <div className="tm-shop-tools">
+        <form className="tm-shop-tools" role="search" onSubmit={(event) => { event.preventDefault(); searchInput.current?.blur(); }}>
           <label className="tm-search">
             <Search size={16} strokeWidth={1.6} aria-hidden="true" />
             <span className="sr-only">Search compounds</span>
             <input
+              ref={searchInput}
               type="search"
               placeholder="Search"
               autoComplete="off"
@@ -141,11 +138,12 @@ export default function Catalog() {
               autoCapitalize="off"
               spellCheck={false}
               enterKeyHint="search"
+              aria-label="Search compounds"
               value={query}
               onChange={(e) => update("q", e.target.value)}
             />
             {query && (
-              <button type="button" aria-label="Clear search" onClick={() => update("q", null)}>
+              <button type="button" aria-label="Clear search" onClick={() => { update("q", null); searchInput.current?.focus(); }}>
                 <X size={14} strokeWidth={1.8} />
               </button>
             )}
@@ -168,7 +166,7 @@ export default function Catalog() {
               <Grid3x3 size={16} strokeWidth={1.6} aria-hidden="true" />
             </button>
           </div>
-        </div>
+        </form>
 
         {visible.length > 0 ? (
           <div className={`tm-grid tm-shop-grid${density === "dense" ? " is-dense" : ""}`} role="list" aria-label="Compounds" data-review="product-tags">

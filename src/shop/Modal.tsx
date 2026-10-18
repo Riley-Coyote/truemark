@@ -48,7 +48,7 @@ function ModalSheet({
   const panel = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const seen = useVisibleViewport();
-  const state = useSheetLeaving(open, onGone);
+  const state = useSheetLeaving(open, onGone, panel);
   const leaving = state === "leaving";
   useScrollLock();
   useSheetFocus(panel, onClose, field, leaving);

@@ -1,9 +1,12 @@
 import { useEffect, useId, useRef } from "react";
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
+import { cycleDialogFocus } from "../focus";
 
-const FOCUSABLE =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+// Nested record actions share one scroll lock; only the foremost panel handles keys.
+const layers: HTMLDivElement[] = [];
+let savedOverflow = "";
+
 
 /**
  * A right-side panel for one record. Focus moves into it, stays inside it
@@ -38,43 +41,38 @@ export function Drawer({
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const root = panel.current;
     if (!root) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (!layers.length) {
+      savedOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+    }
+    layers.push(root);
     root.focus({ preventScroll: true });
 
     function onKey(event: KeyboardEvent) {
-      if (!root) return;
+      if (!root || layers.at(-1) !== root || event.defaultPrevented) return;
       if (event.key === "Escape") {
         event.preventDefault();
         closeRef.current();
         return;
       }
-      if (event.key !== "Tab") return;
-      const focusable = Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => el.getClientRects().length > 0,
-      );
-      if (!focusable.length) {
-        event.preventDefault();
-        return;
-      }
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const current = document.activeElement;
-      const inside = current instanceof Node && root.contains(current) && current !== root;
-      if (event.shiftKey && (!inside || current === first)) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (!inside || current === last)) {
-        event.preventDefault();
-        first.focus();
-      }
+      cycleDialogFocus(root, event);
     }
 
+    function onFocus(event: FocusEvent) {
+      if (layers.at(-1) === root && event.target instanceof Node && !root?.contains(event.target)) {
+        root?.focus({ preventScroll: true });
+      }
+    }
     document.addEventListener("keydown", onKey);
+    document.addEventListener("focusin", onFocus);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-      if (previous && document.contains(previous)) previous.focus({ preventScroll: true });
+      document.removeEventListener("focusin", onFocus);
+      const wasTop = layers.at(-1) === root;
+      const index = layers.indexOf(root);
+      if (index !== -1) layers.splice(index, 1);
+      if (!layers.length) document.body.style.overflow = savedOverflow;
+      if (wasTop && previous && document.contains(previous)) previous.focus({ preventScroll: true });
     };
   }, []);
 

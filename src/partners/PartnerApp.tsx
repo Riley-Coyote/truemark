@@ -19,7 +19,12 @@ export default function PartnerApp() {
       <Route
         path="app/*"
         element={
-          <Suspense fallback={null}>
+          <Suspense fallback={
+            <div className="pp-portal-opening" role="status">
+              <span className="tm-brand-dot" aria-hidden="true" />
+              Opening your portal…
+            </div>
+          }>
             <Portal />
           </Suspense>
         }

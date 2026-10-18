@@ -19,7 +19,7 @@ import type { Payout, Referral, ReferralStatus } from "../../platform/types";
 import { nextPayoutDate, payoutFor, periodLabel } from "../metrics";
 import { percent } from "../program";
 import { usePartner, useQueryParam } from "./context";
-import { TotalsRow } from "./parts";
+import { MissingRecord, TotalsRow } from "./parts";
 
 const FLOW: ReferralStatus[] = ["pending", "approved", "paid", "void"];
 
@@ -215,6 +215,7 @@ export default function Referrals() {
         description="Every order placed with your code or through your link, newest first. You see the order, never the buyer. Select a referral to read its record."
         meta={referrals.data && <span>{plural(all.length, "referral")}</span>}
       />
+      {openId && referrals.data && !open && <MissingRecord kind="referral" onClear={() => setOpenId(null, { replace: true })} />}
       <div className="kit-toolbar">
         <Segmented
           label="Filter referrals by status"

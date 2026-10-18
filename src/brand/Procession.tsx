@@ -50,7 +50,7 @@ export function Procession() {
           return <div className="tm-procession-actor" key={c.id} data-product-id={product.id} aria-hidden="true">
             <span className="tm-procession-plinth" />
             <span className="tm-procession-shadow" />
-            <img src={productCutout(product)} width="578" height="1112" alt="" draggable={false} decoding="async" />
+            <img src={productCutout(product)} width="578" height="1112" alt="" draggable={false} decoding="async" loading="lazy" fetchPriority="low" />
           </div>;
         })}
       </div>

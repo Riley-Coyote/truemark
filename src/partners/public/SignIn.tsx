@@ -46,6 +46,8 @@ export default function SignIn() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (busy) return;
+    setError(undefined);
     if (!EMAIL.test(email.trim())) {
       setError(email.trim() ? "Enter a full email address." : "Enter the email address you applied with.");
       document.getElementById("pp-signin-email")?.focus();
@@ -85,7 +87,7 @@ export default function SignIn() {
           <p className="tm-section-note pp-signin-note">
             Your code and links, your referrals and payouts, and the asset library.
           </p>
-          <form className="pp-signin-form" onSubmit={submit} noValidate>
+          <form className="pp-signin-form" onSubmit={submit} aria-busy={busy} noValidate>
             <Field
               id="pp-signin-email"
               label="Email"
@@ -96,15 +98,16 @@ export default function SignIn() {
               spellCheck={false}
               placeholder="you@example.com"
               value={email}
+              disabled={busy}
               error={error}
               onChange={(event) => {
                 setEmail(event.target.value);
                 if (error) setError(undefined);
               }}
             />
-            {LIVE && <Field name="password" id="pp-signin-password" label="Password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} />}
+            {LIVE && <Field name="password" id="pp-signin-password" label="Password" type="password" autoComplete="current-password" value={password} disabled={busy} onChange={(event) => { setPassword(event.target.value); if (error) setError(undefined); }} />}
             <button className="tm-button tm-button-primary" type="submit" disabled={busy}>
-              {busy ? "One moment" : "Continue"}
+              {busy ? "Signing in…" : "Continue"}
             </button>
           </form>
           <p className="pp-signin-switch"><button type="button" className="tm-textlink" onClick={() => setReset(true)}>Forgot password?</button></p>

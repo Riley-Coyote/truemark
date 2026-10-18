@@ -27,7 +27,7 @@ import { Celebrate } from "./Celebrate";
 import { Hero } from "./Hero";
 import { Momentum } from "./Momentum";
 import { HOME } from "./nav";
-import { useSampleNow } from "./parts";
+import { MissingRecord, useSampleNow } from "./parts";
 import { ReferralDrawer } from "./Referrals";
 import { ShareKit } from "./ShareKit";
 
@@ -96,6 +96,7 @@ export default function Overview() {
         arrivals={arrivals}
         goal={prefs.goal}
       />
+      {openId && referrals.data && !open && <MissingRecord kind="referral" actionLabel="Back to overview" onClear={() => setOpenId(null, { replace: true })} />}
       {referrals.error ? (
         <div className="kit-card kit-span-8">
           <EmptyState

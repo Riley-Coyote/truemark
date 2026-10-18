@@ -276,6 +276,10 @@ export function MistOpening() {
   // never waits for them; pointing at a vial (or reaching it by keyboard) readies its own at once.
   useEffect(() => {
     if (!allowed) return;
+    // A possible next page should not consume a data-saving visitor's connection.
+    // Intent still readies the same product through RoomVial's onNear callback.
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    if (connection?.saveData || (connection?.effectiveType && connection.effectiveType !== "4g") || matchMedia("(prefers-reduced-data: reduce)").matches) return;
     let idle = 0;
     // Safari has no idle callback: a moment after load does.
     const later = typeof window.requestIdleCallback === "function";

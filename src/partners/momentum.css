@@ -1043,3 +1043,15 @@
 @media (prefers-reduced-motion: reduce) {
   .kit[data-theme="studio"] :is(.pp-hero-light, .pp-sale-item, .pp-sale-row, .pp-sale-row > *, .pp-celebrate-light) { animation: none !important; transition: none !important; }
 }
+
+/* The alert panel leaves as quietly as it arrives; closed controls are inert. */
+.pp-bell-panel[data-closing] {
+  pointer-events: none;
+  animation: pp-alerts-leave var(--tm-dur-leave) var(--tm-ease-enter) both;
+}
+@keyframes pp-alerts-leave {
+  to { opacity: 0; transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pp-bell-panel, .pp-bell-panel[data-closing] { animation: none; }
+}

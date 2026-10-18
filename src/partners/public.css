@@ -1001,6 +1001,18 @@ html:has(.pp-public) {
   }
 }
 
+.pp-portal-opening {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--tm-space-3);
+  min-height: calc(100svh - var(--review-bar-height, 0px));
+  padding: var(--tm-space-6);
+  background: var(--tm-paper);
+  color: var(--tm-ink-2);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-display);
+}
+
 /* ---------- Narrow screens ---------- */
 
 @media (max-width: 1100px) {
@@ -1186,5 +1198,16 @@ html:has(.pp-public) {
   }
   .pp-fields.is-pair {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Keep the program name and sign-in reachable on compact phones. */
+@media (max-width: 400px) {
+  .pp-public .pp-bar-brand { gap: var(--tm-space-2); }
+  .pp-public .pp-bar-label {
+    padding-left: var(--tm-space-2);
+    max-width: 6.5rem;
+    white-space: normal;
+    line-height: 1.4;
   }
 }

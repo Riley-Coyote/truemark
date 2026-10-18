@@ -54,10 +54,10 @@ function exitTime(element: Element): number {
 }
 
 /**
- * Calls `done` once the element has faded out: when its opacity transition or its animation ends, or once the longest
+ * Calls `done` once the element has left: when its opacity (or requested property) transition or its animation ends, or once the longest
  * of them has had its time, so nothing is left behind if the end never comes. Returns a way to call it off.
  */
-export function afterExit(element: HTMLElement, done: () => void): () => void {
+export function afterExit(element: HTMLElement, done: () => void, property = "opacity"): () => void {
   let called = false;
   const finish = () => {
     if (called) return;
@@ -67,7 +67,7 @@ export function afterExit(element: HTMLElement, done: () => void): () => void {
   };
   const end = (event: Event) => {
     if (event.target !== element) return;
-    if (event.type === "animationend" || (event as TransitionEvent).propertyName === "opacity") finish();
+    if (event.type === "animationend" || (event as TransitionEvent).propertyName === property) finish();
   };
   element.addEventListener("transitionend", end);
   element.addEventListener("animationend", end);

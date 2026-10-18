@@ -30,6 +30,7 @@ const VARIANT_KEY = "tm-offer-variant";
 const STATE_KEY = "tm-offer";
 /** On the site this long, or this far down a page, and the offer appears. */
 const DELAY_MS = 7000;
+const READING_PAUSE_MS = 2500;
 const SCROLL_SHARE = 0.4;
 /** Pages where a buyer is busy with something else: buying, their account, a lot or an order. */
 const QUIET = /^\/(cart|checkout|account|access|track|verify)(\/|$)/;
@@ -61,6 +62,8 @@ function write(key: string, value: string) {
 /** Another dialog, the bag, search, the chat or the menu has the reader's attention, the chat is open beside the page
  *  (desktop), or the reader is partway through the opening's closer look (brand/Sequence.tsx). */
 const busy = () =>
+  document.hidden ||
+  Boolean(document.activeElement?.matches('input, textarea, select, [contenteditable="true"]')) ||
   document.documentElement.hasAttribute("data-scroll-locked") ||
   Boolean(document.querySelector('.tm-mmenu, [aria-modal="true"], .tm-desk-dock:not([hidden]), .tm-mist[data-seq-playing]'));
 
@@ -84,16 +87,20 @@ export function FirstOrderOffer({ locked }: { locked: boolean }) {
   const [applied, setApplied] = useState(false);
   // Shown once per visit, even where `?offer=` asks for it again after a "Not now".
   const [done, setDone] = useState(false);
-  const quiet = QUIET.test(location.pathname);
+  const quiet = QUIET.test(location.pathname) ||
+    (location.pathname === "/products" && Boolean(new URLSearchParams(location.search).get("q")?.trim()));
   const settled = read(STATE_KEY);
   const eligible = !done && Boolean(offer.data?.active) && variant !== "off" && !quiet && (forced || !settled) && (applied || code.discount?.code !== CODE);
 
-  // Appear once: after a while on the site, or partway down a page, never over another dialog.
+  // Wait for a pause in browsing. Searching, typing and scrolling keep their place;
+  // a closed search must not immediately be replaced by a promotional dialog.
   useEffect(() => {
     if (!eligible || open) return;
     let timer = 0;
+    let lastInteraction = performance.now();
+    const interacting = () => { lastInteraction = performance.now(); };
     const show = () => {
-      if (busy()) {
+      if (busy() || (!forced && performance.now() - lastInteraction < READING_PAUSE_MS)) {
         timer = window.setTimeout(show, 1500);
         return;
       }
@@ -102,18 +109,25 @@ export function FirstOrderOffer({ locked }: { locked: boolean }) {
     const elapsed = performance.now() - visitStart;
     timer = window.setTimeout(show, forced ? 900 : Math.max(1500, DELAY_MS - elapsed));
     const onScroll = () => {
+      interacting();
       const room = document.documentElement.scrollHeight - window.innerHeight;
       if (room > 0 && window.scrollY / room >= SCROLL_SHARE && performance.now() - visitStart > 2000) {
         window.clearTimeout(timer);
-        show();
+        timer = window.setTimeout(show, READING_PAUSE_MS);
       }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("pointerdown", interacting, { passive: true });
+    window.addEventListener("keydown", interacting);
+    document.addEventListener("visibilitychange", interacting);
     return () => {
       window.clearTimeout(timer);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("pointerdown", interacting);
+      window.removeEventListener("keydown", interacting);
+      document.removeEventListener("visibilitychange", interacting);
     };
-  }, [eligible, open, forced]);
+  }, [eligible, open, forced, location.pathname]);
 
   // Arriving at checkout, an account page or a lookup puts the offer away in the same step; it isn't dismissed.
   if (open && quiet) setOpen(false);

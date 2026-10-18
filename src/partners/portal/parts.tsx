@@ -7,7 +7,7 @@
 import { useEffect, useId, useState } from "react";
 import type { InputHTMLAttributes, ReactNode, Ref } from "react";
 import { Check, Copy } from "lucide-react";
-import { Button } from "../../app-kit";
+import { Button, EmptyState } from "../../app-kit";
 import type { Column } from "../../app-kit";
 import { SITE } from "../program";
 import { worldNow } from "../../platform/storage";
@@ -33,19 +33,20 @@ export async function copyText(text: string): Promise<boolean> {
     /* Fall through to the selection copy. */
   }
   const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  let area: HTMLTextAreaElement | undefined;
   try {
-    const area = document.createElement("textarea");
+    area = document.createElement("textarea");
     area.value = text;
     area.setAttribute("readonly", "");
     area.className = "pp-copy-source";
     document.body.appendChild(area);
     area.select();
     const copied = document.execCommand("copy");
-    area.remove();
     return copied;
   } catch {
     return false;
   } finally {
+    area?.remove();
     previous?.focus({ preventScroll: true });
   }
 }
@@ -89,7 +90,7 @@ export function CopyButton({
       >
         {copied ? <Check aria-hidden="true" strokeWidth={1.8} /> : <Copy aria-hidden="true" strokeWidth={1.6} />}
         <span className="pp-copy-labels">
-          <span data-show={!copied}>{label}</span>
+          <span data-show={!copied} aria-hidden={copied}>{label}</span>
           <span data-show={copied} aria-hidden={!copied}>
             Copied
           </span>
@@ -238,5 +239,19 @@ export function TotalsRow<T>({
         </tr>
       </tbody>
     </table>
+  );
+}
+
+/** A stale shared record address should always explain how to return to the list. */
+export function MissingRecord({ kind, onClear, actionLabel }: { kind: "referral" | "payout"; onClear: () => void; actionLabel?: string }) {
+  return (
+    <div className="kit-card kit-span-12" role="status">
+      <EmptyState
+        compact
+        title={`That ${kind} is no longer available.`}
+        note="The link may be out of date, or the record may belong to another account."
+        action={<Button onClick={onClear}>{actionLabel ?? `Return to ${kind === "referral" ? "referrals" : "payouts"}`}</Button>}
+      />
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
-import { Card, Facts, PageHeader, Segmented, Select, Skeleton, StatusChip } from "../../app-kit";
+import { Button, Card, Facts, PageHeader, Segmented, Select, Skeleton, StatusChip } from "../../app-kit";
 import { LIVE } from "../../platform/mode";
 import { store, useResource } from "../../platform/store";
 import { productCutout } from "../../shop/catalog";
@@ -48,7 +48,7 @@ export default function Links() {
             ]}
           />
         ) : discounts.error ? (
-          <p className="kit-note">The code’s status could not be loaded. The code itself is shown above.</p>
+          <div role="status"><p className="kit-note">The code’s status could not be loaded. The code itself is shown above.</p><Button onClick={discounts.reload}>Try again</Button></div>
         ) : (
           <div className="pp-list-loading" aria-label="Loading">
             <Skeleton width="80%" />

@@ -1880,6 +1880,12 @@ html:has(.kit[data-theme="studio"]) {
   }
 }
 
+/* Keep the brand mark and every action reachable on the narrowest phones. */
+@media (max-width: 22.5rem) {
+  .kit-mbar .kit-brand-label { display: none; }
+  .kit-mbar, .kit-mbar-tools { gap: var(--tm-space-2); }
+}
+
 /* Below 720px tables become stacked rows. */
 @media (max-width: 45rem) {
   .kit {

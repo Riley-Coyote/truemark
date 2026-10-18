@@ -55,18 +55,38 @@ export function MobileAdd() {
   }, []);
 
   useEffect(() => {
-    if (!entry) return;
-    const deadline = Date.now() + 5000;
-    const dismiss = () => {
-      if (Date.now() < deadline || bar.current?.contains(document.activeElement)) return;
-      setOpen(false);
-    };
-    const timer = window.setTimeout(dismiss, 5000);
+    if (!entry || !open) return;
     const el = bar.current;
-    const blur = () => window.setTimeout(dismiss, 0);
-    el?.addEventListener("focusout", blur);
-    return () => { window.clearTimeout(timer); el?.removeEventListener("focusout", blur); };
-  }, [entry, bar]);
+    if (!el) return;
+    let timer = 0, disposed = false;
+    let hovered = window.matchMedia("(hover: hover) and (pointer: fine)").matches && el.matches(":hover");
+    let touching = false;
+    const pause = () => window.clearTimeout(timer);
+    const resume = () => {
+      pause();
+      if (disposed || document.hidden || hovered || touching || el.contains(document.activeElement)) return;
+      // A full reading interval after returning to the tab or leaving a control. The
+      // message never expires under a finger, keyboard focus, or a hovering pointer.
+      timer = window.setTimeout(() => setOpen(false), 5000);
+    };
+    const enter = (event: PointerEvent) => { if (event.pointerType === "mouse") { hovered = true; pause(); } };
+    const leave = () => { hovered = false; resume(); };
+    const down = () => { touching = true; pause(); };
+    const up = () => { if (touching) { touching = false; resume(); } };
+    const blur = () => queueMicrotask(resume);
+    const listeners = new AbortController();
+    const options = { signal: listeners.signal };
+    el.addEventListener("pointerenter", enter, options);
+    el.addEventListener("pointerleave", leave, options);
+    el.addEventListener("pointerdown", down, options);
+    el.addEventListener("focusin", pause, options);
+    el.addEventListener("focusout", blur, options);
+    window.addEventListener("pointerup", up, options);
+    window.addEventListener("pointercancel", up, options);
+    document.addEventListener("visibilitychange", resume, options);
+    resume();
+    return () => { disposed = true; pause(); listeners.abort(); };
+  }, [entry, bar, open]);
 
   useEffect(() => {
     if (!entry || !product || !entry.origin || reduced) return;

@@ -40,6 +40,18 @@ Follow Mason's current request. If he is starting without a specific task, verif
 
 Codex can independently inspect the lot model, trace its order/payment/certificate consumers, and research real carrier events while waiting for business details. No production migration, provider activation or customer communication is authorized merely by this checkpoint.
 
+## Website, Partners and Command Center polish — 18 October 2026
+
+**Decision and source:** Riley explicitly requested a comprehensive final experience pass and publication of Website, Partners, Command Center and their nested product areas. Studio and Overview are outside this scope; the existing pinned Studio package and Pages workflow are preserved.
+
+**Result:** Search now handles compound names and strengths consistently, with correct results/prices and Enter submission. Mobile menu/search/cart transitions and sheet gestures are more interruptible; canceled or second-finger drags no longer dismiss a sheet. Notifications respect focus and background tabs. Partners has compact layouts, loading feedback, stale-link recovery, retryable payout/discount failures and clearer submission/copy states. Command Center message search includes displayed email addresses and resets filters between Inbox and Email & SMS. Shared drawers retain nested focus/scroll behavior, and explicit keyboard traversal fixes Safari skipping controls. Homepage imagery loads as needed, data-saving connections avoid speculative product downloads, and the photographed room paints before optional mist compilation.
+
+**Verification:** Chrome route/journey checks cover all three areas at phone and desktop widths, all 20 product variants and seven articles, account/checkout review states, all 28 Command Center navigation routes, partner workflows and injected fixture failures. WebKit verifies the same core journeys and 144 forward/reverse dialog focus traversals. An iPhone Safari simulator was also visually inspected; this is not physical-device acceptance. Local regression coverage totals 363 distinct tests including the new search, sheet gesture and focus cases. Portable release checks cover preview/live/launch builds, seven SQL validators, five function bundles and browser artifact isolation. Historical comparisons requiring private commits or original certificate files remain excluded; this is not a claim that the full historical suite is portable.
+
+A throttled mobile lab sample transferred 2.38 MB versus 3.24 MB before this pass, with FCP/LCP 4.224 s versus 7.816 s. Timing is directional (single samples and baseline contention), not field-performance certification. The existing large initial JavaScript chunk warning remains.
+
+**Release boundary:** This source checkpoint is prepared for the authorized publication through the existing GitHub Pages workflow. Verify its successful deployment run and hosted assets for the deployed identity. No migration, hosted data change, provider activation, real payment, shipment or customer message is part of this release. Connected-provider and client-machine acceptance remain separate work.
+
 ## Record future checkpoints here
 
 For each meaningful update, add a short dated entry with:

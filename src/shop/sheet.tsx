@@ -1,8 +1,9 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent, RefObject } from "react";
 import { createPortal } from "react-dom";
-import { usePrefersReducedMotion } from "./motion";
+import { afterExit, usePrefersReducedMotion } from "./motion";
 import { useStepWaiting } from "../stepping";
+import { cycleDialogFocus } from "../focus";
 import "./sheet.css";
 
 /*
@@ -114,14 +115,13 @@ export function useScrollLock() {
  * Closed by a step forward (a link in it followed), it holds as the tap left it until the page is
  * taken for the step, and goes with the page whole (stepping.ts).
  */
-export function useSheetPresence(onClose: () => void) {
+export function useSheetPresence(onClose: () => void, panel?: RefObject<HTMLElement | null>) {
   const reduced = usePrefersReducedMotion();
   const waiting = useStepWaiting();
   const [state, setState] = useState<SheetState>(reduced ? "open" : "entering");
   const finish = useRef(onClose);
   finish.current = onClose;
   const leaving = useRef(false);
-  const timer = useRef(0);
 
   useLayoutEffect(() => {
     if (state !== "entering") return;
@@ -138,6 +138,19 @@ export function useSheetPresence(onClose: () => void) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Let the sheet's actual exit finish, including a reversed entrance. Older callers keep
+  // the shared glide time. Unmounting or reopening cancels the pending dismissal.
+  useLayoutEffect(() => {
+    if (state !== "leaving" || waiting) return;
+    if (reduced) {
+      finish.current();
+      return;
+    }
+    if (panel?.current) return afterExit(panel.current, () => finish.current(), "transform");
+    const timer = window.setTimeout(() => finish.current(), SHEET_MS);
+    return () => window.clearTimeout(timer);
+  }, [state, waiting, reduced, panel]);
+
   const requestClose = useCallback(() => {
     if (leaving.current) return;
     leaving.current = true;
@@ -146,14 +159,12 @@ export function useSheetPresence(onClose: () => void) {
       return;
     }
     setState("leaving");
-    timer.current = window.setTimeout(() => finish.current(), SHEET_MS);
   }, [reduced]);
 
   /** Opened again while it leaves: it comes back from wherever it had reached. */
   const reopen = useCallback(() => {
     if (!leaving.current) return;
     leaving.current = false;
-    window.clearTimeout(timer.current);
     setState("open");
   }, []);
 
@@ -165,8 +176,8 @@ export function useSheetPresence(onClose: () => void) {
  * however that came (its own Close, Escape, a link in it followed, the page changing beneath it), it leaves first;
  * opened again before it has gone, it comes back from wherever it had reached.
  */
-export function useSheetLeaving(open: boolean, onGone: () => void): SheetState {
-  const { state, requestClose, reopen } = useSheetPresence(onGone);
+export function useSheetLeaving(open: boolean, onGone: () => void, panel?: RefObject<HTMLElement | null>): SheetState {
+  const { state, requestClose, reopen } = useSheetPresence(onGone, panel);
   useLayoutEffect(() => {
     if (open) reopen();
     else requestClose();
@@ -211,23 +222,13 @@ export function useSheetFocus(panel: RefObject<HTMLElement | null>, onEscape: ()
     if (field === "always") target()?.focus({ preventScroll: true });
     settle.current = window.setTimeout(() => target()?.focus({ preventScroll: true }), 60);
     function onKey(event: KeyboardEvent) {
-      if (away.current) return;
+      if (away.current || !root || event.defaultPrevented) return;
       if (event.key === "Escape") {
         event.preventDefault();
         escape.current();
         return;
       }
-      if (event.key !== "Tab" || !root) return;
-      const items = Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.getClientRects().length);
-      const first = items[0], last = items[items.length - 1];
-      if (!first || !last) return;
-      if (event.shiftKey && (document.activeElement === first || document.activeElement === root)) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
+      cycleDialogFocus(root, event);
     }
     document.addEventListener("keydown", onKey);
     return () => {
@@ -258,32 +259,50 @@ export function useSheetFocus(panel: RefObject<HTMLElement | null>, onEscape: ()
  * start a pull (its handle and title); controls never do.
  */
 export function useSheetDrag(panel: RefObject<HTMLElement | null>, requestClose: () => void, grabs: (target: HTMLElement) => boolean = () => true) {
-  const drag = useRef<{ start: number; at: number; distance: number; id: number } | null>(null);
+  const drag = useRef<{ start: number; origin: number; last: number; at: number; speed: number; distance: number; id: number } | null>(null);
   const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
     const target = event.target as HTMLElement;
-    if (event.pointerType === "mouse" || target.closest("button, a, input, select, textarea") || !grabs(target)) return;
+    if (drag.current || !event.isPrimary || event.pointerType === "mouse" || target.closest("button, a, input, select, textarea") || !grabs(target)) return;
     if (!window.matchMedia?.(PHONE).matches || !panel.current) return;
-    drag.current = { start: event.clientY, at: performance.now(), distance: 0, id: event.pointerId };
+    // Catch a sheet wherever it is, even halfway through arriving or settling back.
+    const transform = getComputedStyle(panel.current).transform;
+    const origin = transform === "none" ? 0 : new DOMMatrixReadOnly(transform).m42;
+    drag.current = { start: event.clientY, origin, last: event.clientY, at: performance.now(), speed: 0, distance: origin, id: event.pointerId };
     event.currentTarget.setPointerCapture(event.pointerId);
     panel.current.style.transition = "none";
+    panel.current.style.transform = `translateY(${origin}px)`;
   };
   const onPointerMove = (event: ReactPointerEvent<HTMLElement>) => {
     const moving = drag.current;
     if (!moving || event.pointerId !== moving.id || !panel.current) return;
-    moving.distance = Math.max(0, event.clientY - moving.start);
+    const now = performance.now();
+    moving.speed = (event.clientY - moving.last) / Math.max(16, Math.min(100, now - moving.at));
+    moving.last = event.clientY;
+    moving.at = now;
+    const distance = moving.origin + event.clientY - moving.start;
+    // A little resistance above rest; there is no abrupt invisible stop under the finger.
+    moving.distance = distance >= 0 ? distance : -24 * (1 - Math.exp(distance / 80));
     panel.current.style.transform = `translateY(${moving.distance}px)`;
   };
-  const onPointerUp = (event: ReactPointerEvent<HTMLElement>) => {
+  const release = (event: ReactPointerEvent<HTMLElement>, cancelled: boolean) => {
     const moving = drag.current;
     if (!moving || event.pointerId !== moving.id || !panel.current) return;
     drag.current = null;
-    const speed = moving.distance / Math.max(1, performance.now() - moving.at);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    // A pause or a change of direction cancels a flick. Use the last movement, not the
+    // average since the finger first landed (which lost a quick flick after a long hold).
+    const speed = performance.now() - moving.at < 100 ? moving.speed : 0;
     // Clearing the inline styles hands the sheet back to its states, from wherever it was let go.
     panel.current.style.transition = "";
     panel.current.style.transform = "";
-    if (moving.distance > 120 || (moving.distance > 40 && speed > 0.5)) requestClose();
+    if (!cancelled && (moving.distance > 120 || (moving.distance > 40 && speed > 0.5))) requestClose();
   };
-  return { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp };
+  return {
+    onPointerDown, onPointerMove,
+    onPointerUp: (event: ReactPointerEvent<HTMLElement>) => release(event, false),
+    onPointerCancel: (event: ReactPointerEvent<HTMLElement>) => release(event, true),
+    onLostPointerCapture: (event: ReactPointerEvent<HTMLElement>) => release(event, true),
+  };
 }
 
 /**

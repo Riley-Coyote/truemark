@@ -1,5 +1,5 @@
 import { LIVE } from "../platform/mode";
-import { useId } from "react";
+import { useId, useRef } from "react";
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, ChevronDown, Search, X } from "lucide-react";
 import { splitMoney } from "./format";
@@ -251,6 +251,7 @@ export function SearchField({
   disabled?: boolean;
 }) {
   const id = useId();
+  const input = useRef<HTMLInputElement>(null);
   return (
     <form
       role="search"
@@ -265,6 +266,7 @@ export function SearchField({
         {label}
       </label>
       <input
+        ref={input}
         id={id}
         type="search"
         value={value}
@@ -282,7 +284,7 @@ export function SearchField({
         }}
       />
       {value && !disabled && (
-        <button type="button" className="kit-search-clear" aria-label="Clear search" onClick={() => onChange("")}>
+        <button type="button" className="kit-search-clear" aria-label="Clear search" onClick={() => { onChange(""); input.current?.focus(); }}>
           <X aria-hidden="true" strokeWidth={1.7} />
         </button>
       )}

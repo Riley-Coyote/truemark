@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { moveInto, registerClaimant } from "../share";
-import { createFog, createFogWhenReady, fogTop } from "./fog";
+import { createFogWhenReady, fogTop } from "./fog";
 import type { Fog, FogFallback, FogParams, FogScene } from "./fog";
 
 /** The event a camera move sends as it starts and as it settles (src/brand/flight.ts FLIGHT_EVENT). */
@@ -104,6 +104,20 @@ function afterIdle(run: () => void) {
   return () => window.clearTimeout(later);
 }
 
+/** Give the photographed room a paint before compiling the optional atmosphere. */
+function afterPaintIdle(run: () => void) {
+  let second = 0;
+  let cancelIdle: (() => void) | undefined;
+  const first = requestAnimationFrame(() => {
+    second = requestAnimationFrame(() => { cancelIdle = afterIdle(run); });
+  });
+  return () => {
+    cancelAnimationFrame(first);
+    cancelAnimationFrame(second);
+    cancelIdle?.();
+  };
+}
+
 /**
  * The room's floor mist, simulated: a canvas laid on the room's plate from the highest row the mist can reach down to
  * the room's foot, across its full width, so it moves with the plate (its pointer parallax, a camera move) and stays
@@ -167,17 +181,17 @@ export function FloorMist({ scene, still, ambient, zoom = 1, tune, fallback = nu
       if (held(el) || scrolling) host.mist.fog.pause();
       else host.mist.fog.resume();
     };
-    /** Make the mist: at once as the page first loads, or, while a camera move runs, once it has settled and the
-     *  browser is idle, with its shaders compiled off the page's thread where the browser can, coming up gently. */
-    const make = (later: boolean) => {
+    /** Compile after the room has painted or a camera move has settled. Where supported,
+     *  the browser compiles shaders off the page's thread; the mist then comes up gently. */
+    const make = () => {
       cancelBuild = null;
-      if (!live || owners.get(key) !== host || host.mist || making.has(key)) return;
+      if (!live || owners.get(key) !== host || host.mist || making.has(key) || held(el)) return;
       making.add(key);
       // A fresh canvas: a context can't be handed back once lost or given up.
       const canvas = document.createElement("canvas");
       canvas.className = "tm-floor-mist-canvas";
       canvas.setAttribute("aria-hidden", "true");
-      const fade = later && !stillNow.current;
+      const fade = !stillNow.current;
       if (fade) canvas.style.opacity = "0";
       el.append(canvas);
       const made: Mist = { canvas, fog: null as unknown as Fog, key, dead: false, onFallback: null };
@@ -207,8 +221,7 @@ export function FloorMist({ scene, still, ambient, zoom = 1, tune, fallback = nu
           requestAnimationFrame(() => requestAnimationFrame(() => { canvas.style.opacity = ""; }));
         }
       };
-      if (later) void createFogWhenReady(canvas, options, () => !live && owners.get(key) === undefined).then(ready);
-      else ready(createFog(canvas, options));
+      void createFogWhenReady(canvas, options, () => !live && owners.get(key) === undefined).then(ready);
     };
     const host: Host = {
       key,
@@ -236,8 +249,13 @@ export function FloorMist({ scene, still, ambient, zoom = 1, tune, fallback = nu
         return mist;
       },
       build() {
+        // Let the room and its controls paint first. Shader compilation then uses
+        // the same asynchronous path as an arriving page, fading into the room.
         // In a move, it waits for the move to settle (onFlight).
-        if (!held(el)) make(false);
+        if (!held(el)) {
+          cancelBuild?.();
+          cancelBuild = afterPaintIdle(make);
+        }
       },
     };
     const onFlight = () => {
@@ -245,7 +263,7 @@ export function FloorMist({ scene, still, ambient, zoom = 1, tune, fallback = nu
       // A page that came in with a camera move and found no mist makes one once the move has settled, when idle.
       if (owners.get(key) === host && !making.has(key) && !held(el)) {
         cancelBuild?.();
-        cancelBuild = afterIdle(() => make(true));
+        cancelBuild = afterIdle(make);
       }
     };
     // A real change of the window's size: the mist is rendered for this page's own framing again.

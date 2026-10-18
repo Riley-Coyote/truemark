@@ -9,6 +9,7 @@ import {
   formatDateTime,
 } from "../../app-kit";
 import { BuyerEmail, buyerEmailsFor } from "../../shop/pages/account/emails";
+import { matches } from "../state";
 import {
   BusinessProvider,
   DeviceNote,
@@ -23,7 +24,7 @@ import {
 export function MessageWorkspace({ kind }: { kind: "inbox" | "deliveries" }) {
   return (
     <BusinessProvider>
-      <SampleMessages kind={kind} />
+      <SampleMessages key={kind} kind={kind} />
     </BusinessProvider>
   );
 }
@@ -79,14 +80,12 @@ function SampleMessages({ kind }: { kind: "inbox" | "deliveries" }) {
     (m) =>
       (filter === "all" ||
         (filter === "handled") === Boolean(notes[m.id]?.handled)) &&
-      `${m.buyer.name} ${m.topic}`.toLowerCase().includes(query.toLowerCase()),
+      matches(query, m.buyer.name, m.buyer.email, m.buyer.institution, m.topic, m.text),
   );
   const emailRows = emails.filter(
     (m) =>
       (filter === "all" || m.kind === filter) &&
-      `${m.subject} ${m.buyer?.email}`
-        .toLowerCase()
-        .includes(query.toLowerCase()),
+      matches(query, m.subject, m.buyer?.name, m.buyer?.email, m.buyer?.institution, m.order.number),
   );
   return (
     <div className="bi-page">
@@ -134,6 +133,7 @@ function SampleMessages({ kind }: { kind: "inbox" | "deliveries" }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            type="search"
             placeholder="Name, subject or email"
           />
         </label>

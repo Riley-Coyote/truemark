@@ -2,8 +2,8 @@ import { live } from "../platform/live/runtime";
 import { useResource } from "../platform/store";
 import { LIVE } from "../platform/mode";
 import { useEffect, useId, useRef, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, Menu, Search, X } from "lucide-react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { ArrowRight, ArrowUpRight, Search, X } from "lucide-react";
 import "@fontsource/poppins/300.css";
 import "@fontsource/poppins/400.css";
 import "@fontsource/poppins/500.css";
@@ -12,6 +12,7 @@ import { readyPage } from "../Navigation";
 import { HEADER_FOLLOWS_LIGHT } from "../brand/dusk";
 import { categoryName, products, business } from "../data";
 import { productCutout } from "./catalog";
+import { matchesProductSearch } from "./search";
 import { useShop } from "./context";
 import { Modal } from "./Modal";
 import { usePresence } from "./motion";
@@ -42,6 +43,8 @@ export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const location = useLocation();
+  const navigate = useNavigate();
+  const searchInput = useRef<HTMLInputElement>(null);
   const { cart, openCart } = useShop();
   const menuId = useId();
   const header = useRef<HTMLElement>(null);
@@ -68,6 +71,9 @@ export function Header() {
   useEffect(() => {
     if (menuOpen) for (const item of primaryNav) void readyPage(item.to);
   }, [menuOpen]);
+  useEffect(() => {
+    if (searchOpen) void readyPage("/products");
+  }, [searchOpen]);
   // The phone menu drops from the header, as the command center's does: Escape or a tap
   // anywhere outside the header closes it, and Escape hands focus back to the button.
   useEffect(() => {
@@ -91,13 +97,10 @@ export function Header() {
     };
   }, [menuOpen]);
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const matches = products.filter((product) => product.active !== false)
-    .filter((p) =>
-      `${p.name} ${p.size} ${categoryName(p.category)}`
-        .toLowerCase()
-        .includes(query.trim().toLowerCase()),
-    )
-    .slice(0, 6);
+  const results = products.filter(product => matchesProductSearch(product, query));
+  const matches = results.slice(0, 6);
+  const catalogSearch = query.trim() ? `/products?q=${encodeURIComponent(query.trim())}` : "/products";
+  const clearSearch = () => { setQuery(""); searchInput.current?.focus(); };
   return (
     <>
       <div className="tm-notice">
@@ -150,7 +153,7 @@ export function Header() {
                 setMenuOpen((open) => !open);
               }}
             >
-              {menuOpen ? <X size={20} strokeWidth={1.6} aria-hidden="true" /> : <Menu size={20} strokeWidth={1.6} aria-hidden="true" />}
+              <span className="tm-menu-mark" aria-hidden="true"><span /><span /><span /></span>
             </button>
           </div>
         </div>
@@ -172,6 +175,8 @@ export function Header() {
                 className="tm-mmenu-tool"
                 data-chosen={chosen === "search" || undefined}
                 onClick={() => {
+                  // Search outlives this menu. Give it a stable place to return focus.
+                  menuButton.current?.focus({ preventScroll: true });
                   choose("search");
                   setSearchOpen(true);
                 }}
@@ -192,9 +197,14 @@ export function Header() {
       <FirstOrderOffer locked={locked} />
       {!locked && (
         <Modal open={searchOpen} title="Find a compound" onClose={() => setSearchOpen(false)} field="always">
-          <label className="search-input-wrap">
-            <Search size={20} strokeWidth={1.6} />
+          <form className="search-input-wrap" role="search" onSubmit={(event) => {
+            event.preventDefault();
+            setSearchOpen(false);
+            navigate(catalogSearch);
+          }}>
+            <Search size={20} strokeWidth={1.6} aria-hidden="true" />
             <input
+              ref={searchInput}
               type="search"
               autoComplete="off"
               autoCorrect="off"
@@ -206,7 +216,12 @@ export function Header() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by compound or class"
             />
-          </label>
+            {query && <button type="button" className="tm-search-clear" aria-label="Clear search" onClick={clearSearch}><X size={18} strokeWidth={1.6} aria-hidden="true" /></button>}
+            <button type="submit" className="tm-search-submit" aria-label="Search all compounds"><ArrowRight size={20} strokeWidth={1.6} aria-hidden="true" /></button>
+          </form>
+          <p className="tm-search-summary" role="status" aria-atomic="true">
+            {results.length} {results.length === 1 ? "result" : "results"}{results.length > matches.length ? ` · Showing ${matches.length}` : ""}
+          </p>
           <div className="search-results">
             {matches.map((product) => (
               <Link key={product.id} to={`/product/${product.id}`} onClick={() => setSearchOpen(false)}>
@@ -225,12 +240,15 @@ export function Header() {
             {!matches.length && (
               <div className="empty-inline">
                 <p>No compounds match “{query}”.</p>
-                <button className="text-button" onClick={() => setQuery("")}>
+                <button type="button" className="text-button" onClick={clearSearch}>
                   Clear the search
                 </button>
               </div>
             )}
           </div>
+          <Link className="tm-search-all" to={results.length ? catalogSearch : "/products"} onClick={() => setSearchOpen(false)}>
+            {query.trim() && results.length ? "View all results" : "Browse all compounds"}<ArrowRight size={16} strokeWidth={1.6} aria-hidden="true" />
+          </Link>
         </Modal>
       )}
     </>

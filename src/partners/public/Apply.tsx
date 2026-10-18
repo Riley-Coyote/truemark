@@ -97,6 +97,7 @@ export default function Apply() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (status === "busy") return;
     setTouched(Object.fromEntries(ORDER.map((k) => [k, true])));
     const first = ORDER.find((k) => problem(k, values, confirmed));
     if (first) {
@@ -185,8 +186,8 @@ export default function Apply() {
             </div>
           </div>
         ) : (
-          <form className="pp-apply-form" onSubmit={submit} noValidate aria-labelledby="pp-apply-title">
-            <fieldset className="pp-form-section">
+          <form className="pp-apply-form" onSubmit={submit} aria-busy={status === "busy"} noValidate aria-labelledby="pp-apply-title">
+            <fieldset disabled={status === "busy"} className="pp-form-section">
               <legend>
                 <span className="pp-form-index">01</span>
                 About you
@@ -198,7 +199,7 @@ export default function Apply() {
               </div>
             </fieldset>
 
-            <fieldset className="pp-form-section">
+            <fieldset disabled={status === "busy"} className="pp-form-section">
               <legend>
                 <span className="pp-form-index">02</span>
                 Where you publish
@@ -230,7 +231,7 @@ export default function Apply() {
               </div>
             </fieldset>
 
-            <fieldset className="pp-form-section">
+            <fieldset disabled={status === "busy"} className="pp-form-section">
               <legend>
                 <span className="pp-form-index">03</span>
                 How you would feature TrueMark
@@ -249,7 +250,7 @@ export default function Apply() {
               </div>
             </fieldset>
 
-            <fieldset className="pp-form-section" aria-describedby={commitError ? "pp-apply-commit-error" : undefined}>
+            <fieldset disabled={status === "busy"} className="pp-form-section" aria-describedby={commitError ? "pp-apply-commit-error" : undefined}>
               <legend>
                 <span className="pp-form-index">04</span>
                 Your commitments

@@ -76,6 +76,8 @@
 }
 .pp-card-aside {
   font-size: var(--tm-type-micro);
+  white-space: normal;
+  text-wrap: pretty;
 }
 .pp-chart-loading {
   height: var(--kit-chart);
@@ -1099,4 +1101,15 @@
   .kit[data-theme="studio"] :is(.pp-overview, .pp-share-kit) :is(.kit-button, .kit-link, .kit-iconbutton) { min-height: 44px; min-width: 44px; }
   .kit[data-theme="studio"] .pp-last-sale { column-gap: var(--tm-space-2); }
   .kit[data-theme="studio"] .pp-sale-row { padding-inline: var(--tm-space-4); }
+}
+
+/* The destination chooser wraps as a whole control on compact phones. */
+@media (max-width: 400px) {
+  .pp-builder-controls .kit-segmented {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    border-radius: var(--tm-radius-md);
+  }
+  .pp-builder-controls .kit-segment { min-width: 0; min-height: 44px; }
 }
