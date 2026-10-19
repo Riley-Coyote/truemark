@@ -426,10 +426,11 @@ function FoldingLine({ id, className, folding, onGone, children }: { id: string;
   );
 }
 
-function PairsWith({ onAdd }: { onAdd: (id: string) => void }) {
+function PairsWith({ onAdd, freeVial = false }: { onAdd: (id: string) => void; freeVial?: boolean }) {
   const { cart, catalogChecking, catalogError } = useShop();
   const title = useId();
-  const suggestions = pairsFor(products, cart);
+  // Once the bag has earned a free BAC Water vial, don't also offer to sell one.
+  const suggestions = pairsFor(products, cart).filter((product) => !(freeVial && product.id === FREE_BAC_WATER_ID));
   if (!suggestions.length) return null;
   const disabled = Boolean(catalogChecking || catalogError);
   return (
@@ -522,7 +523,7 @@ export function BagContents() {
             </FoldingLine>
           ))}
         </ul>
-        <PairsWith onAdd={(id) => { focus.added(id); add(id, 1); }} />
+        <PairsWith freeVial={free.earned && free.available} onAdd={(id) => { focus.added(id); add(id, 1); }} />
       </div>
       <div className="tm-bag-foot">
         <p className="tm-bag-subtotal">
@@ -636,7 +637,7 @@ export function CartPage() {
           <h2 id="tm-cart-summary-title" className="tm-summary-title">
             Summary
           </h2>
-          <PairsWith onAdd={(id) => {
+          <PairsWith freeVial={free.earned && free.available} onAdd={(id) => {
             focus.added(id);
             add(id, 1);
             // React batches these updates: adding here never opens the drawer.
