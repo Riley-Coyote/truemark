@@ -6,10 +6,19 @@ import type { Lot } from "../platform/types";
 import { inventoryStore } from "../platform/inventory-store";
 import { store } from "../platform/store";
 import { incomingUnits, lotKey, lotNumber, lotStage } from "../platform/inventory";
+import { releaseProblem } from "../platform/certificate-records";
 import { SelectField, TextField, SwitchRow } from "./fields";
 
 export const localDate=(iso:string)=>{const d=new Date(iso);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);};
 const errorText=(e:unknown)=>e instanceof Error ? e.message : "The change could not be saved.";
+/** Where received units go: receiving into a lot already released with passing results adds sellable units under its certificate. */
+function receivedNote(kind:string,lot?:Lot) {
+  if(kind==="incoming") return "Incoming units cannot be sold until they are received.";
+  if(lot?.holdReason) return "This lot is on hold, so received units stay unavailable until the hold is lifted.";
+  if(lot?.testingStatus==="passed" && lot.coaPath && !releaseProblem(lot.results)) return "This lot is already released with a passing certificate, so these units are available to sell right away under its certificate.";
+  if(lot?.testingStatus==="passed") return "This lot has passed testing. Received units become available once its certificate is saved.";
+  return "Received units wait in quarantine until testing. Saving a passing certificate releases them automatically.";
+}
 export function ReceiveInventory({products,lots,productId,onClose,onSaved}:{products:Product[];lots:Lot[];productId?:string;onClose:()=>void;onSaved:(lot:Lot,certificate:boolean)=>void}) {
   const [product,setProduct]=useState(productId ?? ""); const [existing,setExisting]=useState(""); const [number,setNumber]=useState("");
   const [kind,setKind]=useState("received"); const [quantity,setQuantity]=useState("");const [date,setDate]=useState(localDate(new Date().toISOString()));
@@ -46,7 +55,7 @@ export function ReceiveInventory({products,lots,productId,onClose,onSaved}:{prod
       <TextField label={kind==="received" ? "Units received now" : "Units expected"} value={quantity} onChange={setQuantity} inputMode="numeric" hint="For a partial delivery, enter only the units that arrived."/>
       {kind==="received" ? <TextField label="Actual receipt date and time" type="datetime-local" value={date} onChange={setDate}/> : <TextField label="Expected arrival (optional)" type="date" value={expected} onChange={setExpected}/>}
     </fieldset><SwitchRow title="Add certificate next" description="Upload the passing results and PDF in the next step." checked={certificate} onChange={setCertificate}/>
-      <p className="kit-note">Received units await testing in quarantine. Saving a passing certificate releases them automatically. Incoming units cannot be sold.</p>
+      <p className="kit-note">{receivedNote(kind,lots.find(l=>lotKey(l)===existing))}</p>
       {error && <p ref={problem} role="alert" className="kit-field-error">{error}</p>}
     </form>
   </Drawer>;
