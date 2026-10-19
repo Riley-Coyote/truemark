@@ -130,7 +130,10 @@ test('signed-out referral records once, survives sign-in/reload, and reaches the
   await globalThis.fixtureLive.store.orders.place('fixture-buyer', { lines: [{ productId: 'fixture-product', quantity: 1 }], address: {}, shipping: 'cold-2day', discountCode: live.readReferral(), via: 'link' });
   assert.equal(drafts[0].discountCode, 'FIXTURE27'); assert.equal(drafts[0].via, 'link');
   const gate = await readFile(join(root, 'src/brand/Gate.tsx'), 'utf8');
-  assert.match(gate, /navigate\(LIVE \? \(from\?\.startsWith\("\/"\)/);
+  // A shopper returns to the same-site page sign-in interrupted; only the team and partners bound for the shop's
+  // account pages go to their own area instead.
+  assert.match(gate, /const back = from\?\.startsWith\("\/"\) && !from\.startsWith\("\/\/"\) \? from : undefined;/);
+  assert.match(gate, /navigate\(own && \(!back \|\| back\.startsWith\("\/account"\)\) \? own : back \?\? "\/"/);
 });
 test('bootstrap follows the session and clears reload only for the full catalog', async () => {
   let signedIn = false;
