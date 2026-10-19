@@ -3,8 +3,20 @@ name: Deploy review to GitHub Pages
 # Publishes the client review: the platform at the site's root, and the first
 # design (as sent on 22 September, tag archive/07-pages-september-22) at
 # /first-design/, so the link the client already has still reaches both.
+#
+# To undo a bad release, run it again with `ref` set to an earlier published
+# version: a `published/...` tag (one is added after every successful publish)
+# or a commit hash. The workflow still runs from main, and only versions that
+# are already part of main's history are accepted. See
+# docs/owner-handoff/BACKUPS-AND-UNDO.md.
 on:
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "Leave empty to publish main. To undo a release: an earlier published/... tag or commit already in main"
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -20,11 +32,43 @@ jobs:
     # The working design branch contains private client material and is never a publish source.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    outputs:
+      commit: ${{ steps.version.outputs.commit }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+      - name: Choose the version to publish
+        id: version
+        env:
+          REQUESTED: ${{ inputs.ref }}
+        # An earlier version is accepted only if it is already part of main's
+        # history, so a working branch can never be published this way. Commits
+        # older than cf8aa9e (14 October 2026) lack scripts the steps below call;
+        # their build fails and nothing is published.
+        run: |
+          set -euo pipefail
+          if [ -z "$REQUESTED" ]; then
+            commit="$GITHUB_SHA"
+          else
+            if ! printf '%s' "$REQUESTED" | grep -Eq '^[A-Za-z0-9][A-Za-z0-9._/-]{0,199}$'; then
+              echo "::error::The ref input must be a tag name or a commit hash."
+              exit 1
+            fi
+            commit=$(git rev-parse --verify --quiet "refs/tags/$REQUESTED^{commit}" || git rev-parse --verify --quiet "$REQUESTED^{commit}" || true)
+            if [ -z "$commit" ]; then
+              echo "::error::No tag or commit named $REQUESTED was found."
+              exit 1
+            fi
+            if ! git merge-base --is-ancestor "$commit" "$GITHUB_SHA"; then
+              echo "::error::$REQUESTED ($commit) is not part of main's history, so it is never published."
+              exit 1
+            fi
+            git checkout --quiet --detach "$commit"
+          fi
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "Publishing $(git log -1 --format='%h (%ad) %s' --date=short "$commit")${REQUESTED:+, requested as $REQUESTED}" >> "$GITHUB_STEP_SUMMARY"
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
@@ -88,3 +132,21 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # Names every published version (published/<UTC time>-<commit>), so it can be
+  # found and published again with the ref input. Runs only after a deploy succeeds.
+  record:
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Tag the published version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT: ${{ needs.build.outputs.commit }}
+        run: |
+          set -euo pipefail
+          tag="published/$(date -u +%Y-%m-%d-%H%M%S)-${COMMIT:0:7}"
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$tag" -f sha="$COMMIT" > /dev/null
+          echo "Tagged $tag" >> "$GITHUB_STEP_SUMMARY"
