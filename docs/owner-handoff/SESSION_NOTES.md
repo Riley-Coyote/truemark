@@ -61,6 +61,16 @@ Replace stale next-step guidance as work progresses; preserve the dated decision
 
 **Next:** Review the local workflow, then inspect existing Supabase migration history/backups and reconcile actual stock before deploying this migration and matching frontend/functions. No authenticated Supabase tool was available. Existing invitation acceptance does not need to be requested again. The earlier handoff questions about FIFO and manual quarantine release are settled by Mason's current brief.
 
+## Local preview restored — 17 October 2026
+
+**Decision and source:** Mason reported that the page was no longer visible.
+
+**Result:** The preview server was stopped. Restarted the current Desktop repository in explicit sample-preview mode at `http://127.0.0.1:5175/admin/products`, replacing the earlier port 5184 preview address. No application code or hosted data changed.
+
+**Verification:** Opened Products & inventory in the browser and confirmed its product table, receiving controls and local-only sample-data notice loaded. Left the working preview open.
+
+**Next:** Continue the Products & inventory review; lots and certificates are included in this workspace.
+
 ## Retention direction and email-provider evaluation — 17 October 2026
 
 **Decision and source:** Mason approved the proposed customer groups, product purchase drill-down, unified customer history, follow-up notes/reminders/drafts and outcome tracking. He said reorder timing varies too much for a standard timeframe. Collect relevant purchase and customer-interaction history from the beginning so six months of activity can inform future decisions. Do not label a customer overdue using an assumed universal interval; show observed gaps, sample sizes and insufficient-history states. Mason requested an email-provider recommendation before implementation starts.
@@ -100,3 +110,24 @@ Replace stale next-step guidance as work progresses; preserve the dated decision
 **Verification:** Inspected all extracted PDF text and a rendered 14-page overview; the repository copy matches the supplied file byte-for-byte. Checked documentation links and staged file scope. Authenticated GitHub metadata confirms push access; the current remote main at preparation was `117997d`, with separate interaction-polish work. The branch publication preserves those main-branch changes. No application tests are rerun for adding documentation, and no deployment is requested or triggered by this handoff preparation.
 
 **Next:** Verify the remote handoff branch after pushing and use its document links for continuation. Merging into main and deploying remain separate from publishing these handoffs. No coordination issue or customer message is part of this request.
+
+
+## Consolidated notes and restored reference images — 18 October 2026
+
+**Decision and source:** Mason asked for all conversation requests and his complete meeting notes in `docs/owner-handoff/MASON_REQUESTS.md`, committed to `mason/notes`, then pointed out that the PDF photos had been omitted.
+
+**Result:** The text handoff is published on [GitHub](https://github.com/Riley-Coyote/truemark/blob/mason/notes/docs/owner-handoff/MASON_REQUESTS.md) at commit `1653766aa76e85db2164657cdfca0cc68c6d277b`. All 10 PDF photos/screenshots have now been extracted at their original resolution to `assets/mason-requests/` and embedded beside the matching captions in the local handoff. The correction is local only: the GitHub image-upload tool returned “user rejected MCP tool call,” so the online document still lacks these images.
+
+**Verification:** Inspected all 10 extracted images, checked the PDF's labeled before/after order, verified every local image link and that the image bytes match the PDF extraction, and confirmed the meeting-note text is otherwise unchanged. Remote `mason/notes` was verified at the published commit before attempting the correction. No application or production change was made.
+
+**Next:** Obtain approval for the rejected image upload, publish the corrected document and its 10 image assets together on `mason/notes`, then verify the remote images and share the same file link. Preserve unrelated local work and leave main unchanged.
+
+## Full Command Center feature handoff published — 18 October 2026
+
+**Decision and source:** After reviewing the inventory and retention recap, Mason requested a complete handoff alongside the existing notes, committed and pushed to `mason/notes`, with everything already there preserved.
+
+**Result:** Added [COMMAND_CENTER_FEATURES_HANDOFF.md](COMMAND_CENTER_FEATURES_HANDOFF.md) and published it on [GitHub](https://github.com/Riley-Coyote/truemark/blob/mason/notes/docs/owner-handoff/COMMAND_CENTER_FEATURES_HANDOFF.md) in commit `900f61cdcf31b7d41c75b433befc8097a4c325de`. The 253-line document covers settled decisions, receiving/certificate/FIFO behavior, picking and shipment evidence, retention analysis and private activity, historical verification, source checkpoints, acceptance examples, migration/release work and the separate remaining backlog. The existing `mason/notes` branch was continued rather than recreated.
+
+**Verification:** The GitHub file exactly matches the local text and blob hash. The published commit adds exactly this one file, with zero deletions or modifications to existing files, and follows `1653766aa76e85db2164657cdfca0cc68c6d277b`. Main remained at `117997da5e5868a8a97c4940a99d96c2b1ae9a81`. Checked 32 local source paths, four document links and both implementation commits. The authenticated coordination search returned no open matching issues; no message was sent. Application tests were not rerun for this documentation addition. No application source, migration, provider or deployment changed.
+
+**Next:** Continue from Mason's current priority and the new handoff. Feature source integration and live rollout remain separate from this documentation publication. The earlier local photo correction is still preserved and awaits approval of its rejected image upload; this commit does not publish those image assets or overwrite `MASON_REQUESTS.md`.
