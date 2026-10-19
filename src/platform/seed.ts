@@ -433,10 +433,11 @@ const firstBatchLots: Lot[] = products.map((p, i) => ({
 const certified = new Map(certificates.map((entry) => [entry.lot, entry]));
 
 export const lots: Lot[] = [
-  // The client's certificates, released as the live import releases them; a lot without one stays in testing.
+  // The client's certificates, released as the live import releases them, keeping the sample receipt date the
+  // inventory rules need before a lot can sell; a lot without one stays in testing.
   ...firstBatchLots.map((lot) => {
     const entry = certified.get(lot.lot);
-    return entry ? { ...lot, ...releasedFields(entry) } : lot;
+    return entry ? { ...lot, ...releasedFields(entry), receivedAt: lot.receivedAt } : lot;
   }),
   { lot: "SAMPLE-RT30-A", productId: "retatrutide-30-mg", status: "released", receivedAt: day(70), releasedAt: day(61), results: [{ label: "Purity", method: "HPLC", value: "99.12", unit: "%" }, { label: "Identity", method: "Mass spectrometry", value: "Confirmed", unit: "" }], reference: "TM-COA-0109", units: 0, sample: true },
   { lot: "SAMPLE-GH100-A", productId: "ghk-cu-100-mg", status: "archived", receivedAt: day(140), releasedAt: day(131), results: [{ label: "Purity", method: "HPLC", value: "99.04", unit: "%" }], reference: "TM-COA-0088", units: 0, sample: true },
