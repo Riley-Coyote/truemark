@@ -1,6 +1,8 @@
 /* Procession belongs to the opening's room. The glass and the typography are
    the original site's; no extra card faces, miniature sets or image filters. */
-.tm.tm-procession{--tm-bg:transparent;display:block;padding-top:clamp(32px,5vh,64px);padding-bottom:clamp(72px,8vw,128px);overflow:visible}
+/* The collection ends on the site's own silence, as every section does: with the paper trail's own above its heading,
+   the two meet at the same distance as every other pair of sections (a larger one here left a void above it). */
+.tm.tm-procession{--tm-bg:transparent;display:block;padding-top:clamp(32px,5vh,64px);padding-bottom:var(--tm-space-silence);overflow:visible}
 .tm-procession-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:48px;max-width:1220px;margin:auto}
 .tm-procession-heading .tm-eyebrow{margin-bottom:18px}
 .tm.tm-procession .tm-heading{font-size:clamp(32px,3.4vw,46px);line-height:1.1;letter-spacing:-.05em;margin:0}
@@ -14,7 +16,9 @@
 .tm-procession-plinth{position:absolute;z-index:0;display:block;mask-image:linear-gradient(black 55%,transparent);pointer-events:none}
 .tm-procession-shadow{position:absolute;z-index:1;left:9%;right:9%;bottom:-.4%;height:2%;border-radius:50%;background:#3323424a;filter:blur(3px)}
 .tm-procession-shadow::after{content:"";position:absolute;inset:-2px -40%;border-radius:50%;background:#33234225;filter:blur(7px)}
-.tm-procession-details{display:grid;text-align:center;position:relative;max-width:700px;margin:26px auto 30px;min-height:160px}
+/* Every caption shares one grid cell, so the cell is always the tallest caption's height and the controls below never
+   move as the class changes; no height beyond that is held. */
+.tm-procession-details{display:grid;text-align:center;position:relative;max-width:700px;margin:26px auto 30px}
 .tm-procession-caption{grid-area:1/1;opacity:0;pointer-events:none;align-self:start;transform:translateY(6px);transition:opacity 360ms ease,transform 360ms cubic-bezier(.22,1,.36,1)}
 .tm-procession-caption[data-selected]{opacity:1;transform:translateY(0);pointer-events:auto}
 .tm-procession-caption .tm-eyebrow{font-size:10px;letter-spacing:.18em;margin:0 0 12px}
