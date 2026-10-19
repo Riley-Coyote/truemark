@@ -20,6 +20,8 @@ create table if not exists public.inventory_events (
   kind text not null, reason text not null, before_value jsonb, after_value jsonb,
   actor_id uuid references public.profiles(id), created_at timestamptz not null default now()
 );
+-- Keep a readable operator identity with the audit record.
+alter table public.inventory_events add column if not exists actor_label text;
 create table if not exists public.order_lot_allocations (
   id uuid primary key default gen_random_uuid(), order_line_id uuid not null references public.order_lines(id),
   lot_id uuid not null references public.lots(inventory_id), quantity integer not null check(quantity > 0),
@@ -48,6 +50,14 @@ create or replace function public.inventory_team() returns void language plpgsql
  if coalesce(public.platform_role(),'') not in ('owner','staff') then raise exception 'Team access required' using errcode='42501'; end if;
 end $$;
 
+-- Lot changes made by checkout, cancellation and shipping are the system's, labelled with their order. They are
+-- never recorded as an inventory edit by the customer or operator whose action set them off.
+create or replace function public.inventory_system_label(reason text) returns text[] language plpgsql set search_path=public as $$
+declare prior text[]:=array[coalesce(current_setting('inventory.reason',true),''),coalesce(current_setting('inventory.actor',true),'')];
+begin perform set_config('inventory.reason',$1,true); perform set_config('inventory.actor','system',true); return prior; end $$;
+create or replace function public.inventory_label_restore(prior text[]) returns void language plpgsql set search_path=public as $$
+begin perform set_config('inventory.reason',$1[1],true); perform set_config('inventory.actor',$1[2],true); end $$;
+
 -- This predicate is shared by checkout, receipt, edits and shipping. Unknown is not unlimited.
 create or replace function public.inventory_eligible(l public.lots) returns boolean language sql stable security definer set search_path=public as $$
  select l.status='released' and l.testing_status='passed' and l.received_at is not null and l.units is not null
@@ -66,13 +76,16 @@ begin
 
 end $$;
 
-create or replace function public.inventory_lot_changed() returns trigger language plpgsql security definer set search_path=public as $$ begin
+create or replace function public.inventory_lot_changed() returns trigger language plpgsql security definer set search_path=public as $$
+declare by_system boolean:=coalesce(current_setting('inventory.actor',true),'')='system';
+begin
  if tg_op='UPDATE' and new is not distinct from old then return new; end if;
  if tg_op='UPDATE' and new.lot_number is distinct from old.lot_number then
   update public.order_lot_allocations set lot_number=coalesce(new.lot_number,new.lot) where lot_id=new.inventory_id and state='reserved';
  end if;
- insert into public.inventory_events(product_id,lot_id,kind,reason,before_value,after_value,actor_id)
- values(new.product_id,new.inventory_id,'lot',coalesce(nullif(current_setting('inventory.reason',true),''),'Lot updated'),case when tg_op='UPDATE' then to_jsonb(old) else null end,to_jsonb(new),auth.uid());
+ insert into public.inventory_events(product_id,lot_id,kind,reason,before_value,after_value,actor_id,actor_label)
+ values(new.product_id,new.inventory_id,case when by_system then 'system' else 'lot' end,coalesce(nullif(current_setting('inventory.reason',true),''),'Lot updated'),
+ case when tg_op='UPDATE' then to_jsonb(old) else null end,to_jsonb(new),case when by_system then null else auth.uid() end,case when by_system then 'System' end);
  perform public.inventory_refresh(new.product_id); return new;
 end $$;
 drop trigger if exists inventory_lot_changed on public.lots;
@@ -153,10 +166,11 @@ begin
 end $$;
 
 create or replace function public.inventory_allocate() returns trigger language plpgsql security definer set search_path=public as $$
-declare l public.lots; remaining integer:=new.quantity; take integer;
+declare l public.lots; remaining integer:=new.quantity; take integer; prior text[];
 begin
  perform 1 from public.products where id=new.product_id and active for update;
  if not found then raise exception 'Product unavailable' using errcode='22023'; end if;
+ prior:=public.inventory_system_label('Reserved for order '||(select number from public.orders where id=new.order_id));
  for l in select * from public.lots x where product_id=new.product_id and public.inventory_eligible(x) and units>reserved_units order by received_at,inventory_id for update loop
    take:=least(remaining,l.units-l.reserved_units);
    insert into public.order_lot_allocations(order_line_id,lot_id,quantity,lot_number) values(new.id,l.inventory_id,take,coalesce(l.lot_number,l.lot));
@@ -164,32 +178,36 @@ begin
    remaining:=remaining-take; exit when remaining=0;
  end loop;
  if remaining>0 then raise exception 'Not enough received, certified inventory for this order' using errcode='22023'; end if;
+ perform public.inventory_label_restore(prior);
  perform public.inventory_refresh(new.product_id); return new;
 end $$;
 drop trigger if exists inventory_allocate on public.order_lines;
 create trigger inventory_allocate after insert on public.order_lines for each row execute function public.inventory_allocate();
 
 create or replace function public.restore_cancelled_stock() returns trigger language plpgsql security definer set search_path=public as $$
-declare a record;
+declare a record; prior text[];
 begin
  if old.status in ('placed','paid','packed') and new.status in ('cancelled','refunded') then
    perform 1 from public.products p where id in(select product_id from public.order_lines where order_id=new.id) order by id for update;
+   prior:=public.inventory_system_label('Released from '||new.status||' order '||new.number);
    for a in select alloc.* from public.order_lot_allocations alloc join public.order_lines li on li.id=alloc.order_line_id where li.order_id=new.id and alloc.state='reserved' order by alloc.lot_id loop
      update public.order_lot_allocations set state='released' where id=a.id;
      update public.lots set reserved_units=reserved_units-a.quantity,version=version+1 where inventory_id=a.lot_id;
    end loop;
+   perform public.inventory_label_restore(prior);
    update public.order_lines set stock_reserved=0 where order_id=new.id;
  end if; return new;
 end $$;
 
 -- A trigger covers both team actions and shipping-provider events.
 create or replace function public.inventory_fulfillment() returns trigger language plpgsql security definer set search_path=public as $$
-declare a record;
+declare a record; prior text[];
 begin
  if old.status is distinct from new.status and new.status in ('packed','shipped') then
    perform 1 from public.products p where id in(select product_id from public.order_lines where order_id=new.id) order by id for update;
    if exists(select 1 from public.order_lines li where li.order_id=new.id and li.quantity<>(select coalesce(sum(quantity),0) from public.order_lot_allocations where order_line_id=li.id and state='reserved')) then
      raise exception 'Resolve missing lot allocations before fulfillment' using errcode='22023'; end if;
+   if new.status='shipped' then prior:=public.inventory_system_label('Shipped on order '||new.number); end if;
    for a in select alloc.id,alloc.quantity,l.* from public.order_lot_allocations alloc join public.order_lines li on li.id=alloc.order_line_id join public.lots l on l.inventory_id=alloc.lot_id where li.order_id=new.id and alloc.state='reserved' order by l.inventory_id for update of l loop
      if not public.inventory_eligible((select l from public.lots l where inventory_id=a.inventory_id)) or a.units<a.reserved_units then
        raise exception 'Allocated lot % is unavailable. Resolve its testing, certificate, hold or quantity before fulfillment.',a.lot using errcode='22023'; end if;
@@ -199,6 +217,7 @@ begin
        update public.lots set units=units-a.quantity,reserved_units=reserved_units-a.quantity,version=version+1 where inventory_id=a.inventory_id;
      end if;
    end loop;
+   if prior is not null then perform public.inventory_label_restore(prior); end if;
  end if; return new;
 end $$;
 drop trigger if exists inventory_fulfillment on public.orders;
@@ -246,9 +265,12 @@ insert into public.order_lot_allocations(order_line_id,lot_id,quantity,state,lot
  select li.id,l.inventory_id,li.quantity,case when o.status in ('placed','paid','packed') then 'reserved' when o.status='cancelled' or (o.status='refunded' and not exists(select 1 from public.order_events ev where ev.order_id=o.id and ev.status in ('shipped','delivered'))) then 'released' else 'fulfilled' end,li.lot,true
  from public.order_lines li join public.orders o on o.id=li.order_id join public.lots l on l.lot=li.lot
  where not exists(select 1 from public.order_lot_allocations a where a.order_line_id=li.id);
+select set_config('inventory.reason','Reservations reconciled from existing orders',true),set_config('inventory.actor','system',true);
 update public.lots l set reserved_units=(select coalesce(sum(quantity),0) from public.order_lot_allocations a where a.lot_id=l.inventory_id and a.state='reserved');
+select set_config('inventory.reason','',true),set_config('inventory.actor','',true);
 
 -- Helper and trigger functions are not callable by browsers.
+revoke all on function public.inventory_system_label(text),public.inventory_label_restore(text[]) from public,anon,authenticated,service_role;
 revoke all on function public.inventory_team(),public.inventory_eligible(public.lots),public.inventory_refresh(text),public.inventory_lot_changed(),public.inventory_allocate(),public.inventory_fulfillment() from public,anon,authenticated,service_role;
 revoke all on function public.save_inventory_lot(jsonb),public.receive_inventory(uuid,integer,timestamptz,uuid),public.substitute_inventory(uuid,text,jsonb,text),public.remove_inventory_certificate(uuid,text) from public,anon,authenticated,service_role;
 grant execute on function public.save_inventory_lot(jsonb),public.receive_inventory(uuid,integer,timestamptz,uuid),public.substitute_inventory(uuid,text,jsonb,text),public.remove_inventory_certificate(uuid,text) to authenticated;
@@ -343,6 +365,7 @@ begin
       and $5 in (e.before_value->>'coa_path', e.after_value->>'coa_path'))) then
     raise exception 'This lot was rejected. Upload a new certificate with the new passing results.' using errcode = '22023';
   end if;
+  perform set_config('inventory.reason', 'Certificate and passing results recorded: ' || btrim($3), true);
   update public.lots l set status = case when l.status in ('archived','rejected') then l.status else 'released' end, testing_status='passed', version=version+1, results = $2, reference = btrim($3),
     tested_at = $4, coa_path = $5, released_at = coalesce(l.released_at,now()) where l.lot = v_lot.lot returning * into v_lot;
   return v_lot;
@@ -416,6 +439,7 @@ begin
     raise exception 'Release needs HPLC purity at least 95.0 and a conforming identity for every component' using errcode = '22023';
   end if;
 return true; exception when others then return false; end $$;
+select set_config('inventory.reason','Existing passing results and certificate recognised',true),set_config('inventory.actor','system',true);
 update public.lots l set testing_status='passed' where l.status='released' and testing_status='pending'
  and reference is not null and tested_at is not null and public.inventory_results_pass(results)
  and exists(select 1 from storage.objects s where s.bucket_id='certificates' and s.name=l.coa_path);
@@ -423,7 +447,7 @@ update public.lots l set testing_status='passed' where l.status='released' and t
 select set_config('inventory.reason','Rejected before inventory tracking: testing marked failed',true);
 update public.lots set testing_status='failed' where testing_status='pending'
  and (status='rejected' or (status='archived' and rejection_note is not null));
-select set_config('inventory.reason','',true);
+select set_config('inventory.reason','',true),set_config('inventory.actor','',true);
 
 create or replace function public.set_lot_certificate(lot text, coa_path text) returns public.lots language plpgsql security definer set search_path=public as $$
 declare l public.lots; begin
@@ -445,6 +469,7 @@ declare l public.lots; begin
  if (l.status='rejected' or l.testing_status='failed') and $2 in ('quarantine','testing') then
    raise exception 'This lot was rejected. Record new passing results and a new certificate before returning it to sale.' using errcode='22023'; end if;
  if $2='released' and (l.testing_status<>'passed' or l.coa_path is null) then raise exception 'Upload passing test results and the certificate first' using errcode='22023'; end if;
+ perform set_config('inventory.reason','Status changed to '||$2,true);
  update public.lots set coa_path=case when $2 in ('quarantine','testing') then null else coa_path end,status=$2,testing_status=case when $2 in ('quarantine','testing') then 'pending' when $2='rejected' then 'failed' else testing_status end,version=version+1 where inventory_id=l.inventory_id returning * into l;
  return l;
 end $$;
@@ -745,9 +770,8 @@ do $$ declare t text; begin
   if not exists(select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename=t) then execute format('alter publication supabase_realtime add table public.%I',t);end if;
  end loop;
 end $$;
--- Keep a readable operator identity with the audit record.
-alter table public.inventory_events add column if not exists actor_label text;
 create or replace function public.inventory_event_actor() returns trigger language plpgsql security definer set search_path=public as $$ begin
+ if new.actor_id is null then return new; end if;
  select coalesce(nullif(u.raw_user_meta_data->>'name',''),nullif(u.raw_user_meta_data->>'full_name',''),u.email) into new.actor_label from auth.users u where u.id=new.actor_id;
  return new;
 end $$;

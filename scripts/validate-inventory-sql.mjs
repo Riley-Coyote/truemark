@@ -20,6 +20,8 @@ const place=async q=>(await auth(buyer,'select * from place_order($1)',[draft(q)
 const allocations=o=>rows('select a.*, l.lot from order_lot_allocations a join order_lines li on li.id=a.order_line_id join lots l on l.inventory_id=a.lot_id where li.order_id=$1 and a.state<>\'released\' order by l.received_at',[o.id]);
 const edit=async(l,patch)=>save({id:l.inventory_id,version:l.version,productId,number:l.lot_number ?? l.lot,expectedUnits:l.expected_units,expectedAt:l.expected_at,...patch,reason:patch.reason ?? 'Fixture correction'});
 const pass=name=>console.log(`PASS ${name}`);
+const historyFor=reason=>rows('select kind,actor_id,actor_label from inventory_events where reason=$1',[reason]);
+const systemEntries=async(reason,count)=>{const found=await historyFor(reason);assert.equal(found.length,count,reason);assert(found.every(e=>e.kind==='system' && e.actor_id===null && e.actor_label==='System'),reason);};
 try {
  let a=await create('TM-FIFO-OLD'), b=await create('TM-FIFO-NEW');
  assert.equal(await stock(),0);assert.equal(a.received_at,null);
@@ -35,6 +37,7 @@ try {
  let incoming=await create('TM-FIFO-INCOMING');incoming=await certify(incoming);assert.equal(await stock(),110);assert.equal(incoming.received_at,null);pass('prearrival certificate does not enable sales');
  const order=await place(15);const parts=await allocations(order);assert.deepEqual(parts.map(x=>[x.lot,x.quantity]),[['TM-FIFO-OLD',10],['TM-FIFO-NEW',5]]);assert.equal(await stock(),95);
  assert.equal(await scalar('select count(*)::int from order_lines where order_id=$1',[order.id]),1);assert.equal(Number(order.subtotal),1500);pass('FIFO split preserves one commercial line and totals');
+ await systemEntries(`Reserved for order ${order.number}`,2);
  a=await get(a.inventory_id);await assert.rejects(()=>edit(a,{units:9}),/reserved/);
  await assert.rejects(()=>edit({...a,version:a.version-1},{number:'TM-EDITED'}),/changed/);
  a=await edit(a,{number:'TM-FIFO-CORRECTED'});assert.equal(a.lot,'TM-FIFO-OLD');assert.equal((await allocations(order))[0].lot_id,a.inventory_id);assert.equal((await allocations(order))[0].lot_number,'TM-FIFO-CORRECTED');pass('editable lot labels preserve identity and reserved counts');
@@ -44,6 +47,7 @@ try {
  await db.query("update orders set status='paid' where id=$1",[order.id]);
  await db.query("update orders set status='packed' where id=$1",[order.id]);
  await db.query("update orders set status='shipped' where id=$1",[order.id]);
+ await systemEntries(`Shipped on order ${order.number}`,2);
  let shipped=await allocations(order);assert(shipped.every(a=>a.state==='fulfilled' && a.certificate_path));assert.equal((await get(a.inventory_id)).units,0);assert.equal((await get(b.inventory_id)).units,95);assert.equal(await stock(),95);
  await db.query("update orders set status='shipped' where id=$1",[order.id]);assert.equal((await get(b.inventory_id)).units,95);
  const originalPath=shipped[0].certificate_path;
@@ -60,6 +64,7 @@ try {
  await assert.rejects(()=>auth(owner,'select set_lot_certificate($1,$2)',[a.lot,originalPath]),/Confirm the certificate results/);
  pass('returns require inspection, preserve certificate gates, and cannot exceed or double-count shipments');
  const cancelled=await place(7);assert.equal(await stock(),88);await auth(owner,"select advance_order($1,'cancelled')",[cancelled.id]);assert.equal(await stock(),95);await auth(owner,"select advance_order($1,'cancelled')",[cancelled.id]);assert.equal(await stock(),95);pass('cancellation releases original lots exactly once');
+ await systemEntries(`Released from cancelled order ${cancelled.number}`,1);
  const swap=await place(6);incoming=await receive(await get(incoming.inventory_id),20,'2026-09-03T12:00:00Z');
  await auth(owner,'select substitute_inventory($1,$2,$3,$4)',[swap.id,productId,[{lotId:incoming.inventory_id,quantity:6}],'Picking correction']);
  assert.equal((await allocations(swap))[0].lot_id,incoming.inventory_id);assert.equal((await get(b.inventory_id)).reserved_units,0);pass('explicit substitutions reconcile reservations');
@@ -107,6 +112,12 @@ try {
  assert(await scalar("select count(*)::int from inventory_events where product_id='fixture-product' and actor_label is not null")>0);
  pass('new products, distinct variants and duplicate prevention; product edits cannot invent stock');
  assert(await scalar('select count(*)::int from inventory_events')>0);
+ assert.equal(await scalar('select count(*)::int from inventory_events where actor_id=$1',[buyer]),0,'Checkout is never recorded as the customer editing inventory');
+ assert.equal(await scalar("select count(*)::int from inventory_events where reason='Lot updated'"),0,'Every lot history entry says what happened');
+ const staffEdit=(await rows("select actor_id,actor_label,kind from inventory_events where reason='Damaged units: two vials cracked'"))[0];
+ assert.equal(staffEdit.actor_id,owner);assert.equal(staffEdit.actor_label,'inventory-owner@fixture.test');assert.equal(staffEdit.kind,'lot');
+ assert.equal((await historyFor(`Certificate and passing results recorded: CERT-FIXTURE`)).length>0,true);
+ pass('checkout, cancellation and shipment history is labelled by order and recorded as the system; staff edits keep their operator');
  console.log('Inventory SQL checks passed; all migrations applied twice. Local fixtures only.');
 } finally {await db.close();}
 
@@ -133,6 +144,8 @@ try {
  assert.equal(await legacy.scalar("select stock from products where id='retatrutide-30-mg'"),0);
  assert.equal(await legacy.scalar('select count(*)::int from order_lot_allocations'),2);
  await assert.rejects(()=>legacy.db.query("update orders set status='packed' where id=$1",[opened.id]),/unavailable/);
+ assert.equal(await legacy.scalar("select count(*)::int from inventory_events where reason='Lot updated'"),0);
+ assert.deepEqual(await legacy.rows("select kind,actor_id,actor_label from inventory_events where reason='Reservations reconciled from existing orders'"),[{kind:'system',actor_id:null,actor_label:'System'}]);
  assert.deepEqual(Object.fromEntries((await legacy.rows("select lot,testing_status from lots where lot like 'TM-LEGACY-%'")).map(r=>[r.lot,r.testing_status])),{'TM-LEGACY-REJECTED':'failed','TM-LEGACY-RETIRED':'failed','TM-LEGACY-ARCHIVED':'pending'});
  const legacyOwner=await legacy.person('legacy-owner@fixture.test','owner');
  for(const lot of ['TM-LEGACY-REJECTED','TM-LEGACY-RETIRED']) await assert.rejects(()=>legacy.auth(legacyOwner,'select * from set_lot_status($1,$2)',[lot,'quarantine']),/was rejected/);
