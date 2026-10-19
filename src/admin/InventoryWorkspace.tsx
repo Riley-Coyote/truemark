@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
-import { Button, DataTable, Dot, Drawer, EmptyState, Facts, PageHeader, Section, formatCount, formatDate, formatMoney } from "../app-kit";
+import { Button, DataTable, Dot, Drawer, EmptyState, Facts, PageHeader, Section, formatCount, formatDate, formatMoney, plural } from "../app-kit";
 import type { Column } from "../app-kit";
 import { categoryName } from "../data";
 import type { Product } from "../data";
@@ -23,7 +23,7 @@ import "./inventory.css";
 type Row={product:Product;lots:Lot[];totals:ReturnType<typeof inventoryTotals>};
 export default function InventoryWorkspace() {
   const catalog=useResource(()=>store.catalog.products(true));const lots=useResource(()=>store.lots.list());const classes=useResource(()=>store.catalog.categories());
-  const [params,setParams]=useSearchParams();const query=useSearchQuery();const [filter,setFilter]=useState("all");
+  const [params,setParams]=useSearchParams();const query=useSearchQuery();const [filter,setFilter]=useState("all");const [category,setCategory]=useState("all");
   const [receiving,setReceiving]=useState<string|null>(null);const [editing,setEditing]=useState<Lot|null>(null);const [certificate,setCertificate]=useState<Lot|null>(null);
   const [newProduct,setNewProduct]=useState<Product|null>(null);const [firstLot,setFirstLot]=useState(true);const [notice,setNotice]=useState("");
   const selected=params.get("product");const openLot=params.get("lot");
@@ -31,23 +31,26 @@ export default function InventoryWorkspace() {
   const refresh=()=>{catalog.reload();lots.reload();};
   const open=(id:string|null)=>setParams(p=>{if(id)p.set("product",id);else {p.delete("product");p.delete("lot");}return p;});
   const rows=(catalog.data ?? []).map(product=>{const own=fifoLots((lots.data ?? []).filter(l=>l.productId===product.id));return {product,lots:own,totals:inventoryTotals(own)};});
-  const visible=rows.filter(r=>matches(query,r.product.name,r.product.size,r.product.form,r.product.id,...r.lots.map(lotNumber)) && (filter==="all" || filter==="incoming" && r.totals.incoming>0 || filter==="quarantine" && r.totals.quarantine>0 || filter==="certificate" && r.totals.awaiting>0 || filter==="available" && r.totals.available>0 || filter==="attention" && (r.totals.unknown>0 || r.totals.held>0)));
+  const categoryOf=(id:string)=>classes.data?.find(c=>c.id===id)?.name ?? categoryName(id);const byName=new Map([...rows].sort((a,b)=>a.product.name.localeCompare(b.product.name)).map((r,i)=>[r.product.id,i]));
+  const categories=[{value:"all",label:`All categories (${rows.length})`},...(classes.data ?? []).filter(c=>c.id!=="all").map(c=>({value:c.id,label:c.name,count:rows.filter(r=>r.product.category===c.id).length})).filter(c=>c.count>0).map(c=>({value:c.value,label:`${c.label} (${c.count})`}))];
+  const visible=rows.filter(r=>matches(query,r.product.name,r.product.size,r.product.form,r.product.id,categoryOf(r.product.category),...r.lots.map(lotNumber)) && (category==="all" || r.product.category===category) && (filter==="all" || filter==="incoming" && r.totals.incoming>0 || filter==="quarantine" && r.totals.quarantine>0 || filter==="certificate" && r.totals.awaiting>0 || filter==="available" && r.totals.available>0 || filter==="attention" && (r.totals.unknown>0 || r.totals.held>0)));
   const totals=inventoryTotals(lots.data ?? []);const row=rows.find(r=>r.product.id===selected);
   const columns:Column<Row>[]=[
-    {key:"product",header:"Product",width:"23%",mobile:"primary",cell:r=><span className="kit-cell-name"><span>{r.product.name}<span className="kit-cell-sub">{r.product.size} · {r.product.form}<br/>{r.product.active===false ? "Archived product" : `Active · ${formatMoney(r.product.price ?? 0)}`}</span></span></span>},
-    {key:"available",header:"Available",width:"9%",align:"end",mobile:"aside",cell:r=><strong>{formatCount(r.totals.available)}</strong>},
-    {key:"reserved",header:"Reserved",width:"9%",align:"end",cell:r=>formatCount(r.totals.reserved)},
-    {key:"incoming",header:"Incoming",width:"9%",align:"end",mobile:"meta",cell:r=>formatCount(r.totals.incoming)},
-    {key:"testing",header:"Quarantine",width:"10%",align:"end",mobile:"meta",cell:r=>formatCount(r.totals.quarantine)},
-    {key:"held",header:"Other held",width:"12%",align:"end",cell:r=><span>{formatCount(r.totals.awaiting+r.totals.held)}{r.totals.unknown>0 && <span className="kit-cell-sub">{r.totals.unknown} records to check</span>}</span>},
-    {key:"lots",header:"Selling now",width:"28%",mobile:"secondary",cell:r=>{const current=r.lots.find(l=>lotAvailable(l)>0);return <span className="kit-mono">{current ? lotNumber(current) : "No eligible lot"}<span className="kit-cell-sub">{r.lots.length} lots · {r.totals.onHand} on hand</span></span>;}},
+    // By name; sizes of one compound stay together in catalog order.
+    {key:"product",header:"Product",width:"23%",mobile:"primary",sortValue:r=>byName.get(r.product.id) ?? 0,cell:r=><span className="kit-cell-name"><Dot colour={r.product.color}/><span>{r.product.name}<span className="kit-cell-sub">{r.product.size} · {r.product.form}<br/>{r.product.active===false ? "Archived product" : `Active · ${formatMoney(r.product.price ?? 0)}`}</span></span></span>},
+    {key:"available",header:"Available",width:"9%",align:"end",mobile:"aside",sortValue:r=>r.totals.available,sortFirst:"desc",cell:r=><strong>{formatCount(r.totals.available)}</strong>},
+    {key:"reserved",header:"Reserved",width:"9%",align:"end",sortValue:r=>r.totals.reserved,sortFirst:"desc",cell:r=>formatCount(r.totals.reserved)},
+    {key:"incoming",header:"Incoming",width:"9%",align:"end",mobile:"meta",sortValue:r=>r.totals.incoming,sortFirst:"desc",cell:r=>formatCount(r.totals.incoming)},
+    {key:"testing",header:"Quarantine",width:"10%",align:"end",mobile:"meta",sortValue:r=>r.totals.quarantine,sortFirst:"desc",cell:r=>formatCount(r.totals.quarantine)},
+    {key:"held",header:"Other held",width:"12%",align:"end",sortValue:r=>r.totals.awaiting+r.totals.held,sortFirst:"desc",cell:r=><span>{formatCount(r.totals.awaiting+r.totals.held)}{r.totals.unknown>0 && <span className="kit-cell-sub">{r.totals.unknown} records to check</span>}</span>},
+    {key:"lots",header:"Selling now",width:"28%",mobile:"secondary",sortValue:r=>{const current=r.lots.find(l=>lotAvailable(l)>0);return current ? lotNumber(current) : null;},cell:r=>{const current=r.lots.find(l=>lotAvailable(l)>0);return <span className="kit-mono">{current ? lotNumber(current) : "No eligible lot"}<span className="kit-cell-sub">{plural(r.lots.length,"lot")} · {formatCount(r.totals.onHand)} on hand</span></span>;}},
   ];
   function createProduct(){setNewProduct({id:`product-${crypto.randomUUID()}`,name:"",size:"",category:classes.data?.[0]?.id ?? "",form:"Lyophilized powder",price:0,stock:0,lot:"",active:true,color:"#7A39B1",colorInk:"#7A39B1"});}
   return <div className="kit-grid">
     <PageHeader description="Products, lots and certificates together. Receive stock, follow testing, and sell the first eligible lot received." meta={<span>{rows.length} products · {totals.onHand} units on hand{totals.unknown ? ` · ${totals.unknown} lot records need reconciliation` : ""}</span>}/>
     {!LIVE && <p className="kit-note kit-span-12">Working sample preview. Changes stay in this browser and do not affect live inventory.</p>}
     <div className="inventory-summary kit-span-12">{[["Available",totals.available],["Incoming",totals.incoming],["Quarantine",totals.quarantine],["Awaiting certificate",totals.awaiting]].map(([label,value])=><div className="kit-card" key={label}><span className="kit-label">{label}</span><strong className="kit-figure">{value}</strong></div>)}</div>
-    <div className="inventory-toolbar kit-span-12"><div className="cc-confirm-actions"><Button variant="primary" onClick={()=>setReceiving("")} disabled={!catalog.data}>Receive inventory</Button><Button onClick={createProduct} disabled={!classes.data}>Add new product</Button></div><SelectField label="Show inventory" value={filter} onChange={setFilter} options={[{value:"all",label:"All products"},{value:"available",label:"Available to sell"},{value:"incoming",label:"Incoming shipments"},{value:"quarantine",label:"Awaiting testing"},{value:"certificate",label:"Awaiting certificate"},{value:"attention",label:"Holds or records to check"}]}/></div>
+    <div className="inventory-toolbar kit-span-12"><div className="cc-confirm-actions"><Button variant="primary" onClick={()=>setReceiving("")} disabled={!catalog.data}>Receive inventory</Button><Button onClick={createProduct} disabled={!classes.data}>Add new product</Button></div><div className="inventory-filters"><SelectField label="Category" value={category} onChange={setCategory} options={categories}/><SelectField label="Show inventory" value={filter} onChange={setFilter} options={[{value:"all",label:"All products"},{value:"available",label:"Available to sell"},{value:"incoming",label:"Incoming shipments"},{value:"quarantine",label:"Awaiting testing"},{value:"certificate",label:"Awaiting certificate"},{value:"attention",label:"Holds or records to check"}]}/></div></div>
     {notice && <p role="status" className="inventory-notice kit-span-12">{notice}</p>}
     <div className="kit-card kit-span-12 inventory-table"><DataTable caption="Products and lot inventory" columns={columns} rows={visible} rowKey={r=>r.product.id} onRowClick={r=>open(r.product.id)} activeKey={selected} loading={catalog.loading || lots.loading} error={catalog.error ?? lots.error} onRetry={refresh} empty={{title:"No products match.",note:"Add a product or change the search or filter."}}/></div>
     {classes.data && <ClassesEditor classes={classes.data} onSaved={classes.reload}/>}
