@@ -32,7 +32,7 @@ import "./lab-desk.css";
 
 const money = (value: number | null) => (value == null ? "Price on request" : `$${value.toFixed(2)}`);
 const categoryName = (id: string) => { const c = categories.find((x) => x.id === id); return c?.short ?? c?.name ?? id; };
-const statusWord: Record<string, string> = { placed: "Placed", paid: "Paid", packed: "Packed", shipped: "Shipped", delivered: "Delivered", cancelled: "Cancelled", refunded: "Refunded" };
+const statusWord: Record<string, string> = { placed: "Awaiting payment", paid: "Paid", packed: "Packed", shipped: "Shipped", delivered: "Delivered", cancelled: "Cancelled", refunded: "Refunded" };
 const day = (iso?: string) => {
   if (!iso) return "";
   const date = new Date(iso);
@@ -148,12 +148,14 @@ function CompareView({ products, onNavigate }: { products: ProductCard[]; onNavi
   );
 }
 
-const STEPS = ["placed", "paid", "packed", "shipped", "delivered"] as const;
+/* The journey starts at payment, as the tracker's does (brand/Tracker.tsx): an order not yet paid has reached none of it. */
+const STEPS = ["paid", "packed", "shipped", "delivered"] as const;
 
 export function OrderView({ order, onNavigate }: { order: OrderCard; onNavigate: () => void }) {
   const stopped = order.status === "cancelled" || order.status === "refunded";
+  const unpaid = order.status === "placed";
   const reached = stopped ? -1 : STEPS.indexOf(order.status as (typeof STEPS)[number]);
-  const at = (status: string) => order.events.find((e) => e.status === status)?.at ?? (status === "placed" ? order.placedAt : undefined);
+  const at = (status: string) => order.events.find((e) => e.status === status)?.at;
   return (
     <article className="tm-desk-card tm-desk-order" aria-label={`Order ${order.number}`}>
       <header className="tm-desk-order-head">
@@ -163,9 +165,9 @@ export function OrderView({ order, onNavigate }: { order: OrderCard; onNavigate:
       {!stopped && (
         <ol className="tm-desk-track" style={{ "--tm-desk-reached": Math.max(0, reached) } as CSSProperties}>
           {STEPS.map((step, i) => (
-            <li key={step} className={i <= reached ? "is-done" : undefined} aria-current={i === reached ? "step" : undefined} style={{ "--tm-i": i + 1 } as CSSProperties}>
+            <li key={step} className={i <= reached ? "is-done" : undefined} aria-current={i === reached || (unpaid && i === 0) ? "step" : undefined} style={{ "--tm-i": i + 1 } as CSSProperties}>
               <span className="tm-desk-node" aria-hidden="true" />
-              <span className="tm-desk-step">{statusWord[step]}</span>
+              <span className="tm-desk-step">{unpaid && i === 0 ? statusWord.placed : statusWord[step]}</span>
               <span className="tm-desk-when">{i <= reached ? day(at(step)) : ""}</span>
             </li>
           ))}
@@ -586,7 +588,8 @@ export function Activity({ label }: { label: string }) {
 /** "was shipped on Oct 6", or "is paid" when the record has no date. */
 function lastOrderLine(status: string, iso?: string) {
   const word = (statusWord[status] ?? status).toLowerCase(), when = day(iso);
-  return when ? `was ${word} on ${when}` : `is ${word}`;
+  // Awaiting payment is where it stands now, not a step it took on a day.
+  return when && status !== "placed" ? `was ${word} on ${when}` : `is ${word}`;
 }
 
 /** A question the desk offers, with the mark of the record it opens. */

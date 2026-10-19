@@ -22,6 +22,8 @@ const NEXT = [
 
 /** How far along "What happens next" an order is. */
 const REACHED: Partial<Record<OrderStatus, number>> = { placed: 0, paid: 0, packed: 1, shipped: 2, delivered: 3 };
+/** The first step while an order is not yet paid ("placed"): it waits on payment rather than being confirmed. */
+const UNPAID = { title: "Awaiting payment", text: "Your order is on record, and is confirmed once payment is received." };
 
 // In UTC, as the account and the tracker read it, so the day matches wherever it is opened.
 const longDate = (iso: string) =>
@@ -145,7 +147,7 @@ function Placed({ order, method, sampleRates }: { order: Order; method?: Shippin
           <div className="tm-next">
             <h2 className="tm-eyebrow tm-next-title">What happens next</h2>
             <ol className="tm-next-steps">
-              {NEXT.map((step, i) => {
+              {(order.status === "placed" ? [UNPAID, ...NEXT.slice(1)] : NEXT).map((step, i) => {
                 const state = i < reached ? "is-done" : i === reached ? "is-current" : "";
                 return (
                   <li

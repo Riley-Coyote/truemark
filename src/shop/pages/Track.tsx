@@ -29,7 +29,7 @@ const longDate = (iso: string) => {
 function headline(order: Order): [string, string] {
   switch (order.status) {
     case "placed":
-      return ["Order placed.", "It is packed cold once payment is confirmed."];
+      return ["Awaiting payment.", "It is packed cold once payment is confirmed."];
     case "paid":
       return ["Payment confirmed.", "Next, it is packed cold."];
     case "packed":

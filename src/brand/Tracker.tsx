@@ -21,9 +21,11 @@ function carrierTracking(carrier: string | undefined, tracking: string): string 
 }
 
 /*
- * An order's journey, in the home page's paper-trail language: five stations on a
+ * An order's journey, in the home page's paper-trail language: four stations on a
  * hairline and the logo's dot travelling to where the parcel is now. When the order
- * moves on while the page is open, the dot travels the next leg.
+ * moves on while the page is open, the dot travels the next leg. The journey starts at
+ * payment: an order not yet paid (its "placed" step) is awaiting payment, said on the
+ * first station, and no dot sets off until it is paid.
  */
 
 /** The client's own words: Handling (shipping and cold chain) and the Shipping Policy. */
@@ -35,10 +37,10 @@ export const ON_ARRIVAL = "Move vials to −20 °C promptly, check seals, and ve
 export const ESTIMATES_NOTE = "Delivery times are estimates and are not guaranteed.";
 export const PROCESSING_NOTE = "Orders are typically processed within 1–3 business days after payment is confirmed.";
 
-export const JOURNEY: OrderStatus[] = ["placed", "paid", "packed", "shipped", "delivered"];
+export const JOURNEY: OrderStatus[] = ["paid", "packed", "shipped", "delivered"];
 
 export const STATION_LABEL: Record<OrderStatus, string> = {
-  placed: "Placed",
+  placed: "Awaiting payment",
   paid: "Paid",
   packed: "Packed cold",
   shipped: "Shipped",
@@ -48,7 +50,7 @@ export const STATION_LABEL: Record<OrderStatus, string> = {
 };
 
 const SENTENCE: Record<OrderStatus, string> = {
-  placed: "is placed",
+  placed: "is awaiting payment",
   paid: "is paid",
   packed: "is packed cold",
   shipped: "has shipped",
@@ -134,8 +136,8 @@ type Station = { status: OrderStatus; at?: string; estimate?: string };
 
 function stationsFor(order: Order): Station[] {
   if (isClosed(order)) {
-    // A closed order shows only the steps it took, ending where it stopped.
-    const seen = new Set<OrderStatus>();
+    // A closed order shows only the steps it took, ending where it stopped. Its checkout ("placed") is not a step.
+    const seen = new Set<OrderStatus>(["placed"]);
     return journeyEvents(order)
       .filter((event) => {
         if (seen.has(event.status)) return false;
@@ -267,6 +269,8 @@ export function Tracker({
   parcel?: boolean;
 }) {
   const closed = isClosed(order);
+  // Not yet paid: nothing on the journey is reached, and its first station says so.
+  const unpaid = !closed && order.status === "placed";
   const stations = stationsFor(order);
   const target = closed ? stations.length - 1 : JOURNEY.indexOf(order.status);
   const { ref, at, moving } = useTravel(closed ? -1 : target);
@@ -287,7 +291,7 @@ export function Tracker({
         className="tm-tracker-rail"
         data-started={!closed && at >= 0 ? "" : undefined}
         data-moving={moving ? "" : undefined}
-        data-live={!closed && settled && !moving && order.status !== "delivered" ? "" : undefined}
+        data-live={!closed && at >= 0 && settled && !moving && order.status !== "delivered" ? "" : undefined}
         style={{ "--tm-tracker-n": stations.length, "--tm-tracker-at": closed ? stations.length - 1 : Math.max(at, 0) } as CSSProperties}
       >
         <ol className="tm-tracker-track" aria-label={`Progress of order ${order.number}`}>
@@ -300,7 +304,7 @@ export function Tracker({
                 className="tm-tracker-stop"
                 data-lit={lit ? "" : undefined}
                 data-ending={ending ? "" : undefined}
-                aria-current={i === target ? "step" : undefined}
+                aria-current={i === target || (unpaid && i === 0) ? "step" : undefined}
               >
                 <span className="tm-tracker-node" aria-hidden="true" />
                 <span className="tm-tracker-date">
@@ -315,7 +319,7 @@ export function Tracker({
                     </>
                   )}
                 </span>
-                <span className="tm-tracker-step">{STATION_LABEL[station.status]}</span>
+                <span className="tm-tracker-step">{unpaid && i === 0 ? STATION_LABEL.placed : STATION_LABEL[station.status]}</span>
                 <span className="tm-tracker-detail">
                   {station.at ? clock(station.at) : station.estimate ? "Estimated" : " "}
                 </span>

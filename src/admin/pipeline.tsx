@@ -13,7 +13,7 @@ import type { OpenStage, Stage, StageFigures } from "./metrics";
 import { HOME } from "./nav";
 import { CountingCount } from "./pulse";
 
-const NAMES: Record<Stage, string> = { placed: "Placed", paid: "Paid", packed: "Packed", shipped: "Shipped", delivered: "Delivered" };
+const NAMES: Record<Stage, string> = { placed: "Awaiting payment", paid: "Paid", packed: "Packed", shipped: "Shipped", delivered: "Delivered" };
 
 /** What the stage says under its count, and the same said in full for a screen reader. */
 function describe(s: StageFigures) {
