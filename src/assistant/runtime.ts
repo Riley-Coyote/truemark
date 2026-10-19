@@ -264,9 +264,11 @@ export function createToolRuntime(deps: RuntimeDependencies) {
         return output({ ...result, items }, { kind: "rows", rows: items.map((b) => ({ label: b.name, detail: `${b.institution} · ${b.status}`, href: `/admin/customers?customer=${encodeURIComponent(b.id)}` })) });
       }
       case "lots": case "released_lots": {
-        // Partners see the public record only: released lots, never the command center's fictional samples.
-        const list = (await s.lots.list()).filter((l) => (tool.name !== "released_lots" || (l.status === "released" && !l.sample)) && matching(a.filter, l.lot, l.productId, l.status));
-        return output(page(list.map((l) => ({ lot: l.lot, productId: l.productId, status: l.status, units: l.units, results: l.results.slice(0, 6), sample: l.sample })), a));
+        // Partners see the public record only: released lots' public fields (no unit counts), never the command
+        // center's fictional samples. The owner's lots tool reads the whole table.
+        const released = tool.name === "released_lots";
+        const list = (await (released ? s.lots.released() : s.lots.list())).filter((l) => (!released || (l.status === "released" && !l.sample)) && matching(a.filter, l.lot, l.productId, l.status));
+        return output(page(list.map((l) => ({ lot: l.lot, productId: l.productId, status: l.status, ...(released ? {} : { units: l.units }), results: l.results.slice(0, 6), sample: l.sample })), a));
       }
       case "applications": return output(page((await s.applications.list()).filter((row) => matching(a.filter, row.name, row.status)).map(({ id, name, institution, status, submittedAt }) => ({ id, name, institution, status, submittedAt })), a));
       case "partners": return output(page(await partnerStats(), a));

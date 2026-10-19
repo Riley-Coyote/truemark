@@ -144,7 +144,10 @@ export function createLiveAdapter(client: SupabaseClient, options: {
       },
     },
     lots: {
+      // The whole table, every column: the team's (RLS returns no rows to anyone else).
       list: async () => (await rows("lots")).map(row => { const value=map.lot(row); if(value.coaPath)value.coaUrl=publicUrl("certificates",value.coaPath);return value; }),
+      // Released lots' public records, for visitors and customers.
+      released: () => createContentAdapter(client, rows, rpc, changed).library(),
       get: async (lot) => { const row = await rpc<map.Row | null>("lot_lookup", { lot }); if(!row) return null;
         const value=map.lot(["released","archived"].includes(String(row.status)) ? row : {...row,results:[],reference:null,coa_path:null,coaUrl:null}); value.coaUrl=map.certificateLink(value.coaUrl,publicUrl); return value; },
       setStatus: async (lot, status) => {

@@ -16,6 +16,7 @@ import { FREE_BAC_WATER_ID, defaultSettings, earnsFreeBacWater, priceQuote } fro
 import { STORE_CHANGE, read, worldNow, write } from "./storage";
 import type { AssistantCapabilities, AssistantModels, AssistantIdentity, AssistantProduct } from "../assistant-types";
 import { previewJournal } from "./content";
+import { publicLot, publiclyReleased } from "../inventory";
 import type {
   Address,
   Application,
@@ -311,6 +312,8 @@ export const store = {
 
   lots: {
     list: () => wait(allLots()),
+    /** Released lots' public records, as the live store reads them for visitors and customers. */
+    released: () => wait(allLots().filter(publiclyReleased).map(publicLot)),
     get: (lot: string) => wait(allLots().find((l) => l.lot === lot.trim().toUpperCase()) ?? null),
     setStatus: (lot: string, status: LotStatus) => {
       const l=allLots().find(l=>l.lot===lot)!;

@@ -104,7 +104,9 @@ function runtimeFixture(persona: Persona = 'owner') {
     orders: { async list() { reads.push('orders'); return orders; }, async listForBuyer(id: string) { reads.push(`buyer:${id}`); return orders.filter((o) => o.buyerId === id); }, async get(id: string) { return orders.find((o) => o.id === id || o.number === id) ?? null; }, async advance(id: string, status: Order['status']) { writes++; const o = orders.find((o) => o.id === id)!; o.status = status; return o; } },
     buyers: { async list() { reads.push('buyers'); return []; } },
     applications: { async list() { return [{ id: 'application-a', name: 'Fixture applicant', institution: 'Fixture lab', status: 'submitted' }]; }, async review(id: string, status: string) { writes++; return { id, status }; } },
-    lots: { async list() { return []; }, async get() { return null; } },
+    lots: { async list() { reads.push('lots'); return [{ lot: 'LOT-1', productId: 'compound', status: 'released', receivedAt: '2026-09-01', units: 40, holdReason: 'PRIVATE HOLD', results: [], sample: false }]; },
+      async released() { reads.push('released'); return [{ lot: 'LOT-1', productId: 'compound', status: 'released', receivedAt: null, units: null, results: [{ label: 'Purity', method: 'HPLC', value: '99.1', unit: '%' }], sample: false }]; },
+      async get() { return null; } },
     partners: { async me() { return p; }, async get() { return p; }, async list() { return [p]; }, async referrals(id: string) { reads.push(`referrals:${id}`); return refs; }, async payouts(id: string) { reads.push(`payouts:${id}`); return []; }, async visits(id: string) { reads.push(`visits:${id}`); return []; } },
     actions: { async approveCommissions() { writes++; return 1; }, async recordPayout() { writes++; return { id: 'payout', amount: 12 }; }, async updateProduct() { writes++; return { id: 'compound' }; }, async saveDraft(input: unknown) { writes++; return { ...(input as object), id: 'draft-id' }; }, async createDiscount(input: unknown) { writes++; return input; } },
   } as unknown as AssistantStore;
@@ -239,6 +241,18 @@ test('visitor orders are selected by session, partner results omit buyer identit
   await assert.rejects(partner.prepare(call('orders'), tools('owner'), 'partner'), /cannot use/);
   const staff = runtimeFixture(); staff.changeScope({ persona: 'owner', role: 'staff', id: 'staff', sample: false });
   await assert.rejects(staff.prepare(call('create_discount_code', { code: 'NEW', percent: 10, active: true }), tools('owner'), 'owner'), /requires the owner/);
+});
+test('partner released lots come from the public records, without unit counts; the owner lots tool reads the team table', async () => {
+  const partner = runtimeFixture('partner');
+  const released = await partner.prepare(call('released_lots'), tools('partner'), 'partner');
+  assert.deepEqual(partner.reads, ['released']);
+  const [item] = (released.model as { data: { items: Record<string, unknown>[] } }).data.items;
+  assert.deepEqual(Object.keys(item).sort(), ['lot', 'productId', 'results', 'sample', 'status']);
+  assert.doesNotMatch(JSON.stringify(released.model), /units|PRIVATE HOLD/);
+  const owner = runtimeFixture();
+  const lots = await owner.prepare(call('lots'), tools('owner'), 'owner');
+  assert.deepEqual(owner.reads, ['lots']);
+  assert.equal((lots.model as { data: { items: { units: number }[] } }).data.items[0].units, 40);
 });
 test('catalog write is feature-detected and never tries an absent upsert; bag changes require Confirm', async () => {
   const owner = runtimeFixture(); const result = await owner.prepare(call('update_product', { id: 'compound', price: 45 }), tools('owner'), 'owner');

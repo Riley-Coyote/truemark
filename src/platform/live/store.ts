@@ -18,7 +18,7 @@ export const store: typeof Preview.store = {
     saveProduct: (draft, expectedStock) => live().store.catalog.saveProduct(draft, expectedStock), saveCategory: (draft) => live().store.catalog.saveCategory(draft),
     uploadPhoto: (id, file) => live().store.catalog.uploadPhoto(id, file), shippingMethods: () => live().store.catalog.shippingMethods(), validateCode: (code) => live().store.catalog.validateCode(code) },
   orders: { list: () => live().store.orders.list(), listForBuyer: (id) => live().store.orders.listForBuyer(id), get: (id) => live().store.orders.get(id), place: (id, draft) => live().store.orders.place(id, draft), advance: (id, status, extra) => live().store.orders.advance(id, status, extra) },
-  lots: { list: () => live().store.lots.list(), get: (lot) => live().store.lots.get(lot), setStatus: (lot, status) => live().store.lots.setStatus(lot, status) },
+  lots: { list: () => live().store.lots.list(), released: () => live().store.lots.released(), get: (lot) => live().store.lots.get(lot), setStatus: (lot, status) => live().store.lots.setStatus(lot, status) },
   buyers: { list: () => live().store.buyers.list(), get: (id) => live().store.buyers.get(id) },
   applications: { list: () => live().store.applications.list(), submit: (form) => live().store.applications.submit(form), review: (id, status, note) => live().store.applications.review(id, status, note) },
   partners: { list: () => live().store.partners.list(), get: (id) => live().store.partners.get(id), me: () => live().store.partners.me(), referrals: (id) => live().store.partners.referrals(id), payouts: (id) => live().store.partners.payouts(id), visits: (id) => live().store.partners.visits(id), discounts: () => live().store.partners.discounts() },

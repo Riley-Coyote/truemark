@@ -57,7 +57,7 @@ export default function Track() {
 
   const session = useResource(() => store.session.get(), []);
   const methods = useResource(() => store.catalog.shippingMethods(), []);
-  const lots = useResource(() => store.lots.list(), []);
+  const lots = useResource(() => store.lots.released(), []);
   const [tracked, setTracked] = useState<TrackedOrder | null>(null);
   const [unlocked, setUnlocked] = useState<string | null>(null);
   const buyerId = session.data?.id;

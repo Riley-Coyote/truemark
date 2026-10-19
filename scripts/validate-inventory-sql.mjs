@@ -99,7 +99,7 @@ try {
  retired=await setStatus(retired,'archived');assert.equal(retired.status,'archived');assert.equal(retired.testing_status,'failed');
  await assert.rejects(()=>setStatus(retired,'quarantine'),/was rejected/);await assert.rejects(()=>editLot(retired,{status:'active'}),/was rejected/);
  const verified=(await anon('select lot_lookup($1) as r',[retired.lot]))[0].r;assert.equal(verified.status,'rejected');assert.deepEqual(verified.results,[]);assert.equal(verified.coaUrl,null);
- assert.equal((await anon('select * from lots where inventory_id=$1',[retired.inventory_id])).length,0);
+ assert.equal((await anon('select * from released_lots() where lot=$1',[retired.lot])).length,0);await denied('anon',null,'select * from lots where inventory_id=$1',[retired.inventory_id]);
  pass('rejection needs a note stored on the lot through every path; a rejected or rejected-then-archived lot returns to sale only after new passing evidence');
  await denied('authenticated',buyer,'select receive_inventory($1,1,$2,$3)',[b.inventory_id,at,randomUUID()]);
  await denied('authenticated',buyer,'select save_inventory_lot($1)',[{productId,number:'DENIED',reason:'No',expectedUnits:0}]);
