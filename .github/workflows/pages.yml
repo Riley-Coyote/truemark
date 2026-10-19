@@ -54,6 +54,10 @@ jobs:
           VITE_REVIEW_SUPABASE_URL: ${{ vars.REVIEW_SUPABASE_URL }}
           VITE_REVIEW_SUPABASE_ANON_KEY: ${{ vars.REVIEW_SUPABASE_ANON_KEY }}
         run: npm run build:launch -- --emptyOutDir --base /truemark/launch/
+      - name: Add the standalone pages
+        # Finished, self-contained pages in standalone/ are published as they are, outside
+        # every app build (standalone/built/ becomes /truemark/built/). The scan below covers them.
+        run: cp -R standalone/. dist/
       - name: Verify launch integration and browser isolation
         env:
           WP27_LAUNCH_DIR: dist/launch
