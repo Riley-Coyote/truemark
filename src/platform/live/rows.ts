@@ -6,6 +6,15 @@ import type { Notice } from "../notifications";
 import type { PartnerApplication } from "../accounts";
 
 export type Row = Record<string, unknown>;
+/** A file's public address in a storage bucket. The live adapter passes its client's own, so links follow the configured Supabase project. */
+export type PublicUrl = (bucket: string, path: string) => string;
+/** Without a client: the file's path within a Supabase project. */
+const projectPath: PublicUrl = (bucket, path) => `/storage/v1/object/public/${bucket}/${path}`;
+/** A certificate address built with a fixed host (the lot lookup's), served from the configured project instead. Anything else is kept. */
+export function certificateLink(url: string | undefined, publicUrl: PublicUrl): string | undefined {
+  const path = url?.match(/\/storage\/v1\/object\/public\/certificates\/(.+)$/)?.[1];
+  return path ? publicUrl("certificates", path) : url;
+}
 export function settings(row: Row): StorefrontSettings {
   return { freeShippingThreshold: row.free_shipping_threshold == null ? null : Number(row.free_shipping_threshold),
     freeShippingMethod: String(row.free_shipping_method), insuranceMode: row.insurance_mode as StorefrontSettings["insuranceMode"],
@@ -54,7 +63,7 @@ export function partner(row: Row, codes: Discount[]): Partner {
     rate: Number(row.rate), codeDiscount: (codes.find((d) => d.partnerId === row.id)?.percent ?? 0) / 100,
     status: row.status as Partner["status"], joinedAt: String(row.joined_at), audience: String(row.audience) };
 }
-export function order(row: Row): Order {
+export function order(row: Row, publicUrl: PublicUrl = projectPath): Order {
   return { inventoryIssue: ["placed","paid","packed"].includes(String(row.status)) && ((row.order_lines ?? []) as Row[]).some(line=>{
       const allocations=(line.order_lot_allocations ?? []) as Row[];
       return allocations.filter(a=>a.state==="reserved").reduce((n,a)=>n+Number(a.quantity),0)!==Number(line.quantity) || allocations.some(a=>a.state==="reserved" && (!a.lots || !["Available","Exhausted"].includes(lotStage(lot(a.lots as Row)))));
@@ -66,7 +75,7 @@ export function order(row: Row): Order {
     discount: row.discount_code || Number(row.discount_amount) > 0 ? { code: row.discount_code ? String(row.discount_code) : "Member / rewards", amount: Number(row.discount_amount), partnerId: optional(row.discount_partner_id), source: row.discount_code ? "promotion" : "program" } : undefined,
     tax: Number(row.tax ?? 0), refunded: Number(row.refunded ?? 0), paymentExpiresAt: optional(row.payment_expires_at), paidAt: optional(row.paid_at), paymentProvider: optional(row.payment_provider),
     insurance: Number(row.insurance ?? 0), insuranceApplied: Boolean(row.insurance_applied), total: Number(row.total),
-    lines: ((row.order_lines ?? []) as Row[]).map((line) => ({ id: optional(line.id), allocations: ((line.order_lot_allocations ?? []) as Row[]).filter(a=>a.state!=="released").map(a=>({id:String(a.id),lotId:String(a.lot_id),lot:String(a.lot_number),quantity:Number(a.quantity),state:a.state as "reserved" | "fulfilled" | "released",certificatePath:optional(a.certificate_path),certificateUrl:a.certificate_path ? `https://gydihnfzmuqmbnykaihg.supabase.co/storage/v1/object/public/certificates/${a.certificate_path}` : undefined,returnedUnits:Number(a.returned_units ?? 0)})), productId: String(line.product_id), quantity: Number(line.quantity), unitPrice: Number(line.unit_price), lot: String(line.lot) })),
+    lines: ((row.order_lines ?? []) as Row[]).map((line) => ({ id: optional(line.id), allocations: ((line.order_lot_allocations ?? []) as Row[]).filter(a=>a.state!=="released").map(a=>({id:String(a.id),lotId:String(a.lot_id),lot:String(a.lot_number),quantity:Number(a.quantity),state:a.state as "reserved" | "fulfilled" | "released",certificatePath:optional(a.certificate_path),certificateUrl:a.certificate_path ? publicUrl("certificates",String(a.certificate_path)) : undefined,returnedUnits:Number(a.returned_units ?? 0)})), productId: String(line.product_id), quantity: Number(line.quantity), unitPrice: Number(line.unit_price), lot: String(line.lot) })),
     events: ((row.order_events ?? []) as Row[]).map((event) => ({ status: event.status as Order["status"], at: String(event.at), note: optional(event.note) })).sort((a, b) => a.at.localeCompare(b.at)) };
 }
 export function lot(row: Row): Lot {

@@ -35,6 +35,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
   const changed = options.changed ?? (() => {});
   const emit = options.emit ?? (() => {});
   const rpc = async <T,>(name: string, args: Record<string, unknown> = {}) => unwrap<T>(await client.rpc(name, args));
+  const publicUrl: map.PublicUrl = (bucket, path) => client.storage.from(bucket).getPublicUrl(path).data.publicUrl;
   async function rows(table: string, select = "*", filters: Record<string, string> = {}) {
     const result: map.Row[] = [];
     for (let offset = 0; ; offset += 1000) {
@@ -57,7 +58,7 @@ export function createLiveAdapter(client: SupabaseClient, options: {
   const orderRows = (filters = {}) => rows("orders", "*, order_lines(*, order_lot_allocations(*, lots(*))), order_events(*)", filters);
   async function getOrder(id: string) {
     const found = await orderRows(id.startsWith("TM-") ? { number: id } : { id });
-    return found[0] ? map.order(found[0]) : null;
+    return found[0] ? map.order(found[0], publicUrl) : null;
   }
   const codes = async () => (await rows("discounts")).map(map.discount);
   async function partnerRows(filters = {}): Promise<Partner[]> {
@@ -129,8 +130,8 @@ export function createLiveAdapter(client: SupabaseClient, options: {
       },
     },
     orders: {
-      list: async () => (await orderRows()).map(map.order).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-      listForBuyer: async (buyerId) => (await orderRows({ buyer_id: buyerId })).map(map.order).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+      list: async () => (await orderRows()).map((row) => map.order(row, publicUrl)).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+      listForBuyer: async (buyerId) => (await orderRows({ buyer_id: buyerId })).map((row) => map.order(row, publicUrl)).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
       get: getOrder,
       place: async (_buyerId, draft: OrderDraft) => refreshedOrder(await rpc<map.Row>("place_order", { draft: {
         lines: draft.lines.map(({ productId, quantity }) => ({ productId, quantity })), address: draft.address,
@@ -143,8 +144,9 @@ export function createLiveAdapter(client: SupabaseClient, options: {
       },
     },
     lots: {
-      list: async () => (await rows("lots")).map(row => { const value=map.lot(row); if(value.coaPath)value.coaUrl=client.storage.from("certificates").getPublicUrl(value.coaPath).data.publicUrl;return value; }),
-      get: async (lot) => { const row = await rpc<map.Row | null>("lot_lookup", { lot }); return row ? map.lot(["released","archived"].includes(String(row.status)) ? row : {...row,results:[],reference:null,coa_path:null,coaUrl:null}) : null; },
+      list: async () => (await rows("lots")).map(row => { const value=map.lot(row); if(value.coaPath)value.coaUrl=publicUrl("certificates",value.coaPath);return value; }),
+      get: async (lot) => { const row = await rpc<map.Row | null>("lot_lookup", { lot }); if(!row) return null;
+        const value=map.lot(["released","archived"].includes(String(row.status)) ? row : {...row,results:[],reference:null,coa_path:null,coaUrl:null}); value.coaUrl=map.certificateLink(value.coaUrl,publicUrl); return value; },
       setStatus: async (lot, status) => {
         const saved = map.lot(await rpc<map.Row>("set_lot_status", { lot, status }));
         changed(); return saved;

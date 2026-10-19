@@ -93,7 +93,8 @@ export function Fulfilment({ order, shipment, onDone, onAdvance = store.orders.a
   }, [labelReady, saving]);
   const next = order.status === "placed" && order.payment !== "authorized" ? undefined : NEXT[order.status];
   if (!next) return null;
-  if (order.inventoryIssue) return <p className="kit-field-error" role="alert">{order.inventoryIssue}</p>;
+  // A lot problem blocks packing and shipping only; taking payment does not depend on lots.
+  if (order.inventoryIssue && order.status !== "placed") return <p className="kit-field-error" role="alert">{order.inventoryIssue}</p>;
 
   async function perform(action: () => Promise<unknown>, message: string) {
     if (saving) return;

@@ -1,6 +1,6 @@
 import { productById } from "../shop/catalog";
 import { useState } from "react";
-import { Button, Section } from "../app-kit";
+import { Button, Section, plural } from "../app-kit";
 import { store, useResource } from "../platform/store";
 import type { LotAllocation, Order, OrderLine } from "../platform/types";
 import { inventoryStore } from "../platform/inventory-store";
@@ -16,8 +16,8 @@ export function OrderInventory({order,onSaved}:{order:Order;onSaved:()=>void}) {
   const link=(a:LotAllocation|undefined,lot:string)=>a?.certificateUrl ?? `/verify?lot=${encodeURIComponent(lot)}`;
   return <Section title="Pick these lots">
     {order.inventoryIssue && <p role="alert" className="kit-field-error">{order.inventoryIssue}</p>}
-    <ul className="inventory-history">{allocatedLines(order.lines).map((l,i)=><li key={`${l.productId}-${i}`}><strong>{productById(l.productId)?.name ?? l.productId} · {productById(l.productId)?.size}<br/>{l.quantity} units · {l.lot}</strong><a className="cc-inline-link" href={link(l.allocations?.[0],l.lot)} target="_blank" rel="noreferrer">{l.allocations?.[0]?.state==="fulfilled" ? "Shipped certificate" : "Lot certificate"} ↗</a></li>)}</ul>
-    {["placed","paid","packed"].includes(order.status) && <div className="cc-confirm-actions">{order.lines.map(l=><Button key={l.productId} onClick={()=>begin(l)}>Change lots · {l.quantity} units</Button>)}</div>}
+    <ul className="inventory-history">{allocatedLines(order.lines).map((l,i)=><li key={`${l.productId}-${i}`}><strong>{productById(l.productId)?.name ?? l.productId} · {productById(l.productId)?.size}<br/>{plural(l.quantity,"unit")} · {l.lot}</strong><a className="cc-inline-link" href={link(l.allocations?.[0],l.lot)} target="_blank" rel="noreferrer">{l.allocations?.[0]?.state==="fulfilled" ? "Shipped certificate" : "Lot certificate"} ↗</a></li>)}</ul>
+    {["placed","paid","packed"].includes(order.status) && <div className="cc-confirm-actions">{order.lines.map(l=><Button key={l.productId} onClick={()=>begin(l)}>Change lots · {plural(l.quantity,"unit")}</Button>)}</div>}
     {line && <div className="cc-form"><p className="kit-note">Choose a total of {line.quantity} units. A packed order will return to the packing queue for confirmation.</p>
       {(lots.data ?? []).filter(l=>l.productId===line.productId).map(l=><TextField key={lotKey(l)} label={`${lotNumber(l)} (${lotAvailable(l)+(line.allocations ?? []).filter(a=>a.state==="reserved" && a.lotId===lotKey(l)).reduce((n,a)=>n+a.quantity,0)} available to this order)`} inputMode="numeric" value={counts[lotKey(l)] ?? ""} onChange={v=>setCounts({...counts,[lotKey(l)]:v})}/>)}
       <TextField label="Reason for changing lots" value={reason} onChange={setReason}/><div className="cc-confirm-actions"><Button variant="primary" disabled={busy || !reason.trim()} onClick={()=>perform(()=>inventoryStore.substitute(order.id,line.productId,Object.entries(counts).filter(([,q])=>q!=="" && q!=="0").map(([lotId,q])=>({lotId,quantity:Number(q)})),reason))}>Save picking list</Button><Button onClick={()=>setLine(null)} disabled={busy}>Cancel</Button></div>
