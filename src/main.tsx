@@ -1,3 +1,4 @@
+import "./platform/random-uuid";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "@fontsource-variable/manrope";
