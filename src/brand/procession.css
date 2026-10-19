@@ -105,13 +105,23 @@
   box-sizing:border-box;overflow-x:auto;overflow-y:hidden;touch-action:auto;
   scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;
 }
+/* The strip goes round (native-procession.ts): at rest on a copy of a class, it is moved to its twin a whole collection
+   along. A vial and a gap of whole pixels (layout keeps those exactly) put the two on the same pixel grid, so not a pixel
+   of the move shows. The height follows the rounded width, keeping the vial's own proportions. */
+@supports (width:round(1.5px,1px)){
+  .tm-home[data-procession-native] .tm-procession-stage{
+    --native-width:round(calc(clamp(170px,25svh,222px) * .51978),1px);--native-height:calc(var(--native-width) / .51978);
+    gap:round(clamp(72px,24vw,180px),1px);
+  }
+}
 .tm-home[data-procession-native] .tm-procession-stage::-webkit-scrollbar{display:none}
 .tm-home[data-procession-native] .tm-procession-light{display:none}
 .tm-home[data-procession-native] .tm-procession-actor{
   position:relative;left:auto;bottom:auto;flex:0 0 var(--native-width);height:var(--native-height);width:var(--native-width);
   opacity:1;visibility:visible;scroll-snap-align:center;transform:scale(.86);transition:transform 400ms cubic-bezier(.22,1,.36,1);will-change:auto;
 }
-.tm-home[data-procession-native] .tm-procession-actor[data-current]{transform:scale(1)}
+/* The centred pedestal is the nearest: its rim stands in front of its smaller neighbours', whichever class it is. */
+.tm-home[data-procession-native] .tm-procession-actor[data-current]{transform:scale(1);z-index:1}
 .tm-home[data-procession-native] .tm-procession-plinth{mask-image:linear-gradient(black 18%,transparent 82%)}
 .tm-home[data-procession-native] .tm-mist-foot{padding-block:32px 40px!important}
 .tm-home[data-procession-native] .tm-procession-heading,.tm-home[data-procession-native] .tm-procession-details,.tm-home[data-procession-native] .tm-procession-navigation{opacity:1}
