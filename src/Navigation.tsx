@@ -12,6 +12,7 @@ import {
 import type { Location } from "react-router-dom";
 import "./navigation.css";
 import { drawingStep, setStepWaiting } from "./stepping";
+import { PATH_ROUTER } from "./platform/mode";
 
 type History = ReturnType<typeof createBrowserHistory>;
 type Listener = Parameters<History["listen"]>[0];
@@ -475,20 +476,38 @@ export function releaseScroll() {
 }
 /** The place a history entry's page was left at, if it is known. */
 export const scrollFor = (key: string) => positions.get(key);
-/** Where a page drawing for the first time now will stand once ScrollMemory has put it back (read before it has): the
- *  place a reload, a return from another site or a step back keeps for its entry, or its top. vite.config.ts startHead
- *  reads the same place for the page's first paint. */
+/** Where the opening, drawing for the first time now, will stand once ScrollMemory has put it back (read before it
+ *  has): the place a return from another site or a step back keeps for its entry, or its top. A reload starts it at its
+ *  top (ScrollMemory). vite.config.ts startHead reads the same place for the page's first paint. */
 export function placeOnOpening(key: string): number {
-  if (currentKey === null && !returning()) return 0;
+  if (currentKey === null && !returnedTo()) return 0;
   return positions.get(key) ?? 0;
 }
 /** The input that ends a wait for a place: whatever the reader does first wins. */
 export const READER_INPUT = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
 
+const arrival = () => (performance.getEntriesByType?.("navigation")[0] as PerformanceNavigationTiming | undefined)?.type;
 /** A reload, or a return from another site, comes back to a page's place; a fresh visit starts at the top. */
-function returning() {
-  const entry = performance.getEntriesByType?.("navigation")[0] as PerformanceNavigationTiming | undefined;
-  return entry?.type === "reload" || entry?.type === "back_forward";
+const returning = () => arrival() === "reload" || arrival() === "back_forward";
+/** A return from another site, by Back or Forward. */
+const returnedTo = () => arrival() === "back_forward";
+/** The opening is the page's first moment: opened or reloaded, it starts at its top. Only Back and Forward return to a
+ *  place on it, and a step within the site. */
+const OPENING = "/";
+
+// iPhone Safari returns a reloaded page to its place by itself, once the page has grown tall enough, after anything
+// the page does at its first render. For the opening that return is held off, until the reader first moves the page.
+if (typeof window !== "undefined" && arrival() === "reload") {
+  const base = import.meta.env.BASE_URL;
+  const opening = PATH_ROUTER ? location.pathname === base || `${location.pathname}/` === base : !location.hash || /^#\/(\?|$)/.test(location.hash);
+  if (opening) {
+    window.history.scrollRestoration = "manual";
+    const browserPlaces = () => {
+      window.history.scrollRestoration = "auto";
+      for (const type of READER_INPUT) window.removeEventListener(type, browserPlaces, true);
+    };
+    for (const type of READER_INPUT) window.addEventListener(type, browserPlaces, { capture: true, passive: true });
+  }
 }
 
 const room = () => document.documentElement.scrollHeight - window.innerHeight;
@@ -542,6 +561,10 @@ function restore(y: number) {
  * after the browser's own attempt; a new page opens at its top (or at its section, or where it
  * asked to stay with `keepScroll`). Search and filter changes keep the place.
  */
+/** The entry the document opened on, until the reader first goes elsewhere. Its drawing is the arrival, however many
+ *  times it is drawn (React draws it twice in development). */
+let arrivalKey: string | null | undefined;
+
 export function ScrollMemory() {
   const location = useLocation();
   const action = useNavigationType();
@@ -581,8 +604,12 @@ export function ScrollMemory() {
       heldPop = null;
       return;
     }
+    if (arrivalKey === undefined) arrivalKey = location.key;
+    else if (arrivalKey !== location.key) arrivalKey = null;
     if (action === "POP") {
-      const y = before === null && !returning() ? undefined : positions.get(location.key);
+      const fresh = arrivalKey === location.key && (location.pathname === OPENING ? !returnedTo() : !returning());
+      const y = fresh ? undefined : positions.get(location.key);
+      if (fresh && location.pathname === OPENING && window.scrollY > 0) jump(0);
       if (y !== undefined) restore(y);
       else if (before !== null && before !== location.pathname) jump(0);
       return;

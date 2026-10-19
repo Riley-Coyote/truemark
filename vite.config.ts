@@ -74,23 +74,22 @@ function startHead(): Plugin {
           }
         }
         // The opening is "#/" in a build with hash addresses (or no hash at all, which the router reads as "#/"), and the
-        // site's root in one with paths (but there the first visit of a tab is sent to sign in, as main.tsx's enterRoot
-        // does: nothing is readied for it).
+        // site's root in one with paths.
         const atOpening = process.env.VITE_ROUTER === "path"
-          ? `(location.pathname===${JSON.stringify(base)}||location.pathname+"/"===${JSON.stringify(base)})&&sessionStorage.getItem("tm-entered")==="1"`
+          ? `(location.pathname===${JSON.stringify(base)}||location.pathname+"/"===${JSON.stringify(base)})`
           : `(!location.hash||${/^#\/(\?|$)/}.test(location.hash))`;
         // The opening's first paint is the room's own haze, not a blank white page: the room, seen through a lens not yet
         // focused, which the room then comes into focus out of (mist-word.css --tm-dawn-haze, the same gradient). The
         // opening puts it away once the room is drawn; if the opening never draws, it goes anyway. Not for a page that
-        // will be put back lower down (a reload, or a return from another site, keeps its place: Navigation.tsx
-        // placeOnOpening, read here the same way): its first paint is the light wall the page stands on there
-        // (procession.css), which the opening puts away just the same.
+        // will be put back lower down (a return from another site keeps its place; a reload starts at the top:
+        // Navigation.tsx placeOnOpening, read here the same way): its first paint is the light wall the page stands on
+        // there (procession.css), which the opening puts away just the same.
         const ready = [
           "(function(){try{",
           `if(!(${atOpening}))return;`,
           "var d=document,h=d.head,r=d.documentElement,y=0;",
           "try{var n=performance.getEntriesByType('navigation')[0],k=history.state&&history.state.key||'default';",
-          "if(n&&(n.type==='reload'||n.type==='back_forward')){var s=JSON.parse(sessionStorage.getItem('tm-scroll-positions')||'[]');for(var i=0;i<s.length;i++)if(s[i][0]===k)y=s[i][1];}}catch(e){}",
+          "if(n&&n.type==='back_forward'){var s=JSON.parse(sessionStorage.getItem('tm-scroll-positions')||'[]');for(var i=0;i<s.length;i++)if(s[i][0]===k)y=s[i][1];}}catch(e){}",
           "r.setAttribute('data-tm-dawn',y>0&&y>=innerHeight*.25?'wall':'');setTimeout(function(){r.removeAttribute('data-tm-dawn')},4000);",
           "function l(u,a){var e=d.createElement('link');e.rel='preload';e.as=a;e.href=u;e.setAttribute('fetchpriority','high');h.appendChild(e);}",
           `l(matchMedia(${JSON.stringify(TALL_SCREEN)}).matches?${JSON.stringify(base + OPENING_MEDIA.tall.poster)}:${JSON.stringify(base + OPENING_MEDIA.wide.poster)},'image');`,
