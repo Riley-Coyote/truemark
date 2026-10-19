@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties, FormEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Plus } from "lucide-react";
@@ -289,8 +289,16 @@ export function ClassIndex() {
  * then the lookup, in the client's words, for the reader's own lot. The featured lot's certificate is the closer look's
  * (Sequence.tsx); its number here opens it.
  */
+/** The featured lot's record as last read on this visit. A return to the page draws it at once, rather than the
+ *  record's placeholders while it is read again, which grew the record under a reader brought back to it. */
+let lastRecord: Lot | null | undefined;
+
 export function PaperTrail() {
   const current = useResource(() => store.lots.get(lot));
+  useEffect(() => {
+    if (current.data !== undefined) lastRecord = current.data;
+  }, [current.data]);
+  const record = current.data ?? lastRecord;
   const navigate = useNavigate();
   const [value, setValue] = useState("");
 
@@ -302,7 +310,7 @@ export function PaperTrail() {
   return (
     <>
       <section className="tm tm-papertrail" aria-labelledby="tm-trail-title">
-        <LotRecord record={current.data} loading={current.loading} />
+        <LotRecord record={record} loading={current.loading && record === undefined} />
       </section>
       <section className="tm tm-papertrail tm-lookup-section" aria-labelledby="tm-proof-title">
         <div className="tm-lookup-copy" data-reveal>

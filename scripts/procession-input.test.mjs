@@ -141,3 +141,14 @@ test('scrolling back up part way keeps the class; only the opening itself starts
     assert.equal(f.status().active, 2, 'back at the opening, the collection starts in the room\'s order');
   } finally { f.close(); }
 });
+test('the opening takes the collection styling at once, and keeps it only while it is parked', () => {
+  const parked = fixture(); try {
+    assert.equal(parked.home.dataset.procession, '');
+    parked.controller.destroy(true);
+    assert.equal(parked.home.dataset.procession, '', 'a parked opening comes back as it was left');
+  } finally { parked.close(); }
+  const left = fixture(); try {
+    left.controller.destroy();
+    assert.equal(left.home.dataset.procession, undefined);
+  } finally { left.close(); }
+});

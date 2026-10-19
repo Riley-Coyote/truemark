@@ -524,8 +524,13 @@ function restore(y: number) {
     }
     frame = requestAnimationFrame(step);
   };
-  // Already tall enough, as on a swipe back: the page is in place before it is painted.
-  if (room() >= y - 1) jump(y);
+  // Already tall enough, as on a swipe back: the page is in place before it is painted. Placed once the page has laid
+  // itself out (its own layout effects measure it and draw it again, as the opening does its room), still before it is
+  // painted: placed before that, the browser kept what was on screen as the page above it grew, so the page first
+  // showed a little off, then jumped into place.
+  queueMicrotask(() => {
+    if (stopRestoring === stop && room() >= y - 1) jump(y);
+  });
   // Whatever the reader does first wins.
   for (const type of INPUT) window.addEventListener(type, stop, { passive: true });
   stopRestoring = stop;

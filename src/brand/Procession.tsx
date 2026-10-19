@@ -8,6 +8,8 @@ import { useMotion } from "./Sequence";
 import { createProcession } from "./procession-controller";
 import { createNativeProcession } from "./native-procession";
 import { TOUCH_FIRST } from "./touch-first";
+import { flightViews } from "./flight";
+import { useFlightSlot } from "./FlightViews";
 import type { ProcessionController, ProcessionStatus } from "./procession-controller";
 import "./procession.css";
 
@@ -23,6 +25,7 @@ export function Procession() {
   const initial = original[Math.floor(original.length / 2)] ?? 0;
   const [status, setStatus] = useState<ProcessionStatus>({ active: initial, paused: false, reduced: !moving, arrived: false, progress: 0 });
   const signature = classes.map(c => c.id).join("|");
+  const slot = useFlightSlot();
   useEffect(() => {
     if (!root.current || !classes.length) return;
     const native = matchMedia(TOUCH_FIRST);
@@ -32,7 +35,10 @@ export function Procession() {
       controller.current.setMotion(movingNow.current);
     };
     mount(); native.addEventListener('change', mount);
-    return () => { native.removeEventListener('change', mount); controller.current?.destroy(); controller.current = null; };
+    // Put away because the opening is being parked under a product page (flight.ts): it keeps the collection's styling,
+    // so it comes back with Back exactly as it was left.
+    const parked = () => flightViews.snapshot().slots.some(s => s.id === slot && s.parked);
+    return () => { native.removeEventListener('change', mount); controller.current?.destroy(parked()); controller.current = null; };
     // A catalog refresh can change the collection; ordinary control updates cannot rebuild it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature]);

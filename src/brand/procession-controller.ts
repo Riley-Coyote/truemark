@@ -23,7 +23,8 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   const navigation = section.querySelector<HTMLElement>(".tm-procession-navigation")!;
   const count = actors.length;
   const layer = document.createElement("div");
-  layer.className = "tm-procession-passage"; layer.setAttribute("aria-hidden", "true");
+  // Put away until the camera hands over (draw): never shown before its copies are placed.
+  layer.className = "tm-procession-passage"; layer.setAttribute("aria-hidden", "true"); layer.hidden = true;
   const travelers = actors.map(actor => {
     const group = actor.cloneNode(true) as HTMLElement;
     // The copies stand in a layer that is put away until the camera hands over: loaded now, not lazily as they rise.
@@ -35,6 +36,9 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   fill.className = "tm-procession-world-fill"; room.className = "tm-procession-world-room";
   // The room's field lies first, under the window's light on its wall (WallLight), and stays behind the whole page.
   fill.alt = room.alt = ""; world.append(fill, room); home.prepend(world); document.body.append(layer);
+  // The opening takes the collection's styling at once (procession.css), in the same frame the page is drawn, not a
+  // frame later as its first measure: a page drawn on a return never shows the opening restyled under the reader.
+  home.dataset.procession = "";
 
   let options: Options = { size: 100, tempo: 1, hold: 5.5, depth: 2.1, drift: "continuous", still: false };
   let moving = true, paused = false, frozen = false, visible = false, disposed = false, dirty = true, story = false;
@@ -433,7 +437,9 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   return {
     step, select, toggle, pauseAutoplay,
     setMotion(value: boolean) { moving = value; if (!value) cancelResume(); if (still()) { phase = target = Math.round(target); velocity = driftVelocity = 0; } schedule(); },
-    destroy() {
+    /** `keepOpening`: the opening is set aside unseen (parked under a product page, flight.ts) and will come back as it
+     *  is: it keeps the collection's styling, so it never changes as the collection comes back with it. */
+    destroy(keepOpening = false) {
       disposed = true; cancelResume(); window.clearTimeout(wheeling); cancelAnimationFrame(frame); resized.disconnect(); observer.disconnect(); seen.disconnect();
       stage.removeEventListener("wheel", wheel);
       window.removeEventListener("scroll", schedule); window.removeEventListener("resize", resize);
@@ -446,7 +452,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       for (const el of [camera, word, copy, cue, lead]) { el?.style.removeProperty("opacity"); el?.style.removeProperty("transform"); }
       copy?.style.removeProperty("visibility");
       camera.style.removeProperty("pointer-events");
-      for (const key of ["procession", "processionFlight", "processionStill", "processionStory"]) delete home.dataset[key];
+      for (const key of keepOpening ? ["processionFlight", "processionStory"] : ["procession", "processionFlight", "processionStill", "processionStory"]) delete home.dataset[key];
     },
   };
 }

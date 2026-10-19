@@ -77,6 +77,9 @@ const DAWN_MS = 2800;
  *  arrival, and its haze behind the page (mist-word.css), are for then only. */
 const AT_TOP = 0.25;
 const atTop = (y: number) => y <= 0 || y < window.innerHeight * AT_TOP;
+/** Whether the opening has stood on this visit already: coming back to it (the logo, Back) finds it standing, as the
+ *  camera's return does, rather than its first entrance played again without the first paint it was made for. */
+let shownBefore = false;
 
 /**
  * The opening: the collection in its misty room, quietly alive (daylight breathing on the walls, mist
@@ -110,8 +113,13 @@ export function MistOpening() {
   const screen = useStageSize(screenSizer).h;
   const slot = useFlightSlot();
   const allowed = useFlightAllowed();
-  // Brought back by the camera: it stands as it was left, without its entrance.
-  const arrived = useArrivedByFlight();
+  // Brought back by the camera, or come back to on this visit: it stands as it was left, without its entrance.
+  const flown = useArrivedByFlight();
+  const [returned] = useState(() => shownBefore);
+  useEffect(() => {
+    shownBefore = true;
+  }, []);
+  const arrived = flown || returned;
   const room = tall ? COLLECTION_TALL : COLLECTION;
   const seats = tall ? COLLECTION_TALL_SEATS : COLLECTION_SEATS;
   const vials = (tall ? collectionIds.slice(1, 4) : collectionIds)
