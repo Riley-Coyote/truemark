@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { useMotion } from "./Sequence";
-import { TOUCH_FIRST } from "./touch-first";
 import { startWallLight } from "./wall-light";
 
 /**
@@ -24,8 +23,6 @@ export function WallLight() {
     const light = startWallLight(node, () => top, !moving);
     if (!light) return;
     const seen = new Set<Element>();
-    const touch = matchMedia(TOUCH_FIRST).matches;
-    let scrolling = false, scrollRest = 0;
     // The wall is in sight below the header only: what lies under the header is the header's.
     const header = document.querySelector(".tm-header")?.getBoundingClientRect().bottom ?? 0;
     const watch = new IntersectionObserver((entries) => {
@@ -33,7 +30,7 @@ export function WallLight() {
         if (entry.isIntersecting) seen.add(entry.target);
         else seen.delete(entry.target);
       }
-      light.setActive(seen.size > 0 && !scrolling);
+      light.setActive(seen.size > 0 && !document.hidden);
       // With none of the wall in sight the light is put away (home.css): Safari reads a fixed layer at the screen's
       // foot as the colour under its toolbar, and keeps the one it first read, so at the page's end the footer's own
       // colour would never show there.
@@ -45,17 +42,19 @@ export function WallLight() {
       light.redraw();
     });
     if (opening) sized.observe(opening);
-    const scrolled = () => {
-      if (!touch) { light.redraw(); return; }
-      if (!scrolling) { scrolling = true; light.setActive(false); }
-      window.clearTimeout(scrollRest);
-      scrollRest = window.setTimeout(() => { scrolling = false; light.setActive(seen.size > 0); }, 180);
-    };
-    if (touch || !moving) window.addEventListener("scroll", scrolled, { passive: true });
+    // The canvas stands still while the page scrolls past it, and the light on it is drawn from the scroll, so it is
+    // drawn on every frame the page moves, on a phone too: held while a finger scrolled, it rode with the screen and
+    // then jumped into place once the scroll stopped. Every scroll event asks for the renderer's one next frame (moving,
+    // it is drawn on every frame already). A tab put away stops drawing, and starts again when it is back.
+    const scrolled = () => light.redraw();
+    const visibility = () => light.setActive(seen.size > 0 && !document.hidden);
+    window.addEventListener("scroll", scrolled, { passive: true });
+    document.addEventListener("visibilitychange", visibility);
     return () => {
       watch.disconnect();
       sized.disconnect();
-      window.removeEventListener("scroll", scrolled); window.clearTimeout(scrollRest);
+      window.removeEventListener("scroll", scrolled);
+      document.removeEventListener("visibilitychange", visibility);
       light.stop();
     };
   }, [moving]);

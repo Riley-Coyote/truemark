@@ -90,6 +90,13 @@ void main() {
   float k = floor(wall.y / period);
   float light = windowAt(wall, k - 1.0, w, unit, period, day) + windowAt(wall, k, w, unit, period, day) + windowAt(wall, k + 1.0, w, unit, period, day);
 
+  // Most of the wall has no window's light on it: its pixels are left clear (as they would be below) without working
+  // out the ripples.
+  if (light * onWall * strength <= 0.0) {
+    gl_FragColor = vec4(0.0);
+    return;
+  }
+
   // Clouds: the light dims and returns, slowly.
   float cloud = 0.8 + 0.2 * sin(t * 0.11 + sin(t * 0.037) * 2.0);
 

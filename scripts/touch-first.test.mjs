@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
 
-// Which devices get the home page's phone/tablet path (Procession.tsx, WallLight.tsx). A touchscreen laptop reports a
+// Which devices get the home page's phone/tablet path (Procession.tsx). A touchscreen laptop reports a
 // fine main pointer that hovers and, besides it, a coarse one: it must keep the desktop page.
 const bundle = await build({ entryPoints: ['src/brand/touch-first.ts'], bundle: true, write: false, platform: 'node', format: 'esm' });
 const { TOUCH_FIRST } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].text).toString('base64')}`);
