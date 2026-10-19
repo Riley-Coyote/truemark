@@ -89,8 +89,11 @@ export function MobileAdd() {
     return () => { disposed = true; pause(); listeners.abort(); };
   }, [entry, bar, open]);
 
+  // Only an add flies a vial. The product is looked up here rather than followed: the catalog reloads on every change
+  // of page with fresh objects, and following it replayed the last add's flight on each one.
   useEffect(() => {
-    if (!entry || !product || !entry.origin || reduced) return;
+    const flying = entry && productById(entry.id);
+    if (!entry || !flying || !entry.origin || reduced) return;
     const target = document.querySelector<HTMLElement>("[data-cart-target]");
     if (!target) return;
     const end = target.getBoundingClientRect();
@@ -103,7 +106,7 @@ export function MobileAdd() {
     const y = end.top + end.height / 2 - top - height / 2;
     const vial = document.createElement("img");
     vial.className = "tm-add-flight";
-    vial.src = productCutout(product, "sm");
+    vial.src = productCutout(flying, "sm");
     vial.alt = "";
     vial.setAttribute("aria-hidden", "true");
     Object.assign(vial.style, { width: `${width}px`, height: `${height}px`, left: `${left}px`, top: `${top}px` });
@@ -122,7 +125,7 @@ export function MobileAdd() {
       pulse = target.animate([{ transform: "scale(1)" }, { transform: "scale(1.08)" }, { transform: "scale(1)" }], { duration: 240 });
     };
     return () => { flight.cancel(); pulse?.cancel(); vial.remove(); };
-  }, [entry, product, reduced]);
+  }, [entry, reduced]);
 
   if (!presence.shown || !entry || !product) return null;
   const close = () => {
