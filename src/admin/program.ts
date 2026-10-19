@@ -6,14 +6,15 @@
  */
 import { formatDate, formatDay } from "../app-kit";
 import type { Tone } from "../app-kit";
-import { payoutFor } from "../partners/metrics";
+import { nextPayoutDate, payoutFor } from "../partners/metrics";
 import { TODAY } from "../platform/seed";
 import { LIVE } from "../platform/mode";
 import type { Discount, Order, Partner, PartnerStatus, Payout, Referral } from "../platform/types";
 import type { PayoutBatch, PreviewState } from "./preview";
 
-/** Payouts go out on the 5th for approved commission: the sample schedule. */
-export const NEXT_PAYOUT = "2026-10-05T12:00:00.000Z";
+/** Payouts go out on the 5th for approved commission: the sample schedule. The partner portal's own date, so both
+ *  sides name the same day (5 October 2026 against the sample data's fixed today; the real next 5th live). */
+export const NEXT_PAYOUT = nextPayoutDate();
 export const PAYOUT_METHOD = "Bank transfer";
 
 const END_OF_TODAY = `${TODAY}T23:59:59.999Z`;
