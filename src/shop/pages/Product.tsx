@@ -35,9 +35,11 @@ import "../product-room.css";
 
 /*
  * Every product stands in the collection's room, the room the opening shows: the camera close on one of its pedestals.
- * The opening's own products stand on their own pedestals; every other product stands on the centre one (the tallest),
- * where the opening's vial would be. A phone held upright sees the room's tall cut, as the opening does there, with its
- * middle three pedestals.
+ * On a wide screen the opening's own products stand on their own pedestals; every other product stands on the centre
+ * one (the tallest), where the opening's vial would be. A phone held upright sees the room's tall cut, as the opening
+ * does there, with its middle three pedestals: there every product stands on the centre one, since the tall cut has too
+ * little room beside its outer two for a vial on them to stand in the middle of the screen (the opening's camera then
+ * crossfades into BPC-157 and NAD+ rather than moving, flight.ts geometry).
  */
 /** The room the opening shows on this screen (MistOpening.tsx): the tall cut on a phone held upright. */
 const TALL_ROOM = TALL_SCREEN;
@@ -192,13 +194,13 @@ function ProductRoom({ product, signInToOrder }: { product: Product; signInToOrd
     setQuantity(1);
   }, [product.id]);
 
-  // The room the opening shows on this screen, and the pedestal this product stands on: the opening's own, found by
-  // name so every size of a compound stands where it does, or the centre one.
+  // The room the opening shows on this screen, and the pedestal this product stands on: on a wide screen the opening's
+  // own, found by name so every size of a compound stands where it does, or the centre one; on a phone held upright,
+  // always the centre one, so every vial stands in the middle of the screen.
   const tall = useMediaQuery(TALL_ROOM);
   const room = tall ? COLLECTION_TALL : COLLECTION;
   const seats = tall ? COLLECTION_TALL_SEATS : COLLECTION_SEATS;
-  const shownIds = tall ? collectionIds.slice(1, 4) : collectionIds;
-  const own = shownIds.findIndex((shownId) => products.find((p) => p.id === shownId)?.name === product.name);
+  const own = tall ? -1 : collectionIds.findIndex((shownId) => products.find((p) => p.id === shownId)?.name === product.name);
   const pedestal = own >= 0 ? own : tall ? CENTRE.tall : CENTRE.wide;
   const seat = seats[pedestal];
   const half = (tall ? FOG_SCENES.collectionTall : FOG_SCENES.collection).pedestals[pedestal].half;
