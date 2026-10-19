@@ -305,7 +305,7 @@ function AccountView({ onNavigate, onAsk }: { onNavigate: () => void; onAsk?: (t
   const steps = [
     ["Create an account", "Four short steps: about you, your institution, your research use, and four attestations."],
     ["We review it", "Every new account is reviewed before ordering opens. You can sign in and see pricing meanwhile; you'll hear from us by email."],
-    ["Sign in and order", "Once you're approved, sign in and place orders."],
+    ["Order", "Once the account is approved, ordering opens and you can place orders."],
   ];
   return (
     <article className="tm-desk-card tm-desk-account" aria-label="Opening a research account">
