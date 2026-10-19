@@ -135,9 +135,9 @@ function stackRoom(sw: number, sh: number, room: Room, seat: Seat, back: { left:
  * From the opening's vials the page arrives as one camera move (src/brand/flight.ts); it registers its room
  * so the camera can carry it in, and holds back what lies below the first screen until the move settles.
  *
- * `signInToOrder` is the seam for a live visitor who isn't signed in, should product pages ever open to them
- * (today they redirect to sign in, App.tsx shopAccess): "Sign in to order" then replaces the quantity and
- * Add to cart. Riley hasn't decided it.
+ * `signInToOrder` is a live visitor who isn't signed in. The page is open to them (the landing's vials carry everyone
+ * in), but pricing and ordering belong to research accounts: an account prompt stands where the price, the quantity
+ * and Add to cart would. Their catalog (catalog_showcase) carries no prices.
  */
 export default function ProductPage({ signInToOrder = false }: { signInToOrder?: boolean }) {
   const { id } = useParams();
@@ -431,7 +431,20 @@ function ProductRoom({ product, signInToOrder }: { product: Product; signInToOrd
           )}
 
           <div className="tm-proom-buy" data-rise="">
-            {product.price !== undefined && (
+            {signInToOrder ? (
+              <>
+                <p className="tm-proom-account">Pricing and ordering open with a research account.</p>
+                <Link className="tm-button tm-button-primary tm-button-wide tm-proom-signin" to="/access/apply">
+                  Create an account to order
+                </Link>
+                <p className="tm-proom-account">
+                  Already have one?{" "}
+                  <Link className="tm-inline-link" to="/access" state={{ from: location.pathname }}>
+                    Sign in
+                  </Link>
+                </p>
+              </>
+            ) : product.price !== undefined && (
               <>
                 <p className="tm-proom-price">
                   <strong>{money(product.price)}</strong>
@@ -439,26 +452,20 @@ function ProductRoom({ product, signInToOrder }: { product: Product; signInToOrd
                 </p>
                 {product.stock === 0 && <p className="tm-proom-stock" role="status">Out of stock</p>}
                 {unavailable && product.stock !== 0 && <p className="tm-field-error" role="status">{unavailable}</p>}
-                {signInToOrder ? (
-                  <Link className="tm-button tm-button-primary tm-proom-signin" to="/access" state={{ from: location.pathname }}>
-                    Sign in to order
-                  </Link>
-                ) : (
-                  <div className="tm-buy-row">
-                    <Quantity value={quantity} onChange={setQuantity} label="Quantity" />
-                    <button
-                      type="button"
-                      className="tm-button tm-button-primary tm-button-wide"
-                      disabled={Boolean(unavailable)}
-                      onClick={() => {
-                        add(product.id, quantity);
-                        announceMobileAdd(product.id, scene.current?.querySelector<HTMLImageElement>(".tm-proom-glass img.is-active"));
-                      }}
-                    >
-                      Add to cart
-                    </button>
-                  </div>
-                )}
+                <div className="tm-buy-row">
+                  <Quantity value={quantity} onChange={setQuantity} label="Quantity" />
+                  <button
+                    type="button"
+                    className="tm-button tm-button-primary tm-button-wide"
+                    disabled={Boolean(unavailable)}
+                    onClick={() => {
+                      add(product.id, quantity);
+                      announceMobileAdd(product.id, scene.current?.querySelector<HTMLImageElement>(".tm-proom-glass img.is-active"));
+                    }}
+                  >
+                    Add to cart
+                  </button>
+                </div>
               </>
             )}
             {!LIVE && <p className="tm-fineprint">Design preview. No order is placed and no payment is collected.</p>}

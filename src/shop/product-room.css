@@ -342,6 +342,18 @@
   max-width: 30rem;
   margin-top: var(--tm-space-6);
 }
+.tm.tm-proom .tm-proom-account {
+  margin: 0;
+  font: var(--tm-weight-regular) var(--tm-type-ui) / var(--tm-leading-body) var(--tm-font-sans);
+  color: var(--tm-ink-2);
+}
+.tm.tm-proom .tm-proom-account .tm-inline-link {
+  color: var(--tm-ink);
+  border-bottom-color: var(--tm-line-strong);
+}
+.tm.tm-proom .tm-proom-account .tm-inline-link:hover {
+  border-bottom-color: var(--tm-ink);
+}
 .tm.tm-proom .tm-proom-price {
   display: flex;
   align-items: baseline;

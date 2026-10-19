@@ -340,8 +340,7 @@ export function MistOpening() {
     };
   }, [tall]);
 
-  // A vial opens its product as one camera move; with a modifier key, or while product pages ask a live
-  // visitor to sign in first, it is simply the link it is.
+  // A vial opens its product as one camera move, for every visitor; with a modifier key it is simply the link it is.
   const open = (product: Product) => (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     // The featured vial tells its own story: the camera comes in to it, and the story plays (Sequence.tsx).

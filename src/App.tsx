@@ -53,7 +53,9 @@ function RouteEffects() {
   return null;
 }
 
-export const gatedShopPath = (path: string) => ["/products", "/product/", "/cart", "/checkout", "/account"].some((prefix) => path.startsWith(prefix));
+/** The shop that needs an account: the catalog, the cart, checkout and the account. A product page is open to anyone, so
+ *  the landing's vials carry every visitor in; signed out, it asks for an account where the price and Add to cart stand. */
+export const gatedShopPath = (path: string) => ["/products", "/cart", "/checkout", "/account"].some((prefix) => path.startsWith(prefix));
 export function shopAccess(path: string, loading: boolean, signedIn: boolean) {
   return loading ? "wait" : gatedShopPath(path) && !signedIn ? "redirect" : "render";
 }
@@ -75,6 +77,8 @@ export default function App() {
     if (ref) void rememberLink(ref).catch(() => { /* Referral capture does not block sign-in. */ });
   }, [location.search]);
   const gated = LIVE && gatedShopPath(location.pathname);
+  // Pages that show prices to a signed-in visitor: once they sign in, the catalog loaded without prices is replaced.
+  const priced = gated || (LIVE && location.pathname.startsWith("/product/"));
   // The opening's haze under the page's first paint (vite.config.ts startHead) belongs to the opening alone, which puts
   // it away itself once its room is drawn (MistOpening.tsx): any other page, a sign-in the opening sends to included,
   // puts it away at once.
@@ -83,8 +87,8 @@ export default function App() {
   }, [location.pathname]);
   useEffect(() => {
     if (!LIVE || session.loading) return;
-    if (catalogReloadNeeded(catalogAccess(), Boolean(session.data), gated, sessionStorage)) window.location.reload();
-  }, [gated, session.loading, session.data]);
+    if (catalogReloadNeeded(catalogAccess(), Boolean(session.data), priced, sessionStorage)) window.location.reload();
+  }, [priced, session.loading, session.data]);
   const catalog = useResource(async () => {
     if (!LIVE) return;
     const [current, classes] = await Promise.all([await live().auth.hasSession() ? store.catalog.products() : live().showcase(), store.catalog.categories()]);
@@ -131,7 +135,7 @@ export default function App() {
     const access = shopAccess(location.pathname, session.loading && session.data === undefined, Boolean(session.data));
     if (access === "wait") return null;
     if (access === "redirect") return <Navigate to="/access" replace state={{ from: location.pathname + location.search }} />;
-    if (gated && session.data && catalogAccess() === "showcase") return null;
+    if (priced && session.data && catalogAccess() === "showcase") return null;
   }
   return (
     <ShopContext.Provider
@@ -155,9 +159,8 @@ export default function App() {
         <Header />
         <main id="main">
           {/* The page is drawn into view slots, so the opening's camera move can draw both pages while it
-              runs (src/brand/FlightViews.tsx). A live visitor who isn't signed in is sent to sign in by a
-              product page, so their vials simply navigate. */}
-          <FlightViews allowed={!LIVE || Boolean(session.data)}>
+              runs (src/brand/FlightViews.tsx). Product pages are open to every visitor, so every vial flies. */}
+          <FlightViews allowed>
             {(at) => (
               // Each view slot waits for its own page's code, and a page that fails keeps the shop around it.
               <PageBoundary at={at.pathname}>
@@ -165,10 +168,8 @@ export default function App() {
               <Routes location={at}>
                 <Route path="/" element={<Home />} />
                 <Route path="/products" element={<Catalog />} />
-                {/* The seam for live, signed-out ordering: product pages redirect to sign in today (shopAccess). If
-                    Riley opens them to signed-out visitors, pass signInToOrder={LIVE && !session.data} here, and
-                    "Sign in to order" replaces the quantity and Add to cart. */}
-                <Route path="/product/:id" element={<ProductPage />} />
+                {/* Open to every visitor; signed out, an account prompt replaces the price and Add to cart. */}
+                <Route path="/product/:id" element={<ProductPage signInToOrder={LIVE && !session.data} />} />
                 <Route path="/verify" element={<Verify />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/checkout" element={<Checkout />} />
