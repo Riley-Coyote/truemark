@@ -336,7 +336,7 @@
   .tm-vsteps-head {
     grid-column: 1 / -1;
   }
-  /* On a phone the hint is a line under the form: the loupe alone, beside its caption. */
+  /* Were the home page's picture missing, a phone's hint is a line under the form: the loupe alone, beside its caption. */
   .tm-lothint {
     --tm-lh-w: 7.5rem;
     --tm-lh-k: 2.4;
@@ -404,5 +404,82 @@
   }
   .tm-vresult {
     padding-block: var(--tm-space-7);
+  }
+}
+
+/* ---------- The lookup on a phone: the home page's ---------- */
+
+/* The home page's picture of where the number is (HomeSections.tsx, LotOnTheVial; paper-trail.css): the vial on the
+   collection's pedestal, a reading glass on its label's lot line. A wide screen keeps the page's own night band. */
+.tm-vhero .tm-lookup-still {
+  display: none;
+}
+/* On a phone the lookup is the home page's (paper-trail.css, .tm-papertrail): each night ink is the brand's daylight
+   ink in the same role, on the lilac the pedestal's photograph ends in, as the home page's room is on a phone. Over it
+   the third ink is the room's, which holds AA (home.css). Its words, picture and field stand in the home page's
+   order, sizes and spacing; the field and what follows it keep the page's own order for the keyboard. */
+@media (max-width: 960px) {
+  .tm.tm-vhero {
+    --tm-bg: var(--tm-lilac-floor);
+    --tm-glow: var(--tm-ink-rest);
+    --tm-glow-2: var(--tm-ink-2-rest);
+    --tm-glow-3: var(--tm-ink-3-lilac);
+    --tm-glow-4: var(--tm-line-strong-rest);
+    --tm-night-line: var(--tm-line-rest);
+    --tm-night-raised: var(--tm-paper);
+    --tm-night: var(--tm-paper);
+  }
+  .tm-vhero-copy {
+    gap: 0;
+  }
+  .tm .tm-vhero-title {
+    font-size: clamp(2rem, min(5.4vw, 6svh), 3.5rem);
+    line-height: 1.06;
+    letter-spacing: var(--tm-track-display);
+  }
+  .tm .tm-vhero-note {
+    order: 1;
+    max-width: 44ch;
+    margin-top: var(--tm-space-6);
+    font-size: var(--tm-type-body);
+    color: var(--tm-glow-2);
+  }
+  .tm-vhero .tm-lookup-still {
+    display: block;
+    order: 2;
+    margin-top: var(--tm-space-7);
+  }
+  /* The picture replaces the loupe and its caption. */
+  .tm-vhero:has(.tm-lookup-still) .tm-lothint {
+    display: none;
+  }
+  .tm-vhero-form.tm-lookup {
+    order: 3;
+    max-width: 26rem;
+  }
+  .tm .tm-vhero-try {
+    order: 4;
+    margin-top: var(--tm-space-5);
+  }
+}
+/* The glass is set down as the page opens, and the hairline drawn from it to the vial (paper-trail.css). */
+@media (max-width: 960px) and (prefers-reduced-motion: no-preference) {
+  .tm-vhero .tm-lookup-glass {
+    animation: tm-lookup-glass 700ms var(--tm-ease-enter) 150ms both;
+  }
+  .tm-vhero .tm-lookup-lead {
+    animation: tm-lookup-lead 500ms var(--tm-ease-enter) 600ms both;
+  }
+}
+/* The words stand centred, as the home page's do on a phone; the picture and the field keep the column. */
+@media (max-width: 560px) {
+  .tm .tm-vhero-title,
+  .tm .tm-vhero-note {
+    justify-self: center;
+    text-align: center;
+  }
+  .tm .tm-vhero-try {
+    justify-self: stretch;
+    justify-content: center;
   }
 }
