@@ -30,7 +30,7 @@ This is one platform with several connected surfaces. The map describes scope an
 | --- | --- | --- |
 | Storefront | Approved brand/design, catalog and product pages, journal, research-use presentation, shopping and checkout | `src/shop/`, `src/data.ts`, `docs/handoff/DECISIONS.md` |
 | Customer account | Research-account application/approval, account access, order history, tracking and certificates | `src/shop/pages/account/`, `src/platform/`, current shop routes |
-| Lot verification | Certificate library and lot verification; preserve historical lot/certificate associations and existing verification links | `src/admin/Lots.tsx`, `src/admin/LotCertificateDrawer.tsx`, Supabase certificate migrations |
+| Lot verification | Certificate library and lot verification; preserve historical lot/certificate associations and existing verification links | `src/admin/InventoryWorkspace.tsx`, `src/admin/LotDetail.tsx`, `src/admin/LotCertificateDrawer.tsx`, Supabase certificate migrations |
 | Partners | Affiliate/partner portal, referrals, discounts and commissions | `src/partners/`, shared platform types and Supabase migrations |
 | Command Center | Orders/shipping, stock/products/lots, content, customers, communications, analytics, reports, settings and operational readiness | `src/admin/`, the implementation plan and [coverage map](../platform/COMMAND-CENTER-COVERAGE.md) |
 | Customer programs and marketing | Rewards/memberships, consent, campaign/flow foundations and retention follow-up | [Connected programs](../platform/CONNECTED-PROGRAMS.md); test outbox is distinct from real delivery |
