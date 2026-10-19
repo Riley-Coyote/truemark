@@ -60,6 +60,8 @@ Before the client's first release:
 5. For schema changes, inspect existing migration history/data and capture a backup/forward-repair plan; coordinate code/function/schema versions. A website rollback does not reverse a database migration.
 6. Publish under the client's authorization. Record commit, migration IDs, deployed function versions, URLs and rollback steps. Test a small deployment and rollback using the client's accounts.
 
+Backups (`npm run backup`, `npm run backup:check`) and the step-by-step undo for the website, database changes and functions are in [BACKUPS-AND-UNDO.md](BACKUPS-AND-UNDO.md).
+
 Current function names: `assistant`, `messages`, `payments`, `shipping`, `uploads`. Existing server secret names include `FUNCTIONS_KEY`, assistant/provider keys and simulator/webhook settings; do not blindly regenerate these or break existing scheduled worker/webhook connections. Inspect vault/cron configuration as part of integration review without printing secrets.
 
 ## Independent daily work

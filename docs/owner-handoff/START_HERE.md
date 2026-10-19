@@ -15,6 +15,7 @@ Read, in order:
 3. [Current state and next work](CURRENT_STATE.md): implemented foundations, missing operations and unresolved decisions.
 4. [Command Center implementation plan](../platform/COMMAND-CENTER-IMPLEMENTATION-PLAN.md): detailed requirements, source references and acceptance scenarios.
 5. [Accounts and transfer checklist](ACCESS.md) and [run, verify and deploy](OPERATIONS.md): technical setup for Codex to handle, asking Mason only for steps that genuinely need him.
+6. [Backups and undo](BACKUPS-AND-UNDO.md): back up and check before every release, and undo the website, a database change or a function.
 
 Read these yourself; do not require Mason to read the engineering documents or answer the entire question backlog. Use [FIRST_PROMPT.md](FIRST_PROMPT.md) if he wants a short opening message. The supplied [owner AGENTS template](AGENTS.owner.md) becomes root `AGENTS.md` in the exported owner snapshot, so its instructions are discoverable from the project. Opening an older GitHub checkout does not automatically bring in unpublished handoff files.
 

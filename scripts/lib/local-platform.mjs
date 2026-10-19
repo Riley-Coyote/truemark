@@ -11,7 +11,7 @@ export const cli = resolve(root, 'node_modules/.bin/supabase');
 export const appOrigin = 'http://127.0.0.1:5300';
 // Keep hosted credentials and build overrides out of the isolated native services.
 export const localEnv = { ...Object.fromEntries(Object.entries(process.env).filter(([key]) =>
-  !/^(VITE_|SUPABASE_|OPENAI_|ANTHROPIC_|OPENROUTER_|RESEND_|TWILIO_|SHIPSTATION_|FUNCTIONS_KEY$|PAYMENTS_SIM_SECRET$|SHIPPING_SIM_SECRET$|SHIPPING_WEBHOOK_KEY$|SITE_URL$)/.test(key))),
+  !/^(VITE_|SUPABASE_|TRUEMARK_|OPENAI_|ANTHROPIC_|OPENROUTER_|RESEND_|TWILIO_|SHIPSTATION_|FUNCTIONS_KEY$|PAYMENTS_SIM_SECRET$|SHIPPING_SIM_SECRET$|SHIPPING_WEBHOOK_KEY$|SITE_URL$)/.test(key))),
   SUPABASE_HOME: resolve(stateDir, 'supabase') };
 export const password = 'TrueMark-local-2026!';
 export const accounts = [

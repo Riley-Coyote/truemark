@@ -16,6 +16,6 @@ test('local setup refuses hosted, redirected and mismatched services',()=>{
   ])assert.throws(()=>assertLocal({...valid,...patch}));
 });
 test('local services do not inherit hosted build or provider configuration',()=>{
-  assert(!Object.keys(localEnv).some(key=>/^(VITE_|OPENAI_|ANTHROPIC_|OPENROUTER_|RESEND_|TWILIO_|SHIPSTATION_)/.test(key)));
+  assert(!Object.keys(localEnv).some(key=>/^(VITE_|TRUEMARK_|OPENAI_|ANTHROPIC_|OPENROUTER_|RESEND_|TWILIO_|SHIPSTATION_)/.test(key)));
   assert.deepEqual(Object.keys(localEnv).filter(key=>key.startsWith('SUPABASE_')),['SUPABASE_HOME']);
 });
