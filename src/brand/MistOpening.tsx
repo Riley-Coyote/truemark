@@ -327,7 +327,7 @@ export function MistOpening() {
 
   const lede = (
     <p className="tm-mist-lead" ref={lead}>
-      Research compounds supplied as lyophilized powder, independently tested on receipt, quarantined
+      Research peptides supplied as lyophilized powder, independently tested on receipt, quarantined
       until release, and traceable from the vial in your hand back to the source batch.
     </p>
   );
@@ -379,6 +379,7 @@ export function MistOpening() {
               <span>TRUEMARK</span>
             </span>
           </h1>
+          <p className="tm-mist-kind">Research peptides</p>
         </div>
         {phone ? way : (
           <div className="tm-mist-aside">

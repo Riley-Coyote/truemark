@@ -183,6 +183,18 @@
   height: 1px;
   background: var(--tm-ink-4);
 }
+/* Under the headline, what the shop supplies, lettered as the caption is. */
+.tm.tm-mist .tm-mist-kind {
+  margin: var(--tm-space-3) 0 0;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink-2);
+}
+/* On a phone it stands in the room's shade, so it takes the headline's full ink, as the eyebrow does (mist-word.css). */
+.tm.tm-mist[data-shape="tall"] .tm-mist-kind {
+  color: var(--tm-ink);
+}
 
 /* The entrance: the headline's lines rise one after another (hero.css) as the vials stand; a beat after its last
    line the lead comes up gently, then the way in, then (on a phone) the lead and caption beneath the room. Their

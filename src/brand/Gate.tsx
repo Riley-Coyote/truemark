@@ -132,7 +132,7 @@ export default function Gate() {
           </Link>
           <div className="tm-gate-statement">
             <h1 className="tm-gate-title">
-              Research compounds,
+              Research peptides,
               <br />
               verified by lot
               <BrandDot />

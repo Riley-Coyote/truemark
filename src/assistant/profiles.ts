@@ -27,7 +27,7 @@ export const profiles: CompoundProfile[] = [
   {
     "name": "BAC Water",
     "what": "Bacteriostatic water: sterile water containing 0.9% benzyl alcohol as a bacteriostatic preservative.",
-    "origin": "A laboratory diluent rather than a research compound; the benzyl alcohol limits microbial growth in a vial that is opened repeatedly.",
+    "origin": "A laboratory diluent rather than a research peptide; the benzyl alcohol limits microbial growth in a vial that is opened repeatedly.",
     "fields": [
       "laboratory reagent preparation",
       "reconstitution of lyophilized peptides"
@@ -166,7 +166,7 @@ export const profiles: CompoundProfile[] = [
   },
   {
     "name": "GLOW",
-    "what": "A blend of three research compounds: GHK-Cu (50 mg), BPC-157 (10 mg) and TB-500 (10 mg).",
+    "what": "A blend of three research peptides: GHK-Cu (50 mg), BPC-157 (10 mg) and TB-500 (10 mg).",
     "origin": "GHK-Cu is a copper complex of a plasma tripeptide; BPC-157 is a partial sequence of gastric body protection compound; TB-500 corresponds to thymosin β4 residues 17–23.",
     "target": "GHK binds Cu(II); BPC-157 has no identified receptor (cell studies implicate VEGFR2 and FAK–paxillin signaling); thymosin β4, TB-500's parent protein, sequesters monomeric G-actin.",
     "fields": [

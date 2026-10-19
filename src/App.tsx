@@ -30,10 +30,10 @@ function RouteEffects() {
       ? products.find((p) => p.id === decodeURIComponent(location.pathname.slice("/product/".length)))
       : undefined;
     const title = location.pathname.startsWith("/product/")
-      ? (product ? `${product.name} ${product.size}` : "Research compound")
+      ? (product ? `${product.name} ${product.size}` : "Research peptide")
       : ({
           "/": "Research peptides. Third-party tested.",
-          "/products": "Research compounds",
+          "/products": "Research peptides",
           "/verify": "Lot verification",
           "/quality": "Quality",
           "/handling": "Handling",

@@ -93,7 +93,7 @@ export default function Catalog() {
         <div className="tm-shop-heading">
           <div className="tm-shop-titleline">
             <h1 id="tm-catalog-title" className="tm-shop-title">
-              {active === "all" || !activeClass ? "Research compounds" : activeClass.name}
+              {active === "all" || !activeClass ? "Research peptides" : activeClass.name}
             </h1>
             <p className="tm-shop-count" aria-live="polite">
               {visible.length} {visible.length === 1 ? "compound" : "compounds"}

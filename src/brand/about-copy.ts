@@ -4,7 +4,7 @@ export const verbs = [
   {
     number: "01",
     verb: "Supply",
-    text: "Research compounds as lyophilized powder, in Type I glass vials, organized into eight compound classes with full specification data.",
+    text: "Research peptides as lyophilized powder, in Type I glass vials, organized into eight compound classes with full specification data.",
   },
   {
     number: "02",
@@ -33,5 +33,5 @@ export const principles = [
   },
 ];
 
-export const aboutLead = "TrueMark BioLabs is committed to delivering the highest quality research compounds with precision, transparency, and absolute integrity.";
+export const aboutLead = "TrueMark BioLabs is committed to delivering the highest quality research peptides with precision, transparency, and absolute integrity.";
 export const whoWeSupply = "Accounts are opened to educational institutions, hospitals, pharmaceutical and biotech companies, government laboratories, and private and contract research organizations.";
