@@ -111,7 +111,8 @@
   position:relative;left:auto;bottom:auto;flex:0 0 var(--native-width);height:var(--native-height);width:var(--native-width);
   opacity:1;visibility:visible;scroll-snap-align:center;transform:scale(.86);transition:transform 400ms cubic-bezier(.22,1,.36,1);will-change:auto;
 }
-.tm-home[data-procession-native] .tm-procession-actor[data-current]{transform:scale(1)}
+/* The centred pedestal is the nearest: its rim stands in front of its smaller neighbours', whichever class it is. */
+.tm-home[data-procession-native] .tm-procession-actor[data-current]{transform:scale(1);z-index:1}
 .tm-home[data-procession-native] .tm-procession-plinth{mask-image:linear-gradient(black 18%,transparent 82%)}
 .tm-home[data-procession-native] .tm-mist-foot{padding-block:32px 40px!important}
 .tm-home[data-procession-native] .tm-procession-heading,.tm-home[data-procession-native] .tm-procession-details,.tm-home[data-procession-native] .tm-procession-navigation{opacity:1}

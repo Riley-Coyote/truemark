@@ -135,6 +135,21 @@ export function pedestalCrop(scene: FogScene, index: number) {
   };
 }
 
+/** A vial's seat in a room, as fractions of the room (Rooms.tsx Seat): its foot's middle and row, and its height. */
+type RoomSeat = { x: number; y: number; h: number };
+
+/**
+ * Where the room's own vial stands on pedestal `index`, in the room's pixels: its foot's row and its height. It is the
+ * one of the opening's `seats` standing within that pedestal's silhouette, whichever product it is. Procession seats
+ * every vial on its crop of that pedestal by it; a seat taken from another pedestal (nearer the camera, so lower in the
+ * room) stood the glass in front of this one.
+ */
+export function pedestalSeat(scene: FogScene, index: number, seats: readonly RoomSeat[]) {
+  const p = scene.pedestals[index];
+  const on = seats.find((s) => Math.abs(s.x * scene.room.w - p.x) < p.half && s.y > 0 && s.h > 0);
+  return on ? { foot: on.y * scene.room.h, height: on.h * scene.room.h } : null;
+}
+
 /** The distance (room px) from a point to the silhouette's outline: negative inside. */
 function outside(s: ReturnType<typeof silhouette>, X: number, Y: number) {
   const dx = X - s.x;

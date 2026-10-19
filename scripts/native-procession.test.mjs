@@ -12,9 +12,11 @@ class El extends EventTarget {
   hasAttribute(k){return this.attrs.has(k);} toggleAttribute(k,on){on?this.attrs.set(k,''):this.attrs.delete(k);}
   scrollTo(options){this.calls.push(options);this.scrollLeft=options.left;this.dispatchEvent(new Event('scroll'));}
 }
-function setup(){
+function setup({shape,plate,initial=2}={}){
  const home=new El(),opening=new El(),section=new El(),stage=new El();section.home=home;
  home.map['.tm-mist']=opening;section.map['.tm-procession-stage']=stage;
+ if(shape)opening.dataset.shape=shape;
+ if(plate){const p=new El();p.children=plate;p.querySelector=q=>plate.find(v=>q.includes(`"${v.dataset.productId}"`))??null;opening.map['.tm-room-plate']=p;}
  stage.children=Array.from({length:8},(_,i)=>{const a=new El();a.offsetLeft=145+i*240;a.dataset.productId=`p${i}`;a.map['.tm-procession-plinth']=new El();return a;});
  let status,seen,resize,id=0;const tasks=new Map(),frames=new Map(),previous=new Map();
  const set=(k,v)=>{previous.set(k,Object.getOwnPropertyDescriptor(globalThis,k));Object.defineProperty(globalThis,k,{value:v,writable:true,configurable:true});};
@@ -24,7 +26,7 @@ function setup(){
  set('ResizeObserver',class{constructor(cb){resize=cb;}observe(){}disconnect(){}});
  set('IntersectionObserver',class{constructor(cb){seen=cb;}observe(){}disconnect(){}});
  set('MutationObserver',class{observe(){}disconnect(){}});
- const c=createNativeProcession(section,[0,1,2,3,4,5,6,7],2,s=>status=s);
+ const c=createNativeProcession(section,[0,1,2,3,4,5,6,7],initial,s=>status=s);
  const tick=()=>{const batch=[...frames.values()];frames.clear();batch.forEach(f=>f());};tick();
  return {home,section,stage,win,c,tasks,frames,status:()=>status,tick,resize,visible:on=>seen([{isIntersecting:on}]),advance(){const batch=[...tasks.values()];tasks.clear();batch.forEach(f=>f());tick();},close(){c.destroy();for(const[k,v]of previous)v?Object.defineProperty(globalThis,k,v):delete globalThis[k];}};
 }
@@ -60,4 +62,16 @@ test('rapid direction changes reach the requested class without a synthetic drag
  const f=setup();try{f.c.step(1);f.tick();assert.equal(f.status().active,3);f.c.step(-1);f.tick();assert.equal(f.status().active,2);
  f.stage.dispatchEvent(new Event('touchcancel'));f.c.destroy();assert.equal(f.tasks.size,0);assert.equal(f.frames.size,0);
  }finally{f.close();}
+});
+test('every vial stands on the centre pedestal crop as the room vial on that pedestal does, whichever class comes first',()=>{
+ const seat=(id,x,y,h)=>({dataset:{productId:id},style:{getPropertyValue:k=>String({'--seat-x':x,'--seat-y':y,'--vial-h':h}[k]??'')}});
+ const tops=[];
+ // The live catalog can begin the strip on BPC-157, which the room shows on the left pedestal, lower and nearer.
+ for(const first of [0,1,2]){
+  const f=setup({shape:'tall',plate:[seat('p0',.168,.6083,.1417),seat('p1',.4963,.5714,.1417),seat('p2',.8306,.6166,.1417)],initial:first});
+  try{tops.push(f.stage.children.map(a=>a.map['.tm-procession-plinth'].style.top));}finally{f.close();}
+ }
+ // Room px: seat 0.5714 x 1934 above the centre pedestal's back rim, over the vial's 0.1417 x 1934.
+ for(const t of tops.flat())assert.equal(t,tops[0][0]);
+ assert.ok(Math.abs(parseFloat(tops[0][0])-91.1)<.1,tops[0][0]);
 });

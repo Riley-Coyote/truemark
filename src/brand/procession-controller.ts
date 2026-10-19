@@ -1,5 +1,5 @@
 import { advance, advanceDrift, ARRIVE, clamp01, distance, HANDOFF, mix, modulo, pose, RISE, scene, smooth, swipeTarget } from "./procession-math";
-import { FOG_SCENES, pedestalCrop } from "./fog/scenes";
+import { FOG_SCENES, pedestalCrop, pedestalSeat } from "./fog/scenes";
 
 export type ProcessionStatus = { active: number; paused: boolean; reduced: boolean; arrived: boolean; progress: number };
 type Options = { size: number; tempo: number; hold: number; depth: number; drift: string; still: boolean };
@@ -124,8 +124,13 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     const tall = opening.dataset.shape === "tall";
     const fogScene = tall ? FOG_SCENES.collectionTall : FOG_SCENES.collection;
     const crop = pedestalCrop(fogScene, tall ? 1 : 2);
-    const seat = featured ? (featured.foot - plateY) / plateH * fogScene.room.h : crop.frontTop;
-    const sourceHeight = featured ? featured.height / plateH * fogScene.room.h : 256;
+    // Seated as the room's own vial on that pedestal stands, whichever class the collection begins on (the featured
+    // vial can stand on another pedestal, nearer and lower in the room).
+    const seated = pedestalSeat(fogScene, tall ? 1 : 2, [...plate.querySelectorAll<HTMLElement>(".tm-room-vial")].map(vial => ({
+      x: Number(vial.style.getPropertyValue("--seat-x")), y: Number(vial.style.getPropertyValue("--seat-y")), h: Number(vial.style.getPropertyValue("--vial-h")),
+    })));
+    const seat = seated?.foot ?? crop.frontTop;
+    const sourceHeight = seated?.height ?? 256;
     const cut = crop.frontTop + .45 * (crop.base - crop.frontTop);
     const cropWidth = crop.half * 2, cropHeight = cut - crop.backTop;
     for (const actor of [...actors, ...travelers]) {

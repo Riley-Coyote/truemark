@@ -1,4 +1,4 @@
-import { FOG_SCENES, pedestalCrop } from './fog/scenes';
+import { FOG_SCENES, pedestalCrop, pedestalSeat } from './fog/scenes';
 import type { ProcessionStatus } from './procession-controller';
 
 /** Mobile uses the browser's scroller, not a JS camera or a pointer-driven spring.
@@ -49,13 +49,17 @@ export function createNativeProcession(section: HTMLElement, order: number[], in
     measuredWidth = width;
     const ordered = order.map(i => actors[i]);
     centers = actors.map(actor => actor.offsetLeft + actor.offsetWidth / 2 - width / 2);
-    // Preserve the real room's photographed support, at its original glass/rim ratio.
+    // Preserve the real room's photographed support, at its original glass/rim ratio. Every vial stands as the room's
+    // own vial stands on the centre pedestal the crop shows, whichever class the strip begins on.
     const poster = posterImage?.currentSrc || posterImage?.src;
-    const source = plate?.querySelector<HTMLElement>(`.tm-room-vial[data-product-id="${actors[initial].dataset.productId}"]`);
-    const scene = opening.dataset.shape === 'tall' ? FOG_SCENES.collectionTall : FOG_SCENES.collection;
-    const crop = pedestalCrop(scene, opening.dataset.shape === 'tall' ? 1 : 2);
-    const sourceHeight = (Number(source?.style.getPropertyValue('--vial-h')) || .18) * scene.room.h;
-    const seat = (Number(source?.style.getPropertyValue('--seat-y')) || crop.frontTop / scene.room.h) * scene.room.h;
+    const tall = opening.dataset.shape === 'tall';
+    const scene = tall ? FOG_SCENES.collectionTall : FOG_SCENES.collection;
+    const crop = pedestalCrop(scene, tall ? 1 : 2);
+    const seated = pedestalSeat(scene, tall ? 1 : 2, [...plate?.querySelectorAll<HTMLElement>('.tm-room-vial') ?? []].map(vial => ({
+      x: Number(vial.style.getPropertyValue('--seat-x')), y: Number(vial.style.getPropertyValue('--seat-y')), h: Number(vial.style.getPropertyValue('--vial-h')),
+    })));
+    const sourceHeight = seated?.height ?? .18 * scene.room.h;
+    const seat = seated?.foot ?? crop.frontTop;
     const cropWidth = crop.half * 2, cropHeight = crop.frontTop + .45 * (crop.base - crop.frontTop) - crop.backTop;
     for (const actor of ordered) {
       const plinth = actor.querySelector<HTMLElement>('.tm-procession-plinth')!;
