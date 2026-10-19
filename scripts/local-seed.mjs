@@ -34,6 +34,19 @@ export async function seed(config) {
       }
       users.set(account.email,user.id);
     }
+    // Release the first batch before history exists, so every historical line has a certified lot to come from.
+    for(const certificate of certificates) {
+      const fields=releasedFields(certificate);
+      const path=resolve(root,'public/certificates',fields.coaPath);
+      try {await access(path);} catch {continue;}
+      const result=await admin.storage.from('certificates').upload(fields.coaPath,await readFile(path),{contentType:'application/pdf',upsert:true});
+      if(result.error)throw result.error;
+      // Lot inventory sells only received, counted, passing lots whose certificate file exists.
+      await sql.begin(async tx=>{
+        await query(tx,"select set_config('inventory.reason','Sample batch received and certified',true)");
+        await query(tx,"update public.lots set status='released',testing_status='passed',received_at=$6,units=120,received_units=120,expected_units=120,tested_at=$1,released_at=$7,results=$2,reference=$3,coa_path=$4 where lot=$5",[fields.testedAt,fields.results,fields.reference,fields.coaPath,certificate.lot,certificate.sampleReceived,fields.releasedAt]);
+      });
+    }
     await sql.begin(async tx=>{
       for(const account of accounts) {
         await query(tx,'update public.profiles set role=$1 where id=$2',[account.role,users.get(account.email)]);
@@ -47,7 +60,6 @@ export async function seed(config) {
       await insert(tx,'partners',{id:id('partner'),user_id:users.get(partner.email),name:partner.name,handle:'@alexresearch',email:partner.email,code:'ALEX10',rate:0.12,status:'active',joined_at:daysAgo(180),audience:'Research community (sample)'},'(id)');
       await insert(tx,'discounts',{code:'ALEX10',kind:'partner',percent:10,partner_id:id('partner'),active:true},'(code)');
       await query(tx,"update public.discounts set active=true where code in ('FIRSTLOT','WELCOME5')");
-      await query(tx,'update public.products set stock=120 where active');
       await query(tx,'update public.settings set shipping_rates_confirmed=true');
       await query(tx,"update public.shipping_methods set label=case when id='cold-2day' then 'Standard · 2 business days' else 'Express · overnight' end,detail='Sample rate for the local simulation'");
       await query(tx,'update public.customer_program_settings set rewards_enabled=true,memberships_enabled=true,earn_per_dollar=10');
@@ -55,6 +67,8 @@ export async function seed(config) {
       for(const account of accounts.filter(a=>a.role==='buyer'&&!a.pending))
         await insert(tx,'reward_ledger',{buyer_id:id(account.email),points:1500,kind:'adjustment',entry_key:'local-opening-'+account.email,note:'Sample opening points for local testing'},'(entry_key)');
       const catalog=await query(tx,'select * from public.products order by id');
+      // History is inserted in its final state, so reserve and ship its lots below instead of through checkout's trigger.
+      await query(tx,'alter table public.order_lines disable trigger inventory_allocate');
       for(let i=0;i<90;i++) {
         const at=daysAgo(i*2+1),orderId=id('history-'+i),buyerEmail=i%3===0?'procurement@truemark.test':'researcher@truemark.test',product=catalog[i%catalog.length];
         const quantity=1+i%4,subtotal=Number(product.price)*quantity,partnerOrder=i%3===0;
@@ -68,20 +82,63 @@ export async function seed(config) {
           await insert(tx,'order_events',{id:id('history-event-'+i+'-'+step),order_id:orderId,status:steps[step],at:new Date(Date.parse(at)+step*3600000).toISOString(),note:'Seeded local history',actor_id:users.get('owner@truemark.test'),source:'team'});
         if(partnerOrder)await insert(tx,'referrals',{partner_id:id('partner'),order_id:orderId,order_number:'TM-LOCAL-'+(1000+i),created_at:at,order_subtotal:subtotal-discount,commission:Math.round((subtotal-discount)*12)/100,status:i<7?'pending':'approved',via:'code'},'(order_id)');
       }
+      await query(tx,'alter table public.order_lines enable trigger inventory_allocate');
+      await query(tx,"select set_config('inventory.reason','Sample order history',true)");
+      await query(tx,`insert into public.order_lot_allocations(order_line_id,lot_id,quantity,state,lot_number,certificate_path,certificate_snapshot)
+        select li.id,l.inventory_id,li.quantity,case when o.status in ('paid','packed') then 'reserved' else 'fulfilled' end,coalesce(l.lot_number,l.lot),
+          case when o.status in ('shipped','delivered') then l.coa_path end,
+          case when o.status in ('shipped','delivered') then jsonb_build_object('reference',l.reference,'results',l.results,'testedAt',l.tested_at,'lot',coalesce(l.lot_number,l.lot)) end
+        from public.order_lines li join public.orders o on o.id=li.order_id join public.lots l on l.lot=li.lot
+        where o.number like 'TM-LOCAL-%' and not exists(select 1 from public.order_lot_allocations a where a.order_line_id=li.id)`);
+      await query(tx,`update public.lots l set units=l.received_units-coalesce((select sum(a.quantity) from public.order_lot_allocations a where a.lot_id=l.inventory_id and a.state='fulfilled'),0),
+        reserved_units=coalesce((select sum(a.quantity) from public.order_lot_allocations a where a.lot_id=l.inventory_id and a.state='reserved'),0)
+        where exists(select 1 from public.order_lot_allocations a where a.lot_id=l.inventory_id)`);
       for(let i=0;i<90;i++)await insert(tx,'visits',{partner_id:id('partner'),date:daysAgo(i).slice(0,10),clicks:15+i%27});
     });
-    for(const certificate of certificates) {
-      const fields=releasedFields(certificate);
-      const path=resolve(root,'public/certificates',fields.coaPath);
-      try {await access(path);} catch {continue;}
-      const result=await admin.storage.from('certificates').upload(fields.coaPath,await readFile(path),{contentType:'application/pdf',upsert:true});
-      if(result.error)throw result.error;
-      await query(sql,"update public.lots set status='released',received_at=$6,units=120,tested_at=$1,released_at=$7,results=$2,reference=$3,coa_path=$4 where lot=$5",[fields.testedAt,fields.results,fields.reference,fields.coaPath,certificate.lot,certificate.sampleReceived,fields.releasedAt]);
-    }
+    await demoLots(sql,admin);
     await query(sql,"insert into local_development.checkpoints(name) values('functional-v1') on conflict do nothing");
     await linkHistory(sql);
-    console.log('Seeded six local accounts, 90 orders, referrals, rewards, stock and available certificate files.');
+    console.log('Seeded six local accounts, 90 orders, referrals, rewards, lot inventory and available certificate files.');
   } finally {await sql.end();}
+}
+
+// One lot in each inventory state for walkthroughs, plus a second BPC-157 lot so a 15-unit order splits 10 + 5.
+// SAMPLE lots carry a labeled sample certificate, never a laboratory result.
+async function demoLots(sql,admin) {
+  const samplePath='SAMPLE-BPC10-B.pdf';
+  const upload=await admin.storage.from('certificates').upload(samplePath,samplePdf(['Sample certificate for local demonstration','Lot SAMPLE-BPC10-B - BPC-157 10 mg','Not a laboratory result. Created by the TrueMark local seed.']),{contentType:'application/pdf',upsert:true});
+  if(upload.error)throw upload.error;
+  const product=async(tx,lot)=>(await query(tx,'select product_id from public.lots where lot=$1',[lot]))[0]?.product_id;
+  const add=async(tx,reason,row)=>{
+    await query(tx,"select set_config('inventory.reason',$1,true)",[reason]);
+    await insert(tx,'lots',{lot_number:row.lot,...row},'(lot)');
+  };
+  await sql.begin(async tx=>{
+    const bpc=await product(tx,'TM-BPC10-2609-01');
+    await query(tx,"select set_config('inventory.reason','Count correction: sample older lot nearly sold through',true)");
+    await query(tx,"update public.lots set units=reserved_units+10,version=version+1 where lot='TM-BPC10-2609-01' and units>reserved_units+10");
+    await add(tx,'Sample newer lot received and certified',{lot:'SAMPLE-BPC10-B',product_id:bpc,status:'released',testing_status:'passed',received_at:daysAgo(6),tested_at:daysAgo(4),released_at:daysAgo(3),
+      units:100,received_units:100,expected_units:100,reference:'SAMPLE-COA-BPC10-B',coa_path:samplePath});
+    await query(tx,"update public.lots set results=$1 where lot='SAMPLE-BPC10-B'",[[{label:'Purity',method:'HPLC',value:'99.21',unit:'%'},{label:'Identity',method:'HPLC (RT + UV vs. reference)',value:'Conforms',unit:''}]]);
+    await add(tx,'Sample shipment expected',{lot:'TM-RET10-2610-02',product_id:await product(tx,'TM-RET10-2609-01'),status:'quarantine',testing_status:'pending',
+      units:0,received_units:0,expected_units:100,expected_at:daysAgo(-5).slice(0,10)});
+    await add(tx,'Sample shipment received, awaiting test results',{lot:'TM-TRZ30-2610-02',product_id:await product(tx,'TM-TRZ30-2609-01'),status:'quarantine',testing_status:'pending',
+      received_at:daysAgo(3),units:100,received_units:100,expected_units:100});
+    await add(tx,'Sample lot passed testing, certificate not yet uploaded',{lot:'TM-SEM20-2610-02',product_id:await product(tx,'TM-SEM20-2609-01'),status:'quarantine',testing_status:'passed',
+      received_at:daysAgo(9),tested_at:daysAgo(2),units:80,received_units:80,expected_units:80});
+  });
+}
+// A one-page PDF with plain text, enough for the certificate viewer and download links.
+function samplePdf(lines) {
+  const text=lines.map((line,i)=>`BT /F1 ${i?11:16} Tf 72 ${720-i*28} Td (${line.replace(/[\\()]/g,m=>'\\'+m)}) Tj ET`).join('\n');
+  const objects=['<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',`<< /Length ${Buffer.byteLength(text)} >>\nstream\n${text}\nendstream`];
+  let body='%PDF-1.4\n';const offsets=[];
+  objects.forEach((object,i)=>{offsets.push(Buffer.byteLength(body));body+=`${i+1} 0 obj\n${object}\nendobj\n`;});
+  const xref=Buffer.byteLength(body);
+  body+=`xref\n0 ${objects.length+1}\n0000000000 65535 f \n`+offsets.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('')+`trailer\n<< /Size ${objects.length+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return Buffer.from(body,'latin1');
 }
 
 async function linkHistory(sql) {
