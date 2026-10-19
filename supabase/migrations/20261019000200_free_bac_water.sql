@@ -1,4 +1,5 @@
--- Free BAC Water: spend the threshold (default $75, merchandise after discounts, as free shipping is decided) and the
+-- Free BAC Water: spend the threshold (default $75, merchandise after any promo or partner code, as the cart shows it;
+-- member and reward benefits applied at checkout never take it away) and the
 -- order carries one BAC Water 10 mL at $0.00. place_order adds it, never the browser; its stock is reserved by the
 -- existing lot-allocation trigger. Without stock the order is placed without it and its placed event says so.
 -- place_order below is 20261017000000_lot_inventory.sql's definition with only the free vial added.
@@ -85,6 +86,7 @@ declare
   gift_paid integer := 0;
   gift_note text;
   list_subtotal numeric(12,2) := 0;
+  gift_base numeric(12,2);
 begin
   if auth.uid() is null or public.platform_role() is distinct from 'buyer' then
     raise exception 'a verified buyer account is required' using errcode = '42501';
@@ -176,6 +178,8 @@ begin
     discount_amount := round(subtotal * discount.percent / 100, 2);
 
   end if;
+  -- The cart decides the free vial on merchandise after the code it shows; keep that figure before benefits replace it.
+  gift_base := subtotal - discount_amount;
   select * into program from public.customer_program_settings where id for share;
   benefits := public.customer_benefits(buyer.id, subtotal, discount_amount, coalesce((draft ->> 'rewardPoints')::numeric,0));
   member_amount := (benefits ->> 'membershipAmount')::numeric;
@@ -196,7 +200,7 @@ begin
     and base >= storefront.free_shipping_threshold then
     method.price := 0;
   end if;
-  if gift_threshold is not null and base >= gift_threshold then
+  if gift_threshold is not null and gift_base >= gift_threshold then
     -- Reached only by a price raised since the first look: the vial's row is locked now instead.
     if not gift_locked then perform public.inventory_refresh(gift_id); end if;
     select * into gift from public.products where id = gift_id and active for update;

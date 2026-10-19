@@ -563,7 +563,8 @@ export default function Checkout() {
   const selectedMethod = methods.data?.find((m) => m.id === methodId) ?? null;
   const priced = settings.data ? priceQuote(subtotal, code.discount?.percent ?? 0, selectedMethod, settings.data, insured, LIVE ? address : null, taxRates.data ?? [], discountAmount) : null;
   const method = selectedMethod ? { ...selectedMethod, price: priced?.shipping ?? selectedMethod.price } : null;
-  const freeVial = useFreeBacWater(priced?.base ?? roundMoney(subtotal - discountAmount), settings.data ?? undefined);
+  // The free vial follows the subtotal after any code, as the cart shows it; member and reward benefits never remove it.
+  const freeVial = useFreeBacWater(roundMoney(subtotal - promoAmount), settings.data ?? undefined);
 
   // Preselect the account's first saved address once it is known; drop a selection that left.
   const addressIds = addresses.map((a) => a.id).join(" ");
