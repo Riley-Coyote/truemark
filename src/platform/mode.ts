@@ -1,4 +1,5 @@
 /** Vite folds this at build time; preview is the default. */
+export const LOCAL = import.meta.env?.DEV === true && import.meta.env.VITE_LOCAL_PLATFORM === "1";
 export const LIVE = import.meta.env.VITE_PLATFORM === "live";
 
 /** UI preferences may keep their old names in preview, never in live. */

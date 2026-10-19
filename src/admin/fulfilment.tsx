@@ -118,6 +118,7 @@ export function Fulfilment({ order, shipment, onDone, onAdvance = store.orders.a
       <p className="cc-footnote">{!LIVE ? "Preview only: no label is purchased or printed." :
         !shipment ? "Shipping is not connected for this order. Label details must sync before packing." :
         shipment.status === "failed" ? "Resolve the shipping error below, then print the label." :
+        shipment.provider === "simulator" ? "Create a sample label, then confirm the items are packed. No label is purchased or printed." :
         shipment.cancelRequested || shipment.status === "cancelled" ? "This shipment is being cancelled. Refresh the order before proceeding." :
         "Find this order in ShipStation and print its label. Packing becomes available when the label details arrive."}</p>
     </div>{problem}</div>;
@@ -127,7 +128,7 @@ export function Fulfilment({ order, shipment, onDone, onAdvance = store.orders.a
     <p className="cc-footnote">This confirms packing only. The customer sees shipped after carrier confirmation.</p>
     {problem}<div className="cc-confirm-actions">
       <button ref={confirm} className="kit-button kit-button-primary" disabled={saving}
-        onClick={() => void perform(() => onAdvance(order.id, "packed", { note: PACKED_NOTE }), "Marked packed. Awaiting carrier confirmation.")}>
+        onClick={() => void perform(() => onAdvance(order.id, "packed", { note: PACKED_NOTE }), "Packing confirmed.")}>
         {saving ? "Saving…" : "Confirm packed"}
       </button>
       <Button disabled={saving} onClick={() => { setConfirming(false); requestAnimationFrame(() => primary.current?.focus()); }}>Cancel</Button>

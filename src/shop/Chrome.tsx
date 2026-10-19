@@ -1,6 +1,6 @@
 import { live } from "../platform/live/runtime";
 import { useResource } from "../platform/store";
-import { LIVE } from "../platform/mode";
+import { LIVE, LOCAL } from "../platform/mode";
 import { useEffect, useId, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, Search, X } from "lucide-react";
@@ -354,7 +354,7 @@ export function Footer() {
               </Link>
             ))}
           </nav>
-          {!LIVE && <span className="tm-preview-tag">Design preview · sample data</span>}
+          {(!LIVE || LOCAL) && <span className="tm-preview-tag">{LOCAL ? "Local simulation · sample data" : "Design preview · sample data"}</span>}
         </div>
       </div>
     </footer>

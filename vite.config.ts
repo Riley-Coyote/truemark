@@ -128,7 +128,10 @@ export default defineConfig({
   plugins: [react(), process.env.VITE_PLATFORM === "live" && liveHead(), startHead()],
   css: { postcss: { plugins: [fingerStates] } },
   // Agents' worktrees live under .claude/; they are separate checkouts, not part of this site.
-  server: { watch: { ignored: ["**/.claude/**"] } },
+  server: {
+    watch: { ignored: ["**/.claude/**", "**/.local-platform/**"] },
+    fs: { deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "**/.local-platform/**"] },
+  },
   optimizeDeps: { entries: ["index.html"] },
   build: {
     rollupOptions: {

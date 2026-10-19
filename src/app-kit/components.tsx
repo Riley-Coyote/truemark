@@ -1,4 +1,4 @@
-import { LIVE } from "../platform/mode";
+import { LIVE, LOCAL } from "../platform/mode";
 import { useId, useRef } from "react";
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
 import { ArrowDownRight, ArrowRight, ArrowUpRight, ChevronDown, Search, X } from "lucide-react";
@@ -52,7 +52,7 @@ export function Dot({ tone, colour, className }: { tone?: Tone; colour?: string;
 }
 
 export function SampleTag({ children = "Sample data" }: { children?: ReactNode }) {
-  return LIVE && children !== "Saving arrives next" ? null : <span className="kit-tag">{children}</span>;
+  return LIVE && !LOCAL && children !== "Saving arrives next" ? null : <span className="kit-tag">{children}</span>;
 }
 
 export function Avatar({ initials, label }: { initials: string; label: string }) {

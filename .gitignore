@@ -11,3 +11,6 @@ dist/
 .claude/worktrees/
 dist-functions/
 supabase/.temp/
+
+# Isolated local platform database, provider keys and generated logs
+.local-platform/

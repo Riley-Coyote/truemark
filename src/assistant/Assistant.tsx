@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Drawer } from "../app-kit/Drawer";
 import { Card } from "../app-kit/components";
 import { Certificate } from "../brand/Certificate";
-import { LIVE } from "../platform/mode";
+import { LIVE, LOCAL } from "../platform/mode";
 import { STORE_CHANGE, worldNow } from "../platform/storage";
 import { ShopContext } from "../shop/context";
 import { SheetSkirt, useScrollLock, useSheetDrag, useSheetFocus, useSheetPresence, useVisibleViewport, viewportBox } from "../shop/sheet";
@@ -388,7 +388,7 @@ function DeskComposer({ field, busy, placeholder, more, onSend, onStop, onLatest
         ? <button type="button" className="tm-chat-send is-stop" onClick={onStop} aria-label="Stop the answer"><Square size={14} strokeWidth={2.4} aria-hidden="true" /></button>
         : <button type="submit" className="tm-chat-send" disabled={!input.trim()} aria-label="Send"><ArrowUp size={18} strokeWidth={2} aria-hidden="true" /></button>}
     </div>
-    <p className="tm-chat-fine">{LIVE ? "Chats are saved to improve answers." : "Sample data · Built-in answers · No AI connection."} <button type="button" className="tm-desk-human" onClick={onPerson}>Talk to a person</button></p>
+    <p className="tm-chat-fine">{LIVE && !LOCAL ? "Chats are saved to improve answers." : "Sample data · Built-in answers · No AI connection."} <button type="button" className="tm-desk-human" onClick={onPerson}>Talk to a person</button></p>
   </form>;
 }
 

@@ -111,8 +111,17 @@ end $$;
 
 -- Same review_access comparison as the review layer, without opening that table.
 create or replace function public.assistant_review_project(p_key text) returns text
-language sql stable security definer set search_path = public
-as $$ select public.review_key_project(p_key); $$;
+language plpgsql stable security definer set search_path = public
+as $$
+declare project text;
+begin
+  -- The launch platform can be installed without the optional legacy review layer.
+  -- Resolve it at call time so a clean database does not require review.sql first.
+  if to_regprocedure('public.review_key_project(text)') is null then return null; end if;
+  execute 'select public.review_key_project($1)' into project using p_key;
+  return project;
+end;
+$$;
 
 -- Compare-and-swap reservation also prevents replaying the same confirmation result.
 create or replace function public.assistant_reserve(p_id uuid, p_subject text, p_token text, p_user uuid,

@@ -17,7 +17,12 @@
     "dev:studio": "vite --config design-lab/universe/vite.config.mjs --open /design-lab/universe/index.html",
     "build:studio": "node design-lab/universe/package.mjs",
     "preview:studio": "node design-lab/universe/serve.mjs",
-    "test:studio": "node --test design-lab/universe/*.test.mjs"
+    "test:studio": "node --test design-lab/universe/*.test.mjs",
+    "dev:platform": "node --import tsx scripts/local-platform.mjs dev",
+    "platform:setup": "node --import tsx scripts/local-platform.mjs setup",
+    "platform:stop": "node --import tsx scripts/local-platform.mjs stop",
+    "platform:flush": "node --import tsx scripts/local-platform.mjs flush",
+    "platform:verify": "node --import tsx scripts/local-verify.mjs"
   },
   "dependencies": {
     "@fontsource-variable/bodoni-moda": "^5.3.0",
@@ -41,6 +46,8 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "postgres": "3.4.9",
+    "supabase": "2.121.0",
     "tsx": "^4.23.15",
     "typescript": "~5.7.2",
     "vite": "^6.0.5"

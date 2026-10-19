@@ -1,4 +1,4 @@
-import { LAUNCH, LIVE } from "../platform/mode";
+import { LAUNCH, LIVE, LOCAL } from "../platform/mode";
 import { worldNow } from "../platform/storage";
 import { getClient } from "../platform/live/client";
 import { storedKey, keyFromSearch } from "../review/key";
@@ -18,7 +18,7 @@ import { createTransport } from "./client";
 import { OFFLINE, type Persona } from "./protocol";
 
 // Preview visitors use only the local sample-data desk. Hosted AI access stays gated.
-export const localDesk = (persona: Persona) => !LIVE && persona === "visitor";
+export const localDesk = (persona: Persona) => (!LIVE || LOCAL) && persona === "visitor";
 
 const endpoint = import.meta.env.VITE_REVIEW_SUPABASE_URL ? `${import.meta.env.VITE_REVIEW_SUPABASE_URL}/functions/v1/assistant` : "";
 export function reviewKey() {

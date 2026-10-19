@@ -19,11 +19,13 @@ Use Node 22 and the lockfile:
 
 ```sh
 npm ci
-npm run dev -- --port 5174
+npm run dev:platform
 ```
 
-The default mode is a review preview with sample records kept in the browser. Open `/` for the
-storefront and `/review` for the presentation. Production review builds use hash routes.
+The ongoing platform runs at http://127.0.0.1:5300 with the real launch routes, local Supabase
+Auth/database/Storage and simulated providers. Docker is not required. See [the local working
+platform guide](docs/platform/LOCAL-DEVELOPMENT.md) for accounts, workflows and verification.
+`npm run dev` remains the older browser-only design review; `npm run dev:studio` opens Studio.
 
 ## Build modes
 

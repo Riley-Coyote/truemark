@@ -62,3 +62,40 @@ For each meaningful update, add a short dated entry with:
 - **Next:** one recommended action and the question, if any, it depends on.
 
 Replace stale next-step guidance as work progresses; preserve the dated decision history. Do not record example wording from the collaboration guide as an answer from Mason.
+
+
+## Native local platform — 18 October 2026
+
+**Decision/source:** Riley requested a single ongoing version of the actual platform,
+runnable locally with functional simulated data, ahead of Mason's incoming repository
+handoff. Use codex/platform-local, based on public main 117997d. The older private
+checkout is preserved. No new coordination issue was present when checked this session.
+
+**Result:** npm run dev:platform starts the real launch application at
+http://127.0.0.1:5300 using native local Supabase 2.121.0 (Docker is not required).
+Website, researcher accounts, Partners and Command Center share the actual database,
+Auth, Storage, checked RPCs and server functions. Six initial accounts, 90 historical
+orders, stock, rewards, referrals and certificates support demonstration. Historical
+orders also have simulator payment/shipment records. Local keys/data/logs live in the
+ignored .local-platform directory. Auth emails use default templates and local mail capture (native template
+serving is not supported; branded production templates remain preserved); shipping and transactional message workers run every five seconds.
+The clean-install assistant migration now tolerates absence of the optional legacy
+review layer. Existing hosted databases/services were not modified.
+
+**Evidence:** All 20 application migrations installed on an empty native database.
+Ten real-local acceptance checks cover role enforcement, application approval,
+checkout/stock, payment callbacks, referral attribution, label/packing/shipping/delivery,
+simulated notices, refund/reversal, declined-payment cancellation, contacts and catalog
+saves. The production launch build passes; 27 focused regression/isolation tests pass;
+61 built browser artifacts pass the credential/server-prompt scan. Browser acceptance
+includes a customer checkout (TM-10505), owner label/packing/carrier/delivery actions,
+and a signed-in partner portal at 390 px with no horizontal overflow or runtime errors.
+Native stop/start retained the records, the ten acceptance checks passed again, and
+a password-reset email reached the local inbox. See the local guide and
+.local-platform/verification.json. Local state is denied by Vite (403).
+
+**Boundary/next:** Local native CLI support is experimental and pinned. Simulated
+providers do not establish real processor/carrier/sender readiness. Full receiving,
+split-lot quantities and unified in-app email replies remain in the owner implementation
+plan. Read Mason's incoming handoff, reconcile it with these requirements, and continue
+from this application. No publication or hosted provider activation is part of this setup.
