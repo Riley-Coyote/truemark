@@ -96,6 +96,7 @@ function page<T>(rows: T[], input: Record<string, unknown>) {
   return { total: rows.length, offset, items: rows.slice(offset, offset + limit), nextOffset: offset + limit < rows.length ? offset + limit : null };
 }
 const money = (v: number) => `$${v.toFixed(2)}`;
+const STOCK_FROM_LOTS = "Stock comes from received lots, so it can't be set on a product. To add units, use Receive inventory in Products & inventory; to correct a count, edit the lot there.";
 const fingerprint = (v: unknown) => JSON.stringify(v);
 function required<T>(value: T | null | undefined, message: string): T { if (value == null) throw new Error(message); return value; }
 function date(value: string) { if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !Number.isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0, 10) !== value) throw new Error("Use a valid YYYY-MM-DD date."); return value; }
@@ -328,10 +329,14 @@ export function createToolRuntime(deps: RuntimeDependencies) {
       }
       case "update_product": {
         if (!(await s.assistant.capabilities()).updateProduct) return output({ message: "Catalog editing arrives with the next update." });
-        const p = await product(); const { id: _id, ...patch } = a;
-        if (!Object.keys(patch).length) throw new Error("Specify which product fields to change.");
+        // Stock is derived from lots, so a product update never sends or proposes it.
+        const p = await product(); const { id: _id, stock, ...patch } = a;
+        if (!Object.keys(patch).length) {
+          if (stock !== undefined) return output({ message: STOCK_FROM_LOTS });
+          throw new Error("Specify which product fields to change.");
+        }
         if (typeof patch.description === "string") { const check = checkClaims(patch.description); if (!check.passed) return output({ check }, { kind: "draft", text: patch.description, check }); }
-        return pending(`Update ${p.name} ${p.size}`, { id: `${p.name} ${p.size}`, before: Object.fromEntries(Object.keys(patch).map((key) => [key, p[key as keyof typeof p]])), after: patch }, async () => { await unchanged(product, p); return s.actions.updateProduct(p.id, patch, p.stock); });
+        return pending(`Update ${p.name} ${p.size}`, { id: `${p.name} ${p.size}`, before: Object.fromEntries(Object.keys(patch).map((key) => [key, p[key as keyof typeof p]])), after: patch, ...(stock !== undefined ? { stock: `Not changed here. ${STOCK_FROM_LOTS}` } : {}) }, async () => { await unchanged(product, p); return s.actions.updateProduct(p.id, patch, p.stock); });
       }
       case "draft_journal_post": {
         if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(text("slug"))) throw new Error("Use a lowercase URL slug.");
