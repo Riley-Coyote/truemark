@@ -289,6 +289,9 @@
   width: 100%;
   margin-top: var(--tm-space-2);
 }
+.tm .tm-gate-open {
+  margin-top: var(--tm-space-7);
+}
 .tm .tm-gate-submit:disabled {
   opacity: 0.7;
   cursor: progress;

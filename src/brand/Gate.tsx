@@ -1,6 +1,7 @@
 import { PasswordReset, useRecovery } from "../platform/PasswordReset";
 import { LIVE } from "../platform/mode";
 import { live } from "../platform/live/runtime";
+import { roleHome, type Profile } from "../platform/accounts";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -49,6 +50,46 @@ function Field({
   );
 }
 
+const AREAS: Record<Profile["role"], { place: string; open: string }> = {
+  owner: { place: "Your team account opens Command Center.", open: "Open Command Center" },
+  staff: { place: "Your team account opens Command Center.", open: "Open Command Center" },
+  partner: { place: "Your partner account opens the partner portal.", open: "Open the partner portal" },
+  buyer: { place: "Your research account is open.", open: "Open your account" },
+};
+
+function SignedIn({ profile, onSignedOut }: { profile: Profile; onSignedOut: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const area = AREAS[profile.role];
+  return (
+    <>
+      <h2 className="tm-gate-heading">You're signed in.</h2>
+      <p className="tm-gate-sub">{area.place}</p>
+      <Link className="tm-button tm-button-primary tm-gate-submit tm-gate-open" to={roleHome(profile.role)}>
+        {area.open}
+      </Link>
+      <p className="tm-gate-switch">
+        Not you?{" "}
+        <button
+          type="button"
+          className="tm-gate-link"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            try {
+              await live().auth.signOut();
+              onSignedOut();
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          Sign out
+        </button>
+      </p>
+    </>
+  );
+}
+
 /**
  * The front door. Every logged-out visitor lands here on the client's live site,
  * so it carries the brand at its most exact: the real lockup, their ink, their
@@ -73,6 +114,15 @@ export default function Gate() {
   const specimen = productById(SCENE.vials[focusedLot.index].id);
   const scene = useRef<HTMLElement>(null);
   const focusLot = useCallback((index: number, phase: LotPhase) => setFocusedLot({ index, phase }), []);
+  // Someone already signed in who reaches this page (the header's Account link, for a team member or partner) is
+  // pointed to their own area rather than shown an empty form.
+  const [signedIn, setSignedIn] = useState<Profile | null>(null);
+  useEffect(() => {
+    if (!LIVE) return;
+    let current = true;
+    live().auth.profile().then((profile) => { if (current) setSignedIn(profile); }).catch(() => undefined);
+    return () => { current = false; };
+  }, []);
 
   useEffect(() => {
     document.title = `${mode === "signin" ? "Sign in" : "Create account"} — TrueMark BioLabs`;
@@ -106,9 +156,17 @@ export default function Gate() {
     }
     setBusy(true);
     try {
-      if (LIVE) await live().auth.signIn(values.email.trim(), values.password);
-      else await store.session.signIn(values.email);
-      navigate(LIVE ? (from?.startsWith("/") && !from.startsWith("//") ? from : "/") : from ?? "/", { replace: true });
+      if (!LIVE) {
+        await store.session.signIn(values.email);
+        navigate(from ?? "/", { replace: true });
+        return;
+      }
+      const profile = await live().auth.signIn(values.email.trim(), values.password);
+      const back = from?.startsWith("/") && !from.startsWith("//") ? from : undefined;
+      // The team and partners go to their own area, unless sign-in interrupted them on the way somewhere else;
+      // the shop's account pages are a researcher's, so they are never where a team member is sent back to.
+      const own = profile && profile.role !== "buyer" ? roleHome(profile.role) : undefined;
+      navigate(own && (!back || back.startsWith("/account")) ? own : back ?? "/", { replace: true });
     } catch (error) {
       setFailure(error instanceof Error ? error.message : "Sign-in could not be completed.");
       setBusy(false);
@@ -159,7 +217,9 @@ export default function Gate() {
 
         <main className="tm-gate-panel">
           <div className="tm-gate-form">
-            {reset || recovery ? <PasswordReset gate="shop" email={values.email} onBack={() => setReset(false)} /> : <>
+            {reset || recovery ? <PasswordReset gate="shop" email={values.email} onBack={() => setReset(false)} /> : signedIn ? (
+              <SignedIn profile={signedIn} onSignedOut={() => setSignedIn(null)} />
+            ) : <>
             <h2 className="tm-gate-heading">{mode === "signin" ? "Sign in" : "Create account"}</h2>
             <p className="tm-gate-sub">
               {mode === "signin"
