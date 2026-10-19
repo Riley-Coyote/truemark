@@ -59,7 +59,7 @@ const FLY_ZOOM = 2.1;
  *  height; less on a phone, where the narrower word would otherwise lose its middle letter wholly behind the glass),
  *  its gap under the words on the wall (px), its cap height and its width in ems (Poppins, tracked in, from the foot of
  *  its box), and the share of the screen it may span. */
-const WORD = { sink: { wide: 0.6, tall: 0.35 }, gap: 30, cap: 0.78, em: 4.83, span: 0.86 } as const;
+const WORD = { sink: { wide: 0.6, tall: 0.18 }, gap: 30, cap: 0.78, em: 4.83, span: 0.86 } as const;
 /** The space kept under the words on the wall for it to rise into: a share of the screen's height above a floor of
  *  it, so a short laptop window keeps its room whole and a tall one gives the word more. */
 /** The room's light on each vial by how many pedestals it stands from the one under the light (mist-word.css): half
