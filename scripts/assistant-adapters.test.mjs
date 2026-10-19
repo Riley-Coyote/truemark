@@ -28,6 +28,14 @@ test('preview read helpers and confirmed writes use the shared sample world; dra
   assert((await store.assistant.products()).length > 0);
   const lots = await store.lots.list(), lot = lots.find((l) => l.status === 'released');
   assert(lot); assert.deepEqual(recordFromLot(await store.lots.get(lot.lot)).results, lot.results);
+  // Visitors' and customers' lot records: the live store's public shape, for the same rows its released_lots() returns.
+  const records = await store.lots.released();
+  const shape = ['coaPath', 'coaUrl', 'lot', 'number', 'productId', 'receivedAt', 'reference', 'releasedAt', 'results', 'sample', 'status', 'testedAt', 'testingStatus', 'units'];
+  assert.deepEqual(records.map((l) => l.lot), lots.filter((l) => l.status === 'released' && l.results.length > 0).map((l) => l.lot));
+  assert(records.length > 0);
+  for (const l of records) { assert.deepEqual(Object.keys(l).sort(), shape); assert.equal(l.units, null); assert.equal(l.receivedAt, null); }
+  assert(lots.some((l) => l.units !== null), 'the team list keeps its counts');
+  assert.deepEqual((await content.library()).map((l) => l.lot).sort(), records.filter((l) => !l.sample).map((l) => l.lot).sort());
   const code = await store.actions.createDiscount({ code: 'WP17FIXTURE', percent: 10, active: true });
   assert.equal((await store.catalog.validateCode(code.code)).percent, 10);
   await assert.rejects(store.actions.createDiscount({ code: code.code, percent: 20, active: false }), /already exists/);

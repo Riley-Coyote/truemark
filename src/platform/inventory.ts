@@ -18,6 +18,16 @@ export function lotStage(lot: Lot): string {
   return lot.units === 0 ? "Exhausted" : "Available";
 }
 export const lotAvailable = (lot: Lot) => lotStage(lot) === "Available" ? Math.max(0, (lot.units ?? 0) - (lot.reservedUnits ?? 0)) : 0;
+/** The lots anyone may read: released, with results. The database's released_lots() keeps the same rows. */
+export const publiclyReleased = (lot: Lot) => lot.status === "released" && lot.results.length > 0;
+/**
+ * A released lot as visitors and customers read it: what the storefront shows, and nothing of its stock, its
+ * hold or rejection notes, who last saved it or its bookkeeping. The live and preview stores both give this shape.
+ */
+export function publicLot(lot: Lot): Lot {
+  const { lot: id, number, productId, status, testingStatus, testedAt, releasedAt, results, reference, coaPath, coaUrl, sample } = lot;
+  return { lot: id, number, productId, status, testingStatus, testedAt, releasedAt, results, reference, coaPath, coaUrl, receivedAt: null, units: null, sample };
+}
 export const incomingUnits = (lot: Lot) => Math.max(0, (lot.expectedUnits ?? 0) - (lot.receivedUnits ?? 0));
 export const fifoLots = (lots: Lot[]) => [...lots].sort((a,b) => (a.receivedAt ?? "9999").localeCompare(b.receivedAt ?? "9999") || lotKey(a).localeCompare(lotKey(b)));
 export function inventoryTotals(lots: Lot[]) {

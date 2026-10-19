@@ -68,7 +68,7 @@ function Desk({ buyer, signOut }: { buyer: Buyer; signOut: () => Promise<void> }
   const { pathname } = useLocation();
   const navigation = useRef<HTMLElement>(null);
   const orders = useResource(attempt(() => store.orders.listForBuyer(buyer.id)), [buyer.id]);
-  const lots = useResource(attempt(() => store.lots.list()));
+  const lots = useResource(attempt(() => store.lots.released()));
   const received = useMemo(() => (orders.data ? receivedLots(orders.data).length : undefined), [orders.data]);
   useLayoutEffect(() => {
     const nav = navigation.current;

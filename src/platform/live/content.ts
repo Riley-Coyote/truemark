@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ArticleInput, JournalArticle, LotRelease } from "../types";
+import { publicLot } from "../inventory";
 import { lot as mapLot, type Row } from "./rows";
 
 type Rows = (table: string, select?: string, filters?: Record<string, string>) => Promise<Row[]>;
@@ -38,9 +39,21 @@ export function createContentAdapter(client: SupabaseClient, rows: Rows, rpc: RP
     if (!/^[A-Za-z0-9_-]+$/.test(id)) throw new Error("This lot number cannot be used as a certificate filename.");
     return upload("certificates", `${id}-${crypto.randomUUID()}.pdf`, file);
   }
+  /** Released lots' public fields, through released_lots(): the lots table itself is the team's. Paged like rows(). */
+  async function released() {
+    const result: Row[] = [];
+    for (let offset = 0; ; offset += 1000) {
+      const { data, error } = await client.rpc("released_lots").range(offset, offset + 999);
+      if (error) throw new Error(error.message);
+      const page = (data ?? []) as Row[];
+      result.push(...page);
+      if (page.length < 1000) return result;
+    }
+  }
   return {
-    library: async () => (await rows("lots", "*", { status: "released" })).map(lot)
+    library: async () => (await released()).map((row) => publicLot(lot(row)))
       .sort((a, b) => (b.releasedAt ?? "").localeCompare(a.releasedAt ?? "") || a.lot.localeCompare(b.lot)),
+    // A lot in every status, from the table: the team's. Visitors look a lot up through lot_lookup.
     lot: async (id: string) => { const found = await rows("lots", "*", { lot: id }); return found[0] ? lot(found[0]) : null; },
     async releaseLot(id: string, input: LotRelease, file: File) {
       const path = await certificatePath(id, file);

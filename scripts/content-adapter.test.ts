@@ -6,7 +6,7 @@ import type { Row } from '../src/platform/live/rows.ts';
 import type { ArticleInput } from '../src/platform/types.ts';
 
 function fixture() {
-  const tables: Record<string, Row[]> = { lots: [], articles: [] };
+  const tables: Record<string, Row[]> = { lots: [], articles: [], released_lots: [] };
   const calls: { type: string; name: string; args: unknown }[] = [];
   let result: unknown; let error: { message: string } | null = null; let uploadError: { message: string } | null = null; let changes = 0;
   const fake = {
@@ -19,7 +19,14 @@ function fixture() {
         then(resolve: (value: unknown) => unknown) { return Promise.resolve({ data: tables[table].filter((row) => Object.entries(filters).every(([key, value]) => row[key] === value)).slice(start, end + 1), error }).then(resolve); },
       }; return query;
     },
-    async rpc(name: string, args: unknown) { calls.push({ type: 'rpc', name, args }); return { data: result, error }; },
+    // A set-returning function (released_lots) is paged like a table; any other call answers with the set result.
+    rpc(name: string, args: unknown) {
+      calls.push({ type: 'rpc', name, args }); let start = 0, end = Infinity;
+      const call = {
+        range(a: number, b: number) { start = a; end = b; calls.push({ type: 'range', name, args: [a, b] }); return call; },
+        then(resolve: (value: unknown) => unknown) { return Promise.resolve({ data: name === 'released_lots' ? tables.released_lots.slice(start, end + 1) : result, error }).then(resolve); },
+      }; return call;
+    },
     storage: { from(bucket: string) { return {
       getPublicUrl(path: string) { return { data: { publicUrl: `https://fixture.test/storage/v1/object/public/${bucket}/${path}` } }; },
       async upload(path: string, file: File, options: unknown) { calls.push({ type: 'upload', name: bucket, args: { path, type: file.type, options } }); return { data: { path }, error: uploadError }; },
@@ -36,13 +43,25 @@ const release = { testedAt: '2026-09-29', reference: 'Fixture reference', result
 ] };
 const released = { lot: 'FIXTURE', product_id: 'compound', status: 'released', released_at: '2026-10-01T12:00:00Z', tested_at: '2026-09-29', coa_path: 'FIXTURE.pdf', results: release.results };
 
-test('certificate library filters released rows, paginates and returns public PDF URLs newest first', async () => {
+test('certificate library reads released_lots, paginates and returns public PDF URLs newest first', async () => {
   const f = fixture();
-  f.tables.lots = [{ ...released, status: 'testing' }, ...Array.from({ length: 1001 }, (_, i) => ({ ...released, lot: `FIXTURE-${i}`, released_at: i === 1000 ? '2026-10-02' : '2026-10-01' }))];
+  f.tables.released_lots = Array.from({ length: 1001 }, (_, i) => ({ ...released, lot: `FIXTURE-${i}`, released_at: i === 1000 ? '2026-10-02' : '2026-10-01' }));
   const lots = await f.content.library();
   assert.equal(lots.length, 1001); assert.equal(lots[0].lot, 'FIXTURE-1000');
   assert(lots.every((lot) => lot.status === 'released' && lot.coaUrl?.endsWith('/certificates/FIXTURE.pdf')));
-  assert.equal((f.calls[0].args as Row).status, 'released');
+  assert.deepEqual(f.calls.filter((call) => call.type === 'range').map((call) => call.args), [[0, 999], [1000, 1999]]);
+  // The lots table is the team's: the public library never reads it.
+  assert.equal(f.calls.some((call) => call.type === 'select' && call.name === 'lots'), false);
+});
+test('a public lot record carries no stock, notes, staff or bookkeeping, even if a row did', async () => {
+  const f = fixture();
+  f.tables.released_lots = [{ ...released, lot_number: 'FIXTURE-N', testing_status: 'passed', reference: 'CERT-1', inventory_id: 'private-id', version: 7,
+    units: 40, reserved_units: 3, received_units: 40, expected_units: 50, expected_at: '2026-11-01', received_at: '2026-09-01',
+    hold_reason: 'PRIVATE HOLD', rejection_note: 'PRIVATE NOTE', updated_by: 'staff-id' }];
+  const [lot] = await f.store.lots.released();
+  assert.deepEqual(lot, { lot: 'FIXTURE', number: 'FIXTURE-N', productId: 'compound', status: 'released', testingStatus: 'passed', testedAt: '2026-09-29',
+    releasedAt: '2026-10-01T12:00:00Z', results: release.results, reference: 'CERT-1', coaPath: 'FIXTURE.pdf',
+    coaUrl: 'https://fixture.test/storage/v1/object/public/certificates/FIXTURE.pdf', receivedAt: null, units: null, sample: false });
 });
 test('team lot read uses RLS for every status and the public lookup keeps early PDF URLs hidden', async () => {
   const f = fixture(); f.tables.lots = [{ ...released, status: 'archived' }];

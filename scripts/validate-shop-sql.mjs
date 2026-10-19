@@ -26,7 +26,10 @@ try {
   assert((await auth(buyer, 'select * from products')).length > 0);
   await db.query("update products set active = false where id = $1", [showcase[0].product.id]);
   assert(!(await auth(buyer, 'select * from products')).some((p) => p.id === showcase[0].product.id));
-  for (const table of ['categories', 'shipping_methods', 'lots']) await anon(`select * from ${table}`);
+  for (const table of ['categories', 'shipping_methods']) await anon(`select * from ${table}`);
+  // Lots are public through their public record only (20261019000300_lots_lockdown.sql).
+  assert((await anon('select * from released_lots()')).length > 0);
+  await denied('anon', null, 'select * from lots');
   console.log('PASS anon_no_prices: showcase whitelist; signed-in active catalog; public references');
 
   const order = (await rows(`insert into orders(buyer_id, address, shipping_method_id, shipping_price, subtotal, total)
