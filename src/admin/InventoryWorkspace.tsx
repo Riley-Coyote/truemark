@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Button, DataTable, Drawer, EmptyState, PageHeader, Section, formatCount, formatDate, formatMoney } from "../app-kit";
+import { Link } from "react-router-dom";
+import { ArrowUpRight } from "lucide-react";
+import { Button, DataTable, Dot, Drawer, EmptyState, Facts, PageHeader, Section, formatCount, formatDate, formatMoney } from "../app-kit";
 import type { Column } from "../app-kit";
+import { categoryName } from "../data";
 import type { Product } from "../data";
+import { productCutout } from "../shop/catalog";
 import type { Lot } from "../platform/types";
 import { LIVE } from "../platform/mode";
 import { store, useResource } from "../platform/store";
@@ -12,7 +16,7 @@ import { ProductEditor, ClassesEditor } from "./Commerce";
 import { LotCertificateDrawer } from "./LotCertificateDrawer";
 import { LotDetail } from "./LotDetail";
 import { EditInventoryLot, ReceiveInventory } from "./InventoryForms";
-import { SelectField, SwitchRow, TextField } from "./fields";
+import { Mark, SelectField, SwitchRow, TextField } from "./fields";
 import { useSearchQuery, matches } from "./state";
 import "./inventory.css";
 
@@ -62,8 +66,10 @@ function ProductInventory({row,classes,openLot,onLot,onClose,onRefresh,onReceive
   const eligible=row.lots.filter(l=>lotAvailable(l)>0);
   const other=row.lots.filter(l=>lotAvailable(l)===0).sort((a,b)=>Number((b.units ?? 0)>0 || incomingUnits(b)>0)-Number((a.units ?? 0)>0 || incomingUnits(a)>0));
   const ordered=[...eligible,...other];const detail=openLot ? row.lots.find(l=>l.lot===openLot || lotNumber(l)===openLot || l.id===openLot) : undefined;
-  return <Drawer title={`${row.product.name} · ${row.product.size}`} eyebrow="Product inventory" onClose={onClose} footer={<div className="cc-confirm-actions"><Button variant="primary" onClick={onReceive}>Receive inventory</Button><Button onClick={()=>setEditProduct(!editProduct)}>{editProduct ? "Close product editor" : "Edit product"}</Button></div>}>
-    <div className="inventory-product-counts">{[["Available",row.totals.available],["Reserved",row.totals.reserved],["On hand",row.totals.onHand],["Incoming",row.totals.incoming]].map(([label,value])=><div key={label}><span className="kit-label">{label}</span><strong className="kit-figure">{value}</strong></div>)}</div>
+  const p=row.product;const category=classes.find(c=>c.id===p.category)?.name ?? categoryName(p.category);
+  return <Drawer title={`${p.name} · ${p.size}`} eyebrow="Product inventory" subtitle={`${p.form} · ${category}`} tags={p.active===false ? <Mark>Archived product</Mark> : undefined} onClose={onClose} footer={<div className="cc-confirm-actions"><Button variant="primary" onClick={onReceive}>Receive inventory</Button><Button onClick={()=>setEditProduct(!editProduct)}>{editProduct ? "Close product editor" : "Edit product"}</Button></div>}>
+    <div className="cc-product-head inventory-product-head"><span className="cc-vial" aria-hidden="true"><img src={productCutout(p,"sm")} alt=""/></span>
+      <div className="inventory-product-counts">{[["Available",row.totals.available],["Reserved",row.totals.reserved],["On hand",row.totals.onHand],["Incoming",row.totals.incoming]].map(([label,value])=><div key={label}><span className="kit-label">{label}</span><strong className="kit-figure">{value}</strong></div>)}</div></div>
     {editProduct && <Section title="Product details"><ProductEditor key={row.product.id} product={row.product} classes={classes} onSaved={onRefresh}/></Section>}
     <Section title="Lots · first received, first sold"><p className="kit-note">Quarantine means received and awaiting testing. A passing certificate releases testing quarantine automatically.</p>
       {!row.lots.length && <EmptyState compact title="No lots yet." note="Receive stock or record an incoming shipment to add the first lot." action={<Button onClick={onReceive}>Add first lot</Button>}/>}
@@ -74,6 +80,8 @@ function ProductInventory({row,classes,openLot,onLot,onClose,onRefresh,onReceive
         <div className="cc-confirm-actions"><Button onClick={()=>onLot(l.lot)}>Lot details</Button><Button onClick={()=>onEdit(l)}>Edit lot / adjust count</Button><Button onClick={()=>onCertificate(l)}>{l.coaPath ? "Update certificate" : "Upload certificate"}</Button>{l.coaUrl && <a className="kit-button" href={l.coaUrl} target="_blank" rel="noreferrer">View certificate ↗</a>}{l.coaPath && <Button variant="text" onClick={()=>{setRemove(l);setReason("");setError("");}}>Remove certificate</Button>}</div>
       </article>)}
     </Section>
+    <Section title="Product"><Facts items={[{label:"Compound",value:<span className="cc-dot-name"><Dot colour={p.color}/>{p.name}</span>},{label:"Size",value:p.size},{label:"Form",value:p.form},{label:"Category",value:category},{label:"Price",value:p.price===undefined ? <span className="kit-quiet">Not priced</span> : formatMoney(p.price)},{label:"Shown in the shop",value:p.active===false ? "No, archived" : "Yes"}]}/></Section>
+    <Section title="In the shop"><Link className="cc-public-link" to={`/product/${p.id}`} target="_blank" rel="noreferrer"><span className="kit-mono">/product/{p.id}</span><ArrowUpRight aria-hidden="true" strokeWidth={1.6}/><span className="kit-sr">, opens in a new tab</span></Link></Section>
     {remove && <Section title={`Remove certificate · ${lotNumber(remove)}`}><p className="kit-note">Remaining units will become unavailable. Shipped certificate records stay on file.</p><TextField label="Reason for removing certificate" value={reason} onChange={setReason}/><div className="cc-confirm-actions"><Button variant="danger" disabled={busy || !reason.trim()} onClick={async()=>{setBusy(true);try{await inventoryStore.removeCertificate(lotKey(remove),reason);setRemove(null);onRefresh();}catch(e){setError(e instanceof Error ? e.message : "Could not remove certificate.");}finally{setBusy(false);}}}>Remove attachment</Button><Button onClick={()=>setRemove(null)} disabled={busy}>Cancel</Button></div>{error && <p role="alert" className="kit-field-error">{error}</p>}</Section>}
     {detail && <LotDetail key={lotKey(detail)} lot={detail} product={row.product} onClose={()=>onLot(null)}/>}
     <Section title="Recent inventory history">{history.error ? <p role="alert">{history.error.message}</p> : !history.data?.length ? <p className="kit-note">{history.loading ? "Loading history…" : "Changes and receipts will appear here."}</p> : <ol className="inventory-history">{history.data.map(e=><li key={e.id}><strong>{e.reason}</strong><span className="kit-note">{new Date(e.at).toLocaleString()} · {e.actor ?? "System"}</span><details><summary>View change</summary><HistoryChange before={e.before} after={e.after}/></details></li>)}</ol>}</Section>
