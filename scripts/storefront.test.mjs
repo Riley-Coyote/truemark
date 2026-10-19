@@ -148,12 +148,13 @@ test('catalog renders old class URLs as All and a valid class as only its member
 test('free_shipping_rule: actual preview quote and shared live checkout quote agree after a 10% discount at all three boundaries', async () => {
   const product = current.data.products.find((p) => p.id === 'retatrutide-10-mg');
   const price = product.price;
-  const settings = current.rows.settings({ free_shipping_threshold: '150.00', free_shipping_method: 'cold-2day', insurance_mode: 'off', insurance_rate: null });
+  // The sample data ships free from $200 (pricing.ts defaultSettings); live is given the same threshold.
+  const settings = current.rows.settings({ free_shipping_threshold: '200.00', free_shipping_method: 'cold-2day', insurance_mode: 'off', insurance_rate: null });
   // Placing a preview order refreshes the catalog from the sample inventory, so set the fixture price on whichever
   // product object the catalog holds before each quote.
   const setPrice = (value) => { for (const item of current.data.products) if (item.id === product.id) item.price = value; };
   try {
-    for (const [fixturePrice, base] of [[166.66, 149.99], [166.67, 150], [166.68, 150.01]]) {
+    for (const [fixturePrice, base] of [[222.21, 199.99], [222.22, 200], [222.23, 200.01]]) {
       for (const method of current.seed.shippingMethods) {
         setPrice(fixturePrice);
         const draft = { lines: [{ productId: product.id, quantity: 1 }], shipping: method.id, discountCode: 'FIRSTLOT', address: current.seed.buyers[0].addresses[0] };
@@ -162,7 +163,7 @@ test('free_shipping_rule: actual preview quote and shared live checkout quote ag
         assert.equal(preview.base, base);
         assert.equal(preview.total, live.total);
         assert.equal(preview.method.price, live.shipping);
-        assert.equal(live.shipping, method.id === 'cold-overnight' ? 42 : base >= 150 ? 0 : 24);
+        assert.equal(live.shipping, method.id === 'cold-overnight' ? 42 : base >= 200 ? 0 : 24);
         const placed = await current.preview.store.orders.place(current.seed.buyers[0].id, draft);
         assert.equal(placed.shipping.price, live.shipping);
         assert.equal(placed.total, live.total);

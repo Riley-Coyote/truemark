@@ -2,8 +2,9 @@ import { taxQuote } from "./tax";
 import type { TaxRate } from "./tax";
 import type { Address, ShippingMethod, StorefrontSettings } from "./types";
 
+/** The sample data's storefront settings (preview only: live reads its own from the database, without defaults). */
 export const defaultSettings: StorefrontSettings = {
-  freeShippingThreshold: 150,
+  freeShippingThreshold: 200,
   freeShippingMethod: "cold-2day",
   freeBacWaterThreshold: 75,
   insuranceMode: "off",
