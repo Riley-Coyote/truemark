@@ -42,7 +42,7 @@ export const JOURNEY: OrderStatus[] = ["paid", "packed", "shipped", "delivered"]
 export const STATION_LABEL: Record<OrderStatus, string> = {
   placed: "Awaiting payment",
   paid: "Paid",
-  packed: "Packed cold",
+  packed: "Packed",
   shipped: "Shipped",
   delivered: "Delivered",
   cancelled: "Cancelled",
@@ -52,7 +52,7 @@ export const STATION_LABEL: Record<OrderStatus, string> = {
 const SENTENCE: Record<OrderStatus, string> = {
   placed: "is awaiting payment",
   paid: "is paid",
-  packed: "is packed cold",
+  packed: "is packed",
   shipped: "has shipped",
   delivered: "was delivered",
   cancelled: "was cancelled",

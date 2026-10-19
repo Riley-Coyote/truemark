@@ -269,7 +269,7 @@ export const store = {
       write(KEYS.orderUpdates, updates);
       const step =
         status === "packed"
-          ? { kind: "order.packed" as const, title: `Order ${order.number} is packed`, body: "Packed cold and held until it ships." }
+          ? { kind: "order.packed" as const, title: `Order ${order.number} is packed`, body: "Checked, sealed and ready to ship." }
           : status === "shipped"
             ? {
                 kind: "order.shipped" as const,

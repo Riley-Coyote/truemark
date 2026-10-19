@@ -376,7 +376,7 @@ const DeskLine = memo(function DeskLine({ entry, last, busy, live, actions }: { 
 });
 
 /** The desk's field. It keeps its own words, so typing redraws the field alone, never the conversation. */
-function DeskComposer({ field, busy, placeholder, more, onSend, onStop, onLatest, onPerson }: { field: string; busy: boolean; placeholder: string; more: boolean; onSend: (text: string) => boolean; onStop: () => void; onLatest: () => void; onPerson: () => void }) {
+function DeskComposer({ field, busy, placeholder, more, saved, onSend, onStop, onLatest, onPerson }: { field: string; busy: boolean; placeholder: string; more: boolean; saved: string; onSend: (text: string) => boolean; onStop: () => void; onLatest: () => void; onPerson: () => void }) {
   const [input, setInput] = useState("");
   return <form className="tm-chat-compose" onSubmit={(event) => { event.preventDefault(); if (onSend(input)) setInput(""); }}>
     <button type="button" className="tm-chat-jump" data-shown={more || undefined} aria-hidden={!more || undefined} tabIndex={more ? 0 : -1} aria-label="Go to the newest message" onClick={onLatest}><ArrowDown size={16} strokeWidth={1.8} aria-hidden="true" /></button>
@@ -388,7 +388,7 @@ function DeskComposer({ field, busy, placeholder, more, onSend, onStop, onLatest
         ? <button type="button" className="tm-chat-send is-stop" onClick={onStop} aria-label="Stop the answer"><Square size={14} strokeWidth={2.4} aria-hidden="true" /></button>
         : <button type="submit" className="tm-chat-send" disabled={!input.trim()} aria-label="Send"><ArrowUp size={18} strokeWidth={2} aria-hidden="true" /></button>}
     </div>
-    <p className="tm-chat-fine">{LIVE && !LOCAL ? "Chats are saved to improve answers." : "Sample data · Built-in answers · No AI connection."} <button type="button" className="tm-desk-human" onClick={onPerson}>Talk to a person</button></p>
+    <p className="tm-chat-fine">{LIVE && !LOCAL ? saved : "Sample data · Built-in answers · No AI connection."} <button type="button" className="tm-desk-human" onClick={onPerson}>Talk to a person</button></p>
   </form>;
 }
 
@@ -396,6 +396,8 @@ type DeskProps = { docked?: boolean; minimized?: boolean; onMinimize?: () => voi
 
 function Conversation({ access, surface, open, onClose, request, addToBag, docked = false, minimized = false, onMinimize, onRestore, onAdd, bag: cart, context = null }: { access: Access; surface: Persona; open: boolean; onClose: () => void; request: { id: number; text: string }; addToBag?: (id: string, quantity: number) => void } & DeskProps) {
   const persona = access.scope.persona;
+  // Every live chat is kept on TrueMark's side (assistant_threads): with the account when someone is signed in, without one otherwise.
+  const saved = access.scope.role === "anonymous" ? "Chats are saved by TrueMark." : "Chats are saved to your account.";
   const [entries, setEntries] = useState<Entry[]>([]);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "streaming" | "confirming" | "rate-limited" | "offline" | "error">("idle");
@@ -607,7 +609,7 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
       {persona === "visitor" ? <div className="assistant-compose-pill"><input id={field} type="text" enterKeyHint="send" maxLength={6000} value={input} disabled={busy} onChange={(e) => setInput(e.target.value)} placeholder="Ask a question" /><button className="assistant-button assistant-send" type="submit" disabled={busy || !input.trim()}>Send</button></div>
         : <textarea id={field} rows={2} maxLength={6000} value={input} disabled={busy} onChange={(e) => setInput(e.target.value)} placeholder="Ask a question" />}
       <div className="assistant-actions">{persona !== "visitor" && <button className="assistant-button" type="submit" disabled={busy || !input.trim()}>Send</button>}{busy && <button type="button" className="assistant-button" onClick={stop}>Stop</button>}{persona === "visitor" && <Link className="assistant-contact" to="/contact" onClick={onClose}>Contact TrueMark</Link>}</div>
-      {(persona === "visitor" || !LIVE) && <p className="assistant-note">{!LIVE && "Preview · sample data"}{persona === "visitor" && `${LIVE ? "" : " · "}Chats are saved to improve answers.`}</p>}
+      {(persona === "visitor" || !LIVE) && <p className="assistant-note">{!LIVE && "Preview · sample data"}{persona === "visitor" && `${LIVE ? "" : " · "}${saved}`}</p>}
     </form>
   </div>;
   if (surface === "visitor") {
@@ -649,7 +651,7 @@ function Conversation({ access, surface, open, onClose, request, addToBag, docke
       </div>
       <div className="assistant-a11y" role="status" aria-live="polite">{error || (status === "loading" ? `${activity || "Looking into it"}…` : status === "streaming" ? "Answer arriving…" : status === "confirming" ? "Waiting for your confirmation." : entries.length ? "Ready." : "")}</div>
       <div className="assistant-a11y" aria-live="polite" aria-atomic="true">{announcement}</div>
-      <DeskComposer key={conversationVersion} field={field} busy={busy} more={edges.more} onStop={stop} onLatest={latest} onPerson={talkToPerson}
+      <DeskComposer key={conversationVersion} field={field} busy={busy} more={edges.more} saved={saved} onStop={stop} onLatest={latest} onPerson={talkToPerson}
         placeholder={context?.product ? `Ask about ${context.product.name} ${context.product.size}` : "Ask a question"}
         onSend={(text) => { if (running.current || !text.trim()) return false; void send(text); return true; }} />
     </div>;

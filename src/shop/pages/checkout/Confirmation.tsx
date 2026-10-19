@@ -12,7 +12,7 @@ import "./checkout.css";
 
 const NEXT = [
   { title: "Confirmed", text: "Your order is on record, with the lot number of every vial." },
-  { title: "Packed and held cold", text: "Your vials are packed and held cold until they ship." },
+  { title: "Packed", text: "Each vial and its lot number are checked against your order, then the package is sealed and labelled." },
   {
     title: "Shipped",
     text: "Sent with temperature control when applicable. Tracking appears in your account once it ships.",
