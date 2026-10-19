@@ -1,13 +1,18 @@
-import { useId, useState } from "react";
+import { createContext, useContext, useId, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { Button } from "../../app-kit";
 import { useAppearance } from "../../admin/appearance";
 import { assetUrl } from "../../assetUrl";
 import { useResource } from "../store";
 import { PasswordReset, useRecovery } from "../PasswordReset";
+import { getClient } from "./client";
 import { live } from "./runtime";
 
 const TEAM = new Set(["owner", "staff"]);
+
+/** Who is signed in to Command Center, and the way out, for its account menu. */
+const TeamSession = createContext<{ email?: string; signOut: () => Promise<void> } | null>(null);
+export const useTeamSession = () => useContext(TeamSession);
 
 /** Supabase's own words for a failed sign-in are terse; say it plainly. */
 function plain(message: string): string {
@@ -26,14 +31,19 @@ export function TeamGate({ children }: { children: ReactNode }) {
   const recovery = useRecovery();
   const [reset, setReset] = useState(false);
   const profile = useResource(() => live().auth.profile(), []);
+  const who = useResource(async () => (await getClient().auth.getSession()).data.session?.user.email, [profile.data?.id]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  // Signing out closes Command Center at once, so nothing on it reloads without an account while the sign-out finishes.
+  const [out, setOut] = useState(false);
   const [error, setError] = useState<string>();
   const emailId = useId();
   const passwordId = useId();
 
-  if (!recovery && !reset && profile.data && TEAM.has(profile.data.role)) return children;
+  if (!out && !recovery && !reset && profile.data && TEAM.has(profile.data.role)) {
+    return <TeamSession.Provider value={{ email: who.data, signOut }}>{children}</TeamSession.Provider>;
+  }
 
   const outsider = profile.data && !TEAM.has(profile.data.role);
 
@@ -44,6 +54,7 @@ export function TeamGate({ children }: { children: ReactNode }) {
     try {
       const signedIn = await live().auth.signIn(email.trim(), password);
       if (!signedIn || !TEAM.has(signedIn.role)) setError("This account isn't on the TrueMark team.");
+      else setOut(false);
       profile.reload();
     } catch (failure) {
       setError(plain(failure instanceof Error ? failure.message : "Sign-in failed. Try again."));
@@ -53,6 +64,7 @@ export function TeamGate({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
+    setOut(true);
     setBusy(true);
     try {
       await live().auth.signOut();

@@ -2547,6 +2547,20 @@
   background: var(--kit-panel);
   box-shadow: var(--kit-shadow);
 }
+.cc-account-who {
+  display: grid;
+  justify-items: start;
+  gap: var(--tm-space-2);
+  padding-top: var(--tm-space-3);
+  border-top: 1px solid var(--kit-line);
+}
+.cc-account-email {
+  margin: 0;
+  max-width: 28ch;
+  overflow-wrap: anywhere;
+  font-size: var(--tm-type-ui);
+  color: var(--kit-ink-2);
+}
 .kit-mmenu-foot .cc-account-panel {
   top: auto;
   bottom: calc(100% + var(--tm-space-3));

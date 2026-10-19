@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
-import { Segmented } from "../app-kit";
+import { Button, Segmented } from "../app-kit";
 import { storageKey } from "../platform/mode";
 
 export type Appearance = "purple" | "dark" | "light" | "system";
@@ -90,8 +90,15 @@ export function AppearanceControl() {
 }
 
 /** A small nonmodal account popover; native buttons retain all segmented-control states. */
-export function AccountMenu({ initials, label }: { initials: string; label: string }) {
+export function AccountMenu({ initials, label, email, onSignOut }: {
+  initials: string;
+  label: string;
+  /** The signed-in account, shown above Sign out (the live platform only). */
+  email?: string;
+  onSignOut?: () => Promise<void>;
+}) {
   const [open, setOpen] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const id = useId();
@@ -138,10 +145,29 @@ export function AccountMenu({ initials, label }: { initials: string; label: stri
         {initials}
       </button>
       {open && (
-        <div id={id} className="cc-account-panel" role="dialog" aria-label="Account appearance">
+        <div id={id} className="cc-account-panel" role="dialog" aria-label={onSignOut ? "Account" : "Account appearance"}>
           <p className="kit-label">Appearance</p>
           <AppearanceControl />
           <p className="cc-footnote">Applies to this device.</p>
+          {onSignOut && (
+            <div className="cc-account-who">
+              <p className="kit-label">Signed in</p>
+              {email && <p className="cc-account-email">{email}</p>}
+              <Button
+                disabled={leaving}
+                onClick={async () => {
+                  setLeaving(true);
+                  try {
+                    await onSignOut();
+                  } finally {
+                    setLeaving(false);
+                  }
+                }}
+              >
+                {leaving ? "Signing out…" : "Sign out"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

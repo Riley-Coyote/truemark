@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { LIVE } from "../platform/mode";
-import { TeamGate } from "../platform/live/TeamGate";
+import { TeamGate, useTeamSession } from "../platform/live/TeamGate";
 import { OwnerAssistant } from "../assistant/Assistant";
 import { useEffect, useState } from "react";
 import { Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
@@ -58,7 +58,8 @@ function CommandCenter() {
       {today}
     </time>
   );
-  const operator = <AccountMenu initials={OPERATOR.initials} label={OPERATOR.label} />;
+  const team = useTeamSession();
+  const operator = <AccountMenu initials={OPERATOR.initials} label={OPERATOR.label} email={team?.email} onSignOut={team?.signOut} />;
 
   const searchField = page.search ? (
     <SearchField
