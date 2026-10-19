@@ -90,3 +90,13 @@ Replace stale next-step guidance as work progresses; preserve the dated decision
 **Verification:** Checked local commit ancestry and source/migration references, preserved the supplied brief, and checked documentation links. Authenticated GitHub coordination search returned no open matching issues. No application behavior changed, so application tests were not rerun for this documentation pass; historical results remain labeled as implementation-session evidence. Hosted state was not revalidated. No message, push, deployment or production mutation was performed.
 
 **Next:** Continue from the consolidated handoff and Mason's current priority. Both features remain locally implemented; email-provider selection stays deferred. Verify real migration history, backups and application-owner access before the shared-data rollout.
+
+## Both handoffs prepared for publication — 18 October 2026
+
+**Decision and source:** Mason supplied the complete meeting-notes PDF and explicitly asked to push it with the previous repository handoff.
+
+**Result:** Added [the unchanged 14-page meeting-notes PDF](TRUEMARK-MEETING-NOTES-FOR-RILEY-2026-10-18.pdf) beside [the implementation handoff](COMMAND-CENTER-HANDOFF-2026-10-18.md), with links from START_HERE.md. The PDF is a supplied meeting agenda, not a new instruction to execute all its items or a claim they are implemented. The publication destination is `Riley-Coyote/truemark`, branch `codex/command-center-handoff`; this branch also carries inventory commit `31a8eaf` and retention commit `7b137fd` described in the handoff.
+
+**Verification:** Inspected all extracted PDF text and a rendered 14-page overview; the repository copy matches the supplied file byte-for-byte. Checked documentation links and staged file scope. Authenticated GitHub metadata confirms push access; the current remote main at preparation was `117997d`, with separate interaction-polish work. The branch publication preserves those main-branch changes. No application tests are rerun for adding documentation, and no deployment is requested or triggered by this handoff preparation.
+
+**Next:** Verify the remote handoff branch after pushing and use its document links for continuation. Merging into main and deploying remain separate from publishing these handoffs. No coordination issue or customer message is part of this request.

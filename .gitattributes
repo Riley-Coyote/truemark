@@ -1,3 +1,6 @@
 # Frozen release files must retain exact bytes, including on Windows checkouts.
 # Review changes through the Studio content manifest rather than minified bundles.
 studio-content/** -text -diff
+
+# Preserve supplied PDF handoffs byte-for-byte on every platform.
+docs/owner-handoff/*.pdf binary

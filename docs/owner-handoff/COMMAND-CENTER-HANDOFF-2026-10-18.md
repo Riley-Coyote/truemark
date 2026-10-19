@@ -2,6 +2,8 @@
 
 Prepared 18 October 2026 from Mason's instructions in this conversation, the approved inventory brief, the repository's continuation notes and the two implementation commits below. This is the consolidated continuation document for this work. It records decisions and evidence; it is not a claim that the changes are deployed.
 
+Companion document: [TrueMark complete meeting notes for Riley (PDF)](TRUEMARK-MEETING-NOTES-FOR-RILEY-2026-10-18.pdf), supplied by Mason for publication with this handoff. The PDF is preserved unchanged as a broader meeting agenda with reference images; its requests are separate from the completed implementation evidence below. Existing client authority and current instructions govern any subsequent work.
+
 ## Current position
 
 Two connected workflows are implemented and locally tested: **Products & inventory** and **Customer retention**. The first unifies products, lots, receiving, certificates and fulfillment allocations. The second adds product/customer purchase analysis and a durable foundation for customer activity and manual follow-ups. Email-provider selection and delivery are deferred by Mason.
@@ -14,7 +16,7 @@ Two connected workflows are implemented and locally tested: **Products & invento
 | Production migration, website/function deployment and connected acceptance | Existing Supabase project `gydihnfzmuqmbnykaihg` | Not performed in this conversation |
 | Real email sending, provider account activation and customer outreach | No provider selected | Deferred; no customer messages sent |
 
-The earlier inventory branch is `codex/unified-lot-inventory`. The two feature commits are already in this checkout's ancestry; do not apply them a second time when continuing from this branch. These feature commits were not pushed, merged or deployed by this conversation. Remote publication or hosted changes by other workspaces have not been established here. On 18 October, the authenticated GitHub coordination search returned no open matching issues; no issue, comment or message was sent.
+The earlier inventory branch is `codex/unified-lot-inventory`. The two feature commits are already in this checkout's ancestry; do not apply them a second time when continuing from this branch. At this handoff's initial preparation, the feature and documentation commits had not been pushed, merged or deployed by this conversation. Mason subsequently requested publication of both handoffs on `codex/command-center-handoff`; see the later checkpoint in [continuation notes](SESSION_NOTES.md). Main-branch changes by other workspaces remain separate; hosted deployment has not been established here. On 18 October, the authenticated GitHub coordination search returned no open matching issues; no issue, comment or message was sent.
 
 Read this with [Working with Mason](WORKING_WITH_MASON.md), [continuation notes](SESSION_NOTES.md), [inventory implementation/rollout](../platform/LOT-INVENTORY-WORKFLOW.md) and [retention implementation/rollout](../platform/CUSTOMER-RETENTION.md). The [full approved inventory brief](../platform/LOT-INVENTORY-APPROVED-BRIEF.md) is now preserved in the repository, so the original chat attachment is not needed. Specific settled decisions here supersede earlier discovery questions or manual-release assumptions in the historical implementation plan.
 

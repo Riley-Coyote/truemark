@@ -4,6 +4,8 @@ Prepared 16 October 2026. This is the entry point for Mason and his Codex. The c
 
 **Latest consolidated handoff — 18 October:** [Products, lots, certificates and customer retention](COMMAND-CENTER-HANDOFF-2026-10-18.md) collects Mason's settled decisions, the two local implementation commits, verification, the preserved inventory brief, deferred email choice and remaining rollout work. Read it after the continuation notes when resuming this work.
 
+**Companion meeting notes — 18 October:** [TrueMark complete meeting notes for Riley (PDF)](TRUEMARK-MEETING-NOTES-FOR-RILEY-2026-10-18.pdf) is Mason's supplied 14-page meeting agenda with visual references, preserved unchanged. Read it alongside the implementation handoff: meeting requests and questions are not claims of completed or deployed work. Mason requested that both documents be pushed together to the repository's `codex/command-center-handoff` branch.
+
 ## What you are taking over
 
 TrueMark has a React/TypeScript storefront and Command Center, Supabase database/Auth/storage/Edge Function code, and a published Studio that demonstrates the design using sample records. Backend code and active functions exist; this does **not** mean all real commerce providers are connected or that the client's requested operations are complete.
