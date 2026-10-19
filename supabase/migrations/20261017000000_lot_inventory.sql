@@ -79,7 +79,7 @@ drop trigger if exists inventory_lot_changed on public.lots;
 create trigger inventory_lot_changed after insert or update on public.lots for each row execute function public.inventory_lot_changed();
 
 create or replace function public.save_inventory_lot(draft jsonb) returns public.lots language plpgsql security definer set search_path=public as $$
-declare l public.lots; old_l public.lots; p text := draft->>'productId'; n text:=upper(btrim(draft->>'number')); v_units integer;
+declare l public.lots; old_l public.lots; p text := draft->>'productId'; n text:=upper(btrim(draft->>'number')); v_units integer; v_note text;
 begin
  perform public.inventory_team();
  perform 1 from public.products where id=p for update;
@@ -105,7 +105,18 @@ begin
  if nullif(draft->>'receivedAt','')::timestamptz>now()+interval '5 minutes' then raise exception 'Enter the actual receipt date' using errcode='22023'; end if;
  if draft ? 'status' and draft->>'status' not in ('active','held','archived','rejected','quarantine','awaiting_certificate') then raise exception 'Invalid inventory status' using errcode='22023'; end if;
  if draft->>'status'='held' and nullif(btrim(draft->>'holdReason'),'') is null then raise exception 'Enter the reason for this hold' using errcode='22023'; end if;
- update public.lots set lot_number=n,units=v_units,
+ -- Rejecting needs its own note, kept on the lot. The lot editor has no rejection field yet, so its free-text
+ -- explanation ("<reason>: <explanation>") is accepted until it sends rejectionNote.
+ if draft->>'status'='rejected' and l.status<>'rejected' then
+   v_note:=coalesce(nullif(btrim(draft->>'rejectionNote'),''),nullif(btrim(substring(draft->>'reason' from '^[^:]*:(.*)$')),''));
+   if v_note is null then raise exception 'Explain why this lot is rejected' using errcode='22023'; end if;
+ end if;
+ -- A rejected lot (or one archived after rejection) cannot be returned to testing or sale by a status edit.
+ -- release_lot must first record new passing results with a new certificate.
+ if (l.status='rejected' or l.testing_status='failed') and (draft->>'status' in ('quarantine','awaiting_certificate')
+   or (draft->>'status'='active' and (l.testing_status<>'passed' or l.coa_path is null))) then
+   raise exception 'This lot was rejected. Record new passing results and a new certificate before returning it to sale.' using errcode='22023'; end if;
+ update public.lots set lot_number=n,units=v_units,rejection_note=coalesce(v_note,rejection_note),
    expected_units=coalesce((draft->>'expectedUnits')::integer,l.expected_units),expected_at=nullif(draft->>'expectedAt','')::date,
    received_at=case when draft ? 'receivedAt' then nullif(draft->>'receivedAt','')::timestamptz else l.received_at end,
    coa_path=case when draft->>'status' in ('quarantine','awaiting_certificate') then null else coa_path end,
@@ -326,6 +337,12 @@ begin
   if not exists (select 1 from storage.objects o where o.bucket_id = 'certificates' and o.name = $5) then
     raise exception 'Upload the certificate before releasing the lot' using errcode = '22023';
   end if;
+  -- New evidence clears a rejection only with a certificate file this lot has never carried.
+  if (v_lot.status = 'rejected' or v_lot.testing_status = 'failed') and ($5 = v_lot.coa_path
+    or exists (select 1 from public.inventory_events e where e.lot_id = v_lot.inventory_id
+      and $5 in (e.before_value->>'coa_path', e.after_value->>'coa_path'))) then
+    raise exception 'This lot was rejected. Upload a new certificate with the new passing results.' using errcode = '22023';
+  end if;
   update public.lots l set status = case when l.status in ('archived','rejected') then l.status else 'released' end, testing_status='passed', version=version+1, results = $2, reference = btrim($3),
     tested_at = $4, coa_path = $5, released_at = coalesce(l.released_at,now()) where l.lot = v_lot.lot returning * into v_lot;
   return v_lot;
@@ -402,6 +419,11 @@ return true; exception when others then return false; end $$;
 update public.lots l set testing_status='passed' where l.status='released' and testing_status='pending'
  and reference is not null and tested_at is not null and public.inventory_results_pass(results)
  and exists(select 1 from storage.objects s where s.bucket_id='certificates' and s.name=l.coa_path);
+-- Lots rejected before testing status existed (including those archived after rejection) keep their failure.
+select set_config('inventory.reason','Rejected before inventory tracking: testing marked failed',true);
+update public.lots set testing_status='failed' where testing_status='pending'
+ and (status='rejected' or (status='archived' and rejection_note is not null));
+select set_config('inventory.reason','',true);
 
 create or replace function public.set_lot_certificate(lot text, coa_path text) returns public.lots language plpgsql security definer set search_path=public as $$
 declare l public.lots; begin
@@ -414,7 +436,14 @@ declare l public.lots; begin
  perform public.inventory_team();
  perform 1 from public.products where id=(select product_id from public.lots where lots.lot=$1) for update;
  select * into l from public.lots where lots.lot=$1 for update;
- if not found or $2 not in ('quarantine','testing','released','rejected','archived') then raise exception 'Invalid lot status' using errcode='22023'; end if;
+ if not found or $2 is null or $2 not in ('quarantine','testing','released','rejected','archived') then raise exception 'Invalid lot status' using errcode='22023'; end if;
+ -- A rejection always records its note on the lot: reject_lot takes one, a bare status change cannot.
+ if $2='rejected' then
+   if l.status='rejected' then return l; end if;
+   raise exception 'Rejecting a lot needs a rejection note' using errcode='22023';
+ end if;
+ if (l.status='rejected' or l.testing_status='failed') and $2 in ('quarantine','testing') then
+   raise exception 'This lot was rejected. Record new passing results and a new certificate before returning it to sale.' using errcode='22023'; end if;
  if $2='released' and (l.testing_status<>'passed' or l.coa_path is null) then raise exception 'Upload passing test results and the certificate first' using errcode='22023'; end if;
  update public.lots set coa_path=case when $2 in ('quarantine','testing') then null else coa_path end,status=$2,testing_status=case when $2 in ('quarantine','testing') then 'pending' when $2='rejected' then 'failed' else testing_status end,version=version+1 where inventory_id=l.inventory_id returning * into l;
  return l;
@@ -688,17 +717,23 @@ create or replace function public.reject_lot(lot text,note text) returns public.
 declare l public.lots; begin
  perform public.inventory_team();if nullif(btrim($2),'') is null then raise exception 'Enter a rejection reason' using errcode='22023'; end if;
  perform 1 from public.products where id=(select product_id from public.lots where lots.lot=$1) for update;
- perform set_config('inventory.reason',$2,true);
- update public.lots set status='rejected',testing_status='failed',rejection_note=$2,version=version+1 where lots.lot=$1 returning * into l;
- if not found then raise exception 'Lot not found' using errcode='22023'; end if;return l;
+ select * into l from public.lots where lots.lot=$1 for update;
+ if not found then raise exception 'Lot not found' using errcode='22023'; end if;
+ -- A rejection is final; its note is not rewritten.
+ if l.status='rejected' then raise exception 'This lot is already rejected' using errcode='22023'; end if;
+ perform set_config('inventory.reason','Lot rejected: '||btrim($2),true);
+ update public.lots set status='rejected',testing_status='failed',rejection_note=btrim($2),version=version+1 where inventory_id=l.inventory_id returning * into l;
+ return l;
 end $$;
+-- A lot archived after rejection still verifies as rejected, without presenting its failed evidence.
 create or replace function public.lot_lookup(lot text) returns jsonb language sql stable security definer set search_path=public as $$
- select jsonb_build_object('lot',coalesce(l.lot_number,l.lot),'productId',l.product_id,'status',l.status,'releasedAt',l.released_at,
- 'testedAt',case when l.status in ('released','archived') then l.tested_at end,
- 'reference',case when l.status in ('released','archived') then l.reference end,
- 'results',case when l.status in ('released','archived') then l.results else '[]'::jsonb end,
- 'coaUrl',case when l.status in ('released','archived') and l.coa_path is not null then 'https://gydihnfzmuqmbnykaihg.supabase.co/storage/v1/object/public/certificates/'||l.coa_path end)
- from public.lots l where upper(regexp_replace($1,'[[:space:]]+','','g')) in (upper(l.lot),upper(l.lot_number));
+ select jsonb_build_object('lot',coalesce(l.lot_number,l.lot),'productId',l.product_id,'status',s.status,'releasedAt',l.released_at,
+ 'testedAt',case when s.status in ('released','archived') then l.tested_at end,
+ 'reference',case when s.status in ('released','archived') then l.reference end,
+ 'results',case when s.status in ('released','archived') then l.results else '[]'::jsonb end,
+ 'coaUrl',case when s.status in ('released','archived') and l.coa_path is not null then 'https://gydihnfzmuqmbnykaihg.supabase.co/storage/v1/object/public/certificates/'||l.coa_path end)
+ from public.lots l cross join lateral (select case when l.testing_status='failed' then 'rejected' else l.status end as status) s
+ where upper(regexp_replace($1,'[[:space:]]+','','g')) in (upper(l.lot),upper(l.lot_number));
 $$;
 -- Freeze the already recorded certificate association of historical shipped lines.
 update public.order_lot_allocations a set certificate_path=l.coa_path,

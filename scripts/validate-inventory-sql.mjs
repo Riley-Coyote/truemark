@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { createPlatformDb } from './lib/platform-db.mjs';
 globalThis.fetch=async()=>{throw new Error('Network forbidden in inventory proofs');};
-const h=await createPlatformDb(); const {db,auth,rows,scalar,person,denied}=h;
+const h=await createPlatformDb(); const {db,auth,anon,rows,scalar,person,denied}=h;
 const owner=await person('inventory-owner@fixture.test','owner'),staff=await person('inventory-staff@fixture.test','staff'),buyer=await person('inventory-buyer@fixture.test'),other=await person('inventory-other@fixture.test');
 await db.query("insert into buyers(id,user_id,name,email,institution,status) values ($1,$1,'Fixture','buyer@fixture.test','Lab','verified')",[buyer]);
 await auth(owner,"select set_connection_mode('payments','off',null)");
@@ -63,6 +63,39 @@ try {
  const swap=await place(6);incoming=await receive(await get(incoming.inventory_id),20,'2026-09-03T12:00:00Z');
  await auth(owner,'select substitute_inventory($1,$2,$3,$4)',[swap.id,productId,[{lotId:incoming.inventory_id,quantity:6}],'Picking correction']);
  assert.equal((await allocations(swap))[0].lot_id,incoming.inventory_id);assert.equal((await get(b.inventory_id)).reserved_units,0);pass('explicit substitutions reconcile reservations');
+
+ // Rejection needs a note kept on the lot, through every path; a rejected lot sells again only on new evidence.
+ const other10='retatrutide-10-mg';const stock10=()=>scalar('select stock from products where id=$1',[other10]);
+ const editLot=(l,patch)=>save({id:l.inventory_id,version:l.version,productId:l.product_id,number:l.lot_number ?? l.lot,expectedUnits:l.expected_units,expectedAt:l.expected_at,...patch,reason:patch.reason ?? 'Fixture correction'});
+ const setStatus=(l,status)=>auth(owner,'select * from set_lot_status($1,$2)',[l.lot,status]).then(r=>r[0]);
+ const rejectLot=(l,note,user=owner)=>auth(user,'select * from reject_lot($1,$2)',[l.lot,note]).then(r=>r[0]);
+ let failed=await save({productId:other10,number:'TM-REJECT-EDIT',expectedUnits:20,reason:'Incoming shipment'});
+ const firstCertificate=`${failed.lot}-${randomUUID()}.pdf`;failed=await certify(await receive(failed,20),firstCertificate);assert.equal(await stock10(),20);
+ await assert.rejects(()=>editLot(failed,{status:'rejected'}),/Explain why/);assert.equal((await get(failed.inventory_id)).status,'released');
+ failed=await editLot(failed,{status:'rejected',reason:'Other adjustment: Failed identity retest'});
+ assert.equal(failed.status,'rejected');assert.equal(failed.testing_status,'failed');assert.equal(failed.rejection_note,'Failed identity retest');assert.equal(await stock10(),0);
+ failed=await editLot(failed,{status:'rejected',units:18,reason:'Damaged units: two vials cracked'});assert.equal(failed.units,18);assert.equal(failed.rejection_note,'Failed identity retest');
+ for(const status of ['active','quarantine','awaiting_certificate']) await assert.rejects(()=>editLot(failed,{status}),/was rejected/);
+ for(const status of ['quarantine','testing']) await assert.rejects(()=>setStatus(failed,status),/was rejected/);
+ await assert.rejects(()=>setStatus(failed,'released'),/passing test results/);
+ await assert.rejects(()=>auth(staff,'select * from release_lot($1,$2,$3,$4,$5)',[failed.lot,results,'CERT-FIXTURE','2026-09-01',firstCertificate]),/new certificate/);
+ assert.equal((await get(failed.inventory_id)).testing_status,'failed');
+ failed=await certify(await get(failed.inventory_id));assert.equal(failed.status,'rejected');assert.equal(failed.testing_status,'passed');assert.equal(await stock10(),0,'New evidence alone does not sell a rejected lot');
+ failed=await editLot(failed,{status:'active',reason:'Details correction: retest passed'});assert.equal(failed.status,'released');assert.equal(await stock10(),18);
+ let noted=await save({productId:other10,number:'TM-REJECT-RPC',expectedUnits:5,reason:'Incoming shipment'});
+ for(const note of [null,'','   ']) await assert.rejects(()=>rejectLot(noted,note),/rejection reason/);
+ await assert.rejects(()=>setStatus(noted,'rejected'),/rejection note/);assert.equal((await get(noted.inventory_id)).status,'quarantine');
+ noted=await rejectLot(noted,'  Below release specification  ',staff);assert.equal(noted.rejection_note,'Below release specification');assert.equal(noted.testing_status,'failed');
+ assert.equal((await setStatus(noted,'rejected')).rejection_note,'Below release specification');
+ await assert.rejects(()=>rejectLot(noted,'Rewritten note'),/already rejected/);
+ assert(await scalar("select count(*)::int from inventory_events where lot_id=$1 and reason='Lot rejected: Below release specification'",[noted.inventory_id])===1);
+ let retired=await certify(await receive(await save({productId:other10,number:'TM-REJECT-ARCHIVE',expectedUnits:4,reason:'Incoming shipment'}),4));assert.equal(await stock10(),22);
+ retired=await editLot(retired,{status:'rejected',rejectionNote:'Seal damaged in transit'});assert.equal(retired.rejection_note,'Seal damaged in transit');assert.equal(await stock10(),18);
+ retired=await setStatus(retired,'archived');assert.equal(retired.status,'archived');assert.equal(retired.testing_status,'failed');
+ await assert.rejects(()=>setStatus(retired,'quarantine'),/was rejected/);await assert.rejects(()=>editLot(retired,{status:'active'}),/was rejected/);
+ const verified=(await anon('select lot_lookup($1) as r',[retired.lot]))[0].r;assert.equal(verified.status,'rejected');assert.deepEqual(verified.results,[]);assert.equal(verified.coaUrl,null);
+ assert.equal((await anon('select * from lots where inventory_id=$1',[retired.inventory_id])).length,0);
+ pass('rejection needs a note stored on the lot through every path; a rejected or rejected-then-archived lot returns to sale only after new passing evidence');
  await denied('authenticated',buyer,'select receive_inventory($1,1,$2,$3)',[b.inventory_id,at,randomUUID()]);
  await denied('authenticated',buyer,'select save_inventory_lot($1)',[{productId,number:'DENIED',reason:'No',expectedUnits:0}]);
  await denied('authenticated',other,'select remove_inventory_certificate($1,$2)',[b.inventory_id,'No']);
@@ -84,6 +117,7 @@ try {
  await legacy.db.query("insert into buyers(id,user_id,name,email,institution,status) values($1,$1,'Legacy','legacy@fixture.test','Lab','verified')",[user]);
  await legacy.db.query("update lots set units=23,received_at=null where lot='TM-RET30-2609-01'");
  await legacy.db.query("update products set stock=50 where id='retatrutide-30-mg'");
+ await legacy.db.query("insert into lots(lot,product_id,status,results,rejection_note) values ('TM-LEGACY-REJECTED','retatrutide-10-mg','rejected','[]','Legacy failure'),('TM-LEGACY-RETIRED','retatrutide-10-mg','archived','[]','Legacy failure'),('TM-LEGACY-ARCHIVED','retatrutide-10-mg','archived','[]',null)");
  const old=(await legacy.auth(user,'select * from place_order($1)',[draft(2)]))[0];
  await legacy.db.query("update orders set status='shipped' where id=$1",[old.id]);
  const opened=(await legacy.auth(user,'select * from place_order($1)',[draft(3)]))[0];
@@ -99,5 +133,8 @@ try {
  assert.equal(await legacy.scalar("select stock from products where id='retatrutide-30-mg'"),0);
  assert.equal(await legacy.scalar('select count(*)::int from order_lot_allocations'),2);
  await assert.rejects(()=>legacy.db.query("update orders set status='packed' where id=$1",[opened.id]),/unavailable/);
- console.log('PASS populated migration preserves legacy quantities, order lines and history; missing evidence stays blocked');
+ assert.deepEqual(Object.fromEntries((await legacy.rows("select lot,testing_status from lots where lot like 'TM-LEGACY-%'")).map(r=>[r.lot,r.testing_status])),{'TM-LEGACY-REJECTED':'failed','TM-LEGACY-RETIRED':'failed','TM-LEGACY-ARCHIVED':'pending'});
+ const legacyOwner=await legacy.person('legacy-owner@fixture.test','owner');
+ for(const lot of ['TM-LEGACY-REJECTED','TM-LEGACY-RETIRED']) await assert.rejects(()=>legacy.auth(legacyOwner,'select * from set_lot_status($1,$2)',[lot,'quarantine']),/was rejected/);
+ console.log('PASS populated migration preserves legacy quantities, order lines and history; missing evidence stays blocked; earlier rejections stay rejected');
 } finally {await legacy.db.close();}
