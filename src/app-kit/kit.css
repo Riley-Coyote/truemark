@@ -1429,6 +1429,10 @@ html:has(.kit[data-theme="studio"]) {
   margin-left: var(--tm-space-2);
   color: var(--kit-ink-3);
 }
+/* A column's name inside its own cell, shown only on phones, where the header row is hidden. */
+.kit-table .kit-cell-label {
+  display: none;
+}
 .kit-table .kit-cell-name {
   display: inline-flex;
   align-items: center;
@@ -1956,6 +1960,17 @@ html:has(.kit[data-theme="studio"]) {
   }
   .kit-table td[data-mobile="hidden"] {
     display: none;
+  }
+  /* A labelled quiet value reads a step brighter than the name before it. */
+  .kit-table td[data-mobile="meta"]:has(> .kit-cell-label) {
+    color: var(--kit-ink-2);
+  }
+  .kit-table .kit-cell-label {
+    display: inline;
+    margin-right: var(--tm-space-1);
+    font-size: var(--tm-type-micro);
+    font-weight: var(--tm-weight-regular);
+    color: var(--kit-ink-3);
   }
   .kit-table td.is-end {
     text-align: left;

@@ -21,4 +21,10 @@
 .inventory-table .kit-cell-name,.inventory-table .kit-cell-name>span,.inventory-table .kit-mono{white-space:normal;overflow-wrap:anywhere;}
 .inventory-table .kit-cell-sub{display:block;margin-left:0;font-size:11px;white-space:normal;}
 @media(min-width:721px){.inventory-table td{padding-block:8px;}}
+/* On a phone the header row is hidden, so each count carries its column's name above it; the four share one line, evenly. */
+@media(max-width:45rem){
+  .inventory-table .kit-table .kit-cell-label{display:block;margin-right:0;}
+  .inventory-table .kit-table td[data-mobile="meta"]{flex:1 1 0;min-width:min-content;}
+  .inventory-table .kit-table td[data-mobile="meta"] ~ td[data-mobile="meta"]::before{content:none;}
+}
 .inventory-changes{font-size:12px;}.inventory-changes dt{font-weight:600;}.inventory-changes dd{margin:3px 0 10px;overflow-wrap:anywhere;}

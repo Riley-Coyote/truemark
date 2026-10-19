@@ -38,11 +38,11 @@ export default function InventoryWorkspace() {
   const columns:Column<Row>[]=[
     // By name; sizes of one compound stay together in catalog order.
     {key:"product",header:"Product",width:"23%",mobile:"primary",sortValue:r=>byName.get(r.product.id) ?? 0,cell:r=><span className="kit-cell-name"><Dot colour={r.product.color}/><span>{r.product.name}<span className="kit-cell-sub">{r.product.size} · {r.product.form}<br/>{r.product.active===false ? "Archived product" : `Active · ${formatMoney(r.product.price ?? 0)}`}</span></span></span>},
-    {key:"available",header:"Available",width:"9%",align:"end",mobile:"aside",sortValue:r=>r.totals.available,sortFirst:"desc",cell:r=><strong>{formatCount(r.totals.available)}</strong>},
-    {key:"reserved",header:"Reserved",width:"9%",align:"end",sortValue:r=>r.totals.reserved,sortFirst:"desc",cell:r=>formatCount(r.totals.reserved)},
-    {key:"incoming",header:"Incoming",width:"9%",align:"end",mobile:"meta",sortValue:r=>r.totals.incoming,sortFirst:"desc",cell:r=>formatCount(r.totals.incoming)},
-    {key:"testing",header:"Quarantine",width:"10%",align:"end",mobile:"meta",sortValue:r=>r.totals.quarantine,sortFirst:"desc",cell:r=>formatCount(r.totals.quarantine)},
-    {key:"held",header:"Other held",width:"12%",align:"end",sortValue:r=>r.totals.awaiting+r.totals.held,sortFirst:"desc",cell:r=><span>{formatCount(r.totals.awaiting+r.totals.held)}{r.totals.unknown>0 && <span className="kit-cell-sub">{r.totals.unknown} {r.totals.unknown===1 ? "record" : "records"} to check</span>}</span>},
+    {key:"available",header:"Available",mobileLabel:true,width:"9%",align:"end",mobile:"aside",sortValue:r=>r.totals.available,sortFirst:"desc",cell:r=><strong>{formatCount(r.totals.available)}</strong>},
+    {key:"reserved",header:"Reserved",mobileLabel:true,width:"9%",align:"end",sortValue:r=>r.totals.reserved,sortFirst:"desc",cell:r=>formatCount(r.totals.reserved)},
+    {key:"incoming",header:"Incoming",mobileLabel:true,width:"9%",align:"end",mobile:"meta",sortValue:r=>r.totals.incoming,sortFirst:"desc",cell:r=>formatCount(r.totals.incoming)},
+    {key:"testing",header:"Quarantine",mobileLabel:true,width:"10%",align:"end",mobile:"meta",sortValue:r=>r.totals.quarantine,sortFirst:"desc",cell:r=>formatCount(r.totals.quarantine)},
+    {key:"held",header:"Other held",mobileLabel:true,width:"12%",align:"end",sortValue:r=>r.totals.awaiting+r.totals.held,sortFirst:"desc",cell:r=><span>{formatCount(r.totals.awaiting+r.totals.held)}{r.totals.unknown>0 && <span className="kit-cell-sub">{r.totals.unknown} {r.totals.unknown===1 ? "record" : "records"} to check</span>}</span>},
     {key:"lots",header:"Selling now",width:"28%",mobile:"secondary",sortValue:r=>{const current=r.lots.find(l=>lotAvailable(l)>0);return current ? lotNumber(current) : null;},cell:r=>{const current=r.lots.find(l=>lotAvailable(l)>0);return <span className="kit-mono">{current ? lotNumber(current) : "No eligible lot"}<span className="kit-cell-sub">{plural(r.lots.length,"lot")} · {formatCount(r.totals.onHand)} on hand</span></span>;}},
   ];
   function createProduct(){setNewProduct({id:"",name:"",size:"",category:classes.data?.[0]?.id ?? "",form:"Lyophilized powder",price:0,stock:0,lot:"",active:true,color:"#7A39B1",colorInk:"#7A39B1"});}
