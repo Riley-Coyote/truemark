@@ -188,8 +188,22 @@ export function TrailCarrier({ src, reached }: { src: string; reached: number })
     let visible = false;
     let previous: Point | null = null;
     const along = (p: Point | null) => (p ? (vertical ? p.y : p.x) : 0);
+    // On a phone, while the page is being moved, the light holds its frame (the page carries it), and takes up again
+    // once the page rests, as the room's mist and the wall's light do: drawing it competes with the scroll.
+    const touch = matchMedia("(max-width: 700px), (any-pointer: coarse)").matches;
+    let scrolling = false, rest = 0;
+    const onScroll = () => {
+      scrolling = true;
+      window.clearTimeout(rest);
+      rest = window.setTimeout(() => {
+        scrolling = false;
+        if (visible && started && !frame) frame = requestAnimationFrame(loop);
+      }, 180);
+    };
+    if (touch) window.addEventListener("scroll", onScroll, { passive: true });
     const loop = (now: number) => {
       frame = 0;
+      if (scrolling) { last = 0; return; }
       const dt = Math.min(0.05, last ? (now - last) / 1000 : 1 / 60);
       last = now;
       clock += dt;
@@ -220,6 +234,8 @@ export function TrailCarrier({ src, reached }: { src: string; reached: number })
     return () => {
       seen.disconnect();
       sized.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(rest);
       cancelAnimationFrame(frame);
       delete record.dataset.carrier;
     };

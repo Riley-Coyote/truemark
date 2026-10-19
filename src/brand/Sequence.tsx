@@ -678,14 +678,28 @@ export function useSequenceReady(on: boolean, extra: readonly string[] = []): bo
     let live = true;
     let idle = 0;
     const later = typeof window.requestIdleCallback === "function";
+    // On a phone, a first swipe waits until it has come to rest: decoded mid-swipe, the pictures compete with it.
+    const touch = matchMedia("(max-width: 700px), (any-pointer: coarse)").matches;
+    let rest = 0;
+    const scrolled = () => {
+      if (!touch) return go();
+      window.clearTimeout(rest);
+      rest = window.setTimeout(go, 240);
+    };
+    let fetched = false;
     const go = () => {
-      window.removeEventListener("scroll", go);
+      window.removeEventListener("scroll", scrolled);
+      window.clearTimeout(rest);
+      if (fetched) return;
+      fetched = true;
+      // Only the room cut this screen shows (MistOpening's data-shape), both when it isn't known yet.
+      const shape = document.querySelector<HTMLElement>(".tm-mist")?.dataset.shape;
       const all = [
         productCutout(productById(FEATURED), "lg"),
         PICTURES.certificate,
         PICTURES.findings,
-        ...Object.values(PICTURES.room.wide),
-        ...Object.values(PICTURES.room.tall),
+        ...(shape !== "tall" ? Object.values(PICTURES.room.wide) : []),
+        ...(shape !== "wide" ? Object.values(PICTURES.room.tall) : []),
         ...Object.values(PICTURES.shadow),
         ...Object.values(PICTURES.light),
         rimLight(productById(FEATURED)) ?? "",
@@ -701,12 +715,13 @@ export function useSequenceReady(on: boolean, extra: readonly string[] = []): bo
     const start = () => {
       idle = later ? window.requestIdleCallback(go, { timeout: 2500 }) : window.setTimeout(go, 900);
     };
-    window.addEventListener("scroll", go, { passive: true, once: true });
+    window.addEventListener("scroll", scrolled, { passive: true });
     if (document.readyState === "complete") start();
     else window.addEventListener("load", start, { once: true });
     return () => {
       live = false;
-      window.removeEventListener("scroll", go);
+      window.removeEventListener("scroll", scrolled);
+      window.clearTimeout(rest);
       window.removeEventListener("load", start);
       if (later) window.cancelIdleCallback(idle);
       else window.clearTimeout(idle);
@@ -1513,7 +1528,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       const { pose, air } = vial(p);
       // Procession owns the resting camera. Toolbar/element resize callbacks
       // must not reset that scroll-driven transform between its animation frames.
-      if (open || !section.closest("[data-procession]:not([data-procession-native])")) {
+      if (open || !section.closest("[data-procession]:not([data-procession-native]), [data-procession-pinned]")) {
         write(camera, "transform", p <= 0 ? "none" : cameraTransform(cam));
       }
       // The camera has left the room's rest: the room holds still (its mist pauses), and nothing on it takes the pointer.

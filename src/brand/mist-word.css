@@ -180,6 +180,12 @@
     background-color: var(--tm-studio);
     animation: none;
   }
+  /* A phone with the room held by the screen (pinned-passage.ts): the room and its field cover the page's colour, so
+     it holds at the room's floor rather than being worked out again at every frame of the scroll; the footer's and a
+     sheet's colours below still take over. */
+  html[data-tm-pinned]:not([data-tm-at-foot]):not([data-scroll-locked]):has(.tm.tm-mist[data-shape="tall"][data-seq]) {
+    animation: none;
+  }
   /* While a sheet holds the page still (sheet.tsx useScrollLock), the browser fills everything below it with that
      colour, over the sheet's own paper beneath it: so the paper, as the sheet. Set with the lock itself, which is when
      Safari takes the colour up. */

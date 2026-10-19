@@ -11,7 +11,7 @@ const FLIGHT = "tm-flight";
 const SEQUENCE = "tm-sequence";
 /** A page in a camera move, or waiting to come in with one, or an opening whose scroll camera has left the room's floor
  *  out of its picture: its mist holds still and builds nothing meanwhile. */
-const held = (node: Element) => Boolean(node.closest(".tm-views[data-moving], .tm-view[data-pending], .tm-mist[data-seq-away]"));
+const held = (node: Element) => Boolean(node.closest(".tm-views[data-moving], .tm-view[data-pending], .tm-mist[data-seq-away], .tm-home[data-procession-gone]"));
 
 /**
  * A room's mist, alive: its canvas, its context, programs, air and last frame. There is one per room (and per kind:

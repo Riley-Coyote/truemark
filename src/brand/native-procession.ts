@@ -1,5 +1,6 @@
 import { FOG_SCENES, pedestalCrop, pedestalSeat } from './fog/scenes';
 import type { ProcessionStatus } from './procession-controller';
+import { createPinnedPassage } from './pinned-passage';
 
 /** How long the strip must lie still, with no finger on it, before it is moved from a copy to the middle. Native
  *  momentum and snapping report a scroll every frame, so a pause this long means they have finished. */
@@ -155,13 +156,15 @@ export function createNativeProcession(section: HTMLElement, order: number[], in
   section.addEventListener('focusin', focus);
   document.addEventListener('visibilitychange', schedule);
   measure(); emit();
+  // The opening's camera move, held by the screen while it runs.
+  const passage = createPinnedPassage(home, section);
   return {
     select, step(by: number) { pauseAutoplay(); go(from() + by); }, pauseAutoplay,
     toggle() { paused = !paused; emit(); schedule(); },
-    setMotion(value: boolean) { moving = value; emit(); schedule(); },
+    setMotion(value: boolean) { moving = value; passage.setMotion(value); emit(); schedule(); },
     /** `keepOpening`: as the desktop controller's (procession-controller.ts). */
     destroy(keepOpening = false) {
-      dead = true; stop(); window.clearTimeout(settling); cancelAnimationFrame(frame); resized.disconnect(); seen.disconnect(); story.disconnect();
+      dead = true; stop(); window.clearTimeout(settling); cancelAnimationFrame(frame); passage.destroy(); resized.disconnect(); seen.disconnect(); story.disconnect();
       stage.removeEventListener('scroll', scrolled); stage.removeEventListener('touchstart', contact);
       stage.removeEventListener('touchend', release); stage.removeEventListener('touchcancel', release);
       stage.removeEventListener('wheel', wheel); section.removeEventListener('focusin', focus);
