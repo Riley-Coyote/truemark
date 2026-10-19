@@ -12,7 +12,7 @@ import { notices } from "./notifications";
 import * as seed from "../seed";
 import type { Product, Category } from "../../data";
 import type { SettingsPatch } from "../commerce";
-import { defaultSettings, priceQuote } from "../pricing";
+import { FREE_BAC_WATER_ID, defaultSettings, earnsFreeBacWater, priceQuote } from "../pricing";
 import { STORE_CHANGE, read, worldNow, write } from "./storage";
 import type { AssistantCapabilities, AssistantModels, AssistantIdentity, AssistantProduct } from "../assistant-types";
 import { previewJournal } from "./content";
@@ -25,6 +25,7 @@ import type {
   LotStatus,
   Order,
   OrderDraft,
+  OrderLine,
   OrderStatus,
   Payout,
   Referral,
@@ -100,6 +101,26 @@ function discountFor(code?: string): Discount | undefined {
   return d && d.active ? d : undefined;
 }
 
+/** Said on an order that earned the free vial when none could be sent. */
+export const FREE_BAC_WATER_UNAVAILABLE = "Free BAC Water not included: out of stock";
+
+/**
+ * The free BAC Water vial, as place_order adds it in live: its own $0.00 line, or, when BAC Water is already in the
+ * cart, one more unit on that line marked free (an order has one line per product). Without a vial to send, the order
+ * goes without it and says so.
+ */
+function withFreeVial(lines: OrderLine[], base: number, current: StorefrontSettings): { lines: OrderLine[]; note?: string } {
+  if (!earnsFreeBacWater(base, current)) return { lines };
+  const vial = previewProducts().find((p) => p.id === FREE_BAC_WATER_ID);
+  const paid = lines.find((l) => l.productId === FREE_BAC_WATER_ID)?.quantity ?? 0;
+  if (!vial || vial.active === false || (vial.stock ?? 0) < paid + 1) return { lines, note: FREE_BAC_WATER_UNAVAILABLE };
+  return {
+    lines: paid
+      ? lines.map((l) => (l.productId === FREE_BAC_WATER_ID ? { ...l, quantity: l.quantity + 1, freeQuantity: 1 } : l))
+      : [...lines, { productId: FREE_BAC_WATER_ID, quantity: 1, unitPrice: 0, lot: vial.lot, freeQuantity: 1 }],
+  };
+}
+
 /**
  * What an order draft comes to: its priced lines, subtotal, discount, shipping
  * and total, and, when a partner's code is on it, the partner's commission.
@@ -112,13 +133,16 @@ export function quote(draft: OrderDraft) {
   });
   const subtotal = round2(lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0));
   const discount = discountFor(draft.discountCode);
-  const priced = priceQuote(subtotal, discount?.percent ?? 0, selectedMethod, settings(), draft.insurance);
+  const current = settings();
+  const priced = priceQuote(subtotal, discount?.percent ?? 0, selectedMethod, current, draft.insurance);
   const { discountAmount, base } = priced;
+  const free = withFreeVial(lines, base, current);
   const method = { ...selectedMethod, price: priced.shipping };
   const partner = discount?.partnerId ? seed.partners.find((p) => p.id === discount.partnerId) : undefined;
   return {
     method,
-    lines,
+    lines: free.lines,
+    ...(free.note ? { freeVialNote: free.note } : {}),
     subtotal,
     discount,
     discountAmount,
@@ -174,7 +198,7 @@ export const store = {
     list: () => wait(allOrders()),
     get: (id: string) => wait(allOrders().find((o) => o.id === id || o.number === id) ?? null),
     place: async (buyerId: string, draft: OrderDraft): Promise<Order> => {
-      const { method, lines, subtotal, discount, discountAmount, insurance, insuranceApplied, total, partner, base, commission } = quote(draft);
+      const { method, lines, freeVialNote, subtotal, discount, discountAmount, insurance, insuranceApplied, total, partner, base, commission } = quote(draft);
       const placed = read<Order[]>(KEYS.orders, []);
       const number = 10421 + seed.orders.length + placed.length + previewOrders().length;
       const now = worldNow();
@@ -193,7 +217,7 @@ export const store = {
         insuranceApplied,
         discount: discount ? { code: discount.code, amount: discountAmount, partnerId: discount.partnerId } : undefined,
         total,
-        events: [{ status: "placed", at: now }],
+        events: [{ status: "placed", at: now, ...(freeVialNote ? { note: freeVialNote } : {}) }],
       };
       reservePreviewOrder(order);
 

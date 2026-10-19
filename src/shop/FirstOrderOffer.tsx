@@ -12,6 +12,7 @@ import { useReviewDockRoom } from "./dock";
 import { ADD_EVENT } from "./MobileAdd";
 import { usePresence } from "./motion";
 import { useBagCode } from "./pages/checkout/Bag";
+import { confirmedThisVisitAt, useResearcherConfirmed } from "./researcher";
 import { SheetSkirt, useScrollLock, useSheetDrag, useSheetFocus, useSheetLeaving, useVisibleViewport, viewportBox } from "./sheet";
 import type { SheetState } from "./sheet";
 import "./offer.css";
@@ -90,7 +91,9 @@ export function FirstOrderOffer({ locked }: { locked: boolean }) {
   const quiet = QUIET.test(location.pathname) ||
     (location.pathname === "/products" && Boolean(new URLSearchParams(location.search).get("q")?.trim()));
   const settled = read(STATE_KEY);
-  const eligible = !done && Boolean(offer.data?.active) && variant !== "off" && !quiet && (forced || !settled) && (applied || code.discount?.code !== CODE);
+  // Never over the researcher verification, nor before it is given (ResearcherCheck.tsx).
+  const confirmed = useResearcherConfirmed();
+  const eligible = confirmed && !done && Boolean(offer.data?.active) && variant !== "off" && !quiet && (forced || !settled) && (applied || code.discount?.code !== CODE);
 
   // Wait for a pause in browsing. Searching, typing and scrolling keep their place;
   // a closed search must not immediately be replaced by a promotional dialog.
@@ -106,12 +109,13 @@ export function FirstOrderOffer({ locked }: { locked: boolean }) {
       }
       setOpen(true);
     };
-    const elapsed = performance.now() - visitStart;
+    // A visit confirmed just now counts from the confirmation, so the offer never follows straight on from it.
+    const elapsed = performance.now() - Math.max(visitStart, confirmedThisVisitAt());
     timer = window.setTimeout(show, forced ? 900 : Math.max(1500, DELAY_MS - elapsed));
     const onScroll = () => {
       interacting();
       const room = document.documentElement.scrollHeight - window.innerHeight;
-      if (room > 0 && window.scrollY / room >= SCROLL_SHARE && performance.now() - visitStart > 2000) {
+      if (room > 0 && window.scrollY / room >= SCROLL_SHARE && performance.now() - Math.max(visitStart, confirmedThisVisitAt()) > 2000) {
         window.clearTimeout(timer);
         timer = window.setTimeout(show, READING_PAUSE_MS);
       }

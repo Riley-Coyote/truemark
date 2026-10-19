@@ -71,7 +71,7 @@ const liveUi = await bundle('live', true);
 const preview = await bundle('preview', true);
 
 const gated = ['/products', '/products?class=peptide-fragments', '/products/future', '/product/bpc-157-10-mg', '/cart', '/cart/future', '/checkout', '/checkout/confirmation/TM-10500', '/checkout/payment/future', '/account', '/account/orders/TM-10500'];
-const publicPaths = ['/', '/access', '/access/apply', '/access/team', '/verify', '/quality', '/handling', '/about', '/research-blog', '/research-blog/article', '/contact', '/terms', '/privacy-policy', '/refund_returns', '/shipping-policy', '/track', '/track/TM-10500', '/partners', '/partners/app', '/admin', '/admin/applications'];
+const publicPaths = ['/', '/access', '/access/apply', '/access/team', '/verify', '/quality', '/handling', '/about', '/research-blog', '/research-blog/article', '/contact', '/terms', '/disclaimer', '/privacy-policy', '/refund_returns', '/shipping-policy', '/track', '/track/TM-10500', '/partners', '/partners/app', '/admin', '/admin/applications'];
 test('every gated path redirects signed out, renders signed in and waits for session', async () => {
   for (const path of gated) {
     assert.equal(live.shopAccess(path, false, false), 'redirect', path);

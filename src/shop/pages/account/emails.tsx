@@ -20,6 +20,7 @@ import {
 import { EmailButton, EmailFigure, EmailHeading, EmailNote, EmailPreview, EmailRows, EmailText } from "../../../platform/email/EmailPreview";
 import type { Lot, Order, ShippingMethod } from "../../../platform/types";
 import { productById } from "../../catalog";
+import { lineCharge } from "../../../platform/pricing";
 
 export type BuyerEmailKind = "confirmed" | "shipped" | "delivered";
 
@@ -113,7 +114,7 @@ export function BuyerEmail({
           rows={[
             ...allocatedLines(order.lines).map((line): [string, string] => [
               `${lineName(line.productId)} × ${line.quantity}`,
-              money(line.unitPrice * line.quantity),
+              money(lineCharge(line)),
             ]),
             ...(order.discount ? [[`Code ${order.discount.code}`, `−${money(order.discount.amount)}`] as [string, string]] : []),
             ["Shipping", money(order.shipping.price)],

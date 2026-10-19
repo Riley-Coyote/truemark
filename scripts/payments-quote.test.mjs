@@ -43,15 +43,21 @@ const baseline=await bundle(baselineDir,'baseline');
 const asCart=html=>html.replaceAll('Edit bag','Edit cart').replaceAll('Your bag is empty.','Your cart is empty.').replaceAll(' to your bag',' to your cart');
 // An unpaid order reads "Awaiting payment" since Oct 18, not "Placed": the base is read with that rename too.
 const asAwaiting=html=>html.replaceAll('</i>Placed</span>','</i>Awaiting payment</span>').replace(/(placed \d{1,2} \w{3} \d{4}), placed"/g,'$1, awaiting payment"');
+// The research-use checkbox is named by its own visible statement since the label fix; nothing else about it changed.
+const labelled=html=>html.replace('<input type="checkbox" class="tm-check-input" aria-required="true"/>','<input type="checkbox" class="tm-check-input" aria-required="true" aria-labelledby="tm-attest-text"/>').replace('<span class="tm-check-text">','<span id="tm-attest-text" class="tm-check-text">');
 // Conditional live-only controls can shift React useId positions; keep references consistent.
 const normalizeIds=html=>{const ids=new Map();return html.replace(/_R_[A-Za-z0-9]+_/g,id=>{if(!ids.has(id))ids.set(id,`generated-${ids.size}`);return ids.get(id);});};
 test('preview checkout, confirmation and account orders retain base markup apart from generated ids',()=>{
- for(const key of ['checkout','confirmation','ordersRender']) assert.equal(normalizeIds(current[key]()),normalizeIds(asAwaiting(asCart(baseline[key]()))),key);
+ for(const key of ['checkout','confirmation','ordersRender']) assert.equal(normalizeIds(current[key]()),normalizeIds(labelled(asAwaiting(asCart(baseline[key]())))),key);
+ assert.match(current.checkout(),/<input type="checkbox" class="tm-check-input" aria-required="true" aria-labelledby="tm-attest-text"\/>.*<span id="tm-attest-text" class="tm-check-text">I confirm these materials are for laboratory research use only/s);
 });
-test('preview quote retains base totals, shipping, discount and insurance',()=>{
+test('preview quote retains base totals, shipping, discount and insurance; the free BAC Water vial is its one addition',()=>{
  const draft={lines:[{productId:'bpc-157-10-mg',quantity:2}],address:{region:'TX',country:'US'},shipping:'cold-2day'};
  const before=baseline.preview.quote(draft),after=current.preview.quote(draft);
- assert.deepEqual(after,before);
+ const {lines,...totals}=after,{lines:baseLines,...baseTotals}=before;
+ assert.deepEqual(totals,baseTotals);
+ assert.deepEqual(lines.filter(l=>!l.freeQuantity),baseLines);
+ assert.deepEqual(lines.filter(l=>l.freeQuantity).map(l=>[l.productId,l.quantity,l.unitPrice,l.freeQuantity]),[['bacteriostatic-water-10-ml',1,0,1]]);
 });
 test('live adapter tax quote agrees with PostgreSQL numeric for rated, unrated and non-US fixtures',async()=>{
  const h=sqlDb;

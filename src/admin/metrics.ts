@@ -16,6 +16,7 @@ import type { PayoutBatch } from "./preview";
 import { NEXT_PAYOUT, awaitingPayout } from "./program";
 import { orderMoney } from "./intelligence/model";
 import type { PartnerRow } from "./program";
+import { lineCharge } from "../platform/pricing";
 
 const HOUR = 3_600_000;
 const DAY = 86_400_000;
@@ -449,7 +450,7 @@ export function topCompounds(orders: Order[], limit = 5): CompoundRevenue[] {
       const product = productById(line.productId);
       if (!product) continue;
       const entry = byName.get(product.name) ?? { name: product.name, colour: product.color, revenue: 0, units: 0 };
-      entry.revenue = round2(entry.revenue + line.unitPrice * line.quantity);
+      entry.revenue = round2(entry.revenue + lineCharge(line));
       entry.units += line.quantity;
       byName.set(product.name, entry);
     }

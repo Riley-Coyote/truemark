@@ -61,6 +61,8 @@ export async function seed(config) {
       await insert(tx,'discounts',{code:'ALEX10',kind:'partner',percent:10,partner_id:id('partner'),active:true},'(code)');
       await query(tx,"update public.discounts set active=true where code in ('FIRSTLOT','WELCOME5')");
       await query(tx,'update public.settings set shipping_rates_confirmed=true');
+      // The sample world ships free from $200; a hosted database keeps its own setting.
+      await query(tx,'update public.settings set free_shipping_threshold=200');
       await query(tx,"update public.shipping_methods set label=case when id='cold-2day' then 'Standard · 2 business days' else 'Express · overnight' end,detail='Sample rate for the local simulation'");
       await query(tx,'update public.customer_program_settings set rewards_enabled=true,memberships_enabled=true,earn_per_dollar=10');
       await query(tx,"update public.connections set mode='simulated',provider=''");

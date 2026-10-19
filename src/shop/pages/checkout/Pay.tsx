@@ -8,6 +8,7 @@ import { store, useResource } from "../../../platform/store";
 import { productById } from "../../catalog";
 import Confirmation from "./Confirmation";
 import "./checkout.css";
+import { lineCharge } from "../../../platform/pricing";
 
 export function PaymentOutcomes({ value, onChange, disabled = false }: { value: Outcome; onChange: (value: Outcome) => void; disabled?: boolean }) {
   return <fieldset className="tm-choices" disabled={disabled}>
@@ -55,7 +56,7 @@ export default function Pay() {
       <div className="tm-step-actions"><button className="tm-button tm-button-primary" disabled={busy || mode.data !== "simulated"} onClick={() => void pay()} aria-busy={busy}>{busy ? "Processing" : `Pay ${money(order.total)}`}</button><button className="tm-text-button" disabled={busy} onClick={() => void pay(true)}>Cancel order</button></div>
       {mode.data === "simulated" && <p className="tm-step-fine">Simulated payment. No card is charged.</p>}
     </div>
-    <aside className="tm-summary tm-checkout-summary" aria-label="Order summary"><h2 className="tm-summary-title">Order summary</h2><ul className="tm-summary-lines">{order.lines.map((line) => <li className="tm-summary-line" key={line.productId}><span>{productById(line.productId)?.name ?? line.productId} · Qty {line.quantity}</span><span>{money(line.unitPrice * line.quantity)}</span></li>)}</ul>
+    <aside className="tm-summary tm-checkout-summary" aria-label="Order summary"><h2 className="tm-summary-title">Order summary</h2><ul className="tm-summary-lines">{order.lines.map((line) => <li className="tm-summary-line" key={line.productId}><span>{productById(line.productId)?.name ?? line.productId} · Qty {line.quantity}</span><span>{money(lineCharge(line))}</span></li>)}</ul>
       <dl className="tm-totals"><div className="tm-totals-row"><dt>Subtotal</dt><dd>{money(order.subtotal)}</dd></div>{order.discount && <div className="tm-totals-row"><dt>Discount</dt><dd>−{money(order.discount.amount)}</dd></div>}<div className="tm-totals-row"><dt>Shipping</dt><dd>{money(order.shipping.price)}</dd></div>{order.insuranceApplied && <div className="tm-totals-row"><dt>Insurance</dt><dd>{money(order.insurance ?? 0)}</dd></div>}<div className="tm-totals-row"><dt>Tax</dt><dd>{money(order.tax ?? 0)}</dd></div><div className="tm-totals-row tm-totals-total"><dt>Total</dt><dd>{money(order.total)}</dd></div></dl>
     </aside>
   </section></div>;

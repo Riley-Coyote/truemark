@@ -85,15 +85,16 @@ test('pagination does not silently truncate owner history at 1000 rows', async (
 test('storefront settings map numeric values and off without defaults or client writes', async () => {
   const f = fixture();
   await assert.rejects(f.adapter.store.settings.get(), /settings are unavailable/);
-  f.tables.settings = [{ id: true, free_shipping_threshold: '150.00', free_shipping_method: 'cold-2day', insurance_mode: 'off', insurance_rate: null }];
-  assert.deepEqual(await f.adapter.store.settings.get(), { freeShippingThreshold: 150, freeShippingMethod: 'cold-2day', insuranceMode: 'off', insuranceRate: null, taxMode: 'off', taxShipping: false, shippingRatesConfirmed: false });
+  f.tables.settings = [{ id: true, free_shipping_threshold: '150.00', free_shipping_method: 'cold-2day', free_bac_water_threshold: '75.00', insurance_mode: 'off', insurance_rate: null }];
+  assert.deepEqual(await f.adapter.store.settings.get(), { freeShippingThreshold: 150, freeShippingMethod: 'cold-2day', freeBacWaterThreshold: 75, insuranceMode: 'off', insuranceRate: null, taxMode: 'off', taxShipping: false, shippingRatesConfirmed: false });
   f.tables.settings[0].free_shipping_threshold = null;
+  f.tables.settings[0].free_bac_water_threshold = null;
   f.tables.settings[0].insurance_mode = 'optional';
   f.tables.settings[0].insurance_rate = '0.01250';
   f.tables.settings[0].shipping_rates_confirmed = true;
   f.tables.settings[0].tax_mode = 'rates';
   f.tables.settings[0].tax_shipping = true;
-  assert.deepEqual(await f.adapter.store.settings.get(), { freeShippingThreshold: null, freeShippingMethod: 'cold-2day', insuranceMode: 'optional', insuranceRate: 0.0125, taxMode: 'rates', taxShipping: true, shippingRatesConfirmed: true });
+  assert.deepEqual(await f.adapter.store.settings.get(), { freeShippingThreshold: null, freeShippingMethod: 'cold-2day', freeBacWaterThreshold: null, insuranceMode: 'optional', insuranceRate: 0.0125, taxMode: 'rates', taxShipping: true, shippingRatesConfirmed: true });
   assert.equal(f.calls.some((c) => ['insert', 'update', 'rpc', 'auth'].includes(c.type)), false);
   f.setError('settings read failed');
   await assert.rejects(f.adapter.store.settings.get(), /settings read failed/);

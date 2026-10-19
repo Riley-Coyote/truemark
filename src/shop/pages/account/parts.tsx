@@ -46,9 +46,11 @@ export function useAccount(): AccountData {
 export function useReorder() {
   const { add } = useShop();
   return (order: Order) => {
-    const available = order.lines.filter((line) => productFor(line.productId)?.price !== undefined);
-    available.forEach((line) => add(line.productId, line.quantity));
-    return { added: available.length, missing: order.lines.length - available.length };
+    // What was paid for goes back in the bag; a free vial is earned again, not reordered.
+    const paid = order.lines.filter((line) => line.quantity > (line.freeQuantity ?? 0));
+    const available = paid.filter((line) => productFor(line.productId)?.price !== undefined);
+    available.forEach((line) => add(line.productId, line.quantity - (line.freeQuantity ?? 0)));
+    return { added: available.length, missing: paid.length - available.length };
   };
 }
 

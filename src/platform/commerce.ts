@@ -1,7 +1,7 @@
 import type { Product } from "../data";
 import type { StorefrontSettings } from "./types";
 
-export type SettingsPatch = Partial<Pick<StorefrontSettings, "freeShippingThreshold" | "insuranceMode" | "insuranceRate">>;
+export type SettingsPatch = Partial<Pick<StorefrontSettings, "freeShippingThreshold" | "freeBacWaterThreshold" | "insuranceMode" | "insuranceRate">>;
 export const CATALOG_MAX_BYTES = 5 * 1024 * 1024;
 const imageTypes: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 

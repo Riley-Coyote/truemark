@@ -38,6 +38,7 @@ import {
   useReorder,
   useTitle,
 } from "./parts";
+import { lineCharge } from "../../../platform/pricing";
 
 /** Orders as a table whose rows open the order. Shared by the overview. */
 export function OrderTable({ orders, label }: { orders: Order[]; label: string }) {
@@ -290,9 +291,9 @@ export function OrderDetail() {
                   </span>
                 </span>
                 <span className="tm-acct-line-qty">
-                  {line.quantity} × {money(line.unitPrice)}
+                  {line.quantity} × {line.freeQuantity === line.quantity ? "Free" : money(line.unitPrice)}{line.freeQuantity && line.freeQuantity < line.quantity ? ` · ${line.freeQuantity} free` : ""}
                 </span>
-                <span className="tm-acct-line-total">{money(line.quantity * line.unitPrice)}</span>
+                <span className="tm-acct-line-total">{money(lineCharge(line))}</span>
               </li>
             );
           })}

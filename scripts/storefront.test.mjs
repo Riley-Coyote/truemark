@@ -37,6 +37,7 @@ const current = await bundle(root, 'current', `
   export * as seed from './src/platform/seed.ts'; export * as data from './src/data.ts';
   export * as preview from './src/platform/preview/store.ts'; export * as pricing from './src/platform/pricing.ts';
   export * as rows from './src/platform/live/rows.ts'; export * as catalog from './src/shop/catalog.ts';
+  export * as previewInventory from './src/platform/preview/inventory.ts';
   export * as carousel from './src/brand/carousel.ts';
   export { renderToStaticMarkup } from 'react-dom/server';
   import { createElement } from 'react'; import { ShippingProgress } from './src/shop/ShippingProgress.tsx';
@@ -147,12 +148,13 @@ test('catalog renders old class URLs as All and a valid class as only its member
 test('free_shipping_rule: actual preview quote and shared live checkout quote agree after a 10% discount at all three boundaries', async () => {
   const product = current.data.products.find((p) => p.id === 'retatrutide-10-mg');
   const price = product.price;
-  const settings = current.rows.settings({ free_shipping_threshold: '150.00', free_shipping_method: 'cold-2day', insurance_mode: 'off', insurance_rate: null });
+  // The sample data ships free from $200 (pricing.ts defaultSettings); live is given the same threshold.
+  const settings = current.rows.settings({ free_shipping_threshold: '200.00', free_shipping_method: 'cold-2day', insurance_mode: 'off', insurance_rate: null });
   // Placing a preview order refreshes the catalog from the sample inventory, so set the fixture price on whichever
   // product object the catalog holds before each quote.
   const setPrice = (value) => { for (const item of current.data.products) if (item.id === product.id) item.price = value; };
   try {
-    for (const [fixturePrice, base] of [[166.66, 149.99], [166.67, 150], [166.68, 150.01]]) {
+    for (const [fixturePrice, base] of [[222.21, 199.99], [222.22, 200], [222.23, 200.01]]) {
       for (const method of current.seed.shippingMethods) {
         setPrice(fixturePrice);
         const draft = { lines: [{ productId: product.id, quantity: 1 }], shipping: method.id, discountCode: 'FIRSTLOT', address: current.seed.buyers[0].addresses[0] };
@@ -161,7 +163,7 @@ test('free_shipping_rule: actual preview quote and shared live checkout quote ag
         assert.equal(preview.base, base);
         assert.equal(preview.total, live.total);
         assert.equal(preview.method.price, live.shipping);
-        assert.equal(live.shipping, method.id === 'cold-overnight' ? 42 : base >= 150 ? 0 : 24);
+        assert.equal(live.shipping, method.id === 'cold-overnight' ? 42 : base >= 200 ? 0 : 24);
         const placed = await current.preview.store.orders.place(current.seed.buyers[0].id, draft);
         assert.equal(placed.shipping.price, live.shipping);
         assert.equal(placed.total, live.total);
@@ -184,6 +186,51 @@ test('shipping progress is absent for empty/off, shows cents remaining and unloc
   assert.match(markup(150), /Free shipping unlocked/);
   assert.match(markup(150.01), /aria-valuenow="100"/);
   assert.match(markup(0, 1, 0), /Free shipping unlocked/);
+});
+
+test('the progress bar points to the next reward: free BAC water, then free shipping; the vial only while one can be sent', () => {
+  const settings = { ...current.pricing.defaultSettings, freeShippingThreshold: 200, freeBacWaterThreshold: 75 };
+  const markup = (base, extra = {}) => current.renderToStaticMarkup(current.progressMarkup({ base, count: 1, settings, bacWater: true, ...extra }));
+  assert.match(markup(40), /\$35\.00 more for free BAC water/); assert.match(markup(40), /aria-label="Free BAC water" aria-valuenow="53"/);
+  assert.match(markup(74.99), /\$0\.01 more for free BAC water/);
+  assert.match(markup(75), /\$125\.00 more for free shipping/); assert.match(markup(75), /aria-label="Free shipping" aria-valuenow="38"/);
+  assert.match(markup(200), /Free shipping unlocked/);
+  assert.match(markup(40, { bacWater: false }), /\$160\.00 more for free shipping/);
+  assert.match(markup(80, { settings: { ...settings, freeShippingThreshold: null } }), /Free BAC water unlocked/);
+  assert.equal(markup(80, { settings: { ...settings, freeShippingThreshold: null, freeBacWaterThreshold: null } }), '');
+  assert.equal(current.pricing.earnsFreeBacWater(74.99, settings), false); assert.equal(current.pricing.earnsFreeBacWater(75, settings), true);
+  assert.equal(current.pricing.lineCharge({ quantity: 3, unitPrice: 10, freeQuantity: 1 }), 20);
+  assert.equal(current.pricing.lineUnits({ quantity: 1, unitPrice: 0, freeQuantity: 1 }, String), 'Free');
+});
+
+test('free BAC Water in sample orders: a $0 line at $75 after discounts, one more free unit on BAC Water already in the cart, none when out of stock', async () => {
+  values.clear();
+  const bac = 'bacteriostatic-water-10-ml';
+  const vial = () => current.previewInventory.previewProducts().find((p) => p.id === bac);
+  const draft = (lines, extra = {}) => ({ lines, shipping: 'cold-2day', address: current.seed.buyers[0].addresses[0], ...extra });
+  const price = (id) => current.data.products.find((p) => p.id === id).price;
+  const cheap = current.data.products.filter((p) => p.id !== bac && p.price && 75 % p.price !== 0 && p.price < 75).sort((a, b) => b.price - a.price)[0];
+  assert(vial().stock > 2, 'the sample data holds BAC Water to give');
+  try {
+    // Below the threshold, and above it before a 10% code but below after.
+    assert.equal(current.preview.quote(draft([{ productId: cheap.id, quantity: 1 }])).lines.length, 1);
+    const near = current.data.products.find((p) => p.id !== bac && p.price >= 75 && p.price * 0.9 < 75);
+    if (near) assert.equal(current.preview.quote(draft([{ productId: near.id, quantity: 1 }], { discountCode: 'FIRSTLOT' })).lines.length, 1);
+    const twice = cheap.price * 2 >= 75 ? 2 : 3;
+    const earned = current.preview.quote(draft([{ productId: cheap.id, quantity: twice }]));
+    assert.deepEqual(earned.lines.at(-1), { productId: bac, quantity: 1, unitPrice: 0, lot: vial().lot, freeQuantity: 1 });
+    assert.equal(earned.subtotal, cheap.price * twice); assert.equal(earned.freeVialNote, undefined);
+    const merged = current.preview.quote(draft([{ productId: cheap.id, quantity: twice }, { productId: bac, quantity: 2 }]));
+    assert.deepEqual(merged.lines.find((l) => l.productId === bac), { productId: bac, quantity: 3, unitPrice: price(bac), lot: merged.lines.find((l) => l.productId === bac).lot, freeQuantity: 1 });
+    assert.equal(merged.subtotal, cheap.price * twice + price(bac) * 2);
+    const before = vial().stock;
+    const order = await current.preview.store.orders.place(current.seed.buyers[0].id, draft([{ productId: cheap.id, quantity: twice }]));
+    assert.deepEqual(order.lines.filter((l) => l.productId === bac).map((l) => [l.quantity, l.unitPrice, l.freeQuantity, l.allocations.length]), [[1, 0, 1, 1]]);
+    assert.equal(vial().stock, before - 1); assert.equal(order.total, earned.total); assert.equal(order.events[0].note, undefined);
+    await current.previewInventory.savePreviewProduct({ ...vial(), active: false });
+    const none = await current.preview.store.orders.place(current.seed.buyers[0].id, draft([{ productId: cheap.id, quantity: twice }]));
+    assert(!none.lines.some((l) => l.productId === bac)); assert.equal(none.events[0].note, 'Free BAC Water not included: out of stock');
+  } finally { values.clear(); }
 });
 
 test('the opening reads each vial\'s own lot record for its caption, and leaves the sample record alone', async () => {

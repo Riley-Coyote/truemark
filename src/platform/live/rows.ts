@@ -17,7 +17,10 @@ export function certificateLink(url: string | undefined, publicUrl: PublicUrl): 
 }
 export function settings(row: Row): StorefrontSettings {
   return { freeShippingThreshold: row.free_shipping_threshold == null ? null : Number(row.free_shipping_threshold),
-    freeShippingMethod: String(row.free_shipping_method), insuranceMode: row.insurance_mode as StorefrontSettings["insuranceMode"],
+    freeShippingMethod: String(row.free_shipping_method),
+    // A database without the free-vial migration offers none, as its checkout adds none.
+    freeBacWaterThreshold: row.free_bac_water_threshold == null ? null : Number(row.free_bac_water_threshold),
+    insuranceMode: row.insurance_mode as StorefrontSettings["insuranceMode"],
     insuranceRate: row.insurance_rate == null ? null : Number(row.insurance_rate),
     taxMode: row.tax_mode === "rates" ? "rates" : "off", taxShipping: row.tax_shipping === true,
     shippingRatesConfirmed: row.shipping_rates_confirmed === true };
@@ -75,7 +78,7 @@ export function order(row: Row, publicUrl: PublicUrl = projectPath): Order {
     discount: row.discount_code || Number(row.discount_amount) > 0 ? { code: row.discount_code ? String(row.discount_code) : "Member / rewards", amount: Number(row.discount_amount), partnerId: optional(row.discount_partner_id), source: row.discount_code ? "promotion" : "program" } : undefined,
     tax: Number(row.tax ?? 0), refunded: Number(row.refunded ?? 0), paymentExpiresAt: optional(row.payment_expires_at), paidAt: optional(row.paid_at), paymentProvider: optional(row.payment_provider),
     insurance: Number(row.insurance ?? 0), insuranceApplied: Boolean(row.insurance_applied), total: Number(row.total),
-    lines: ((row.order_lines ?? []) as Row[]).map((line) => ({ id: optional(line.id), allocations: ((line.order_lot_allocations ?? []) as Row[]).filter(a=>a.state!=="released").map(a=>({id:String(a.id),lotId:String(a.lot_id),lot:String(a.lot_number),quantity:Number(a.quantity),state:a.state as "reserved" | "fulfilled" | "released",certificatePath:optional(a.certificate_path),certificateUrl:a.certificate_path ? publicUrl("certificates",String(a.certificate_path)) : undefined,returnedUnits:Number(a.returned_units ?? 0)})), productId: String(line.product_id), quantity: Number(line.quantity), unitPrice: Number(line.unit_price), lot: String(line.lot) })),
+    lines: ((row.order_lines ?? []) as Row[]).map((line) => ({ id: optional(line.id), allocations: ((line.order_lot_allocations ?? []) as Row[]).filter(a=>a.state!=="released").map(a=>({id:String(a.id),lotId:String(a.lot_id),lot:String(a.lot_number),quantity:Number(a.quantity),state:a.state as "reserved" | "fulfilled" | "released",certificatePath:optional(a.certificate_path),certificateUrl:a.certificate_path ? publicUrl("certificates",String(a.certificate_path)) : undefined,returnedUnits:Number(a.returned_units ?? 0)})), productId: String(line.product_id), quantity: Number(line.quantity), unitPrice: Number(line.unit_price), lot: String(line.lot), ...(Number(line.free_quantity) > 0 ? { freeQuantity: Number(line.free_quantity) } : {}) })),
     events: ((row.order_events ?? []) as Row[]).map((event) => ({ status: event.status as Order["status"], at: String(event.at), note: optional(event.note) })).sort((a, b) => a.at.localeCompare(b.at)) };
 }
 export function lot(row: Row): Lot {

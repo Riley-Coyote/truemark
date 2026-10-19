@@ -7,6 +7,7 @@ import type {
   Referral,
 } from "../../platform/types";
 import type { Product } from "../../data";
+import { lineCharge } from "../../platform/pricing";
 
 export const DAY = 86_400_000;
 export const cents = (n: number) =>
@@ -218,7 +219,7 @@ export function productSales(
     const money = orderMoney(order);
     if (!money.paid) continue;
     const grossCents = order.lines.map((l) =>
-      Math.max(0, cents(l.unitPrice * l.quantity)),
+      Math.max(0, cents(lineCharge(l))),
     );
     const grossTotal = grossCents.reduce((a, b) => a + b, 0);
     let allocated = 0,

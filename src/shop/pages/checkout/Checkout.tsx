@@ -4,7 +4,7 @@ import { PaymentOutcomes } from "./Pay";
 import type { Outcome } from "../../../platform/live/payments";
 import type { Order } from "../../../platform/types";
 import { InsuranceRow, useInsuranceChoice, clearInsuranceChoice } from "../../Insurance";
-import { priceQuote, shippingPrice, insurancePrice } from "../../../platform/pricing";
+import { lineCharge, priceQuote, shippingPrice, insurancePrice } from "../../../platform/pricing";
 import { LIVE } from "../../../platform/mode";
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
@@ -20,6 +20,7 @@ import {
   StockNotice,
   CodeControl,
   DiscountRow,
+  FreeVialRow,
   Thumb,
   clearBagCode,
   discountOn,
@@ -27,6 +28,7 @@ import {
   roundMoney,
   useBagCode,
   useBagLines,
+  useFreeBacWater,
 } from "./Bag";
 import type { BagCode, BagLine } from "./Bag";
 import "./checkout.css";
@@ -433,7 +435,9 @@ function OrderSummary({
   sampleRates,
   locked,
   benefits,
+  freeVial,
 }: {
+  freeVial: { earned: boolean; available: boolean };
   benefits?: Benefits | null;
   lines: BagLine[];
   subtotal: number;
@@ -486,6 +490,7 @@ function OrderSummary({
         <DiscountRow discount={benefits?.membershipAmount ? null : code.discount} amount={benefits ? benefits.promoAmount : discountAmount} />
         {Boolean(benefits?.membershipAmount) && <div className="tm-totals-row"><dt>{benefits?.membershipName} member benefit</dt><dd>−{money(benefits!.membershipAmount)}</dd></div>}
         {Boolean(benefits?.rewardAmount) && <div className="tm-totals-row"><dt>Reward credit · {benefits?.rewardPoints} points</dt><dd>−{money(benefits!.rewardAmount)}</dd></div>}
+        <FreeVialRow {...freeVial} />
         <InsuranceRow amount={insurance} applied={insuranceApplied} />
         <div className="tm-totals-row">
           <dt>
@@ -558,6 +563,7 @@ export default function Checkout() {
   const selectedMethod = methods.data?.find((m) => m.id === methodId) ?? null;
   const priced = settings.data ? priceQuote(subtotal, code.discount?.percent ?? 0, selectedMethod, settings.data, insured, LIVE ? address : null, taxRates.data ?? [], discountAmount) : null;
   const method = selectedMethod ? { ...selectedMethod, price: priced?.shipping ?? selectedMethod.price } : null;
+  const freeVial = useFreeBacWater(priced?.base ?? roundMoney(subtotal - discountAmount), settings.data ?? undefined);
 
   // Preselect the account's first saved address once it is known; drop a selection that left.
   const addressIds = addresses.map((a) => a.id).join(" ");
@@ -678,11 +684,14 @@ export default function Checkout() {
   }
 
   const sampleRates = !LIVE || settings.data?.shippingRatesConfirmed !== true;
+  // A held order lists what it charges for; its free vial is the totals row, as before it was placed.
   const heldLines: BagLine[] | null = heldOrder ? heldOrder.lines.flatMap((line) => {
     const product = productById(line.productId);
-    return product ? [{ product, quantity: line.quantity, total: roundMoney(line.quantity * line.unitPrice) }] : [];
+    const paid = line.quantity - (line.freeQuantity ?? 0);
+    return product && paid > 0 ? [{ product, quantity: paid, total: lineCharge(line) }] : [];
   }) : null;
-  const summaryProps = { benefits: appliedBenefits, lines: heldLines ?? lines, subtotal: heldOrder?.subtotal ?? subtotal, code, discountAmount: heldOrder?.discount?.amount ?? discountAmount, method: heldOrder && method ? { ...method, price: heldOrder.shipping.price } : method, total,
+  const heldVial = heldOrder ? { earned: heldOrder.lines.some((line) => line.freeQuantity) || heldOrder.events.some((event) => event.note?.includes("Free BAC Water")), available: heldOrder.lines.some((line) => line.freeQuantity) } : null;
+  const summaryProps = { freeVial: heldVial ?? freeVial, benefits: appliedBenefits, lines: heldLines ?? lines, subtotal: heldOrder?.subtotal ?? subtotal, code, discountAmount: heldOrder?.discount?.amount ?? discountAmount, method: heldOrder && method ? { ...method, price: heldOrder.shipping.price } : method, total,
     tax: heldOrder?.tax ?? priced?.tax ?? 0, taxMode: settings.data?.taxMode ?? "off", addressChosen: address !== null, sampleRates, locked: heldOrder !== null,
     insurance: heldOrder?.insurance ?? priced?.insurance ?? 0, insuranceApplied: heldOrder?.insuranceApplied ?? priced?.insuranceApplied ?? false };
   const listFormat = new Intl.ListFormat("en", { style: "long", type: "conjunction" });
@@ -1012,12 +1021,13 @@ export default function Checkout() {
                 className="tm-check-input"
                 checked={attested}
                 aria-required="true"
+                aria-labelledby="tm-attest-text"
                 onChange={(e) => setAttested(e.target.checked)}
               />
               <span className="tm-check-box" aria-hidden="true">
                 <Check size={14} strokeWidth={2.2} />
               </span>
-              <span className="tm-check-text">
+              <span id="tm-attest-text" className="tm-check-text">
                 I confirm these materials are for laboratory research use only and will not be used
                 in humans or animals.
               </span>

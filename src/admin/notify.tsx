@@ -28,6 +28,7 @@ import { CONSENT } from "../platform/live/messages";
 import type { MessagePreferences, TeamAlerts } from "../platform/live/messages";
 import { teamRoleLabel } from "../platform/team";
 import "../platform/live/team.css";
+import { lineCharge } from "../platform/pricing";
 
 export type Channel = "email" | "text";
 type Prefs = Record<string, Record<Channel, boolean>>;
@@ -111,7 +112,7 @@ export function NewOrderEmail({ context, to }: { context: OrderContext; to: Oper
         rows={[
           ...order.lines.map((line): [string, string] => {
             const product = productById(line.productId);
-            return [`${product ? `${product.name} ${product.size}` : line.productId} × ${line.quantity}`, formatMoney(line.unitPrice * line.quantity)];
+            return [`${product ? `${product.name} ${product.size}` : line.productId} × ${line.quantity}`, formatMoney(lineCharge(line))];
           }),
           ["Buyer", buyer?.name ?? order.address.attention],
           ["Shipping", method?.label ?? "Cold chain"],

@@ -32,7 +32,16 @@ export function inventoryTotals(lots: Lot[]) {
 }
 /** Physical picking/certificates can span lots while the commercial line stays intact. */
 export function allocatedLines(lines: OrderLine[]): OrderLine[] {
-  return lines.flatMap(line => line.allocations?.length ? line.allocations.filter(a=>a.state!=="released").map(a=>({...line,quantity:a.quantity,lot:a.lot,allocations:[a]})) : [line]);
+  return lines.flatMap(line => {
+    if (!line.allocations?.length) return [line];
+    // A line's free units (the free BAC Water vial) are counted on its last lots, so each part charges what it holds.
+    let free = line.freeQuantity ?? 0;
+    return line.allocations.filter(a=>a.state!=="released").reverse().map(a=>{
+      const here = Math.min(free, a.quantity); free -= here;
+      const { freeQuantity: _whole, ...rest } = line;
+      return {...rest,quantity:a.quantity,lot:a.lot,allocations:[a],...(here ? { freeQuantity: here } : {})};
+    }).reverse();
+  });
 }
 
 /** Null is an unknown count/date, always last regardless of sort direction. */

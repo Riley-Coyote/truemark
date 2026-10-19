@@ -129,6 +129,46 @@ try {
  assert.equal(staffEdit.actor_id,owner);assert.equal(staffEdit.actor_label,'inventory-owner@fixture.test');assert.equal(staffEdit.kind,'lot');
  assert.equal((await historyFor(`Certificate and passing results recorded: CERT-FIXTURE`)).length>0,true);
  pass('checkout, cancellation and shipment history is labelled by order and recorded as the system; staff edits keep their operator');
+ // Free BAC Water: one 10 mL vial at $0 once merchandise after discounts reaches the threshold (default $75), reserved
+ // by the lot-allocation trigger like any line; without stock the order is placed without it and says so.
+ {
+  const bac='bacteriostatic-water-10-ml',bpc='bpc-157-10-mg';
+  const lotFor=async(product,number,units)=>certify(await receive(await save({productId:product,number,expectedUnits:units,reason:'Incoming shipment'}),units));
+  await lotFor(bpc,'TM-BPC-FREE',40);const vials=await lotFor(bac,'TM-BAC-FREE',12);
+  await db.query("insert into discounts(code,kind,percent,active) values ('FIXTUREBAC','promo',10,true)");
+  const vialStock=()=>scalar('select stock from products where id=$1',[bac]);
+  const order=(lines,discountCode)=>auth(buyer,'select * from place_order($1)',[{...draft(1),lines,...(discountCode?{discountCode}:{})}]).then(r=>r[0]);
+  const linesOf=o=>rows('select product_id,quantity,unit_price::text as unit_price,free_quantity from order_lines where order_id=$1 order by product_id',[o.id]);
+  const noteOf=o=>scalar("select note from order_events where order_id=$1 and status='placed'",[o.id]);
+  const line=(product_id,quantity,unit_price,free_quantity=0)=>({product_id,quantity,unit_price,free_quantity});
+  const threshold=value=>auth(owner,'select * from update_storefront_settings($1)',[{freeBacWaterThreshold:value}]);
+  assert.equal(await scalar('select free_bac_water_threshold::text from settings'),'75.00');assert.equal(await vialStock(),12);
+  let o=await order([{productId:bpc,quantity:1},{productId:bac,quantity:1}]);
+  assert.deepEqual(await linesOf(o),[line(bac,1,'10.00'),line(bpc,1,'40.00')]);assert.equal(await noteOf(o),null);assert.equal(await vialStock(),11);
+  o=await order([{productId:bpc,quantity:2}],'FIXTUREBAC');
+  assert.equal(Number(o.subtotal)-Number(o.discount_amount),72);assert.deepEqual(await linesOf(o),[line(bpc,2,'40.00')]);assert.equal(await vialStock(),11);
+  pass('free BAC Water: below the threshold after discounts, no free line');
+  await threshold(80);o=await order([{productId:bpc,quantity:2}]);
+  assert.deepEqual(await linesOf(o),[line(bac,1,'0.00',1),line(bpc,2,'40.00')]);assert.equal(await vialStock(),10);
+  await threshold(80.01);o=await order([{productId:bpc,quantity:2}]);assert.deepEqual(await linesOf(o),[line(bpc,2,'40.00')]);
+  await threshold(null);o=await order([{productId:bpc,quantity:2}]);assert.deepEqual(await linesOf(o),[line(bpc,2,'40.00')]);assert.equal(await noteOf(o),null);
+  await threshold(75);
+  const free=await order([{productId:bpc,quantity:2}]);
+  assert.deepEqual(await linesOf(free),[line(bac,1,'0.00',1),line(bpc,2,'40.00')]);assert.equal(Number(free.subtotal),80);assert.equal(await noteOf(free),null);
+  assert.deepEqual(await rows("select a.quantity,a.lot_number,a.state from order_lot_allocations a join order_lines li on li.id=a.order_line_id where li.order_id=$1 and li.product_id=$2",[free.id,bac]),[{quantity:1,lot_number:'TM-BAC-FREE',state:'reserved'}]);
+  assert.equal(await vialStock(),9);assert.equal((await get(vials.inventory_id)).reserved_units,3);
+  pass('free BAC Water: at and above the threshold, one $0 line reserved from its lot; the threshold is the owner\'s setting');
+  // BAC Water already in the cart: one line per product, one more unit on it, marked free and not charged.
+  o=await order([{productId:bpc,quantity:1},{productId:bac,quantity:4}]);
+  assert.deepEqual(await linesOf(o),[line(bac,5,'10.00',1),line(bpc,1,'40.00')]);assert.equal(Number(o.subtotal),80);assert.equal(await vialStock(),4);
+  await auth(owner,"select advance_order($1,'cancelled')",[free.id]);assert.equal(await vialStock(),5,'cancelling releases the free vial');
+  o=await order([{productId:bpc,quantity:1},{productId:bac,quantity:5}]);
+  assert.deepEqual(await linesOf(o),[line(bac,5,'10.00'),line(bpc,1,'40.00')]);assert.equal(await noteOf(o),'Free BAC Water not included: out of stock');assert.equal(await vialStock(),0);
+  o=await order([{productId:bpc,quantity:2}]);
+  assert.deepEqual(await linesOf(o),[line(bpc,2,'40.00')]);assert.equal(await noteOf(o),'Free BAC Water not included: out of stock');assert.equal(Number(o.subtotal),80);
+  await assert.rejects(()=>db.query('update order_lines set free_quantity=quantity+1 where order_id=$1',[o.id]),/free_quantity/);
+  pass('free BAC Water: added to BAC Water already in the cart; out of stock, the order is placed without it and says so');
+ }
  console.log('Inventory SQL checks passed; all migrations applied twice. Local fixtures only.');
 } finally {await db.close();}
 
