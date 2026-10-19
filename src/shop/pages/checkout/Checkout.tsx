@@ -1021,12 +1021,13 @@ export default function Checkout() {
                 className="tm-check-input"
                 checked={attested}
                 aria-required="true"
+                aria-labelledby="tm-attest-text"
                 onChange={(e) => setAttested(e.target.checked)}
               />
               <span className="tm-check-box" aria-hidden="true">
                 <Check size={14} strokeWidth={2.2} />
               </span>
-              <span className="tm-check-text">
+              <span id="tm-attest-text" className="tm-check-text">
                 I confirm these materials are for laboratory research use only and will not be used
                 in humans or animals.
               </span>
