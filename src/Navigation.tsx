@@ -475,6 +475,13 @@ export function releaseScroll() {
 }
 /** The place a history entry's page was left at, if it is known. */
 export const scrollFor = (key: string) => positions.get(key);
+/** Where a page drawing for the first time now will stand once ScrollMemory has put it back (read before it has): the
+ *  place a reload, a return from another site or a step back keeps for its entry, or its top. vite.config.ts startHead
+ *  reads the same place for the page's first paint. */
+export function placeOnOpening(key: string): number {
+  if (currentKey === null && !returning()) return 0;
+  return positions.get(key) ?? 0;
+}
 /** The input that ends a wait for a place: whatever the reader does first wins. */
 export const READER_INPUT = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
 
