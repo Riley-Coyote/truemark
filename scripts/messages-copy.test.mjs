@@ -102,7 +102,11 @@ test('preview contact and order drawer render identically to base; live-only bra
  const context=[current.seed.buyers,current.seed.partners,current.seed.shippingMethods,current.seed.lots],program=[current.seed.referrals,current.seed.payouts];
  globalThis.__resources=[sourceOrder,context,program];const before=base.drawer(sourceOrder.id);
  // WP-26 adds a shipment resource before context; WP-24 adds the outbox after program.
- globalThis.__resources=[sourceOrder,null,context,program,[]];assert.equal(stableReactIds(current.drawer(sourceOrder.id)),stableReactIds(before));
+ // Lot inventory (17 Oct) moves each line's lot link into one "Pick these lots" list; everything else matches.
+ globalThis.__resources=[sourceOrder,null,context,program,[]];const now=current.drawer(sourceOrder.id);
+ const pick=/<section[^>]*><h3[^>]*>Pick these lots<\/h3>[^]*?<\/section>/,lots=[...before.matchAll(/Public record for lot ([A-Z0-9-]+)/g)].map(match=>match[1]);
+ assert(lots.length>0&&lots.every(lot=>now.match(pick)?.[0].includes(lot)),'every linked lot is in the pick list');
+ const ids=html=>stableReactIds(html).replace(/react-id-\d+|_R_[0-9a-z]+_/g,'id');assert.equal(ids(now.replace(pick,'')),ids(before.replace(/<a class="cc-lot-link"[^]*?<\/a>/g,'')));
 });
 test('token-hash links need only verifyOtp, and recovery gate comes from the verified account role',async()=>{
  for(const role of ['owner','staff','partner','buyer']){

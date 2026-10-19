@@ -19,6 +19,7 @@ async function bundle(mode) {
   await build({ stdin: { resolveDir: root, loader: 'tsx', contents: `
     export * as data from './src/data.ts';
     export * as preview from './src/platform/preview/store.ts';
+    export * as seed from './src/platform/seed.ts';
     export * as pricing from './src/platform/pricing.ts';
     export * as catalog from './src/shop/catalog.ts';
     export * as commerce from './src/platform/commerce.ts';
@@ -87,9 +88,15 @@ test('preview and the live adapter quote agree on insurance to the cent in every
   } finally { product.price = original; values.clear(); }
 });
 
-test('preview stock remains untracked, saving refuses, and the seeded world is unchanged', async () => {
-  assert((await current.preview.store.catalog.products()).every((product) => product.stock === null));
-  await assert.rejects(current.preview.store.catalog.saveProduct(current.data.products[0]), /Saving works in the live platform/);
+test('preview stock comes from the sample lots, saving refuses, and the seeded world is unchanged', async () => {
+  // Lot inventory (17 Oct) derives each product's stock from its lots, so no product is untracked any more, and
+  // every product whose first batch carries a released certificate has units to sell.
+  const catalog = await current.preview.store.catalog.products();
+  assert(catalog.every((product) => Number.isInteger(product.stock) && product.stock >= 0));
+  const certified = new Set(current.seed.lots.filter((lot) => !lot.sample && lot.status === 'released').map((lot) => lot.productId));
+  assert(certified.size > 0 && catalog.filter((product) => certified.has(product.id)).every((product) => product.stock > 0));
+  // The sample inventory workspace edits products in the browser now; categories and settings still save only in live.
+  assert.equal((await current.preview.store.catalog.saveProduct(current.data.products[0])).id, current.data.products[0].id);
   await assert.rejects(current.preview.store.catalog.saveCategory(current.data.previewCategories()[0]), /Saving works in the live platform/);
   await assert.rejects(current.preview.store.settings.save({ insuranceMode: 'automatic' }), /Saving works in the live platform/);
   const seed = await readFile(join(root, 'src/platform/seed.ts'), 'utf8');
@@ -107,8 +114,7 @@ test('preview stock remains untracked, saving refuses, and the seeded world is u
   assert.match(reference.match(record)[0], /TM-COA-0114/);
   assert.match(seed.match(lotList)[0], /releasedFields\(entry\)/);
   assert.equal(outside(seed), outside(reference));
-  assert.match(current.editor(), /Saving works in the live platform/);
-  assert.match(current.editor(), /<fieldset disabled=""/);
+  assert.doesNotMatch(current.editor(), /<fieldset disabled=""/, 'the sample workspace can edit products');
 });
 
 test('sold-out products remain visible with disabled purchase controls and a blocked bag', () => {

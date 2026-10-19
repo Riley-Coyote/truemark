@@ -79,8 +79,9 @@ test('seed_only_lots_changed: the first batch carries its real certificates; sto
     const { results, ...record } = lot;
     const { results: none, ...testing } = base;
     assert.deepEqual(none, [], `${base.lot} had no results`);
-    // Seeded stock stays; no certificate states TrueMark's receipt date.
-    assert.deepEqual(record, { ...testing, status: 'released', receivedAt: null, testedAt: entry.analyzed, releasedAt: entry.issued, reference: entry.certificate, coaPath: `${base.lot}.pdf`, sample: false }, base.lot);
+    // Seeded stock stays. No certificate states TrueMark's receipt date, so the sample keeps its own, which the
+    // lot inventory rules require before a lot can sell.
+    assert.deepEqual(record, { ...testing, status: 'released', receivedAt: testing.receivedAt, testedAt: entry.analyzed, releasedAt: entry.issued, reference: entry.certificate, coaPath: `${base.lot}.pdf`, sample: false }, base.lot);
     const rows = (label) => results.filter((result) => result.label === label || result.label.startsWith(`${label} · `));
     const suffix = (component) => (component.name ? ` · ${component.name}` : '');
     assert.deepEqual(rows('Purity'), entry.components.map((c) => ({ label: `Purity${suffix(c)}`, method: 'HPLC', value: c.purity, unit: '%' })), `${base.lot} purity`);
@@ -147,10 +148,13 @@ test('free_shipping_rule: actual preview quote and shared live checkout quote ag
   const product = current.data.products.find((p) => p.id === 'retatrutide-10-mg');
   const price = product.price;
   const settings = current.rows.settings({ free_shipping_threshold: '150.00', free_shipping_method: 'cold-2day', insurance_mode: 'off', insurance_rate: null });
+  // Placing a preview order refreshes the catalog from the sample inventory, so set the fixture price on whichever
+  // product object the catalog holds before each quote.
+  const setPrice = (value) => { for (const item of current.data.products) if (item.id === product.id) item.price = value; };
   try {
     for (const [fixturePrice, base] of [[166.66, 149.99], [166.67, 150], [166.68, 150.01]]) {
-      product.price = fixturePrice;
       for (const method of current.seed.shippingMethods) {
+        setPrice(fixturePrice);
         const draft = { lines: [{ productId: product.id, quantity: 1 }], shipping: method.id, discountCode: 'FIRSTLOT', address: current.seed.buyers[0].addresses[0] };
         const preview = current.preview.quote(draft);
         const live = current.pricing.priceQuote(fixturePrice, 10, method, settings);
@@ -170,7 +174,7 @@ test('free_shipping_rule: actual preview quote and shared live checkout quote ag
       const preview = current.preview.quote({ lines: [{ productId: product.id, quantity: 1 }], shipping: 'cold-2day', discountCode: 'FIRSTLOT' });
       assert.equal(preview.method.price, threshold === 0 ? 0 : 24);
     }
-  } finally { product.price = price; values.clear(); }
+  } finally { setPrice(price); values.clear(); }
 });
 
 test('shipping progress is absent for empty/off, shows cents remaining and unlocks exactly at threshold', () => {
