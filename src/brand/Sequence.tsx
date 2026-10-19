@@ -1064,7 +1064,11 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       }
       // The story plays at the page's top, where the view starts below all that stands above it there (the
       // research-use strip, which scrolls away, as well as the header): it runs from there to the window's foot.
-      const from = view.getBoundingClientRect().top + window.scrollY;
+      // Read in the page's own place: a move into a product holds the whole page up by where it was scrolled while the
+      // window stands at the top (flight.ts), and a measure then must not take that hold for the story's start.
+      const slot = root.closest<HTMLElement>(".tm-view");
+      const holdShift = slot ? new DOMMatrixReadOnly(getComputedStyle(slot).transform).m42 : 0;
+      const from = view.getBoundingClientRect().top + window.scrollY - holdShift;
       if (Math.abs(from - start) > 0.5) {
         start = from;
         section.style.setProperty("--tm-story-from", `${start.toFixed(1)}px`);

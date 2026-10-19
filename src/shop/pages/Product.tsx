@@ -21,7 +21,7 @@ import { ProductName, ProofFigures, Quantity, tone } from "../ui";
 import { certificateDate } from "../../brand/Certificate";
 import { CertificateDialog } from "../../brand/CertificateDialog";
 import { ContinueExploring } from "../../brand/ContinueExploring";
-import { arrivedByFlight, flyBack, registerProduct, STACKED } from "../../brand/flight";
+import { arrivedByFade, arrivedByFlight, flyBack, registerProduct, STACKED } from "../../brand/flight";
 import { useAfterFlight, useArrivedByFlight, useFlightSlot } from "../../brand/FlightViews";
 import { collectionIds } from "../../brand/carousel";
 import { FOCUS, FOG_SCENES } from "../../brand/fog";
@@ -183,6 +183,7 @@ function ProductRoom({ product, signInToOrder }: { product: Product; signInToOrd
   const settled = useAfterFlight();
   // The page the opening's move pushed: "The collection" takes the camera back out to it.
   const enteredByMove = arrivedByFlight(location);
+  const enteredByCamera = enteredByMove && !arrivedByFade(location);
 
   const siblings = products.filter((p) => p.name === product.name && p.active !== false);
   const index = Math.max(0, siblings.indexOf(product));
@@ -198,12 +199,12 @@ function ProductRoom({ product, signInToOrder }: { product: Product; signInToOrd
   // The room the opening shows on this screen, and the pedestal this product stands on: on a wide screen the opening's
   // own, found by name so every size of a compound stands where it does, or the centre one; on a phone held upright,
   // the centre one, so every vial stands in the middle of the screen, unless the opening's camera brought the reader
-  // here, when the vial stays where the camera came to it.
+  // here, when the vial stays where the camera came to it (a fade from the collection has no camera to keep up with).
   const tall = useMediaQuery(TALL_ROOM);
   const room = tall ? COLLECTION_TALL : COLLECTION;
   const seats = tall ? COLLECTION_TALL_SEATS : COLLECTION_SEATS;
   const shownIds = tall ? collectionIds.slice(1, 4) : collectionIds;
-  const own = tall && !enteredByMove ? -1 : shownIds.findIndex((shownId) => products.find((p) => p.id === shownId)?.name === product.name);
+  const own = tall && !enteredByCamera ? -1 : shownIds.findIndex((shownId) => products.find((p) => p.id === shownId)?.name === product.name);
   const pedestal = own >= 0 ? own : tall ? CENTRE.tall : CENTRE.wide;
   const seat = seats[pedestal];
   const half = (tall ? FOG_SCENES.collectionTall : FOG_SCENES.collection).pedestals[pedestal].half;
@@ -419,7 +420,7 @@ function ProductRoom({ product, signInToOrder }: { product: Product; signInToOrd
                     type="button"
                     aria-pressed={s.id === product.id}
                     onClick={() =>
-                      navigate(`/product/${s.id}`, { replace: true, state: { keepScroll: true, flight: enteredByMove || undefined } })
+                      navigate(`/product/${s.id}`, { replace: true, state: { keepScroll: true, flight: enteredByMove || undefined, fade: arrivedByFade(location) || undefined } })
                     }
                   >
                     {s.size}

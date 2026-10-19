@@ -238,6 +238,8 @@ export const productOf = (pathname: string) => /^\/product\/([^/]+)\/?$/.exec(pa
 
 /** The marker a move leaves on the entry it pushed, so Back and "The collection" know to fly home. */
 export const arrivedByFlight = (location: Location) => Boolean((location.state as { flight?: unknown } | null)?.flight);
+/** A move from further down the opening (the collection): it faded in, without the camera, and fades back out. */
+export const arrivedByFade = (location: Location) => Boolean((location.state as { fade?: unknown } | null)?.fade);
 
 /** A parked opening is kept only while the reader stays on a product page the camera brought them to (its sizes too). */
 export const keepsParked = (location: Location) => pageOf(location.pathname) === "product" && arrivedByFlight(location);
@@ -842,6 +844,16 @@ function hold(slot: number, y: number) {
 let landing: ((now?: boolean) => void) | null = null;
 const roomToScroll = () => document.documentElement.scrollHeight - window.innerHeight;
 
+/** The browser's scroll anchoring sits out a landing: it would follow some part of the page as it settles and carry the
+ *  reader off the place just restored (Chrome on a phone, by thousands of pixels). It is back a moment later. */
+let anchoring = 0;
+function quietAnchoring() {
+  const root = document.documentElement;
+  root.style.overflowAnchor = "none";
+  window.clearTimeout(anchoring);
+  anchoring = window.setTimeout(() => root.style.removeProperty("overflow-anchor"), 1000);
+}
+
 /**
  * The page that stays takes its place again: let go, with the window scrolled to where it was held, in one step, so
  * nothing on screen moves. A page that is still too short to stand there (what lies below the opening is drawn once the
@@ -860,6 +872,7 @@ function land(slot: number, y: number) {
     cancelAnimationFrame(frame);
     for (const type of READER_INPUT) window.removeEventListener(type, onInput, true);
     landing = null;
+    quietAnchoring();
     hold(slot, 0);
     if (now) window.scrollTo({ top: Math.min(y, Math.max(0, roomToScroll())), behavior: "instant" });
     releaseScroll();
@@ -1024,9 +1037,10 @@ function inView(element: Element) {
 
 /**
  * Into a product from the opening: the camera moves in on its vial. Returns false when the move can't
- * run here, so the vial's link simply navigates.
+ * run here, so the vial's link simply navigates. A vial from further down the opening (the collection) fades in, and
+ * back out (`camera` false): the camera knows only the opening's own plate, which is out of sight by then.
  */
-export function flyToProduct(id: string, vial: HTMLElement): boolean {
+export function flyToProduct(id: string, vial: HTMLElement, camera = true): boolean {
   if (move) { hurry(); return true; }
   // An opening still landing from the last move lands now, so its place is read where its reader sees it.
   landing?.();
@@ -1034,7 +1048,7 @@ export function flyToProduct(id: string, vial: HTMLElement): boolean {
   const shown = live()[0];
   const home = homes.get(shown.id);
   if (!home || pageOf(router.location.pathname) !== "home" || !productById(id)) return false;
-  const kind: Kind = reduced() || !home.vials.has(id) || !inView(vial) ? "fade" : "camera";
+  const kind: Kind = !camera || reduced() || !home.vials.has(id) || !inView(vial) ? "fade" : "camera";
   // Both pages start at the top. The opening is held where it was if it had scrolled, and that place is kept for it,
   // so the camera brings it back there.
   const scrolled = Math.round(window.scrollY);
@@ -1044,9 +1058,10 @@ export function flyToProduct(id: string, vial: HTMLElement): boolean {
     window.scrollTo({ top: 0, behavior: "instant" });
   }
   const to = `/product/${id}`;
+  const state = camera ? { flight: "in" } : { flight: "in", fade: true };
   const arriving: Slot = {
     id: nextSlot++,
-    location: { pathname: to, search: "", hash: "", state: { flight: "in" }, key: `flight-${nextSlot}` } as Location,
+    location: { pathname: to, search: "", hash: "", state, key: `flight-${nextSlot}` } as Location,
     pending: true,
     leaving: false,
   };
@@ -1055,7 +1070,7 @@ export function flyToProduct(id: string, vial: HTMLElement): boolean {
   // A parked opening can't be under a page that is the opening; there is none here, but none is ever kept by a new move.
   setViews({ slots: [{ ...shown, location: router.location, leaving: true }, arriving], moving: true });
   note("go", { id, kind, scrolled });
-  router.navigate(to, { state: { flight: "in" } });
+  router.navigate(to, { state });
   return true;
 }
 
@@ -1102,7 +1117,7 @@ function onPop(update: PopUpdate): boolean {
   const product = products.get(shown.id);
   const id = productOf(from.pathname);
   if (!product || !id || product.id !== id) return false;
-  const kind: Kind = !reduced() && openingShows(id) && seen(product) ? "camera" : "fade";
+  const kind: Kind = !arrivedByFade(from) && !reduced() && openingShows(id) && seen(product) ? "camera" : "fade";
   const scrolled = Math.round(window.scrollY);
   if (scrolled) {
     hold(shown.id, scrolled);
