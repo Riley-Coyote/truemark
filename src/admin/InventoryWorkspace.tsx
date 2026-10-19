@@ -10,6 +10,7 @@ import { inventoryStore } from "../platform/inventory-store";
 import { fifoLots, incomingUnits, inventoryTotals, lotAvailable, lotKey, lotNumber, lotStage } from "../platform/inventory";
 import { ProductEditor, ClassesEditor } from "./Commerce";
 import { LotCertificateDrawer } from "./LotCertificateDrawer";
+import { LotDetail } from "./LotDetail";
 import { EditInventoryLot, ReceiveInventory } from "./InventoryForms";
 import { SelectField, SwitchRow, TextField } from "./fields";
 import { useSearchQuery, matches } from "./state";
@@ -50,17 +51,17 @@ export default function InventoryWorkspace() {
     : certificate ? <LotCertificateDrawer key={lotKey(certificate)} lot={certificate} onClose={()=>setCertificate(null)} onSaved={()=>{setCertificate(null);refresh();setNotice("Certificate saved. Passing results clear testing quarantine automatically; incoming stock and other holds remain unavailable.");}}/>
     : editing ? <EditInventoryLot key={lotKey(editing)} lot={editing} onClose={()=>setEditing(null)} onSaved={()=>{setEditing(null);refresh();setNotice("Lot updated. Inventory and history are up to date.");}}/>
     : newProduct ? <Drawer title="Add new product" eyebrow="Products & inventory" onClose={()=>setNewProduct(null)}><SwitchRow title="Add first lot next" description="Continue to incoming or received inventory after saving the product." checked={firstLot} onChange={setFirstLot}/><ProductEditor product={newProduct} classes={classes.data ?? []} onSaved={()=>{const id=newProduct.id;setNewProduct(null);refresh();open(id);if(firstLot)setReceiving(id);}}/></Drawer>
-    : row ? <ProductInventory row={row} classes={classes.data ?? []} onClose={()=>open(null)} onRefresh={refresh} onReceive={()=>setReceiving(row.product.id)} onEdit={setEditing} onCertificate={setCertificate}/>
+    : row ? <ProductInventory row={row} classes={classes.data ?? []} openLot={openLot} onLot={id=>setParams(p=>{if(id)p.set("lot",id);else p.delete("lot");return p;})} onClose={()=>open(null)} onRefresh={refresh} onReceive={()=>setReceiving(row.product.id)} onEdit={setEditing} onCertificate={setCertificate}/>
     : selected && !catalog.loading ? <Drawer title="Product" onClose={()=>open(null)}><EmptyState title="This product could not be loaded." action={<Button onClick={refresh}>Try again</Button>}/></Drawer> : null}
   </div>;
 }
 
-function ProductInventory({row,classes,onClose,onRefresh,onReceive,onEdit,onCertificate}:{row:Row;classes:import("../data").Category[];onClose:()=>void;onRefresh:()=>void;onReceive:()=>void;onEdit:(lot:Lot)=>void;onCertificate:(lot:Lot)=>void}) {
+function ProductInventory({row,classes,openLot,onLot,onClose,onRefresh,onReceive,onEdit,onCertificate}:{row:Row;classes:import("../data").Category[];openLot:string|null;onLot:(lot:string|null)=>void;onClose:()=>void;onRefresh:()=>void;onReceive:()=>void;onEdit:(lot:Lot)=>void;onCertificate:(lot:Lot)=>void}) {
   const [editProduct,setEditProduct]=useState(false);const [remove,setRemove]=useState<Lot|null>(null);const [reason,setReason]=useState("");const [error,setError]=useState("");const [busy,setBusy]=useState(false);
   const history=useResource(()=>inventoryStore.history(row.product.id),[row.product.id,row.lots.map(l=>l.version).join(",")]);
   const eligible=row.lots.filter(l=>lotAvailable(l)>0);
   const other=row.lots.filter(l=>lotAvailable(l)===0).sort((a,b)=>Number((b.units ?? 0)>0 || incomingUnits(b)>0)-Number((a.units ?? 0)>0 || incomingUnits(a)>0));
-  const ordered=[...eligible,...other];
+  const ordered=[...eligible,...other];const detail=openLot ? row.lots.find(l=>l.lot===openLot || lotNumber(l)===openLot || l.id===openLot) : undefined;
   return <Drawer title={`${row.product.name} · ${row.product.size}`} eyebrow="Product inventory" onClose={onClose} footer={<div className="cc-confirm-actions"><Button variant="primary" onClick={onReceive}>Receive inventory</Button><Button onClick={()=>setEditProduct(!editProduct)}>{editProduct ? "Close product editor" : "Edit product"}</Button></div>}>
     <div className="inventory-product-counts">{[["Available",row.totals.available],["Reserved",row.totals.reserved],["On hand",row.totals.onHand],["Incoming",row.totals.incoming]].map(([label,value])=><div key={label}><span className="kit-label">{label}</span><strong className="kit-figure">{value}</strong></div>)}</div>
     {editProduct && <Section title="Product details"><ProductEditor key={row.product.id} product={row.product} classes={classes} onSaved={onRefresh}/></Section>}
@@ -70,10 +71,11 @@ function ProductInventory({row,classes,onClose,onRefresh,onReceive,onEdit,onCert
         {eligible[0]===l ? <p className="inventory-queue">Selling now · oldest eligible receipt</p> : eligible[1]===l ? <p className="inventory-queue">Up next</p> : null}
         <p className="kit-note">{l.receivedAt ? `First received ${formatDate(l.receivedAt)}` : (l.units ?? 0)>0 ? "Receipt date needs reconciliation" : "Not received"}{l.expectedAt ? ` · expected ${formatDate(l.expectedAt)}` : ""}{l.holdReason ? ` · ${l.holdReason}` : ""}</p>
         <dl className="inventory-lot-counts">{[["On hand",l.units ?? "Count needed"],["Available",lotAvailable(l)],["Reserved",l.reservedUnits ?? 0],["Incoming",incomingUnits(l)]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
-        <div className="cc-confirm-actions"><Button onClick={()=>onEdit(l)}>Edit lot / adjust count</Button><Button onClick={()=>onCertificate(l)}>{l.coaPath ? "Update certificate" : "Upload certificate"}</Button>{l.coaUrl && <a className="kit-button" href={l.coaUrl} target="_blank" rel="noreferrer">View certificate ↗</a>}{l.coaPath && <Button variant="text" onClick={()=>{setRemove(l);setReason("");setError("");}}>Remove certificate</Button>}</div>
+        <div className="cc-confirm-actions"><Button onClick={()=>onLot(l.lot)}>Lot details</Button><Button onClick={()=>onEdit(l)}>Edit lot / adjust count</Button><Button onClick={()=>onCertificate(l)}>{l.coaPath ? "Update certificate" : "Upload certificate"}</Button>{l.coaUrl && <a className="kit-button" href={l.coaUrl} target="_blank" rel="noreferrer">View certificate ↗</a>}{l.coaPath && <Button variant="text" onClick={()=>{setRemove(l);setReason("");setError("");}}>Remove certificate</Button>}</div>
       </article>)}
     </Section>
     {remove && <Section title={`Remove certificate · ${lotNumber(remove)}`}><p className="kit-note">Remaining units will become unavailable. Shipped certificate records stay on file.</p><TextField label="Reason for removing certificate" value={reason} onChange={setReason}/><div className="cc-confirm-actions"><Button variant="danger" disabled={busy || !reason.trim()} onClick={async()=>{setBusy(true);try{await inventoryStore.removeCertificate(lotKey(remove),reason);setRemove(null);onRefresh();}catch(e){setError(e instanceof Error ? e.message : "Could not remove certificate.");}finally{setBusy(false);}}}>Remove attachment</Button><Button onClick={()=>setRemove(null)} disabled={busy}>Cancel</Button></div>{error && <p role="alert" className="kit-field-error">{error}</p>}</Section>}
+    {detail && <LotDetail key={lotKey(detail)} lot={detail} product={row.product} onClose={()=>onLot(null)}/>}
     <Section title="Recent inventory history">{history.error ? <p role="alert">{history.error.message}</p> : !history.data?.length ? <p className="kit-note">{history.loading ? "Loading history…" : "Changes and receipts will appear here."}</p> : <ol className="inventory-history">{history.data.map(e=><li key={e.id}><strong>{e.reason}</strong><span className="kit-note">{new Date(e.at).toLocaleString()} · {e.actor ?? "System"}</span><details><summary>View change</summary><HistoryChange before={e.before} after={e.after}/></details></li>)}</ol>}</Section>
   </Drawer>;
 }
