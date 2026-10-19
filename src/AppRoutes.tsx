@@ -4,6 +4,7 @@ import { Route, Routes } from "react-router-dom";
 import App from "./App";
 import ReviewShell, { prepareReview } from "./ReviewShell";
 import Gate from "./brand/Gate";
+import { ResearcherCheck } from "./shop/ResearcherCheck";
 import { ReviewOverview } from "./pages";
 // Launch removes these imports and their routes from the customer bundle. The overview arrives with its route
 // (pages.tsx; main.tsx readies it when a visit starts there).
@@ -68,6 +69,8 @@ export default function AppRoutes() {
         <Route path="/access" element={<Gate />} />
         <Route path="*" element={<App />} />
       </Routes>
+      {/* A first visit confirms it is a researcher's, on the shop, its sign-in and the partner pages alike. */}
+      <ResearcherCheck />
     </ReviewShell>
   );
 }
