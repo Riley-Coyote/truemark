@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { productById, productCutout } from "./catalog";
 import { useShop } from "./context";
 import { usePrefersReducedMotion, usePresence } from "./motion";
-import { discountOn, roundMoney, useBagCode, useBagLines } from "./pages/checkout/Bag";
+import { discountOn, roundMoney, useBagCode, useBagLines, useFreeBacWater } from "./pages/checkout/Bag";
 import { ShippingProgress, useShipping } from "./ShippingProgress";
 import { useReviewDockRoom } from "./dock";
 import "./mobile-add.css";
@@ -30,6 +30,7 @@ export function MobileAdd() {
   const code = useBagCode();
   const shipping = useShipping();
   const base = roundMoney(subtotal - (code.discount ? discountOn(subtotal, code.discount) : 0));
+  const free = useFreeBacWater(base, shipping.data?.settings);
   const product = entry ? productById(entry.id) : undefined;
   // A change of page puts it away in the same step, so it never stands over the next page's own buttons (the cart's
   // Check out); it leaves the way it rose, or on a phone goes with the page it was on (motion.ts). It is closed in the
@@ -141,7 +142,7 @@ export function MobileAdd() {
       <p className="tm-addbar-title" role="status" key={entry.sequence}>Added · {product.name} {product.size}</p>
       <button className="tm-addbar-view" onClick={() => { close(); openCart(); }}>View cart</button>
       <button className="tm-addbar-close" aria-label="Close added-to-cart message" onClick={close}><X size={18} aria-hidden="true" /></button>
-      <ShippingProgress base={base} count={count} settings={shipping.data?.settings} />
+      <ShippingProgress base={base} count={count} settings={shipping.data?.settings} bacWater={free.offered} />
       {shipping.error && <button className="tm-addbar-retry" disabled={shipping.loading} onClick={shipping.reload}>Retry shipping</button>}
     </div>
   );

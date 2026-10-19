@@ -9,6 +9,7 @@ import type { Order, OrderStatus, ShippingMethod } from "../../../platform/types
 import { productById } from "../../catalog";
 import { Thumb, itemCount, minus } from "./Bag";
 import "./checkout.css";
+import { lineCharge, lineUnits } from "../../../platform/pricing";
 
 const NEXT = [
   { title: "Confirmed", text: "Your order is on record, with the lot number of every vial." },
@@ -184,9 +185,9 @@ function Placed({ order, method, sampleRates }: { order: Order; method?: Shippin
                   {product && <Thumb product={product} size="lg" />}
                   <div className="tm-confirm-line-body">
                     <p className="tm-confirm-name">{product?.name ?? line.productId}</p>
-                    <p className="tm-confirm-price">{money(line.unitPrice * line.quantity)}</p>
+                    <p className="tm-confirm-price">{money(lineCharge(line))}</p>
                     <p className="tm-line-meta">
-                      {product ? `${product.size} · ` : ""}Qty {line.quantity} · {money(line.unitPrice)} each
+                      {product ? `${product.size} · ` : ""}Qty {line.quantity} · {lineUnits(line, money)}
                     </p>
                     <Link className="tm-lot-card" to={`/verify?lot=${encodeURIComponent(line.lot)}`}>
                       <span className="tm-lot-card-label">Lot</span>

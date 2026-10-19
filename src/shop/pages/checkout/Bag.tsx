@@ -8,14 +8,14 @@ import { ArrowRight, CircleAlert, Plus } from "lucide-react";
 import { money, products } from "../../../data";
 import type { Product } from "../../../data";
 import { store } from "../../../platform/store";
-import type { Discount } from "../../../platform/types";
+import type { Discount, StorefrontSettings } from "../../../platform/types";
 import { productCutout } from "../../catalog";
 import { pairsFor } from "../../pairs";
 import { readReferral, useShop } from "../../context";
 import { afterExit, usePrefersReducedMotion } from "../../motion";
 import { ProductName, Quantity } from "../../ui";
 import { ShippingProgress, useShipping } from "../../ShippingProgress";
-import { priceQuote, defaultSettings, roundMoney } from "../../../platform/pricing";
+import { FREE_BAC_WATER_ID, earnsFreeBacWater, priceQuote, defaultSettings, roundMoney } from "../../../platform/pricing";
 import "./checkout.css";
 
 /* ---------- Shared by the bag, checkout and confirmation ---------- */
@@ -309,6 +309,29 @@ export function CodeControl({ code }: { code: BagCode }) {
   );
 }
 
+/**
+ * The free BAC Water vial for a bag whose merchandise after discounts is `base`: whether the bag has earned it, and
+ * whether one can be sent (in stock beyond any BAC Water already in the bag). The order itself decides at placing.
+ */
+export function useFreeBacWater(base: number, settings: StorefrontSettings | undefined) {
+  const { cart } = useShop();
+  const vial = products.find((product) => product.id === FREE_BAC_WATER_ID);
+  const inBag = cart.find((item) => item.id === FREE_BAC_WATER_ID)?.quantity ?? 0;
+  const available = Boolean(vial && vial.active !== false && (vial.stock == null || vial.stock >= inBag + 1));
+  return { earned: Boolean(settings && earnsFreeBacWater(base, settings)), available, offered: available && settings?.freeBacWaterThreshold != null };
+}
+
+/** The free vial as a totals row once earned: $0.00, or out of stock when none can be sent. */
+export function FreeVialRow({ earned, available }: { earned: boolean; available: boolean }) {
+  if (!earned) return null;
+  return (
+    <div className="tm-totals-row">
+      <dt>Free BAC Water · 10 mL</dt>
+      <dd className={available ? undefined : "tm-totals-quiet"}>{available ? money(0) : "Out of stock"}</dd>
+    </div>
+  );
+}
+
 /** The applied code as a totals row: the kind, the code in mono, and the amount it takes off. */
 export function DiscountRow({ discount, amount }: { discount: Discount | null; amount: number }) {
   if (!discount) return null;
@@ -452,6 +475,7 @@ export function BagContents() {
   const discount = code.discount ? discountOn(subtotal, code.discount) : 0;
   const method = shipping.data?.methods.find((m) => m.id === "cold-2day") ?? null;
   const priced = shipping.data ? priceQuote(subtotal, code.discount?.percent ?? 0, method, shipping.data.settings, insured) : null;
+  const free = useFreeBacWater(priced?.base ?? roundMoney(subtotal - discount), shipping.data?.settings);
 
   if (!lines.length && !issues.length) {
     return (
@@ -508,11 +532,12 @@ export function BagContents() {
         <StockNotice issues={issues} checking={catalogChecking} error={catalogError} onRetry={reloadCatalog} />
         <dl className="tm-totals">
           <DiscountRow discount={code.discount} amount={priced?.discountAmount ?? discount} />
+          <FreeVialRow {...free} />
           <InsuranceRow amount={priced?.insurance} applied={priced?.insuranceApplied} />
           <div className="tm-totals-row"><dt>{method?.label ?? "Shipping"}</dt><dd>{priced && method ? priced.shipping === 0 ? "Free" : money(priced.shipping) : "…"}</dd></div>
           <div className="tm-totals-row tm-totals-total"><dt>Total</dt><dd>{priced && method ? money(priced.total) : "…"}</dd></div>
         </dl>
-        <ShippingProgress base={priced?.base ?? subtotal} count={count} settings={shipping.data?.settings} />
+        <ShippingProgress base={priced?.base ?? subtotal} count={count} settings={shipping.data?.settings} bacWater={free.offered} />
         {shipping.error && <p role="alert" className="tm-bag-note">Shipping could not be loaded. <button className="tm-text-button" onClick={shipping.reload}>Try again</button></p>}
         <div className="tm-bag-actions">
           <Link className="tm-button tm-button-primary" to="/checkout" aria-disabled={blocked || undefined} tabIndex={blocked ? -1 : undefined} onClick={(event) => { if (blocked) event.preventDefault(); else closeCart(); }}>
@@ -541,6 +566,7 @@ export function CartPage() {
   const method = shipping.data?.methods.find((m) => m.id === "cold-2day") ?? null;
   const discount = code.discount ? discountOn(subtotal, code.discount) : 0;
   const priced = shipping.data ? priceQuote(subtotal, code.discount?.percent ?? 0, method, shipping.data.settings, insured) : null;
+  const free = useFreeBacWater(priced?.base ?? roundMoney(subtotal - discount), shipping.data?.settings);
 
   if (!lines.length && !issues.length) {
     return (
@@ -623,6 +649,7 @@ export function CartPage() {
               <dd>{money(subtotal)}</dd>
             </div>
             <DiscountRow discount={code.discount} amount={discount} />
+            <FreeVialRow {...free} />
             <InsuranceRow amount={priced?.insurance} applied={priced?.insuranceApplied} />
             <div className="tm-totals-row"><dt>{method?.label ?? "Shipping"}</dt><dd>{priced && method ? priced.shipping === 0 ? "Free" : money(priced.shipping) : "…"}</dd></div>
           </dl>
@@ -631,7 +658,7 @@ export function CartPage() {
             <span>Total</span>
             <span>{priced && method ? money(priced.total) : "…"}</span>
           </div>
-          <ShippingProgress base={priced?.base ?? roundMoney(subtotal - discount)} count={count} settings={shipping.data?.settings} />
+          <ShippingProgress base={priced?.base ?? roundMoney(subtotal - discount)} count={count} settings={shipping.data?.settings} bacWater={free.offered} />
           {shipping.error && <p role="alert" className="tm-summary-note">Shipping could not be loaded. <button className="tm-text-button" onClick={shipping.reload}>Try again</button></p>}
           <Link aria-disabled={blocked || undefined} tabIndex={blocked ? -1 : undefined} onClick={(event) => { if (blocked) event.preventDefault(); }} className="tm-button tm-button-primary tm-button-block" to="/checkout">
             Check out

@@ -48,7 +48,7 @@ export function renderTemplate(template: string,c: TemplateData): Rendered {
  const institution=c.buyer?.institution??o.address?.institution??'';
  const vials=(c.lines??[]).reduce((n,l)=>n+Number(l.quantity),0);
  const productName=(line: Row)=>{const product=c.products?.find(p=>p.id===line.product_id);return product?`${product.name} ${product.size}`:line.product_id;};
- const lineRows=(c.lines??[]).map(l=>[`${productName(l)} × ${l.quantity}`,money(Number(l.unit_price)*Number(l.quantity))]);
+ const lineRows=(c.lines??[]).map(l=>[`${productName(l)} × ${l.quantity}`,money(Number(l.unit_price)*(Number(l.quantity)-Number(l.free_quantity??0)))]);
  const via=c.partner?.code?` · via ${c.partner.code}`:'';
  if(template.endsWith('_sms')) {
   let text: string;

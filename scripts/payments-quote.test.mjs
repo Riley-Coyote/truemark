@@ -46,10 +46,13 @@ const normalizeIds=html=>{const ids=new Map();return html.replace(/_R_[A-Za-z0-9
 test('preview checkout, confirmation and account orders retain base markup apart from generated ids',()=>{
  for(const key of ['checkout','confirmation','ordersRender']) assert.equal(normalizeIds(current[key]()),normalizeIds(asCart(baseline[key]())),key);
 });
-test('preview quote retains base totals, shipping, discount and insurance',()=>{
+test('preview quote retains base totals, shipping, discount and insurance; the free BAC Water vial is its one addition',()=>{
  const draft={lines:[{productId:'bpc-157-10-mg',quantity:2}],address:{region:'TX',country:'US'},shipping:'cold-2day'};
  const before=baseline.preview.quote(draft),after=current.preview.quote(draft);
- assert.deepEqual(after,before);
+ const {lines,...totals}=after,{lines:baseLines,...baseTotals}=before;
+ assert.deepEqual(totals,baseTotals);
+ assert.deepEqual(lines.filter(l=>!l.freeQuantity),baseLines);
+ assert.deepEqual(lines.filter(l=>l.freeQuantity).map(l=>[l.productId,l.quantity,l.unitPrice,l.freeQuantity]),[['bacteriostatic-water-10-ml',1,0,1]]);
 });
 test('live adapter tax quote agrees with PostgreSQL numeric for rated, unrated and non-US fixtures',async()=>{
  const h=sqlDb;

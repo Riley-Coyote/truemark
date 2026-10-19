@@ -34,6 +34,7 @@ import { STAGE_LIMIT, formatLimit, formatWait, isLate, orderTone, paymentLabel, 
 import type { OpenStage } from "./metrics";
 import { commissionState } from "./program";
 import { ShipmentSection } from "./ShipmentSection";
+import { lineCharge } from "../platform/pricing";
 
 const MINUS = "−";
 
@@ -324,9 +325,9 @@ export function OrderDrawer({ id, onClose }: { id: string; onClose: () => void }
 
                 </div>
                 <span className="cc-line-qty kit-num">
-                  {line.quantity} × {formatMoney(line.unitPrice)}
+                  {line.quantity} × {line.freeQuantity === line.quantity ? "Free" : formatMoney(line.unitPrice)}{line.freeQuantity && line.freeQuantity < line.quantity ? ` · ${line.freeQuantity} free` : ""}
                 </span>
-                <span className="cc-line-total kit-num">{formatMoney(line.unitPrice * line.quantity)}</span>
+                <span className="cc-line-total kit-num">{formatMoney(lineCharge(line))}</span>
               </li>
             );
           })}

@@ -68,6 +68,8 @@ export type ShippingMethod = {
 export type StorefrontSettings = {
   freeShippingThreshold: Money | null;
   freeShippingMethod: string;
+  /** Merchandise after discounts that earns one free BAC Water 10 mL vial; null when the owner turns it off. */
+  freeBacWaterThreshold: Money | null;
   insuranceMode: "off" | "optional" | "automatic";
   insuranceRate: number | null;
   /** False until the owner saves the shipping prices; checkout labels them as samples until then. */
@@ -85,6 +87,8 @@ export type OrderLine = {
   quantity: number;
   unitPrice: Money;
   lot: string;
+  /** Units of `quantity` given free (the free BAC Water vial), and so not charged. */
+  freeQuantity?: number;
   allocations?: LotAllocation[];
 };
 

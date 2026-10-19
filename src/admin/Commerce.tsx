@@ -142,6 +142,8 @@ export function ClassesEditor({ classes, onSaved }: { classes: Category[]; onSav
 function SettingsEditor({ settings, kind, owner, onSaved }: { settings: StorefrontSettings; kind: "shipping" | "insurance"; owner: boolean; onSaved: () => void }) {
   const [enabled, setEnabled] = useState(settings.freeShippingThreshold !== null);
   const [threshold, setThreshold] = useState(settings.freeShippingThreshold?.toFixed(2) ?? "150.00");
+  const [vialEnabled, setVialEnabled] = useState(settings.freeBacWaterThreshold !== null);
+  const [vialThreshold, setVialThreshold] = useState(settings.freeBacWaterThreshold?.toFixed(2) ?? "75.00");
   const [mode, setMode] = useState(settings.insuranceMode);
   const [rate, setRate] = useState(settings.insuranceRate == null ? "" : String(Number((settings.insuranceRate * 100).toFixed(3))));
   const [busy, setBusy] = useState(false);
@@ -156,7 +158,11 @@ function SettingsEditor({ settings, kind, owner, onSaved }: { settings: Storefro
       if (enabled && (parsed.value === undefined || !Number.isFinite(parsed.value) || parsed.value > 99999999.99)) {
         setError(parsed.error ?? "Enter a valid threshold."); return;
       }
-      patch = { freeShippingThreshold: enabled ? parsed.value! : null };
+      const vial = parseDollars(vialThreshold, { allowZero: true });
+      if (vialEnabled && (vial.value === undefined || !Number.isFinite(vial.value) || vial.value > 99999999.99)) {
+        setError(vial.error ?? "Enter a valid free BAC Water threshold."); return;
+      }
+      patch = { freeShippingThreshold: enabled ? parsed.value! : null, freeBacWaterThreshold: vialEnabled ? vial.value! : null };
     } else {
       if ((mode !== "off" || rate !== "") && (!/^\d+(\.\d{1,3})?$/.test(rate) || Number(rate) > 100)) {
         setError("Enter a rate from 0 to 100%, with up to three decimal places."); return;
@@ -173,6 +179,8 @@ function SettingsEditor({ settings, kind, owner, onSaved }: { settings: Storefro
       {kind === "shipping" ? <>
         <SwitchRow title="Offer free shipping" description="Applies to the standard method after discounts. Overnight keeps its price." checked={enabled} onChange={setEnabled} />
         <TextField label="Free-shipping threshold" prefix="$" inputMode="decimal" value={threshold} onChange={setThreshold} disabled={!enabled} />
+        <SwitchRow title="Include a free BAC Water" description="One BAC Water 10 mL at $0 once the order reaches this amount after discounts. When none is in stock, the order goes without it and says so." checked={vialEnabled} onChange={setVialEnabled} />
+        <TextField label="Free BAC Water threshold" prefix="$" inputMode="decimal" value={vialThreshold} onChange={setVialThreshold} disabled={!vialEnabled} />
       </> : <>
         <SelectField label="Mode" value={mode} onChange={setMode} options={[{ value: "off", label: "Off" }, { value: "optional", label: "Optional" }, { value: "automatic", label: "Automatic" }]} />
         <TextField label="Rate" suffix="%" value={rate} onChange={setRate} inputMode="decimal" hint="The client decides the rate and whether it's optional." />
