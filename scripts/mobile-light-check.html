@@ -1,0 +1,32 @@
+<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrueMark mobile scroll check</title>
+<!-- Local browser regression check: serve through Vite and run with this tab visible.
+     Old mobile scroll pausing produces zero draws; the fixed canvas draws during every step.
+     This checks narrow-screen scheduling, not physical-device GPU performance. -->
+<style>body{font:16px system-ui;background:#eee}iframe{width:390px;height:740px;border:1px solid #aaa}pre{white-space:pre-wrap}button{padding:12px}</style>
+<button id="test">Check light during mobile scrolling</button><pre id="result">Load the sample storefront, then run the check.</pre>
+<iframe title="Mobile storefront" src="/"></iframe>
+<script>
+const frame = document.querySelector('iframe'), result = document.querySelector('#result');
+document.querySelector('#test').onclick = async () => {
+ const w = frame.contentWindow, c = w.document.querySelector('.tm-wall-light');
+ if (!c) {result.textContent='Storefront still loading';return;}
+ const gl = c.getContext('webgl'), original = gl.drawArrays;
+ let draws=0;
+ gl.drawArrays=function(...args){draws++;return original.apply(this,args);};
+ const wait=ms=>new Promise(r=>setTimeout(r,ms));
+ const section=w.document.querySelector('.tm-closing');
+ w.scrollTo(0,section.getBoundingClientRect().top+w.scrollY-100);
+ await wait(500);
+ draws=0;
+ const batches=[];
+ for(let i=0;i<12;i++){
+   const before=draws;
+   w.scrollBy(0,i<6?30:-30);
+   await wait(70);
+   batches.push(draws-before);
+ }
+ gl.drawArrays=original;
+ result.textContent=JSON.stringify({width:w.innerWidth,hidden:w.document.hidden,scrollY:w.scrollY,off:c.hasAttribute('data-off'),contextLost:gl.isContextLost(),canvasBounds:c.getBoundingClientRect().toJSON(),drawsDuringScroll:draws,drawsPerScrollStep:batches,pass:batches.every(n=>n>0)},null,2);
+};
+</script>

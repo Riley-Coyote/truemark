@@ -15,16 +15,19 @@ export function WallLight() {
     const home = node?.closest<HTMLElement>(".tm-home");
     if (!node || !home) return;
     const opening = home.querySelector<HTMLElement>(".tm-mist");
-    let top = 0;
+    const paperTrail = home.querySelector<HTMLElement>('[aria-labelledby="tm-trail-title"]');
+    let top = 0, trailCenter = -1;
     const measure = () => {
       top = opening ? opening.getBoundingClientRect().bottom + window.scrollY : 0;
+      if (paperTrail) {
+        const bounds = paperTrail.getBoundingClientRect();
+        trailCenter = bounds.top + window.scrollY + bounds.height / 2;
+      }
     };
     measure();
-    const light = startWallLight(node, () => top, !moving);
+    const light = startWallLight(node, () => top, !moving, () => trailCenter);
     if (!light) return;
     const seen = new Set<Element>();
-    const touch = matchMedia('(max-width: 700px), (any-pointer: coarse)').matches;
-    let scrolling = false, scrollRest = 0;
     // The wall is in sight below the header only: what lies under the header is the header's.
     const header = document.querySelector(".tm-header")?.getBoundingClientRect().bottom ?? 0;
     const watch = new IntersectionObserver((entries) => {
@@ -32,7 +35,7 @@ export function WallLight() {
         if (entry.isIntersecting) seen.add(entry.target);
         else seen.delete(entry.target);
       }
-      light.setActive(seen.size > 0 && !scrolling);
+      light.setActive(seen.size > 0 && !document.hidden);
       // With none of the wall in sight the light is put away (home.css): Safari reads a fixed layer at the screen's
       // foot as the colour under its toolbar, and keeps the one it first read, so at the page's end the footer's own
       // colour would never show there.
@@ -44,17 +47,20 @@ export function WallLight() {
       light.redraw();
     });
     if (opening) sized.observe(opening);
-    const scrolled = () => {
-      if (!touch) { light.redraw(); return; }
-      if (!scrolling) { scrolling = true; light.setActive(false); }
-      window.clearTimeout(scrollRest);
-      scrollRest = window.setTimeout(() => { scrolling = false; light.setActive(seen.size > 0); }, 180);
-    };
-    if (touch || !moving) window.addEventListener("scroll", scrolled, { passive: true });
+    sized.observe(home);
+    if (paperTrail) sized.observe(paperTrail);
+    // The fixed canvas must follow the current scroll position even on touch screens.
+    // Pausing it during a gesture leaves stale pixels behind, then jumps at scroll end.
+    // redraw() shares the renderer's pending frame, including when motion is paused.
+    const scrolled = () => light.redraw();
+    const visibility = () => light.setActive(seen.size > 0 && !document.hidden);
+    window.addEventListener("scroll", scrolled, { passive: true });
+    document.addEventListener("visibilitychange", visibility);
     return () => {
       watch.disconnect();
       sized.disconnect();
-      window.removeEventListener("scroll", scrolled); window.clearTimeout(scrollRest);
+      window.removeEventListener("scroll", scrolled);
+      document.removeEventListener("visibilitychange", visibility);
       light.stop();
     };
   }, [moving]);

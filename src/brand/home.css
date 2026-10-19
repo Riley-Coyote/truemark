@@ -61,6 +61,22 @@ body:has(.tm-wall-light) .tm-footer {
   visibility: hidden;
 }
 
+/* On supported touch browsers scrolling belongs to the compositor, not WebGL's
+   next JavaScript frame. The extra screen is a guard band, not a larger logo. */
+@supports (animation-timeline: scroll(root block)) {
+  .tm-wall-light[data-native-scroll] {
+    top: -50lvh;
+    height: 200lvh;
+    will-change: transform;
+    animation: tm-light-scroll 1s linear both;
+    animation-timeline: scroll(root block);
+  }
+  @keyframes tm-light-scroll {
+    from { transform: translate3d(0, var(--tm-light-base, 0px), 0); }
+    to { transform: translate3d(0, calc(var(--tm-light-base, 0px) + var(--tm-light-travel, 0px)), 0); }
+  }
+}
+
 /* ---------- Arrival, with the scroll ---------- */
 
 /* Below the opening what arrives comes with the reader's scroll, not on a clock behind it: each block rises out of the

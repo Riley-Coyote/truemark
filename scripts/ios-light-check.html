@@ -1,0 +1,49 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrueMark mobile renderer check</title>
+<style>
+body { margin:0; background:#d9d4e5; color:#30234d; font:16px system-ui; }
+header { position:fixed; top:0; left:0; z-index:10; padding:12px; background:#ffffffed; }
+pre { max-height:40vh; overflow:auto; font-size:12px; }
+main { height:6000px; position:relative; isolation:isolate; }
+section { height:800px; display:grid; place-items:center; border-bottom:1px solid #aaa; }
+canvas { position:fixed; top:0; left:0; width:100%; height:100lvh; z-index:-1; pointer-events:none; }
+</style>
+<header><button id="run">Check mobile renderer</button><pre id="result">Loads the actual mobile rendering path, even on a desktop browser. Not an iOS device benchmark.</pre></header>
+<main><canvas class="tm-wall-light"></canvas><section>Logo rendering comparison</section><section>Scroll moves the whole light layer</section><section>Upright logo</section><section>Shimmer continues inside</section></main>
+<script type="module">
+import '../src/brand/home.css';
+import {startWallLight} from '../src/brand/wall-light.ts';
+const canvas = document.querySelector('canvas');
+const params=new URLSearchParams(location.search);
+const light = startWallLight(canvas,()=>0,params.has('still'),()=>2000,{mobile:params.get('mode')!=='desktop',pixelRatio:params.has('retina')?2:undefined});
+light?.setActive(true);
+if(params.has('compare')) { document.querySelector('header').hidden=true; scrollTo(0,1800); }
+addEventListener('scroll',()=>light?.redraw(),{passive:true});
+addEventListener('visibilitychange',()=>light?.setActive(!document.hidden));
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+document.querySelector('#run').onclick=async()=>{
+ const result=document.querySelector('#result');
+ if(!light){result.textContent='WebGL unavailable';return;}
+ scrollTo(0,1000); await wait(250);
+ const gl=canvas.getContext('webgl'), program=gl.getParameter(gl.CURRENT_PROGRAM);
+ const uniform=()=>gl.getUniform(program,gl.getUniformLocation(program,'scroll'));
+ const transform=()=>new DOMMatrixReadOnly(getComputedStyle(canvas).transform).m42;
+ const before={scroll:scrollY,shaderScroll:uniform(),transform:transform()};
+ scrollBy(0,80); await wait(160);
+ const after={scroll:scrollY,shaderScroll:uniform(),transform:transform()};
+ const error=gl.getError();
+ const mobile=canvas.dataset.lightRenderer==='retina-mask';
+ const compositor=canvas.hasAttribute('data-native-scroll');
+ const expected=-0.5*(after.scroll-before.scroll);
+ const actual=after.transform-before.transform;
+ const checkpoints=[];
+ for(const position of [2400,3600,1800,500]) {
+   scrollTo(0,position); await wait(120);
+   const effective=uniform()*0.5-transform();
+   checkpoints.push({scroll:scrollY,shaderScroll:uniform(),effectiveOffset:effective,error:Math.abs(effective-scrollY*0.5)});
+ }
+ const pass=mobile&&compositor&&error===0&&Math.abs(actual-expected)<1&&before.shaderScroll===after.shaderScroll&&checkpoints.every(p=>p.error<1);
+ result.textContent=JSON.stringify({pass,mobile,compositor,devicePixelRatio,buffer:[canvas.width,canvas.height],css:[canvas.clientWidth,canvas.clientHeight],before,after,expectedMovement:expected,actualMovement:actual,checkpoints,webglError:error},null,2);
+};
+</script>
