@@ -537,12 +537,15 @@ export function ShippingDesk({ renderOrder }: { renderOrder?: (id: string, onClo
         </div>
         <Table
           label="Fulfillment queue"
+          className="bi-queue"
           rows={rows}
           rowKey={(o) => o.id}
           columns={[
             {
               key: "choose",
               label: "Select",
+              // On a phone the queue's own layout puts the checkbox at the left of the whole row.
+              mobile: "aside",
               get: (o) => (
                 <input
                   type="checkbox"
@@ -563,18 +566,21 @@ export function ShippingDesk({ renderOrder }: { renderOrder?: (id: string, onClo
               label: "Order",
               get: (o) => <button type="button" className="bi-link" onClick={() => setOpenId(o.id)}>{o.number}</button>,
               sort: (o) => o.number,
+              mobile: "primary",
             },
             {
               key: "buyer",
               label: "Institution",
               get: (o) => o.address.institution,
               sort: (o) => o.address.institution,
+              mobile: "secondary",
             },
             {
               key: "items",
               label: "Units",
               get: (o) => o.lines.reduce((s, l) => s + l.quantity, 0),
               numeric: true,
+              mobileLabel: true,
             },
             {
               key: "status",
@@ -586,6 +592,8 @@ export function ShippingDesk({ renderOrder }: { renderOrder?: (id: string, onClo
               key: "tracking",
               label: "Tracking",
               get: (o) => o.shipping.tracking ?? "Not recorded",
+              mobile: "meta",
+              mobileLabel: true,
             },
           ]}
         />

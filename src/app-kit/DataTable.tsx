@@ -22,6 +22,8 @@ export type Column<T> = {
   /** Share of the table width, e.g. "14%". */
   width?: string;
   mobile?: MobileRole;
+  /** Names the value with the column's header once the header row is hidden on a phone. */
+  mobileLabel?: boolean;
 };
 
 export type RowGroup<T> = { key: string; label: ReactNode; match: (row: T) => boolean };
@@ -110,6 +112,7 @@ export function DataTable<T>({
             data-mobile={column.mobile ?? "meta"}
             title={typeof content === "string" ? content : undefined}
           >
+            {column.mobileLabel && <span className="kit-cell-label">{column.header}</span>}
             {content}
           </td>
         );

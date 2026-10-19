@@ -2230,13 +2230,20 @@
   .kit {
     --cc-trace-min: 13rem;
   }
+  /* Today's three and the period's four go two to a line, so each label, figure and change reads as its own. */
+  .cc-day-row,
   .cc-period-figures {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     row-gap: var(--tm-space-5);
   }
   /* The gap is between the two lines of figures, never inside one. */
+  .cc-day-item,
   .cc-period-figures > div {
     row-gap: 0;
+  }
+  /* A change too long for its half of the line wraps under its arrow rather than running into the next. */
+  :is(.cc-day-row, .cc-period-figures) .kit-delta {
+    white-space: normal;
   }
   /* The period switch takes its own line under the title, its segments sharing the width. */
   .cc-period > .kit-card-head {

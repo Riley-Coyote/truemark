@@ -18,7 +18,7 @@ import {
   formatDate,
   formatMoney,
 } from "../../app-kit";
-import type { Column } from "../../app-kit";
+import type { Column, MobileRole } from "../../app-kit";
 import { LIVE, storageKey } from "../../platform/mode";
 import { store, useResource } from "../../platform/store";
 import { TODAY } from "../../platform/seed";
@@ -349,6 +349,10 @@ type TableColumn<T> = {
   get: (row: T) => ReactNode;
   sort?: (row: T) => string | number | null;
   numeric?: boolean;
+  /** How the cell stacks on a phone; by default the first leads, the last sits aside and the rest run together. */
+  mobile?: MobileRole;
+  /** Names the value with its label on a phone, where the header row is hidden. */
+  mobileLabel?: boolean;
 };
 export function Table<T>({
   rows,
@@ -356,12 +360,14 @@ export function Table<T>({
   label,
   rowKey,
   onSelect,
+  className,
 }: {
   rows: T[];
   columns: TableColumn<T>[];
   label: string;
   rowKey: (r: T) => string;
   onSelect?: (r: T) => void;
+  className?: string;
 }) {
   const mapped: Column<T>[] = columns.map((c, i) => ({
     key: c.key,
@@ -369,10 +375,11 @@ export function Table<T>({
     cell: c.get,
     sortValue: c.sort,
     align: c.numeric ? "end" : undefined,
-    mobile: i === 0 ? "primary" : i === columns.length - 1 ? "aside" : "meta",
+    mobile: c.mobile ?? (i === 0 ? "primary" : i === columns.length - 1 ? "aside" : "meta"),
+    mobileLabel: c.mobileLabel,
   }));
   return (
-    <div className="bi-table">
+    <div className={className ? `bi-table ${className}` : "bi-table"}>
       <DataTable
         columns={mapped}
         rows={rows}

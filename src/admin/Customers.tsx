@@ -137,6 +137,9 @@ export default function Customers() {
   );
 }
 
+/** A customer's orders in the drawer: order, placed, total and status. */
+const DRAWER_WIDTHS: Record<string, string> = { number: "28.5%", date: "21.5%", total: "17%", status: "33%" };
+
 function CustomerDrawer({
   row,
   loading,
@@ -151,7 +154,14 @@ function CustomerDrawer({
   onClose: () => void;
 }) {
   const navigate = useNavigate();
-  const columns = useMemo(() => orderColumns(new Map(), true).filter((c) => c.key !== "institution"), []);
+  // Without the institution the drawer's four share its width; the order number takes enough to show whole.
+  const columns = useMemo(
+    () =>
+      orderColumns(new Map(), true)
+        .filter((c) => c.key !== "institution")
+        .map((c) => ({ ...c, width: DRAWER_WIDTHS[c.key] ?? c.width })),
+    [],
+  );
 
   if (!row) {
     return (

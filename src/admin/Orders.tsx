@@ -51,7 +51,8 @@ export function orderColumns(
     {
       key: "number",
       header: "Order",
-      width: compact ? "16%" : "9.5%",
+      // Wide enough for a whole number, TM-LOCAL-1000 the longest yet, from 1280px up.
+      width: compact ? "20.5%" : "13.5%",
       mobile: "primary",
       sortValue: (o) => o.number,
       sortFirst: "desc",
@@ -60,7 +61,7 @@ export function orderColumns(
     {
       key: "date",
       header: "Placed",
-      width: compact ? "17%" : "10%",
+      width: compact ? "16%" : "10%",
       sortValue: (o) => o.createdAt,
       sortFirst: "desc",
       cell: (o) => formatDate(o.createdAt),
@@ -68,7 +69,7 @@ export function orderColumns(
     {
       key: "buyer",
       header: "Buyer",
-      width: "12%",
+      width: "11%",
       mobile: "hidden",
       sortValue: buyerName,
       cell: buyerName,
@@ -76,7 +77,7 @@ export function orderColumns(
     {
       key: "institution",
       header: "Institution",
-      width: compact ? "30%" : "16%",
+      width: compact ? "24.5%" : "13.5%",
       mobile: "secondary",
       sortValue: institution,
       cell: institution,
@@ -84,7 +85,7 @@ export function orderColumns(
     {
       key: "via",
       header: "Via",
-      width: "11%",
+      width: "10.5%",
       mobile: "meta",
       // Partner orders by code, then direct orders.
       sortValue: (o) => (o.discount?.partnerId ? `0${o.discount.code}` : "1"),
@@ -128,7 +129,7 @@ export function orderColumns(
     {
       key: "status",
       header: "Status",
-      width: compact ? "23%" : "16.5%",
+      width: compact ? "25%" : "16.5%",
       sortValue: (o) => FLOW.indexOf(o.status),
       cell: (o) => <OrderStatusChip order={o} now={now ?? worldNow()} />,
     },

@@ -623,6 +623,43 @@ fieldset.bi-form {
     max-height: none;
     overflow: visible;
   }
+  /* The fulfillment queue on a phone: the checkbox at the left; beside it, on one edge, the order, its
+     institution, units and status on one line, and tracking, the last column, on its own line in full. */
+  .bi-queue .kit-table tr {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    align-items: baseline;
+  }
+  .bi-queue .kit-table td[data-mobile="aside"] {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+  }
+  .bi-queue .kit-table td[data-mobile="primary"] {
+    grid-column: 2 / -1;
+    grid-row: 1;
+  }
+  .bi-queue .kit-table td[data-mobile="primary"] .bi-link {
+    padding-inline: 0;
+  }
+  .bi-queue .kit-table td[data-mobile="secondary"] {
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+  .bi-queue .kit-table td[data-mobile="meta"] {
+    grid-row: 3;
+  }
+  .bi-queue .kit-table td[data-mobile="meta"]:last-child {
+    grid-column: 2 / -1;
+    grid-row: 4;
+    white-space: normal;
+  }
+  .bi-queue .kit-table td[data-mobile="meta"]:last-child::before {
+    content: none;
+  }
+  .bi-queue .kit-table td.kit-empty-cell {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
 }
 .bi-page .kit-card-meta {
   min-width: 0;
@@ -674,8 +711,8 @@ fieldset.bi-form {
   .bi-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  /* A card's filters stay one pill and scroll sideways, as the kit's do, rather than wrapping inside it. */
   .bi-page .kit-card-head .kit-segmented {
-    flex-wrap: wrap;
     max-width: 100%;
   }
   .bi-chart-read strong {
