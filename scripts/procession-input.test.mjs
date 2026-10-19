@@ -49,7 +49,7 @@ function fixture(scrollY = 450, touch = false) {
   const tick = (n=1) => {for(let i=0;i<n;i++){time+=1000/60;const batch=[...frames.values()];frames.clear();batch.forEach(fn=>fn(time));}};
   const event = (type,x,y=120) => { const e=new Event(type,{cancelable:true});Object.assign(e,{isPrimary:true,pointerId:1,button:0,clientX:x,clientY:y});Object.defineProperty(e,'timeStamp',{value:time});(type==='pointerup'||type==='pointercancel'?win:stage).dispatchEvent(e);tick(); };
   tick();
-  return { home, hero, stage, section, win, event, tick, status:()=>reported, close(){controller.destroy();for(const [name,desc] of previous) desc?Object.defineProperty(globalThis,name,desc):delete globalThis[name];} };
+  return { home, hero, stage, section, win, event, tick, controller, status:()=>reported, close(){controller.destroy();for(const [name,desc] of previous) desc?Object.defineProperty(globalThis,name,desc):delete globalThis[name];} };
 }
 
 for (const scrollY of [100, 450, 1800]) test(`short swipe advances independently of arrival and visibility at scroll ${scrollY}`,()=>{
@@ -114,4 +114,30 @@ test('phone toolbar height changes do not rewrite the camera path',()=>{
   f.win.innerHeight+=100;f.win.dispatchEvent(new Event('resize'));f.tick();
   assert.equal(camera.style.transform,before);
  }finally{f.close();}
+});
+
+// The fixture's section stands 1000px below the screen's top, under an 80px header: its scroll end is 896px past the
+// fixture's scroll.
+const scrollTo = (f, y) => { f.win.scrollY = y; f.win.dispatchEvent(new Event('scroll')); f.tick(90); };
+test('the collection stands real and usable short of its scroll end, with its copies put away', () => {
+  const f = fixture(9000); try {
+    const end = Number(f.section.dataset.scrollEnd);
+    assert.ok(9000 / end > .9 && 9000 / end < .95, 'stopped between arrival and the exact end');
+    assert.equal(f.status().arrived, true);
+    assert.equal(f.home.hasAttribute('data-procession-flight'), false);
+    assert.equal(f.stage.children[0].style.opacity, '1');
+  } finally { f.close(); }
+});
+test('scrolling back up part way keeps the class; only the opening itself starts the collection again', () => {
+  const f = fixture(9000); try {
+    const end = Number(f.section.dataset.scrollEnd);
+    f.controller.step(1); f.tick(60);
+    assert.equal(f.status().active, 3);
+    scrollTo(f, Math.round(end * .5));
+    scrollTo(f, 9000);
+    assert.equal(f.status().active, 3, 'the reader keeps the class they were on');
+    scrollTo(f, 0);
+    scrollTo(f, 9000);
+    assert.equal(f.status().active, 2, 'back at the opening, the collection starts in the room\'s order');
+  } finally { f.close(); }
 });

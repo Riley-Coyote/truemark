@@ -1,4 +1,4 @@
-import { advance, advanceDrift, clamp01, distance, HANDOFF, mix, modulo, pose, RISE, scene, smooth, swipeTarget } from "./procession-math";
+import { advance, advanceDrift, ARRIVE, clamp01, distance, HANDOFF, mix, modulo, pose, RISE, scene, smooth, swipeTarget } from "./procession-math";
 import { FOG_SCENES, pedestalCrop } from "./fog/scenes";
 
 export type ProcessionStatus = { active: number; paused: boolean; reduced: boolean; arrived: boolean; progress: number };
@@ -26,6 +26,8 @@ export function createProcession(section: HTMLElement, order: number[], initial:
   layer.className = "tm-procession-passage"; layer.setAttribute("aria-hidden", "true");
   const travelers = actors.map(actor => {
     const group = actor.cloneNode(true) as HTMLElement;
+    // The copies stand in a layer that is put away until the camera hands over: loaded now, not lazily as they rise.
+    for (const img of group.querySelectorAll("img")) img.loading = "eager";
     group.className = "tm-procession-glass"; layer.append(group); return group;
   });
   const world = document.createElement("div"); world.className = "tm-procession-world"; world.setAttribute("aria-hidden", "true");
@@ -172,11 +174,14 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     if (directScroll || grounded() || story || Math.abs(requested - passage) > .6) passage = requested;
     else passage += (requested - passage) * (1 - Math.exp(-dt / .055));
     if (Math.abs(requested - passage) < .00015) passage = requested;
-    const arrived = grounded() || passage >= .94;
+    // The camera eases (above); the vials rising onto their pedestals in the page follow the page's own scroll, so they
+    // move only while it does, never catching up once it has stopped, and stand in place at any scroll speed.
+    const arrived = grounded() || requested >= ARRIVE;
     if (arrived && !priorArrival) elapsed = 0;
     priorArrival = arrived;
-    if ((passage === 0 || passage >= HANDOFF && passage < RISE) && !grounded() && !story) {
-      // Restore spatial order only when the cap of every carried vial is offscreen.
+    if (passage === 0 && !grounded() && !story) {
+      // Back at the opening, the collection starts again in the room's own order. Scrolling back up only part way keeps
+      // the class the reader was on: the copies rearrange below the frame, so they rise into it again.
       phase = target = order.indexOf(initial); velocity = 0; elapsed = 0;
     }
     const running = arrived && !story && !document.hidden && !still();
@@ -196,20 +201,21 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       }
     }
     active = order[modulo(Math.round(phase), count)];
-    const inFlight = !grounded() && !story && passage >= HANDOFF && passage < 1;
+    const inFlight = !grounded() && !story && passage >= HANDOFF && requested < ARRIVE;
     home.toggleAttribute("data-procession-flight", inFlight);
     home.toggleAttribute("data-procession-still", grounded());
     layer.hidden = !inFlight;
-    const arrivalDetail = grounded() ? 1 : smooth((passage - .80) / .20);
-    const arrivalCopy = grounded() ? 1 : smooth((passage - .76) / .18);
+    const arrivalDetail = grounded() ? 1 : smooth((requested - .80) / (ARRIVE - .80));
+    const arrivalCopy = grounded() ? 1 : smooth((requested - .76) / (ARRIVE - .76));
     opacity(details, arrivalCopy); opacity(navigation, arrivalCopy);
     navigation.inert = details.inert = !arrived;
     opacity(heading, grounded() ? 1 : smooth((passage - .45) / .22));
-    const extraScroll = Math.max(0, y - end);
     const filmed = scene(grounded() ? 0 : passage, pivotX, pivotY, options.depth, fall);
     const departure = scene(HANDOFF, pivotX, pivotY, options.depth, fall);
-    const rearrange = smooth((passage - HANDOFF) / (RISE - HANDOFF));
-    const rise = smooth((passage - RISE) / (1 - RISE));
+    // Out of the frame the copies rearrange from the room's pedestals to the collection's, and then rise into it onto
+    // their own pedestals in the page: on the page's own scroll, as the arrival above.
+    const rearrange = smooth((requested - HANDOFF) / (RISE - HANDOFF));
+    const rise = smooth((requested - RISE) / (ARRIVE - RISE));
     const middleSource = sources.get(actors[initial].dataset.productId!) ?? [...sources.values()][0];
     actors.forEach((actor, i) => {
       const d = distance(order.indexOf(i), phase, count), p = pose(d, spacing, vialHeight);
@@ -217,15 +223,17 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       actor.style.transform = `translate3d(${p.x}px,${p.y}px,0) scale(${scale})`;
       const onscreen = Math.abs(p.x) - vialHeight * 1.15 * p.scale / 2 < width / 2 + 8;
       actor.style.visibility = onscreen ? "visible" : "hidden";
-      actor.style.opacity = grounded() || passage === 1 || story ? "1" : "0";
+      actor.style.opacity = grounded() || requested >= ARRIVE || story ? "1" : "0";
       images[i].style.opacity = "1";
       shadows[i].style.opacity = String(arrivalDetail);
       if (!inFlight || !middleSource) return;
       const source = sources.get(actor.dataset.productId!), origin = source ?? middleSource;
       const glass = travelers[i];
-      glass.style.filter = passage < RISE ? `brightness(${origin.light})` : "none";
+      glass.style.filter = rise === 0 ? `brightness(${origin.light})` : "none";
       const toHeight = vialHeight * p.scale, toX = width / 2 + p.x;
-      const laidFoot = baseFoot + p.y - passage * end - extraScroll + lift;
+      // Where the page lays its actor out, on screen at the page's own scroll: the copy never drifts against the words
+      // around it while the page moves, and hands over to the actor exactly.
+      const laidFoot = baseFoot + p.y - y + lift;
       const from = source ? {
         x: departure.x + source.x * departure.zoom,
         foot: departure.y + source.foot * departure.zoom,
@@ -235,7 +243,7 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       const x = mix(from.x, toX, rearrange);
       const foot = mix(from.foot, laidFoot, rearrange) - lift * rise;
       glass.style.transform = `translate3d(${x - glassHeight * 578 / 1112 / 2}px,${foot - glassHeight}px,0) scale(${glassHeight / 1112})`;
-      glass.style.visibility = (passage < RISE ? !!source : onscreen) ? "visible" : "hidden";
+      glass.style.visibility = (rise === 0 ? !!source : onscreen) ? "visible" : "hidden";
     });
     // The opening's room goes on down the page: its defocused field stays behind every section to the footer.
     opacity(world, story ? 0 : 1);
@@ -245,7 +253,9 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     // Before departure the camera carries its own photograph, so native async
     // scrolling cannot pull the glass away from a separately fixed pedestal.
     opacity(room, grounded() || passage < HANDOFF ? 0 : 1 - smooth((passage - HANDOFF) / .10));
-    fill.style.translate = grounded() ? "0 0" : `0 ${Math.min(height * .1, .22 * (passage < HANDOFF ? fall * filmed.drop : mix(fall, lift, rearrange) * (1 - rise)))}px`;
+    // The room's field moves with the camera, on its eased progress.
+    const eased = { rearrange: smooth((passage - HANDOFF) / (RISE - HANDOFF)), rise: smooth((passage - RISE) / (ARRIVE - RISE)) };
+    fill.style.translate = grounded() ? "0 0" : `0 ${Math.min(height * .1, .22 * (passage < HANDOFF ? fall * filmed.drop : mix(fall, lift, eased.rearrange) * (1 - eased.rise)))}px`;
     if (!story) {
       // CSS scroll animations relinquish this camera while Procession owns it.
       // Correct for the hero's resting offset, so its plate and the fixed world

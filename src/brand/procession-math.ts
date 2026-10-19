@@ -31,6 +31,10 @@ export function pose(d: number, spacing: number, height: number) {
 }
 
 export const HANDOFF = .40, RISE = .62;
+/** From here on the collection stands in place: its vials have risen onto their pedestals (the real carousel, in the
+ *  page, takes over from the copies that carried them), and its captions, controls and autoplay are on. The collection
+ *  is then wholly on screen, so it never waits for the scroll to reach its exact end. */
+export const ARRIVE = .9;
 
 /** One rigid camera for the room and everything seated in it. Points are in the
  * resting viewport's coordinates; x/y + point * zoom is their filmed position.
