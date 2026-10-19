@@ -22,8 +22,9 @@ export function parseDollars(text: string, { allowZero = false } = {}): { value?
   return { value };
 }
 
+/** "Preview: changes are not saved" in the preview; in a live build the note is empty and nothing draws. */
 export function PreviewTag() {
-  return <SampleTag>{PREVIEW_NOTE}</SampleTag>;
+  return PREVIEW_NOTE ? <SampleTag>{PREVIEW_NOTE}</SampleTag> : null;
 }
 
 /** Keeps a phrase such as "5 Oct 2026" or "80 units" on one line. */
