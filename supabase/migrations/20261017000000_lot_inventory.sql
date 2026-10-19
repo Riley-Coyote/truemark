@@ -641,12 +641,12 @@ $$;
 
 create or replace function public.upsert_product(draft jsonb) returns public.products
 language plpgsql security definer set search_path = public
-as $$ declare saved public.products; field text; previous public.products;
+as $$ declare saved public.products; field text; previous public.products; v_id text := nullif(btrim(draft ->> 'id'), ''); v_base text; v_n integer := 1;
 begin
   if coalesce(public.platform_role(), '') not in ('owner', 'staff') then
     raise exception 'team access required' using errcode = '42501';
   end if;
-  if jsonb_typeof(draft) is distinct from 'object' or coalesce(draft ->> 'id', '') !~ '^[a-z0-9-]+$'
+  if jsonb_typeof(draft) is distinct from 'object' or v_id !~ '^[a-z0-9-]+$'
     or jsonb_typeof(draft -> 'price') is distinct from 'number'
     or (draft ->> 'price') !~ '^[0-9]+(\.[0-9]{1,2})?$'
     or jsonb_typeof(draft -> 'active') is distinct from 'boolean'
@@ -663,16 +663,25 @@ begin
     or (nullif(draft ->> 'image', '') is not null and (draft ->> 'image') !~ '^(https://|/images/)') then
     raise exception 'invalid description, tag or photo' using errcode = '22023';
   end if;
-  select * into previous from public.products where id = draft ->> 'id' for update;
+  -- A new product sent without an id gets a readable, unique shop address from its name and size:
+  -- "BPC-157" + "10 mg" is bpc-157-10-mg, then bpc-157-10-mg-2 for the next variant. Supplied ids are kept.
+  if v_id is null then
+    v_base := lower(regexp_replace(normalize(btrim(draft ->> 'name') || ' ' || btrim(draft ->> 'size'), NFKD), '[\u0300-\u036f]', '', 'g'));
+    v_base := coalesce(nullif(btrim(left(btrim(regexp_replace(v_base, '[^a-z0-9]+', '-', 'g'), '-'), 80), '-'), ''), 'product');
+    perform pg_advisory_xact_lock(hashtextextended('product-address/' || v_base, 170));
+    v_id := v_base;
+    while exists (select 1 from public.products where id = v_id) loop v_n := v_n + 1; v_id := v_base || '-' || v_n; end loop;
+  end if;
+  select * into previous from public.products where id = v_id for update;
   perform pg_advisory_xact_lock(hashtextextended(lower(btrim(draft->>'name')) || '/' || lower(btrim(draft->>'size')) || '/' || lower(btrim(draft->>'form')),170));
-  if exists(select 1 from public.products where id<>draft->>'id' and lower(btrim(name))=lower(btrim(draft->>'name')) and lower(btrim(size))=lower(btrim(draft->>'size')) and lower(btrim(form))=lower(btrim(draft->>'form'))) then raise exception 'This product and size already exist. Receive inventory for the existing product.' using errcode='22023'; end if;
+  if exists(select 1 from public.products where id<>v_id and lower(btrim(name))=lower(btrim(draft->>'name')) and lower(btrim(size))=lower(btrim(draft->>'size')) and lower(btrim(form))=lower(btrim(draft->>'form'))) then raise exception 'This product and size already exist. Receive inventory for the existing product.' using errcode='22023'; end if;
   -- Updates cannot change brand colours or lot assignments. WP-16 owns lot management.
   insert into public.products(id, name, size, category, price, active, form, tag, description, stock, image, color, color_ink, lot)
-    values (draft ->> 'id', btrim(draft ->> 'name'), btrim(draft ->> 'size'), draft ->> 'category',
+    values (v_id, btrim(draft ->> 'name'), btrim(draft ->> 'size'), draft ->> 'category',
       (draft ->> 'price')::numeric, (draft ->> 'active')::boolean, btrim(draft ->> 'form'),
       nullif(btrim(draft ->> 'tag'), ''), nullif(btrim(draft ->> 'description'), ''), coalesce(previous.stock,0),
       nullif(draft ->> 'image', ''), draft ->> 'color', draft ->> 'colorInk',
-      coalesce((select lot from public.products where id = draft ->> 'id'), nullif(draft ->> 'lot', ''),''))
+      coalesce((select lot from public.products where id = v_id), nullif(draft ->> 'lot', ''),''))
     on conflict (id) do update set name = excluded.name, size = excluded.size, category = excluded.category,
       price = excluded.price, active = excluded.active, form = excluded.form, tag = excluded.tag,
       description = excluded.description, image = excluded.image

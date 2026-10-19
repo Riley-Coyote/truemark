@@ -111,6 +111,17 @@ try {
  await assert.rejects(()=>auth(owner,'select * from upsert_product($1)',[{...newProduct,id:'duplicate-product'}]),/already exist/);const variant=(await auth(owner,'select * from upsert_product($1)',[{...newProduct,id:'fixture-liquid',form:'Liquid'}]))[0];assert.equal(variant.stock,0);
  assert(await scalar("select count(*)::int from inventory_events where product_id='fixture-product' and actor_label is not null")>0);
  pass('new products, distinct variants and duplicate prevention; product edits cannot invent stock');
+ const addProduct=async(name,size,form='Lyophilized powder',id)=>(await auth(owner,'select * from upsert_product($1)',[{...(id===undefined ? {} : {id}),name,size,form,category:'metabolic-peptides',price:10,active:true,lot:'',stock:null}]))[0];
+ assert.equal((await addProduct('Fixture Peptide','5 mg')).id,'fixture-peptide-5-mg');
+ assert.equal((await addProduct('BPC-157','10 mg','Liquid')).id,'bpc-157-10-mg-2','The seeded bpc-157-10-mg keeps its address');
+ assert.equal((await addProduct('BPC-157','10 mg','Nasal spray','')).id,'bpc-157-10-mg-3');
+ assert.equal((await addProduct('  Café   Peptide+ ','2.5 mg')).id,'cafe-peptide-2-5-mg');
+ assert.equal((await addProduct('ペプチド','—')).id,'product');
+ await assert.rejects(()=>addProduct('Fixture Peptide','5 mg'),/already exist/);
+ assert.equal((await addProduct('Explicit address','1 mg','Liquid','fixture-explicit')).id,'fixture-explicit');
+ await assert.rejects(()=>addProduct('Bad address','1 mg','Liquid','Bad Id'),/invalid product fields/);
+ assert.equal(await scalar("select count(*)::int from products where id like 'product-%'"),0);
+ pass('new products sent without an id get a readable, unique address from name and size; supplied ids are kept');
  assert(await scalar('select count(*)::int from inventory_events')>0);
  assert.equal(await scalar('select count(*)::int from inventory_events where actor_id=$1',[buyer]),0,'Checkout is never recorded as the customer editing inventory');
  assert.equal(await scalar("select count(*)::int from inventory_events where reason='Lot updated'"),0,'Every lot history entry says what happened');
