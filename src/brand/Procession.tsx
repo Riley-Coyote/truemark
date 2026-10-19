@@ -7,6 +7,7 @@ import { collectionIds } from "./carousel";
 import { useMotion } from "./Sequence";
 import { createProcession } from "./procession-controller";
 import { createNativeProcession } from "./native-procession";
+import { TOUCH_FIRST } from "./touch-first";
 import type { ProcessionController, ProcessionStatus } from "./procession-controller";
 import "./procession.css";
 
@@ -24,7 +25,7 @@ export function Procession() {
   const signature = classes.map(c => c.id).join("|");
   useEffect(() => {
     if (!root.current || !classes.length) return;
-    const native = matchMedia('(max-width: 700px), (any-pointer: coarse)');
+    const native = matchMedia(TOUCH_FIRST);
     const mount = () => {
       controller.current?.destroy();
       controller.current = (native.matches ? createNativeProcession : createProcession)(root.current!, order, initial, setStatus);

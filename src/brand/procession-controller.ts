@@ -72,7 +72,8 @@ export function createProcession(section: HTMLElement, order: number[], initial:
     cue = hero.querySelector<HTMLElement>(".tm-story-cue");
     lead = opening.querySelector<HTMLElement>(".tm-mist-foot");
     const y = window.scrollY, heroRect = hero.getBoundingClientRect(), r = stage.getBoundingClientRect();
-    directScroll = matchMedia("(any-pointer: coarse)").matches;
+    // A finger as the main pointer (a touchscreen laptop's trackpad scrolls as a desktop's does).
+    directScroll = matchMedia("(pointer: coarse)").matches;
     const widthChanged = width !== window.innerWidth;
     width = window.innerWidth;
     height = directScroll

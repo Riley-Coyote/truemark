@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useMotion } from "./Sequence";
+import { TOUCH_FIRST } from "./touch-first";
 import { startWallLight } from "./wall-light";
 
 /**
@@ -23,7 +24,7 @@ export function WallLight() {
     const light = startWallLight(node, () => top, !moving);
     if (!light) return;
     const seen = new Set<Element>();
-    const touch = matchMedia('(max-width: 700px), (any-pointer: coarse)').matches;
+    const touch = matchMedia(TOUCH_FIRST).matches;
     let scrolling = false, scrollRest = 0;
     // The wall is in sight below the header only: what lies under the header is the header's.
     const header = document.querySelector(".tm-header")?.getBoundingClientRect().bottom ?? 0;
