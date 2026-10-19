@@ -49,7 +49,7 @@ All in Command Center, no code needed:
 
 ## Have these reviewed before they go live
 
-By Riley or whichever developer you work with:
+By a developer:
 
 - Any change to the code, to the database's structure, or to who can see what.
 - Connecting or changing payments, email, shipping or the domain.
