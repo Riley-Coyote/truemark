@@ -616,6 +616,14 @@ fieldset.bi-form {
   max-height: 600px;
   overflow: auto;
 }
+/* Below 720px a table is stacked rows (kit.css). A 600px box scrolling inside the page there left most of a long
+   queue, and what follows it, behind a second scroll a finger rarely finds: the page scrolls the whole table instead. */
+@media (max-width: 45rem) {
+  .bi-table .kit-table-wrap {
+    max-height: none;
+    overflow: visible;
+  }
+}
 .bi-page .kit-card-meta {
   min-width: 0;
 }

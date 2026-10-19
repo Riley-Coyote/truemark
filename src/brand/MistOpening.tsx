@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, MouseEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import type { Product } from "../data";
 import { store, useResource } from "../platform/store";
 import { productById } from "../shop/catalog";
 import { useMediaQuery } from "../shop/motion";
+import { placeOnOpening } from "../Navigation";
 import { collectionIds } from "./carousel";
 import { flyToProduct, preloadProduct, registerHome } from "./flight";
 import { TALL_SCREEN } from "./opening-media";
@@ -72,6 +73,13 @@ const ROOM_FOG = { density: 2.9, depth: 2, climb: 2.1, light: 3.2 } as const;
 /** How long the room takes to come into focus as the page first opens on it, the word last (mist-word.css), with a
  *  little to spare: after this the arrival's rules are put away. */
 const DAWN_MS = 2800;
+/** The opening is on screen at the page's top while the page stands within this share of a screen of it: the room's
+ *  arrival, and its haze behind the page (mist-word.css), are for then only. */
+const AT_TOP = 0.25;
+const atTop = (y: number) => y <= 0 || y < window.innerHeight * AT_TOP;
+/** Whether the opening has stood on this visit already: coming back to it (the logo, Back) finds it standing, as the
+ *  camera's return does, rather than its first entrance played again without the first paint it was made for. */
+let shownBefore = false;
 
 /**
  * The opening: the collection in its misty room, quietly alive (daylight breathing on the walls, mist
@@ -105,8 +113,13 @@ export function MistOpening() {
   const screen = useStageSize(screenSizer).h;
   const slot = useFlightSlot();
   const allowed = useFlightAllowed();
-  // Brought back by the camera: it stands as it was left, without its entrance.
-  const arrived = useArrivedByFlight();
+  // Brought back by the camera, or come back to on this visit: it stands as it was left, without its entrance.
+  const flown = useArrivedByFlight();
+  const [returned] = useState(() => shownBefore);
+  useEffect(() => {
+    shownBefore = true;
+  }, []);
+  const arrived = flown || returned;
   const room = tall ? COLLECTION_TALL : COLLECTION;
   const seats = tall ? COLLECTION_TALL_SEATS : COLLECTION_SEATS;
   const vials = (tall ? collectionIds.slice(1, 4) : collectionIds)
@@ -119,11 +132,15 @@ export function MistOpening() {
   const told = featuredAt >= 0;
   const seq = !still && told;
   // The room comes into focus once, as the page first opens on it (mist-word.css): not when the camera brings it back,
-  // nor when motion is turned on again later.
-  const [dawn, setDawn] = useState(() => seq && !arrived);
+  // nor when motion is turned on again later, nor when the page is put back lower down (a reload there).
+  const { key } = useLocation();
+  const [dawn, setDawn] = useState(() => seq && !arrived && atTop(placeOnOpening(key)));
   // Whether it did, for as long as the opening stands: its vials were set down inside the haze, and keep that entrance
   // (mist-word.css) however the switch is turned afterwards, so it never plays again.
   const [dawned] = useState(dawn);
+  // The haze behind the page while the room arrives (mist-word.css): only while the opening is on screen at the top.
+  // It gives way to the wall as the arrival ends, or as soon as the reader goes on down the page.
+  const [haze, setHaze] = useState(dawn);
   useEffect(() => {
     // The page's first paint is the room's own haze (vite.config.ts startHead); with the room drawn, it is put away.
     const frame = requestAnimationFrame(() => requestAnimationFrame(() => document.documentElement.removeAttribute("data-tm-dawn")));
@@ -133,6 +150,18 @@ export function MistOpening() {
       window.clearTimeout(timer);
     };
   }, []);
+  useEffect(() => {
+    if (!haze) return;
+    const away = () => {
+      if (!atTop(window.scrollY)) setHaze(false);
+    };
+    const timer = window.setTimeout(() => setHaze(false), DAWN_MS);
+    window.addEventListener("scroll", away, { passive: true });
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("scroll", away);
+    };
+  }, [haze]);
   const softs = vials.map(softCutout);
   const ready = useSequenceReady(seq, softs.filter((src): src is string => Boolean(src)));
   // Each shown lot's record in the current world, which the caption reads. Found by its lot, so a set still loading
@@ -443,7 +472,7 @@ export function MistOpening() {
   );
   return (
     <>
-      <section className="tm tm-mist" aria-labelledby="tm-mist-title" data-shape={tall ? "tall" : "wide"} data-arrived={arrived ? "" : undefined} data-seq={seq ? "" : undefined} data-dawn={dawn && seq ? "" : undefined} data-dawned={dawned ? "" : undefined}>
+      <section className="tm tm-mist" aria-labelledby="tm-mist-title" data-shape={tall ? "tall" : "wide"} data-arrived={arrived ? "" : undefined} data-seq={seq ? "" : undefined} data-dawn={dawn && seq ? "" : undefined} data-dawn-haze={haze && seq ? "" : undefined} data-dawned={dawned ? "" : undefined}>
         <SequenceTrack on={seq} scene={{ box, plateScale: PLATE_SCALE, seat: seats[featuredAt], tall }} lead={null} ready={ready}>
           {scene}
         </SequenceTrack>

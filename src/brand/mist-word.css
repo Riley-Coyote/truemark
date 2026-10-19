@@ -82,6 +82,8 @@
      room, blurred, as a laptop's first screen shows it). The page's first paint is this same haze, written out in
      vite.config.ts startHead, since it is drawn before any stylesheet arrives. */
   --tm-dawn-haze: #968fa9 radial-gradient(46% 80% at 50% 48%, #e3dcec 0%, #d9d1e4 30%, #b4abc6 68%, #8f88a2 100%) no-repeat;
+  /* How long the haze takes to give way to the wall. */
+  --tm-dawn-clear: 900ms;
 }
 .tm.tm-mist[data-dawn] .tm-room-plate,
 .tm-home:has(> .tm.tm-mist[data-dawn]) .tm-procession-world {
@@ -90,12 +92,25 @@
 /* Until the room's picture is drawn, what lies behind it is that same haze, not the paler wall the page below stands on
    (home.css, procession.css), so the first paint, the frame and the room meet without a seam. The opening's own still
    of the room is drawn meanwhile (the scroll's shared photograph, procession-controller.ts, takes it over only once its
-   own layer is made), coinciding with that photograph exactly until the camera hands the room over. */
-.tm-home:has(> .tm.tm-mist[data-dawn]) {
+   own layer is made), coinciding with that photograph exactly until the camera hands the room over.
+   The haze is for the opening on screen at the top only (MistOpening.tsx data-dawn-haze): it gives way to the wall as
+   the arrival ends, or as soon as the reader goes on down the page, and always as a fade, never a cut. */
+.tm-home {
+  transition: background-color var(--tm-dawn-clear) ease;
+}
+.tm-home:has(> .tm.tm-mist[data-dawn-haze]) {
   background-color: #b4abc6;
 }
-.tm-home:has(> .tm.tm-mist[data-dawn]) .tm-procession-world {
+.tm-procession-world::before {
+  content: "";
+  position: absolute;
+  inset: 0;
   background: var(--tm-dawn-haze);
+  opacity: 0;
+  transition: opacity var(--tm-dawn-clear) ease;
+}
+.tm-home:has(> .tm.tm-mist[data-dawn-haze]) .tm-procession-world::before {
+  opacity: 1;
 }
 .tm-home[data-procession] .tm-mist[data-dawn]:not([data-story]) .tm-room-plate > .tm-room-still {
   opacity: 1;

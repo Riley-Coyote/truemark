@@ -475,6 +475,13 @@ export function releaseScroll() {
 }
 /** The place a history entry's page was left at, if it is known. */
 export const scrollFor = (key: string) => positions.get(key);
+/** Where a page drawing for the first time now will stand once ScrollMemory has put it back (read before it has): the
+ *  place a reload, a return from another site or a step back keeps for its entry, or its top. vite.config.ts startHead
+ *  reads the same place for the page's first paint. */
+export function placeOnOpening(key: string): number {
+  if (currentKey === null && !returning()) return 0;
+  return positions.get(key) ?? 0;
+}
 /** The input that ends a wait for a place: whatever the reader does first wins. */
 export const READER_INPUT = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
 
@@ -517,8 +524,13 @@ function restore(y: number) {
     }
     frame = requestAnimationFrame(step);
   };
-  // Already tall enough, as on a swipe back: the page is in place before it is painted.
-  if (room() >= y - 1) jump(y);
+  // Already tall enough, as on a swipe back: the page is in place before it is painted. Placed once the page has laid
+  // itself out (its own layout effects measure it and draw it again, as the opening does its room), still before it is
+  // painted: placed before that, the browser kept what was on screen as the page above it grew, so the page first
+  // showed a little off, then jumped into place.
+  queueMicrotask(() => {
+    if (stopRestoring === stop && room() >= y - 1) jump(y);
+  });
   // Whatever the reader does first wins.
   for (const type of INPUT) window.addEventListener(type, stop, { passive: true });
   stopRestoring = stop;

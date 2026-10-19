@@ -81,17 +81,22 @@ function startHead(): Plugin {
           : `(!location.hash||${/^#\/(\?|$)/}.test(location.hash))`;
         // The opening's first paint is the room's own haze, not a blank white page: the room, seen through a lens not yet
         // focused, which the room then comes into focus out of (mist-word.css --tm-dawn-haze, the same gradient). The
-        // opening puts it away once the room is drawn; if the opening never draws, it goes anyway.
+        // opening puts it away once the room is drawn; if the opening never draws, it goes anyway. Not for a page that
+        // will be put back lower down (a reload, or a return from another site, keeps its place: Navigation.tsx
+        // placeOnOpening, read here the same way): its first paint is the light wall the page stands on there
+        // (procession.css), which the opening puts away just the same.
         const ready = [
           "(function(){try{",
           `if(!(${atOpening}))return;`,
-          "var d=document,h=d.head,r=d.documentElement;",
-          "r.setAttribute('data-tm-dawn','');setTimeout(function(){r.removeAttribute('data-tm-dawn')},4000);",
+          "var d=document,h=d.head,r=d.documentElement,y=0;",
+          "try{var n=performance.getEntriesByType('navigation')[0],k=history.state&&history.state.key||'default';",
+          "if(n&&(n.type==='reload'||n.type==='back_forward')){var s=JSON.parse(sessionStorage.getItem('tm-scroll-positions')||'[]');for(var i=0;i<s.length;i++)if(s[i][0]===k)y=s[i][1];}}catch(e){}",
+          "r.setAttribute('data-tm-dawn',y>0&&y>=innerHeight*.25?'wall':'');setTimeout(function(){r.removeAttribute('data-tm-dawn')},4000);",
           "function l(u,a){var e=d.createElement('link');e.rel='preload';e.as=a;e.href=u;e.setAttribute('fetchpriority','high');h.appendChild(e);}",
           `l(matchMedia(${JSON.stringify(TALL_SCREEN)}).matches?${JSON.stringify(base + OPENING_MEDIA.tall.poster)}:${JSON.stringify(base + OPENING_MEDIA.wide.poster)},'image');`,
           "}catch(e){}})();",
         ].join("");
-        const haze = "html[data-tm-dawn]{background:#968fa9 radial-gradient(46% 80% at 50% 48%,#e3dcec 0%,#d9d1e4 30%,#b4abc6 68%,#8f88a2 100%) no-repeat fixed}";
+        const haze = "html[data-tm-dawn]{background:#968fa9 radial-gradient(46% 80% at 50% 48%,#e3dcec 0%,#d9d1e4 30%,#b4abc6 68%,#8f88a2 100%) no-repeat fixed}html[data-tm-dawn=wall]{background:#ded7e9}";
         if (process.env.VITE_INDEX !== "1") tags.push({ tag: "meta", attrs: { name: "robots", content: "noindex, nofollow" }, injectTo: "head" });
         const shared = /<meta property="og:url" content="([^"]*)"/.exec(html)?.[1];
         const canonical = shared ? html.replace(/(<link rel="canonical" href=")[^"]*(")/, `$1${shared}$2`) : html;

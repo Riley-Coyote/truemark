@@ -107,14 +107,15 @@ export function createNativeProcession(section: HTMLElement, order: number[], in
     select, step(by: number) { select(order[Math.max(0, Math.min(order.length - 1, order.indexOf(active) + by))]); }, pauseAutoplay,
     toggle() { paused = !paused; emit(); schedule(); },
     setMotion(value: boolean) { moving = value; emit(); schedule(); },
-    destroy() {
+    /** `keepOpening`: as the desktop controller's (procession-controller.ts). */
+    destroy(keepOpening = false) {
       dead = true; stop(); cancelAnimationFrame(frame); resized.disconnect(); seen.disconnect(); story.disconnect();
       stage.removeEventListener('scroll', scrolled); stage.removeEventListener('touchstart', contact);
       stage.removeEventListener('touchend', release); stage.removeEventListener('touchcancel', release);
       stage.removeEventListener('wheel', wheel); section.removeEventListener('focusin', focus);
       document.removeEventListener('visibilitychange', schedule); posterImage?.removeEventListener('load', measure);
       actors.forEach((actor, i) => { actor.removeAttribute('data-current'); saved[i] === null ? actor.removeAttribute('style') : actor.setAttribute('style', saved[i]!); });
-      for (const key of ['procession', 'processionNative', 'processionStill']) delete home.dataset[key];
+      if (!keepOpening) for (const key of ['procession', 'processionNative', 'processionStill']) delete home.dataset[key];
     },
   };
 }
