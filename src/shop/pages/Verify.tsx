@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { CertificateView } from "../../brand/CertificateView";
 import { CertificateLibrary } from "../../brand/CertificateLibrary";
+import { LotOnTheVial } from "../../brand/HomeSections";
 import { ProductPlinth } from "../../brand/ProductStage";
 import { productById, productCutout, sampleRecord } from "../catalog";
 import { useReveal } from "../motion";
@@ -33,7 +34,8 @@ const meanings = [
   ["Content per vial · HPLC", "The net peptide measured in the vial, in milligrams, with its percentage of the label claim. Purity, a share of peak area, is not a measure of net peptide content."],
 ];
 
-/** Where the lot is printed: the vial, with a loupe over the LOT line of its label. */
+/** Where the lot is printed, on a wide screen: the vial, with a loupe over the LOT line of its label. A phone shows the
+ *  home page's picture instead (LotOnTheVial, verify.css). */
 function LotHint() {
   const vial = productById(sampleRecord.productId)!;
   const src = productCutout(vial, "lg");
@@ -134,6 +136,9 @@ export default function Verify() {
             this page; the number opens the Certificate of Analysis for that batch.
             No account required.
           </p>
+          {/* On a phone the lookup shows where the number is as the home page does: the vial on its pedestal, the
+              reading glass on its lot line (verify.css). */}
+          <LotOnTheVial />
         </div>
         <LotHint />
       </section>

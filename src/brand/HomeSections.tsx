@@ -25,8 +25,9 @@ const PRINTED_LOT = { lot: "TM-BPC10-2609-01", print: assetUrl("images/labels/bp
 /**
  * Where a lot number is on a vial: the featured lot's vial on the collection's pedestal, a reading glass beside it on
  * its label's lot line, and a hairline from the glass along the line's foot to the number as printed on the vial.
+ * Verify's lookup shows the same picture on a phone (verify.css).
  */
-function LotOnTheVial() {
+export function LotOnTheVial() {
   const product = productById(sampleRecord.productId);
   if (!product || lot !== PRINTED_LOT.lot) return null;
   return (

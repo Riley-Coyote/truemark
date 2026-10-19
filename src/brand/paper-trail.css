@@ -70,16 +70,15 @@
    One measure sets it all, P: the picture is 1.8 P by 1.25 P, the glass 0.7 P across at its left, and the vial
    0.4946 P wide, its cap the picture's top. The pedestal is sized from the vial by the room's own proportions (the
    centre seat on the centre pedestal, Rooms.tsx and fog/scenes.ts, in open-crisp's 2560 × 1430), its right side the
-   picture's; it is cut where the picture ends. Each part is placed in its fractions. */
-.tm.tm-lookup-section {
+   picture's; it is cut where the picture ends. Each part is placed in its fractions. The picture carries its own glass,
+   so it is the same wherever it stands (Verify's lookup on a phone, verify.css). */
+.tm-lookup-still {
   --tm-lookup-glass-edge: 0 0 0 1px color-mix(in srgb, var(--tm-paper) 95%, transparent), 0 0 0 2px color-mix(in srgb, var(--tm-ink) 14%, transparent);
   --tm-lookup-glass-cast: 8px 16px 30px -10px color-mix(in srgb, var(--tm-ink) 40%, transparent);
   --tm-lookup-glass-focus: linear-gradient(to bottom, transparent 31%, var(--tm-ink) 38.5%, var(--tm-ink) 62%, transparent 84%);
   --tm-lookup-glass-shine:
     radial-gradient(circle at 30% 24%, color-mix(in srgb, var(--tm-paper) 34%, transparent), color-mix(in srgb, var(--tm-paper) 8%, transparent) 26%, transparent 46%),
     radial-gradient(circle at 50% 50%, transparent 70%, color-mix(in srgb, var(--tm-ink) 8%, transparent) 100%);
-}
-.tm-lookup-still {
   position: relative;
   width: min(100%, 27rem);
   aspect-ratio: 1.8 / 1.25;
