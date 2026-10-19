@@ -255,7 +255,8 @@ export function Header() {
   );
 }
 
-/** The client's footer, column for column; its policy pages stand in the footer's last row (footerPolicies). */
+/** The client's footer, column for column, with the way into the partner program under Company; its policy pages
+ *  stand in the footer's last row (footerPolicies). */
 const footerColumns = [
   {
     title: "Catalog",
@@ -286,6 +287,7 @@ const footerColumns = [
     links: [
       ["About", "/about"],
       ["Quality", "/quality"],
+      ["Partner program", "/partners"],
       ["Contact", "/contact"],
     ],
   },
