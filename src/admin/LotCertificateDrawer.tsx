@@ -5,8 +5,8 @@ import type { FormEvent } from "react";
 import { Button, Drawer } from "../app-kit";
 import { LIVE } from "../platform/mode";
 import { live } from "../platform/live/runtime";
-import { PURITY_MINIMUM, releaseProblem, releaseTemplate, resultGroups, resultsOf } from "../platform/certificate-records";
-import type { Lot, LotRelease } from "../platform/types";
+import { PURITY_MINIMUM, releaseProblem, releaseTemplate, resultGroups, resultsOf, splitLabel } from "../platform/certificate-records";
+import type { Lot, LotRelease, LotResult } from "../platform/types";
 import { productById } from "../shop/catalog";
 import { SelectField, SwitchRow, TextField } from "./fields";
 import { ContentUpload } from "./ContentUpload";
@@ -32,10 +32,13 @@ export function LotCertificateDrawer({ lot, onClose, onSaved }: { lot: Lot; onCl
     return g ? {purity:g.purity?.value ?? "",identity:g.identity?.value === "Conforms" ? "Conforms" : "",content:g.content?.value ?? "",claim:g.claim?.value ?? "",ofClaim:g.ofClaim?.value ?? ""} : {...blank};
   }));
   const [confirmed,setConfirmed]=useState(false);
-  // Results a certificate may also carry, as the form always allowed.
-  const [msIdentity, setMsIdentity] = useState<"" | "Confirmed" | "Not confirmed">("");
-  const [endotoxin, setEndotoxin] = useState("");
-  const [sterility, setSterility] = useState("");
+  // Results a certificate may also carry, as the form always allowed. Those already on file start filled in and keep their label, method and unit.
+  const onFile = (base: string, methods?: string[]) => lot.results.find((r) => { const { base: b, component } = splitLabel(r.label); return !component && b.toLowerCase() === base && (!methods || methods.includes(r.method.trim().toLowerCase())); });
+  const prior = { ms: onFile("identity", ["ms", "mass spectrometry"]), endotoxin: onFile("endotoxin"), sterility: onFile("sterility") };
+  const [msIdentity, setMsIdentity] = useState<"" | "Confirmed" | "Not confirmed">(prior.ms?.value === "Confirmed" || prior.ms?.value === "Not confirmed" ? prior.ms.value : "");
+  const [endotoxin, setEndotoxin] = useState(prior.endotoxin?.value ?? "");
+  const [sterility, setSterility] = useState(prior.sterility?.value ?? "");
+  const kept = (result: LotResult | undefined, fallback: Omit<LotResult, "value">, value: string): LotResult => ({ label: result?.label ?? fallback.label, method: result?.method ?? fallback.method, value, unit: result?.unit ?? fallback.unit });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const edit = (index: number, patch: Partial<Entry>) => setEntries((list) => list.map((entry, i) => (i === index ? { ...entry, ...patch } : entry)));
@@ -45,9 +48,9 @@ export function LotCertificateDrawer({ lot, onClose, onSaved }: { lot: Lot; onCl
     if (!file) { setError("Choose the certificate PDF."); return; }
     const results = [
       ...resultsOf(template.map((part, i) => ({ ...part, ...entries[i], purity: entries[i].purity.trim(), content: entries[i].content.trim(), claim: entries[i].claim.trim(), ofClaim: entries[i].ofClaim.trim() }))),
-      ...(msIdentity ? [{ label: "Identity", method: "Mass spectrometry", value: msIdentity, unit: "" }] : []),
-      ...(endotoxin.trim() ? [{ label: "Endotoxin", method: "LAL", value: endotoxin.trim(), unit: "EU/mg" }] : []),
-      ...(sterility.trim() ? [{ label: "Sterility", method: "", value: sterility.trim(), unit: "" }] : []),
+      ...(msIdentity ? [kept(prior.ms, { label: "Identity", method: "Mass spectrometry", unit: "" }, msIdentity)] : []),
+      ...(endotoxin.trim() ? [kept(prior.endotoxin, { label: "Endotoxin", method: "LAL", unit: "EU/mg" }, endotoxin.trim())] : []),
+      ...(sterility.trim() ? [kept(prior.sterility, { label: "Sterility", method: "", unit: "" }, sterility.trim())] : []),
     ];
     if (!testedAt || !reference.trim() || entries.some((entry) => !entry.identity || ![entry.purity, entry.content, entry.claim, entry.ofClaim].every((value) => number.test(value.trim())))) {
         setError("Enter the certificate number, the date analyzed and, for each component, HPLC purity, identity, content, label claim and % of claim as the certificate prints them."); return;
@@ -85,8 +88,9 @@ export function LotCertificateDrawer({ lot, onClose, onSaved }: { lot: Lot; onCl
             <TextField label="% of label claim" suffix="%" size="short" inputMode="decimal" value={entries[i].ofClaim} onChange={(ofClaim) => edit(i, { ofClaim })} hint="As printed on the certificate." />
           </fieldset>
         ))}
-        <SelectField label="MS identity (optional)" value={msIdentity} onChange={setMsIdentity} disabled={busy} placeholder="Choose the result" options={[{ value: "Confirmed", label: "Confirmed" }, { value: "Not confirmed", label: "Not confirmed" }]} />
-        <TextField label="Endotoxin (optional)" suffix="EU/mg" value={endotoxin} onChange={setEndotoxin} disabled={busy} />
+        {(prior.ms || prior.endotoxin || prior.sterility) && <p className="kit-note">Optional results already on file are filled in below. Clear a field to leave it off this certificate.</p>}
+        <SelectField label="MS identity (optional)" value={msIdentity} onChange={setMsIdentity} disabled={busy} options={[{ value: "", label: "Not on this certificate" }, { value: "Confirmed", label: "Confirmed" }, { value: "Not confirmed", label: "Not confirmed" }]} />
+        <TextField label="Endotoxin (optional)" suffix={prior.endotoxin?.unit || "EU/mg"} value={endotoxin} onChange={setEndotoxin} disabled={busy} />
         <TextField label="Sterility (optional)" value={sterility} onChange={setSterility} disabled={busy} />
       <SwitchRow title="This certificate matches this lot and the results entered above" description="I checked the lot number and passing results on the PDF." checked={confirmed} onChange={busy ? undefined : setConfirmed}/>
       <p className="kit-note">Passing results and this PDF automatically clear testing quarantine. Incoming units and other holds stay unavailable. Shipped certificate records stay on file.</p>
