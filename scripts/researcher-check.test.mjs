@@ -30,6 +30,9 @@ await build({ stdin: { resolveDir: root, loader: 'tsx', contents: `
   import { renderToStaticMarkup } from 'react-dom/server';
   import { MemoryRouter } from 'react-router-dom';
   import { ResearcherCheckCard } from './src/shop/ResearcherCheck.tsx';
+  export { policies, policyByPath, disclaimer } from './src/brand/policies.ts';
+  import Policy from './src/shop/pages/content/Policy.tsx';
+  export const policyPage = (path) => renderToStaticMarkup(h(MemoryRouter, {}, h(Policy, { path })));
   export const card = (props) => renderToStaticMarkup(h(MemoryRouter, {}, h(ResearcherCheckCard, { onTick() {}, onRead() {}, closing: false, exit: { current: null }, ...props })));
 ` }, outfile: file, bundle: true, format: 'esm', platform: 'node', jsx: 'automatic', loader: { '.css': 'empty' }, logLevel: 'silent',
   banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
@@ -103,4 +106,25 @@ test('the card: the client\'s wording, a live count, Enter only once both are ti
   assert.match(DISCLAIMER[0], /^All products sold by TrueMark are intended strictly for in-vitro laboratory research/);
   assert.match(DISCLAIMER[1], /See our Terms of Service for the complete terms\.$/);
   assert.match(both, /<a href="\/disclaimer"[^>]*>Disclaimer<\/a><a href="\/terms"[^>]*>Terms of Service<\/a>/);
+});
+
+test('the Disclaimer page: the client\'s disclaimer, then the Terms\' research-use and warranty sections as they stand there, then the full Terms', async () => {
+  const { policies, policyByPath, disclaimer, policyPage } = await load();
+  assert.deepEqual(policies.map((p) => p.path).slice(0, 2), ['/terms', '/disclaimer']);
+  const page = policyByPath('/disclaimer');
+  assert.equal(page.title, 'Disclaimer');
+  assert.deepEqual(page.blocks.slice(0, 2).map((b) => b.text), [...disclaimer]);
+  const terms = policyByPath('/terms').blocks;
+  const section = (number) => { const at = terms.findIndex((b) => b.kind === 'heading' && b.text.startsWith(`${number}. `)); const end = terms.findIndex((b, i) => i > at && b.kind === 'heading'); return terms.slice(at + 1, end); };
+  const headings = page.blocks.filter((b) => b.kind === 'heading').map((b) => b.text);
+  assert.deepEqual(headings, ['Research Use Only', 'Disclaimer of Warranties']);
+  const after = (heading) => page.blocks.slice(page.blocks.findIndex((b) => b.text === heading) + 1);
+  assert.deepEqual(after('Research Use Only').slice(0, section(2).length), section(2));
+  assert.deepEqual(after('Disclaimer of Warranties').slice(0, section(12).length), section(12));
+  const html = policyPage('/disclaimer');
+  assert.match(html, /<h1 id="tm-legal-title" class="tm-legal-title">Disclaimer<\/h1>/);
+  assert.match(html, /See our <a href="\/terms"[^>]*>Terms of Service<\/a> for the complete terms\./);
+  assert.match(html, /Read the <a href="\/terms"[^>]*>full Terms &amp; Conditions<\/a>\./);
+  assert.match(html, /To the extent permitted by applicable law, the website and its content are provided on an “as is” and “as available” basis\./);
+  assert.match(html, /<nav class="tm-legal-index"[^]*href="\/disclaimer"[^]*<\/nav>/);
 });

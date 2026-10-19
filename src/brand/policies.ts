@@ -195,3 +195,33 @@ export const policies: Policy[] = [
 ];
 
 export const policyByPath = (path: string) => policies.find((p) => p.path === path);
+
+/** The client's disclaimer, word for word: the site's entry check shows it (shop/ResearcherCheck.tsx), and it opens /disclaimer. */
+export const disclaimer = [
+  "All products sold by TrueMark are intended strictly for in-vitro laboratory research and educational purposes only. They are not intended for human or animal consumption, medical use, therapeutic application, or any diagnostic purpose.",
+  "By entering this site you confirm that you are at least 21 years of age and that any products purchased will be used solely for legitimate research purposes. You agree not to misrepresent the intended use of any product purchased from our site. See our Terms of Service for the complete terms.",
+] as const;
+
+/** A section of the Terms as it stands there, its heading without its number. */
+function termsSection(heading: string): PolicyBlock[] {
+  const blocks = policyByPath("/terms")?.blocks ?? [];
+  const start = blocks.findIndex((block) => block.kind === "heading" && block.text.replace(/^\d+\.\s*/, "") === heading);
+  if (start < 0) return [];
+  const end = blocks.findIndex((block, i) => i > start && block.kind === "heading");
+  return [{ kind: "heading", text: heading }, ...blocks.slice(start + 1, end < 0 ? undefined : end)];
+}
+
+// The Disclaimer page, beside the Terms: the client's disclaimer, then the Terms' own research-use and warranty
+// sections, taken from them so the two never disagree.
+policies.splice(1, 0, {
+  path: "/disclaimer",
+  title: "Disclaimer",
+  updated: "October 18, 2026",
+  blocks: [
+    { kind: "paragraph", text: disclaimer[0] },
+    { kind: "paragraph", text: disclaimer[1], links: [["Terms of Service", "/terms"]] },
+    ...termsSection("Research Use Only"),
+    ...termsSection("Disclaimer of Warranties"),
+    { kind: "paragraph", text: "These sections are part of our Terms & Conditions. Read the full Terms & Conditions.", links: [["full Terms & Conditions", "/terms"]] },
+  ],
+});

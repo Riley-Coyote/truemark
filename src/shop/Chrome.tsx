@@ -294,6 +294,7 @@ const footerColumns = [
 /** The client's policy pages, in a row beside the copyright line. */
 const footerPolicies = [
   ["Terms", "/terms"],
+  ["Disclaimer", "/disclaimer"],
   ["Privacy", "/privacy-policy"],
   ["Returns Policy", "/refund_returns"],
   ["Shipping Policy", "/shipping-policy"],

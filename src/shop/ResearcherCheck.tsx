@@ -3,17 +3,15 @@ import type { RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { Check } from "lucide-react";
+import { disclaimer } from "../brand/policies";
 import { useRecovery } from "../platform/PasswordReset";
 import { usePresence } from "./motion";
 import { useScrollLock, useSheetFocus } from "./sheet";
 import { confirmResearcher, confirmationExempt, useResearcherConfirmed } from "./researcher";
 import "./researcher-check.css";
 
-/** The client's wording, word for word. */
-export const DISCLAIMER = [
-  "All products sold by TrueMark are intended strictly for in-vitro laboratory research and educational purposes only. They are not intended for human or animal consumption, medical use, therapeutic application, or any diagnostic purpose.",
-  "By entering this site you confirm that you are at least 21 years of age and that any products purchased will be used solely for legitimate research purposes. You agree not to misrepresent the intended use of any product purchased from our site. See our Terms of Service for the complete terms.",
-] as const;
+/** The client's wording, word for word; the disclaimer itself is kept with the legal pages. */
+export const DISCLAIMER = disclaimer;
 const STATEMENTS = [
   "I am at least 21 years of age.",
   "I am a qualified researcher purchasing for in vitro or laboratory research only, not for human or veterinary use.",
