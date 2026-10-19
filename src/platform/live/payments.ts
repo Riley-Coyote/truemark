@@ -25,7 +25,7 @@ export function createPayments(client: SupabaseClient, rows: (table: string, sel
       const started = await call<{ paymentId: string }>("start", { orderId });
       return call<{ status: "succeeded" | "processing" | "failed"; orderId?: string; message?: string }>("simulate", { paymentId: started.paymentId, outcome });
     },
-    async cancelUnpaid(orderId: string) { const saved = order(await rpc<Row>("cancel_unpaid_order", { order_id: orderId })); changed(); return saved; },
+    async cancelUnpaid(orderId: string) { const saved = order(await rpc<Row>("cancel_unpaid_order", { order_id: orderId }), (bucket, path) => client.storage.from(bucket).getPublicUrl(path).data.publicUrl); changed(); return saved; },
     refund: (orderId: string, amount: number, reason: string) => call<{ status: string }>("refund", { orderId, amount, reason }),
     cancel: (orderId: string, reason: string) => call<{ status: string }>("cancel", { orderId, reason }),
     async rates(): Promise<TaxRate[]> { return (await rows("tax_rates")).map((r) => ({ region: String(r.region), rate: Number(r.rate) })); },
