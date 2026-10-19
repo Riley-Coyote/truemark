@@ -115,7 +115,7 @@ export default function SignIn() {
           <p className="pp-signin-switch">
             <span>Not a partner yet?</span>
             <Link className="tm-textlink" to="/partners/apply">
-              Create a partner account <ArrowRight size={16} strokeWidth={1.6} />
+              Apply to become a partner <ArrowRight size={16} strokeWidth={1.6} />
             </Link>
           </p>
           </>}

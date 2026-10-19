@@ -33,7 +33,7 @@ const ORDER: Key[] = ["name", "email", ...(LIVE ? ["password" as const] : []), "
 
 function problem(key: Key, values: Values, confirmed: string[]): string | undefined {
   if (key === "commitments") {
-    return confirmed.length === commitments.length ? undefined : "Confirm all four commitments to create an account.";
+    return confirmed.length === commitments.length ? undefined : "Confirm all four commitments to apply.";
   }
   const v = values[key].trim();
   switch (key) {
@@ -62,7 +62,7 @@ const withScheme = (url: string) => (/^https?:\/\//i.test(url) ? url : `https://
 
 /** The partner account: who you are, where you publish, how you'd feature TrueMark, and four commitments. */
 export default function Apply() {
-  useTitle("Create a partner account");
+  useTitle("Apply to the partner program");
   const [values, setValues] = useState<Values>({
     name: "",
     email: "",
@@ -129,7 +129,7 @@ export default function Apply() {
       if (application.confirmationRequired) watchEmail(application.email, values.password);
       setReceived(application);
     } catch (error) {
-      setFailure(error instanceof Error ? error.message : "The account could not be created. Your answers are kept; try again.");
+      setFailure(error instanceof Error ? error.message : "The application could not be sent. Your answers are kept; try again.");
       setStatus("failed");
     }
   }
@@ -142,7 +142,7 @@ export default function Apply() {
         <header className="pp-apply-head">
           <p className="tm-eyebrow">Partner program</p>
           <h1 id="pp-apply-title" className="tm-display">
-            Create an account.
+            Apply to the program.
             <br />
             <span>
               One short form
@@ -157,9 +157,9 @@ export default function Apply() {
 
         {received ? (
           <div className="pp-received">
-            <p className="tm-eyebrow">Partner account</p>
+            <p className="tm-eyebrow">Partner application</p>
             <h2 className="tm-heading" tabIndex={-1} ref={heading}>
-              {awaitingEmail ? "Confirm your email." : emailConfirmed ? "Email confirmed." : "Partner account created."}
+              {awaitingEmail ? "Confirm your email." : emailConfirmed ? "Email confirmed." : "Application received."}
             </h2>
             {awaitingEmail && <p className="tm-section-note">Use the link in your email to confirm your account.</p>}
             {LOCAL && received.confirmationRequired && (
@@ -168,7 +168,7 @@ export default function Apply() {
               </p>
             )}
             <p className="tm-section-note">
-              We review and approve every partner account before it is active, and we’ll email you when it has been reviewed.
+              We review every application, and your partner account is active once it is approved. We’ll email you when it has been reviewed.
               {LIVE ? " You can sign in at any time to see where it stands." : ""}
             </p>
             <dl className="pp-received-facts">
@@ -292,14 +292,14 @@ export default function Apply() {
 
             <div className="pp-form-submit">
               <button type="submit" className="tm-button tm-button-primary" disabled={status === "busy"}>
-                {status === "busy" ? "Creating account…" : "Create account"}
+                {status === "busy" ? "Sending application…" : "Submit application"}
               </button>
-              <p className="pp-field-hint">Partner accounts are reviewed and approved before they are active.</p>
-              {!LIVE && <p className="pp-preview-note">Design preview: accounts are kept on this page and not sent.</p>}
+              <p className="pp-field-hint">Every application is reviewed and approved before the partner account is active.</p>
+              {!LIVE && <p className="pp-preview-note">Design preview: applications are kept on this page and not sent.</p>}
             </div>
             {status === "failed" && (
               <p className="pp-field-error" role="alert">
-                {LIVE ? failure : "The account could not be created. Your answers are kept; try again."}
+                {LIVE ? failure : "The application could not be sent. Your answers are kept; try again."}
               </p>
             )}
           </form>

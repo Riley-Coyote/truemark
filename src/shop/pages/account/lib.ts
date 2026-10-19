@@ -87,8 +87,8 @@ export function paymentTone(status: PaymentStatus): Tone {
 
 export const buyerStatusLabel: Record<BuyerStatus, string> = {
   verified: "Verified research account",
-  pending: "Application under review",
-  declined: "Application not approved",
+  pending: "Account under review",
+  declined: "Account not approved",
   suspended: "Account suspended",
 };
 

@@ -13,8 +13,8 @@ import { PageHead, SectionHead, useAccount, useTitle } from "./parts";
 
 const standing: Record<BuyerStatus, string> = {
   verified: "This account is verified to order materials for laboratory research use.",
-  pending: "The application is being reviewed. We’ll email you when your account has been reviewed.",
-  declined: "The application was not approved. The team can answer questions about the decision.",
+  pending: "This account is being reviewed before ordering opens. We’ll email you when it has been reviewed.",
+  declined: "This account was not approved. The team can answer questions about the decision.",
   suspended: "Ordering is paused for this account. Contact the team to resolve it.",
 };
 
