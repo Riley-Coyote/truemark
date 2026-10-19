@@ -26,6 +26,9 @@ Allow several GB of free space for the services and database.
 The command starts the backend, seeds it once, loads the simulator environment,
 starts Vite and processes shipping/messages every five seconds. New signups and
 password resets use the captured Auth email inbox at http://127.0.0.1:55424/.
+No email leaves the machine, so the worker opens each sign-up confirmation link
+about three seconds after it arrives, as the recipient would, and the sign-up
+screen shows the step finish. Password-reset emails are left for you to open.
 Use 127.0.0.1 consistently for the application and email links. The native runtime
 uses default Auth email templates; custom template serving is not supported yet.
 The branded production templates remain in supabase/templates/.

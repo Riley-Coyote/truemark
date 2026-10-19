@@ -54,6 +54,24 @@ export async function configureFunctions() {
   await writeFile(resolve(stateDir, 'functions.env'), Object.entries(values).map(([key, value]) => key + '=' + value).join('\n') + '\n', { mode: 0o600 });
   return values;
 }
+// No email is sent locally, so open each sign-up confirmation as the recipient would.
+export async function confirmSignups(config, minimumAge = 3000) {
+  const inbox = new URL(config.MAILPIT_URL);
+  if (inbox.hostname !== '127.0.0.1') throw new Error('Refusing a non-local email inbox.');
+  const list = await fetch(inbox.origin + '/api/v1/messages?limit=50');
+  if (!list.ok) throw new Error('Local email inbox returned ' + list.status);
+  const waiting = (await list.json()).messages.filter(m => !m.Read && Date.now() - Date.parse(m.Created) >= minimumAge);
+  let confirmed = 0;
+  for (const message of waiting) {
+    // Reading the message marks it read, so each confirmation is opened once.
+    const body = await (await fetch(inbox.origin + '/api/v1/message/' + message.ID)).json();
+    const link = (body.HTML + ' ' + body.Text).match(/https?:\/\/[^\s"'<>]+\/auth\/v1\/verify\?[^\s"'<>]+/)?.[0]?.replaceAll('&amp;', '&');
+    if (!link || new URL(link).searchParams.get('type') !== 'signup') continue;
+    const opened = await fetch(config.API_URL + '/auth/v1/verify' + new URL(link).search, { redirect: 'manual' });
+    if (opened.status >= 300 && opened.status < 400 && !/error/.test(opened.headers.get('location') ?? '')) confirmed++;
+  }
+  return confirmed;
+}
 export async function flush(config) {
   assertLocal(config);
   const { FUNCTIONS_KEY } = await secrets();

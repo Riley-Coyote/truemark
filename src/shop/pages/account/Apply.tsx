@@ -1,5 +1,6 @@
-import { LIVE } from "../../../platform/mode";
+import { LIVE, LOCAL } from "../../../platform/mode";
 import { live } from "../../../platform/live/runtime";
+import { useLocalConfirmation } from "../../../platform/live/demo-email";
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link } from "react-router-dom";
@@ -92,6 +93,8 @@ export default function Apply() {
   const [passwordError, setPasswordError] = useState<string>();
   const [failure, setFailure] = useState<string>();
   const [confirmationRequired, setConfirmationRequired] = useState(false);
+  const { confirmed: emailConfirmed, watch: watchEmail } = useLocalConfirmation();
+  const awaitingEmail = LIVE && confirmationRequired && !emailConfirmed;
   const heading = useRef<HTMLHeadingElement>(null);
   const moved = useRef(false);
 
@@ -172,6 +175,7 @@ export default function Apply() {
         const result = await submitWithDocuments(files, draft.email, live().uploads, () => live().auth.signUp(draft, password),
           (name, text) => setProgress((current) => ({ ...current, [name]: text })));
         setConfirmationRequired(result.confirmationRequired);
+        if (result.confirmationRequired) watchEmail(draft.email, password);
         setPassword("");
         setReceived(draft);
       } else setReceived(await store.applications.submit(draft));
@@ -244,13 +248,18 @@ export default function Apply() {
               Under review {received.id && <span className="tm-mono">{received.id}</span>}
             </p>
             <h2 className="tm-heading" tabIndex={-1} ref={heading}>
-              {LIVE && confirmationRequired ? "Confirm your email." : "Research account created."}
+              {awaitingEmail ? "Confirm your email." : emailConfirmed ? "Email confirmed." : "Research account created."}
             </h2>
             <p className="tm-acct-intro">
-              {LIVE && confirmationRequired
+              {awaitingEmail
                 ? "Check your email to confirm your account. Then you can sign in and see prices; ordering opens once we've reviewed the account, and we'll email you when it's approved."
                 : "You can sign in and see prices now. Ordering opens once we've reviewed the account; we'll email you when it's approved."}
             </p>
+            {LOCAL && confirmationRequired && (
+              <p className="tm-acct-email-note" role="status">
+                {emailConfirmed ? "Demo: confirmed, as if the link in the email had been opened." : "Demo: email isn't set up yet, so the confirmation link is opened for you."}
+              </p>
+            )}
             <dl className="tm-acct-dl is-compact">
               <div>
                 <dt>Name</dt>

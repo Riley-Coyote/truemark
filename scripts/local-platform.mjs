@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
 import { openSync, closeSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { cli, root, stateDir, localEnv, appOrigin, accounts, password, status, database, configureFunctions, flush, run } from './lib/local-platform.mjs';
+import { cli, root, stateDir, localEnv, appOrigin, accounts, password, status, database, configureFunctions, flush, confirmSignups, run } from './lib/local-platform.mjs';
 import { seed } from './local-seed.mjs';
 
 const command=process.argv[2]??'dev';
@@ -58,12 +58,20 @@ console.log('\nTrueMark local platform: '+appOrigin);
 console.log('Website: /  ·  Command Center: /admin  ·  Partners: /partners/sign-in');
 console.log('Local test accounts: '+accounts.map(a=>a.email).join(', '));
 console.log('Local-only password: '+password);
-console.log('Auth email inbox: http://127.0.0.1:55424\n');
+console.log('Auth email inbox: '+config.MAILPIT_URL+' (sign-up confirmations are opened automatically)\n');
+let confirming=false;
+async function confirm() {
+  if(confirming)return;confirming=true;
+  try {await confirmSignups(config);}
+  catch(error) {if(Date.now()>warmUntil)console.error('Local email: '+(error instanceof Error?error.message:String(error)));}
+  finally {confirming=false;}
+}
 const timer=setInterval(()=>void tick(),5000);void tick();
+const mail=setInterval(()=>void confirm(),1500);
 let stopping=false;
 async function stop(code=0) {
   if(stopping)return;stopping=true;
-  clearInterval(timer);child.kill('SIGTERM');functions.kill('SIGTERM');closeSync(functionLog);
+  clearInterval(timer);clearInterval(mail);child.kill('SIGTERM');functions.kill('SIGTERM');closeSync(functionLog);
   await sql.end();process.exit(code);
 }
 process.once('SIGINT',()=>void stop());process.once('SIGTERM',()=>void stop());

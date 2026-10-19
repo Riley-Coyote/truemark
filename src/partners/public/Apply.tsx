@@ -1,4 +1,5 @@
-import { LIVE } from "../../platform/mode";
+import { LIVE, LOCAL } from "../../platform/mode";
+import { useLocalConfirmation } from "../../platform/live/demo-email";
 import { passwordProblem } from "../../platform/accounts";
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
@@ -76,6 +77,8 @@ export default function Apply() {
   const [status, setStatus] = useState<"idle" | "busy" | "failed">("idle");
   const [failure, setFailure] = useState("");
   const [received, setReceived] = useState<PartnerApplication | null>(null);
+  const { confirmed: emailConfirmed, watch: watchEmail } = useLocalConfirmation();
+  const awaitingEmail = LIVE && Boolean(received?.confirmationRequired) && !emailConfirmed;
   const heading = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -123,6 +126,7 @@ export default function Apply() {
         feature: values.feature.trim(),
         commitments: commitments.map((c) => c.id).filter((id) => confirmed.includes(id)),
       }, values.password);
+      if (application.confirmationRequired) watchEmail(application.email, values.password);
       setReceived(application);
     } catch (error) {
       setFailure(error instanceof Error ? error.message : "The account could not be created. Your answers are kept; try again.");
@@ -155,9 +159,14 @@ export default function Apply() {
           <div className="pp-received">
             <p className="tm-eyebrow">Partner account</p>
             <h2 className="tm-heading" tabIndex={-1} ref={heading}>
-              {LIVE && received.confirmationRequired ? "Confirm your email." : "Partner account created."}
+              {awaitingEmail ? "Confirm your email." : emailConfirmed ? "Email confirmed." : "Partner account created."}
             </h2>
-            {LIVE && received.confirmationRequired && <p className="tm-section-note">Use the link in your email to confirm your account.</p>}
+            {awaitingEmail && <p className="tm-section-note">Use the link in your email to confirm your account.</p>}
+            {LOCAL && received.confirmationRequired && (
+              <p className="tm-section-note" role="status">
+                {emailConfirmed ? "Demo: confirmed, as if the link in the email had been opened." : "Demo: email isn't set up yet, so the confirmation link is opened for you."}
+              </p>
+            )}
             <p className="tm-section-note">
               We review and approve every partner account before it is active, and we’ll email you when it has been reviewed.
               {LIVE ? " You can sign in at any time to see where it stands." : ""}
