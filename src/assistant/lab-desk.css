@@ -83,7 +83,7 @@
   color: var(--tm-ink);
   cursor: pointer;
   animation: tm-desk-arrive var(--tm-dur-slow) var(--tm-ease-glide) calc(var(--tm-dur-slow) * 2) backwards;
-  transition: bottom var(--tm-dur-slow) var(--tm-ease-glide), background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter), box-shadow var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro), opacity var(--tm-dur-base) var(--tm-ease-enter), visibility 0s linear 0s;
+  transition: bottom var(--tm-dur-slow) var(--tm-ease-glide), background-color var(--tm-dur-base) var(--tm-ease-enter), border-color var(--tm-dur-base) var(--tm-ease-enter), box-shadow var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-quick) var(--tm-ease-micro), opacity var(--tm-dur-base) var(--tm-ease-enter), translate var(--tm-dur-base) var(--tm-ease-enter), visibility 0s linear 0s;
 }
 @keyframes tm-desk-arrive {
   from {
@@ -112,14 +112,16 @@ html:has(.tm-mist:is([data-seq-playing], [data-story])) .tm-desk-launcher {
   pointer-events: none;
   transition: opacity var(--tm-dur-base) var(--tm-ease-enter), visibility 0s linear var(--tm-dur-base);
 }
-/* On a phone, so too while the added-to-cart bar holds the foot of the screen (shop/MobileAdd.tsx), which it covered:
-   the mark is back as the bar sinks away. */
+/* On a phone, so too while the added-to-cart bar holds the foot of the screen (shop/MobileAdd.tsx), which it covered.
+   It goes the way the bar comes and in the bar's own times (mobile-add.css): it sinks and fades in the leaving time
+   as the bar rises, and is back, rising, in the arriving time as the bar sinks away. */
 @media (max-width: 760px) {
   html:has(.tm-addbar:not([data-state="closing"])) .tm-desk-launcher {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transition: opacity var(--tm-dur-base) var(--tm-ease-enter), visibility 0s linear var(--tm-dur-base);
+    translate: 0 var(--tm-space-3);
+    transition: opacity var(--tm-dur-leave) var(--tm-ease-enter), translate var(--tm-dur-leave) var(--tm-ease-enter), visibility 0s linear var(--tm-dur-leave);
   }
 }
 .tm-desk-launcher .tm-desk-presence {
@@ -2286,5 +2288,9 @@ fieldset.tm-plan-step {
   .tm-desk-presence.is-working {
     animation: none;
     opacity: 1;
+  }
+  /* Out of the added-to-cart bar's way at once, and back at once. */
+  html:has(.tm-addbar) .tm-desk-launcher {
+    transition: none;
   }
 }
