@@ -116,9 +116,11 @@
 }
 .tm-home[data-procession-native] .tm-procession-stage::-webkit-scrollbar{display:none}
 .tm-home[data-procession-native] .tm-procession-light{display:none}
+/* Each vial keeps a layer of its own. Drawn into the strip's own 512-pixel tiles instead, iOS Safari can leave out the
+   last pixel column of a tile under a shrunk vial's masked pedestal: a light hairline down it (once there, it stays). */
 .tm-home[data-procession-native] .tm-procession-actor{
   position:relative;left:auto;bottom:auto;flex:0 0 var(--native-width);height:var(--native-height);width:var(--native-width);
-  opacity:1;visibility:visible;scroll-snap-align:center;transform:scale(.86);transition:transform 400ms cubic-bezier(.22,1,.36,1);will-change:auto;
+  opacity:1;visibility:visible;scroll-snap-align:center;transform:scale(.86);transition:transform 400ms cubic-bezier(.22,1,.36,1);will-change:transform;
 }
 /* The centred pedestal is the nearest: its rim stands in front of its smaller neighbours', whichever class it is. */
 .tm-home[data-procession-native] .tm-procession-actor[data-current]{transform:scale(1);z-index:1}
