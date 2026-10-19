@@ -41,10 +41,12 @@ const baseline=await bundle(baselineDir,'baseline');
 
 // The shopper's bag is called a cart since round 5 of the landing: the base is read with that one rename.
 const asCart=html=>html.replaceAll('Edit bag','Edit cart').replaceAll('Your bag is empty.','Your cart is empty.').replaceAll(' to your bag',' to your cart');
+// An unpaid order reads "Awaiting payment" since Oct 18, not "Placed": the base is read with that rename too.
+const asAwaiting=html=>html.replaceAll('</i>Placed</span>','</i>Awaiting payment</span>').replace(/(placed \d{1,2} \w{3} \d{4}), placed"/g,'$1, awaiting payment"');
 // Conditional live-only controls can shift React useId positions; keep references consistent.
 const normalizeIds=html=>{const ids=new Map();return html.replace(/_R_[A-Za-z0-9]+_/g,id=>{if(!ids.has(id))ids.set(id,`generated-${ids.size}`);return ids.get(id);});};
 test('preview checkout, confirmation and account orders retain base markup apart from generated ids',()=>{
- for(const key of ['checkout','confirmation','ordersRender']) assert.equal(normalizeIds(current[key]()),normalizeIds(asCart(baseline[key]())),key);
+ for(const key of ['checkout','confirmation','ordersRender']) assert.equal(normalizeIds(current[key]()),normalizeIds(asAwaiting(asCart(baseline[key]()))),key);
 });
 test('preview quote retains base totals, shipping, discount and insurance',()=>{
  const draft={lines:[{productId:'bpc-157-10-mg',quantity:2}],address:{region:'TX',country:'US'},shipping:'cold-2day'};

@@ -522,7 +522,7 @@ html:has(.tm-mist:is([data-seq-playing], [data-story])) .tm-desk-launcher {
   --tm-desk-node: 0.625rem;
   position: relative;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -533,15 +533,15 @@ html:has(.tm-mist:is([data-seq-playing], [data-story])) .tm-desk-launcher {
   content: "";
   position: absolute;
   top: calc(var(--tm-desk-node) / 2);
-  left: 10%;
+  left: 12.5%;
   height: 1px;
 }
 .tm-desk-track::before {
-  right: 10%;
+  right: 12.5%;
   background: var(--tm-line-strong);
 }
 .tm-desk-track::after {
-  width: calc(80% * var(--tm-desk-reached) / 4);
+  width: calc(75% * var(--tm-desk-reached) / 3);
   background: var(--tm-ink);
 }
 .tm-desk-track li {

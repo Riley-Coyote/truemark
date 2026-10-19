@@ -88,8 +88,7 @@ export default function Review() {
             <br />
             True precision.
             <br />
-            Verified
-            <BrandDot />
+            TRUEMARK
           </h2>
           <p className="rv-text">
             Your pages in your order: the catalog, every compound on its plinth, lot

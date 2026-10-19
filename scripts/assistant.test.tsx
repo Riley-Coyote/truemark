@@ -343,7 +343,7 @@ test('owner metrics preserve unknown stock, derive personal reorder intervals, r
 test('mounts stay in the four allowed surfaces; offline UI, reduced motion, compact certificate and phone sheet are wired', async () => {
   const files = await Promise.all(['src/shop/Chrome.tsx', 'src/brand/HomeSections.tsx', 'src/admin/AdminApp.tsx', 'src/partners/portal/Overview.tsx', 'src/assistant/Assistant.tsx', 'src/assistant/assistant.css'].map((path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8')));
   for (const [i, component] of ['StorefrontAssistant', 'HomeAssistantEntry', 'OwnerAssistant', 'PartnerAssistant'].entries()) assert(files[i].includes(`<${component}`));
-  assert.match(files[4], /Chats are saved to improve answers/); assert.match(files[4], /rate-limited/); assert.match(files[4], /sessionStorage.setItem\(cacheKey/);
+  assert.match(files[4], /Chats are saved to your account\./); assert.match(files[4], /Chats are saved by TrueMark\./); assert.doesNotMatch(files[4], /improve answers/); assert.match(files[4], /rate-limited/); assert.match(files[4], /sessionStorage.setItem\(cacheKey/);
   assert.match(files[5], /prefers-reduced-motion/); assert.match(files[5], /100dvh/); assert.match(files[5], /assistant-certificate/);
   const source = await readFile(new URL('../src/assistant/copy.ts', import.meta.url), 'utf8');
   const handling = await readFile(new URL('../src/shop/pages/content/Handling.tsx', import.meta.url), 'utf8');

@@ -49,7 +49,7 @@ export function firstName(name: string): string {
 export const productFor = (id: string): Product | undefined => products.find((p) => p.id === id);
 
 export const orderStatusLabel: Record<OrderStatus, string> = {
-  placed: "Placed",
+  placed: "Awaiting payment",
   paid: "Paid",
   packed: "Packed",
   shipped: "Shipped",

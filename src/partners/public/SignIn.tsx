@@ -49,7 +49,7 @@ export default function SignIn() {
     if (busy) return;
     setError(undefined);
     if (!EMAIL.test(email.trim())) {
-      setError(email.trim() ? "Enter a full email address." : "Enter the email address you applied with.");
+      setError(email.trim() ? "Enter a full email address." : "Enter the email address you signed up with.");
       document.getElementById("pp-signin-email")?.focus();
       return;
     }
@@ -115,7 +115,7 @@ export default function SignIn() {
           <p className="pp-signin-switch">
             <span>Not a partner yet?</span>
             <Link className="tm-textlink" to="/partners/apply">
-              Apply to the program <ArrowRight size={16} strokeWidth={1.6} />
+              Create a partner account <ArrowRight size={16} strokeWidth={1.6} />
             </Link>
           </p>
           </>}

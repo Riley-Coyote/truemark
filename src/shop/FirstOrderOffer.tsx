@@ -209,8 +209,8 @@ function CodeLine({ size = "md" }: { size?: "md" | "sm" }) {
 function Primary({ locked, applied, checking, onApply, onClose, from }: OfferProps) {
   if (locked) {
     return (
-      <Link className="tm-button tm-button-primary" to="/access" state={{ from }} onClick={onClose}>
-        Open a research account
+      <Link className="tm-button tm-button-primary" to="/access/apply" onClick={onClose}>
+        Create a research account
       </Link>
     );
   }
@@ -311,7 +311,7 @@ function Applied({ percent }: { percent: number }) {
 
 /** The corner card: the same offer, in view without blocking anything. */
 function OfferCard(props: OfferProps) {
-  const { percent, locked, applied, checking, onApply, onClose, from } = props;
+  const { percent, locked, applied, checking, onApply, onClose } = props;
   const [state, setState] = useState<SheetState>("entering");
   const [hidden, setHidden] = useState(false);
   const card = useRef<HTMLElement>(null);
@@ -374,8 +374,8 @@ function OfferCard(props: OfferProps) {
         <CodeLine size="sm" />
       </div>
       {locked ? (
-        <Link className="tm-offer-card-action" to="/access" state={{ from }} onClick={onClose}>
-          Open an account
+        <Link className="tm-offer-card-action" to="/access/apply" onClick={onClose}>
+          Create an account
         </Link>
       ) : (
         <button type="button" className="tm-offer-card-action" onClick={() => void onApply()} disabled={checking || applied} data-done={applied || undefined}>

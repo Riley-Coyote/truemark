@@ -198,7 +198,7 @@ function PreviewSignInForm({ onSignedIn }: { onSignedIn: () => void }) {
           {busy ? "Opening the account" : "Continue"}
         </button>
         <Link className="tm-textlink" to="/access/apply">
-          Apply for a research account <ArrowRight size={16} strokeWidth={1.6} />
+          Create a research account <ArrowRight size={16} strokeWidth={1.6} />
         </Link>
       </div>
       <p id="tm-checkout-email-note" className="tm-step-fine">

@@ -131,7 +131,7 @@ export default function About() {
               <span className="tm-about-promise-open" aria-hidden="true">
                 “
               </span>
-              Delivering the highest quality research compounds with precision,
+              Delivering the highest quality research peptides with precision,
               transparency, and absolute integrity.
               <span aria-hidden="true">”</span>
             </p>

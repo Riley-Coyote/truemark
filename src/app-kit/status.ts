@@ -33,5 +33,10 @@ const TONES: Record<string, Tone> = {
 
 export const toneFor = (status: string): Tone => TONES[status] ?? "neutral";
 
-/** Human label for a status value: "quarantine" → "Quarantine". */
-export const statusLabel = (status: string): string => status.charAt(0).toUpperCase() + status.slice(1);
+/** Labels that say more than the value itself: an order that is only "placed" has not been paid for yet. */
+const LABELS: Record<string, string> = {
+  placed: "Awaiting payment",
+};
+
+/** Human label for a status value: "quarantine" → "Quarantine", "placed" → "Awaiting payment". */
+export const statusLabel = (status: string): string => LABELS[status] ?? status.charAt(0).toUpperCase() + status.slice(1);

@@ -119,7 +119,7 @@ export function NewOrderEmail({ context, to }: { context: OrderContext; to: Oper
           ["Placed", formatDateTime(order.createdAt)],
         ]}
       />
-      <EmailText>{`${vials} ${vials === 1 ? "vial" : "vials"} to pack cold for ${order.address.city}, ${order.address.region}.`}</EmailText>
+      <EmailText>{`${vials} ${vials === 1 ? "vial" : "vials"} to pack for ${order.address.city}, ${order.address.region}.`}</EmailText>
       <EmailButton>Open the order</EmailButton>
     </EmailPreview>
   );

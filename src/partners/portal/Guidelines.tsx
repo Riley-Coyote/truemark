@@ -88,7 +88,7 @@ export default function Guidelines() {
             <BrandDot />
           </h2>
           <p className="pp-guide-lead">
-            You speak for a supplier of research compounds. Talk about the material, its testing and its record, and
+            You speak for a supplier of research peptides. Talk about the material, its testing and its record, and
             say plainly that you earn a commission.
           </p>
           <p className="pp-guide-scope">

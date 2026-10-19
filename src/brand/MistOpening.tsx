@@ -5,7 +5,6 @@ import type { Product } from "../data";
 import { store, useResource } from "../platform/store";
 import { productById } from "../shop/catalog";
 import { useMediaQuery } from "../shop/motion";
-import { BrandDot } from "./BrandDot";
 import { collectionIds } from "./carousel";
 import { flyToProduct, preloadProduct, registerHome } from "./flight";
 import { TALL_SCREEN } from "./opening-media";
@@ -55,10 +54,11 @@ const PLATE_SCALE = 1.015;
 const DEPTH = { x: 7, y: 5 };
 /** How far the camera pushes in as the reader scrolls on past the room (stories.css): toward the featured vial. */
 const FLY_ZOOM = 2.1;
-/** The headline's last word, set into the room: how far down the featured vial its foot sits (in the vial's height),
- *  its gap under the words on the wall (px), its cap height and its width in ems (Poppins Light, tracked in), and the
- *  share of the screen it may span. */
-const WORD = { sink: 0.6, gap: 30, cap: 0.8, em: 4.05, span: 0.94 } as const;
+/** The headline's last word, "TRUEMARK", set into the room: how far down the featured vial its foot sits (in the vial's
+ *  height; less on a phone, where the narrower word would otherwise lose its middle letter wholly behind the glass),
+ *  its gap under the words on the wall (px), its cap height and its width in ems (Poppins, tracked in, from the foot of
+ *  its box), and the share of the screen it may span. */
+const WORD = { sink: { wide: 0.6, tall: 0.35 }, gap: 30, cap: 0.78, em: 4.83, span: 0.86 } as const;
 /** The space kept under the words on the wall for it to rise into: a share of the screen's height above a floor of
  *  it, so a short laptop window keeps its room whole and a tall one gives the word more. */
 /** The room's light on each vial by how many pedestals it stands from the one under the light (mist-word.css): half
@@ -223,14 +223,14 @@ export function MistOpening() {
     ...(box.height ? { "--tm-room-foot": `${(box.top + box.height).toFixed(1)}px` } : {}),
   } as CSSProperties;
 
-  // "Verified." stands on the room's back wall, behind the glass: its foot sinks behind the featured vial's shoulders,
+  // "TRUEMARK" stands on the room's back wall, behind the glass: its foot sinks behind the featured vial's shoulders,
   // and it grows up to the words above it, as large as that space and the screen allow.
   const word = (() => {
     if (!featuredSeat || !box.width || !size.w) return null;
     const wall = Math.max(0, ...words.wall.map((block) => block.bottom));
     const vial = featuredSeat.h * box.height * PLATE_SCALE;
     const foot = box.top + box.height / 2 + (featuredSeat.y - 0.5) * box.height * PLATE_SCALE;
-    const base = foot - vial * (1 - WORD.sink);
+    const base = foot - vial * (1 - WORD.sink[tall ? "tall" : "wide"]);
     const font = Math.min((base - wall - WORD.gap) / WORD.cap, (size.w * WORD.span) / WORD.em);
     if (font < 40) return null;
     return {
@@ -327,7 +327,7 @@ export function MistOpening() {
 
   const lede = (
     <p className="tm-mist-lead" ref={lead}>
-      Research compounds supplied as lyophilized powder, independently tested on receipt, quarantined
+      Research peptides supplied as lyophilized powder, independently tested on receipt, quarantined
       until release, and traceable from the vial in your hand back to the source batch.
     </p>
   );
@@ -376,12 +376,10 @@ export function MistOpening() {
               <span>True precision.</span>
             </span>
             <span className="tm-bhero-line" style={{ "--tm-i": 2 } as CSSProperties}>
-              <span>
-                Verified
-                <BrandDot />
-              </span>
+              <span>TRUEMARK</span>
             </span>
           </h1>
+          <p className="tm-mist-kind">Research peptides</p>
         </div>
         {phone ? way : (
           <div className="tm-mist-aside">
@@ -396,13 +394,12 @@ export function MistOpening() {
               whichever page shows it (share.ts); the lens's focus comes on only as the camera moves to a pedestal. */}
           <img className="tm-room tm-room-still" src={roomMedia(room).poster} alt="" aria-hidden="true" draggable={false} />
           <RoomLoop room={room} still={still} />
-          {/* "Verified." on the back wall, in the photograph's own light (mist-word.css), and the floor mist. */}
+          {/* "TRUEMARK" on the back wall, in the photograph's own light (mist-word.css), and the floor mist. */}
           <div className="tm-mist-light" style={word ?? undefined} data-word={word ? "" : undefined}>
             {word && (
               <span className="tm-mist-word" aria-hidden="true">
-                <span className="tm-mist-word-ink" data-text="Verified">
-                  Verified
-                  <BrandDot />
+                <span className="tm-mist-word-ink" data-text="TRUEMARK">
+                  TRUEMARK
                 </span>
               </span>
             )}

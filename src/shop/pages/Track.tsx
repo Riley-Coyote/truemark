@@ -29,11 +29,11 @@ const longDate = (iso: string) => {
 function headline(order: Order): [string, string] {
   switch (order.status) {
     case "placed":
-      return ["Order placed.", "It is packed cold once payment is confirmed."];
+      return ["Awaiting payment.", "It is packed once payment is confirmed."];
     case "paid":
-      return ["Payment confirmed.", "Next, it is packed cold."];
+      return ["Payment confirmed.", "Next, it is packed."];
     case "packed":
-      return ["Packed cold.", "Held cold until it ships."];
+      return ["Packed.", "Checked, sealed and ready to ship."];
     case "shipped": {
       const estimate = estimatedDelivery(order);
       return ["On its way.", estimate ? `Estimated ${weekdayDate(estimate)}.` : "Shipped with temperature control when applicable."];

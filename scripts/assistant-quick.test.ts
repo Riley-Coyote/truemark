@@ -60,6 +60,7 @@ test('the desk answers its own suggestions at once, and leaves everything else t
   assert.deepEqual(opens('Common questions'), ['faq', null]);
   assert.deepEqual(opens('What is a retest date?'), ['faq', 'What is a retest date?']);
   assert.deepEqual(opens('Talk to a person'), ['contact', null]);
+  assert.deepEqual(opens('Create an account'), ['apply', null]);
   assert.deepEqual(opens('Start my application'), ['apply', null]);
   assert.deepEqual(opens('Show me the research blog'), ['articles', null]);
   assert.deepEqual(opens('Tell me about TrueMark'), ['about', null]);

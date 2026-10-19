@@ -11,8 +11,8 @@ import { useTitle } from "./title";
 
 const steps = [
   {
-    title: "Apply",
-    detail: "Tell us where you publish and how you would feature TrueMark. Every application is reviewed before a code is issued.",
+    title: "Create an account",
+    detail: "Tell us where you publish and how you would feature TrueMark. Every partner account is reviewed and approved before a code is issued.",
   },
   {
     title: "Share your link or code",
@@ -59,7 +59,7 @@ export default function Landing() {
           <p className="pp-hero-lead">For educators and reviewers who talk about research the right way.</p>
           <div className="tm-actions">
             <Link className="tm-button tm-button-primary" to="/partners/apply">
-              Apply to partner
+              Create a partner account
             </Link>
             <SectionLink className="tm-button tm-button-outline" section="guidelines">
               Read the guidelines
@@ -233,11 +233,11 @@ export default function Landing() {
             <BrandDot />
           </h2>
           <p className="tm-section-note pp-cta-note">
-            The application is one short form. Each one is reviewed before a code is issued.
+            It takes one short form. Every partner account is reviewed and approved before it is active.
           </p>
           <div className="tm-actions">
             <Link className="tm-button tm-button-primary" to="/partners/apply">
-              Apply to partner
+              Create a partner account
             </Link>
             <Link className="tm-textlink" to="/partners/sign-in">
               Already a partner? Sign in <ArrowRight size={16} strokeWidth={1.6} />

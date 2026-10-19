@@ -310,7 +310,7 @@ export function Footer() {
             {HEADER_FOLLOWS_LIGHT && <span className="tm-logo-night" aria-hidden="true"><BrandLogo variant="white" /></span>}
           </Link>
           <p className="tm-footer-line">
-            Research compounds supplied for laboratory use,
+            Research peptides supplied for laboratory use,
             <br />
             <span>with lot-level traceability.</span>
           </p>

@@ -153,7 +153,7 @@ export function renderTemplate(template: string,c: TemplateData): Rendered {
   subject=`New order ${number} · ${money(o.total)}`;preheader=institution+via;footer='You receive this because new-order alerts are on for you in Settings.';
   heading(`New order ${number}`);figure('Order total',money(o.total),institution+via);
   rows([...lineRows,['Buyer',c.buyer?.name??o.address?.attention??''],['Shipping',c.method?.label??'Cold chain'],...(o.insurance_applied||Number(o.insurance)>0?[['Insurance',money(o.insurance)]]:[]),['Placed',`${date(o.created_at)}, ${time(o.created_at)}`]]);
-  text(`${plural(vials,'vial')} to pack cold for ${o.address?.city}, ${o.address?.region}.`);button('Open the order',link('/admin/orders?order='+id));break;
+  text(`${plural(vials,'vial')} to pack for ${o.address?.city}, ${o.address?.region}.`);button('Open the order',link('/admin/orders?order='+id));break;
  case 'team.application': {
   const a=c.application??{},research=d.kind==='application.submitted';subject=research?`New research application · ${a.institution}`:`New partner application · ${a.name}`;footer='You receive this because application alerts are on for you in Settings.';
   heading(research?'A research account application is waiting.':'A partner application is waiting.');rows(research?[['Name',a.name],['Institution',a.institution],['Research area',a.research_area]]:[['Name',a.name],['Email',a.email]]);button('Review it',link(research?'/admin/applications':'/admin/partners?view=applications'));break;
