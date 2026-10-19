@@ -14,7 +14,7 @@ import "./commerce.css";
 const previewNote = "Saving works in the live platform.";
 const messageFor = (error: unknown) => error instanceof Error ? error.message : "The change could not be saved. Try again.";
 
-export function ProductEditor({ product, classes, onSaved }: { product: Product; classes: Category[]; onSaved: () => void }) {
+export function ProductEditor({ product, classes, onSaved }: { product: Product; classes: Category[]; onSaved: (saved: Product) => void }) {
   const [draft, setDraft] = useState(product);
   const [price, setPrice] = useState(product.price?.toFixed(2) ?? "");
   const [photo, setPhoto] = useState<File | null>(null);
@@ -38,14 +38,17 @@ export function ProductEditor({ product, classes, onSaved }: { product: Product;
     }
     setBusy(true); setError(undefined); setMessage(undefined);
     try {
+      const isNew = !product.id;
       let image = uploaded ?? draft.image;
-      if (photo && !uploaded) {
+      if (photo && !uploaded && !isNew) {
         image = await store.catalog.uploadPhoto(product.id, photo);
         setUploaded(image);
       }
-      const saved = await store.catalog.saveProduct({ ...draft, image, price: amount.value, stock: product.stock ?? 0 });
+      let saved = await store.catalog.saveProduct({ ...draft, image, price: amount.value, stock: product.stock ?? 0 });
+      // A new product's shop address comes from the save, so its photo is stored under that address afterwards.
+      if (photo && isNew) saved = await store.catalog.saveProduct({ ...saved, image: await store.catalog.uploadPhoto(saved.id, photo), price: amount.value, stock: saved.stock ?? 0 });
        setDraft(saved); setPrice(saved.price!.toFixed(2));
-      setPhoto(null); setUploaded(undefined); setMessage("Product saved."); onSaved();
+      setPhoto(null); setUploaded(undefined); setMessage("Product saved."); onSaved(saved);
     } catch (error) { setError(messageFor(error)); }
     finally { setBusy(false); }
   }

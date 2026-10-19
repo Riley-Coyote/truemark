@@ -32,8 +32,14 @@ function selected(s:State,id:string) {const l=s.lots.find(l=>lotKey(l)===id); if
 export const previewLots=()=>state().lots;
 export const previewOrders=()=>state().orders;
 export const previewProducts=()=>{const s=state();return s.products.map(p=>({...p,stock:inventoryTotals(s.lots.filter(l=>l.productId===p.id)).available}));};
+// The same readable address the database gives a new product: "BPC-157" + "10 mg" is bpc-157-10-mg, then -2, -3.
+function productAddress(s:State, product:Product) {
+  const base=`${product.name.trim()} ${product.size.trim()}`.normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").slice(0,80).replace(/^-+|-+$/g,"") || "product";
+  let id=base; for(let n=2; s.products.some(p=>p.id===id); n++) id=`${base}-${n}`;
+  return id;
+}
 export async function savePreviewProduct(product:Product) {
-  const s=state(); const previous=s.products.find(p=>p.id===product.id);
+  const s=state(); if(!product.id) product={...product,id:productAddress(s,product)}; const previous=s.products.find(p=>p.id===product.id);
   if(s.products.some(p=>p.id!==product.id && p.name.trim().toLowerCase()===product.name.trim().toLowerCase() && p.size.trim().toLowerCase()===product.size.trim().toLowerCase() && p.form.trim().toLowerCase()===product.form.trim().toLowerCase())) throw new Error("This product and size already exist. Receive inventory for that product.");
   if(previous) s.products=s.products.map(p=>p.id===product.id ? {...product,stock:p.stock,lot:p.lot} : p); else s.products.push({...product,stock:0});
   audit(s,product.id,undefined,"product","Product saved",previous,product); commit(s); return s.products.find(p=>p.id===product.id)!;
