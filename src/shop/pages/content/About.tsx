@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { assetUrl } from "../../../assetUrl";
 import { BrandDot } from "../../../brand/BrandDot";
 import { Trace } from "../../../brand/Trace";
-import { useReveal } from "../../motion";
+import { useMediaQuery, useReveal } from "../../motion";
 import "../../../brand/about.css";
 import { aboutLead, principles, verbs, whoWeSupply } from "../../../brand/about-copy";
 
@@ -26,6 +26,9 @@ export default function About() {
   useReveal(root);
   const lab = scene("lab-bench");
   const light = scene("caustics");
+  // Stacked (about.css, 960px and narrower) the verbs are only 3rem apart, and the trace's peak rises 74% of its
+  // height above Test's rule, into that gap: a lower trace keeps the peak clear of Supply's text above it.
+  const stacked = useMediaQuery("(max-width: 960px)");
 
   return (
     <div className="tm-page tm-about" ref={root}>
@@ -73,7 +76,7 @@ export default function About() {
               data-reveal
               style={{ "--tm-i": i } as CSSProperties}
             >
-              {item.verb === "Test" && <Trace className="tm-about-verb-trace" peakAt={0.36} height={96} />}
+              {item.verb === "Test" && <Trace className="tm-about-verb-trace" peakAt={0.36} height={stacked ? 46 : 96} />}
               <span className="tm-about-verb-number" aria-hidden="true">
                 {item.number}
               </span>
