@@ -296,14 +296,14 @@ function ProcessView({ onNavigate }: { onNavigate: () => void }) {
   );
 }
 
-/* How an account opens: the application's own steps, and the first-order offer when it is on. */
+/* How an account opens: the sign-up's own steps, and the first-order offer when it is on. */
 function AccountView({ onNavigate, onAsk }: { onNavigate: () => void; onAsk?: (text: string) => void }) {
   const signedIn = Boolean(chatContextNow()?.signedIn);
   const offer = useResource(() => (LIVE ? store.catalog.validateCode("FIRSTLOT") : Promise.resolve(firstOrderOffer)).catch(() => null), []);
   const steps = [
-    ["Apply", "Four short steps: about you, your institution, your research use, and four attestations."],
-    ["We review it", "Every application is reviewed before an account can order. You'll hear from us by email."],
-    ["Sign in and order", "Once you're approved, sign in to see pricing and place orders."],
+    ["Create an account", "Four short steps: about you, your institution, your research use, and four attestations."],
+    ["We review it", "Every new account is reviewed before ordering opens. You can sign in and see pricing meanwhile; you'll hear from us by email."],
+    ["Sign in and order", "Once you're approved, sign in and place orders."],
   ];
   return (
     <article className="tm-desk-card tm-desk-account" aria-label="Opening a research account">
@@ -324,8 +324,8 @@ function AccountView({ onNavigate, onAsk }: { onNavigate: () => void; onAsk?: (t
       <div className="tm-desk-actions">
         {signedIn
           ? <Link className="tm-desk-add" to="/products" onClick={onNavigate}>Browse the catalog</Link>
-          : <>{onAsk ? <button type="button" className="tm-desk-add" onClick={() => onAsk("Start my application")}>Start my application</button>
-              : <Link className="tm-desk-add" to="/access/apply" onClick={onNavigate}>Apply for an account</Link>}
+          : <>{onAsk ? <button type="button" className="tm-desk-add" onClick={() => onAsk("Create an account")}>Create an account</button>
+              : <Link className="tm-desk-add" to="/access/apply" onClick={onNavigate}>Create an account</Link>}
             <Link className="tm-desk-link" to="/access" onClick={onNavigate}>Sign in <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" /></Link></>}
       </div>
     </article>

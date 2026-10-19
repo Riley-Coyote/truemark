@@ -159,7 +159,7 @@ function Summary({ chosen, plan, onNavigate, onAdd }: { chosen: Compound[]; plan
       {tooMany && <p className="tm-desk-note">The cart takes up to 99 of a vial; lower an amount to add this plan.</p>}
       <div className="tm-desk-actions">
         {!priced ? <>
-          <Link className="tm-desk-add" to="/access/apply" onClick={onNavigate}>Apply for an account</Link>
+          <Link className="tm-desk-add" to="/access/apply" onClick={onNavigate}>Create an account</Link>
           <Link className="tm-desk-link" to="/access" onClick={onNavigate}>Sign in for pricing <ArrowRight size={14} strokeWidth={1.8} aria-hidden="true" /></Link>
         </> : plan.added ? <>
           <p className="tm-desk-add" data-added=""><Check size={14} strokeWidth={2.2} aria-hidden="true" /> In your cart</p>

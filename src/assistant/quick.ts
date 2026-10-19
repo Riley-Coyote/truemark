@@ -110,7 +110,7 @@ export function quickTurn(text: string, context: ChatContext | null, recent?: st
   const faq = faqs.find(([question]) => same(q, question.toLowerCase().replace(/[?]+$/, "").replace(/’/g, "'"), question.toLowerCase().replace(/[?]+$/, "")));
   if (faq) return panel("faq", "Here's the answer, with the other common questions beside it.", faq[0]);
   if (same(q, "talk to a person", "contact the team", "contact support", "i need to talk to someone", "speak to a person", "contact you")) return panel("contact", "Write to the team here. It goes straight to the right inbox, and a person replies by email.");
-  if (same(q, "apply for an account", "open an account", "start my application", "start an application")) return panel("apply", signedIn ? "You already have a research account." : "Let's start it here: four short steps. The application page then takes your password and any documents.");
+  if (same(q, "create an account", "create a research account", "apply for an account", "open an account", "start my application", "start an application")) return panel("apply", signedIn ? "You already have a research account." : "Let's start it here: four short steps. The account page then takes your password and any documents.");
   if (same(q, "show me the research blog", "research blog", "research articles", "show me your research articles", "what have you written")) return panel("articles", "Here's the research blog, written for laboratory researchers.");
   if (same(q, "about truemark", "tell me about truemark", "who are you", "who is truemark", "what is truemark")) return panel("about", "Here's who we are, in our own words.");
 
@@ -152,7 +152,7 @@ export function quickTurn(text: string, context: ChatContext | null, recent?: st
 
   if (same(q, "how do i start ordering", "how do i open an account", "how do i create an account", "how do i get an account", "how do i order")) return { answer: () => ({
     lead: signedIn ? "You're signed in, so pricing and ordering are already open to you. Here's how an account opens, for anyone you'd send our way."
-      : "Research accounts are for laboratories and research institutions. Opening one takes four short steps, and every application is reviewed.",
+      : "Research accounts are for laboratories and research institutions. Creating one takes four short steps, and every new account is reviewed before ordering opens.",
     artifact: { kind: "account" } }) };
 
   if (same(q, "how do i read a certificate", "how do i read this certificate", "what does a certificate show")) {

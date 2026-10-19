@@ -328,7 +328,7 @@ function ApplyPanel({ onNavigate }: { onNavigate: () => void }) {
     <Field label={label} error={errorOf(key)} hint={hint}>{(id, d) => <input id={id} value={values[key]} onChange={set(key)} aria-describedby={d} aria-invalid={Boolean(errorOf(key)) || undefined} {...extra} />}</Field>
   );
   return (
-    <article className="tm-desk-card tm-desk-apply" aria-label="Research account application">
+    <article className="tm-desk-card tm-desk-apply" aria-label="Create a research account">
       <ol className="tm-desk-apply-rail" aria-label="Steps">
         {applySteps.map((s, i) => <li key={s.title} data-state={i < step ? "done" : i === step ? "current" : undefined} aria-current={i === step ? "step" : undefined}>{s.title}</li>)}
       </ol>
@@ -366,16 +366,16 @@ function ApplyPanel({ onNavigate }: { onNavigate: () => void }) {
           </div>
         </fieldset>}
         {step === 4 && <div className="tm-plan-body">
-          <p className="tm-desk-done"><Check size={14} strokeWidth={2.2} aria-hidden="true" /><span>That's everything the chat can take. {LIVE ? "On the application page, choose a password, add any supporting documents, check each step and submit." : "On the application page, check each step and submit."}</span></p>
+          <p className="tm-desk-done"><Check size={14} strokeWidth={2.2} aria-hidden="true" /><span>That's everything the chat can take. {LIVE ? "On the account page, choose a password, add any supporting documents, check each step and create the account." : "On the account page, check each step and create the account."}</span></p>
         </div>}
       </div>
       <div className="tm-desk-actions">
         {step < 4
           ? <button type="button" className="tm-desk-add" onClick={next}>{step === 3 ? "Done" : "Continue"}</button>
-          : <Link className="tm-desk-add" to="/access/apply" onClick={() => { giveDraft(values, confirmed); try { sessionStorage.removeItem(APPLY_KEY); } catch { /* Fine. */ } onNavigate(); }}>Finish on the application page</Link>}
+          : <Link className="tm-desk-add" to="/access/apply" onClick={() => { giveDraft(values, confirmed); try { sessionStorage.removeItem(APPLY_KEY); } catch { /* Fine. */ } onNavigate(); }}>Finish on the account page</Link>}
         {step > 0 && <button type="button" className="tm-desk-quiet" onClick={() => { setShown(false); save({ ...state, step: step - 1 }); }}>Back</button>}
       </div>
-      {step < 4 && <p className="tm-desk-note">Every application is reviewed before an account can order. Your answers stay in this browser until you send them.</p>}
+      {step < 4 && <p className="tm-desk-note">Every new account is reviewed before ordering opens. Your answers stay in this browser until you send them.</p>}
     </article>
   );
 }
@@ -434,7 +434,7 @@ export const menu: { title: string; items: [string, LucideIcon][] }[] = [
   { title: "Find", items: [["Help me plan an order", ClipboardList], ["What do you carry?", LayoutGrid], ["What are your most popular compounds?", PackageSearch]] },
   { title: "Verify", items: [["Verify a lot", QrCode], ["Show me a real certificate", FileCheck2], ["How is every lot tested?", FlaskConical]] },
   { title: "Order", items: [["What's in my cart?", ShoppingBag], ["Apply a discount code", Tag], ["Track an order", Truck], ["How does shipping work?", Receipt]] },
-  { title: "Help", items: [["Apply for an account", UserRoundPlus], ["What's your return policy?", Undo2], ["Common questions", HelpCircle], ["Talk to a person", Mail], ["Show me the research blog", BookOpen], ["About TrueMark", Building2]] },
+  { title: "Help", items: [["Create an account", UserRoundPlus], ["What's your return policy?", Undo2], ["Common questions", HelpCircle], ["Talk to a person", Mail], ["Show me the research blog", BookOpen], ["About TrueMark", Building2]] },
 ];
 
 function MenuPanel({ onAsk }: { onAsk?: (text: string) => void }) {

@@ -32,7 +32,7 @@ const ORDER: Key[] = ["name", "email", ...(LIVE ? ["password" as const] : []), "
 
 function problem(key: Key, values: Values, confirmed: string[]): string | undefined {
   if (key === "commitments") {
-    return confirmed.length === commitments.length ? undefined : "Confirm all four commitments to apply.";
+    return confirmed.length === commitments.length ? undefined : "Confirm all four commitments to create an account.";
   }
   const v = values[key].trim();
   switch (key) {
@@ -59,9 +59,9 @@ function problem(key: Key, values: Values, confirmed: string[]): string | undefi
 
 const withScheme = (url: string) => (/^https?:\/\//i.test(url) ? url : `https://${url}`);
 
-/** The application: who you are, where you publish, how you'd feature TrueMark, and four commitments. */
+/** The partner account: who you are, where you publish, how you'd feature TrueMark, and four commitments. */
 export default function Apply() {
-  useTitle("Apply to the partner program");
+  useTitle("Create a partner account");
   const [values, setValues] = useState<Values>({
     name: "",
     email: "",
@@ -125,7 +125,7 @@ export default function Apply() {
       }, values.password);
       setReceived(application);
     } catch (error) {
-      setFailure(error instanceof Error ? error.message : "The application could not be sent. Your answers are kept; try again.");
+      setFailure(error instanceof Error ? error.message : "The account could not be created. Your answers are kept; try again.");
       setStatus("failed");
     }
   }
@@ -138,7 +138,7 @@ export default function Apply() {
         <header className="pp-apply-head">
           <p className="tm-eyebrow">Partner program</p>
           <h1 id="pp-apply-title" className="tm-display">
-            Apply to partner.
+            Create an account.
             <br />
             <span>
               One short form
@@ -153,14 +153,15 @@ export default function Apply() {
 
         {received ? (
           <div className="pp-received">
-            <p className="tm-eyebrow">Application</p>
+            <p className="tm-eyebrow">Partner account</p>
             <h2 className="tm-heading" tabIndex={-1} ref={heading}>
-              {LIVE ? (received.confirmationRequired ? "Confirm your email." : "Application received.") : <>Application received.<br /><span>We’ll email you once it has been reviewed.</span></>}
+              {LIVE && received.confirmationRequired ? "Confirm your email." : "Partner account created."}
             </h2>
-            {LIVE && <>
-              {received.confirmationRequired && <p className="tm-section-note">Use the link in your email to confirm your account.</p>}
-              <p className="tm-section-note">{received.confirmationRequired ? "Application received. " : ""}We review every application; you'll hear from us by email. Sign in once you're approved.</p>
-            </>}
+            {LIVE && received.confirmationRequired && <p className="tm-section-note">Use the link in your email to confirm your account.</p>}
+            <p className="tm-section-note">
+              We review and approve every partner account before it is active, and we’ll email you when it has been reviewed.
+              {LIVE ? " You can sign in at any time to see where it stands." : ""}
+            </p>
             <dl className="pp-received-facts">
               <div>
                 <dt>Name</dt>
@@ -175,7 +176,7 @@ export default function Apply() {
                 <dd>{received.channel}</dd>
               </div>
             </dl>
-            {!LIVE && <p className="pp-preview-note">Design preview: this application stays on this page; nothing was sent.</p>}
+            {!LIVE && <p className="pp-preview-note">Design preview: this account stays on this page; nothing was sent.</p>}
             <div className="tm-actions">
               <Link className="tm-button tm-button-primary" to={LIVE ? "/partners/sign-in" : "/partners"}>
                 {LIVE ? "Sign in to the portal" : "Back to the partner program"}
@@ -282,13 +283,14 @@ export default function Apply() {
 
             <div className="pp-form-submit">
               <button type="submit" className="tm-button tm-button-primary" disabled={status === "busy"}>
-                {status === "busy" ? "Submitting…" : "Submit application"}
+                {status === "busy" ? "Creating account…" : "Create account"}
               </button>
-              {!LIVE && <p className="pp-preview-note">Design preview: applications are kept on this page and not sent.</p>}
+              <p className="pp-field-hint">Partner accounts are reviewed and approved before they are active.</p>
+              {!LIVE && <p className="pp-preview-note">Design preview: accounts are kept on this page and not sent.</p>}
             </div>
             {status === "failed" && (
               <p className="pp-field-error" role="alert">
-                {LIVE ? failure : "The application could not be sent. Your answers are kept; try again."}
+                {LIVE ? failure : "The account could not be created. Your answers are kept; try again."}
               </p>
             )}
           </form>
@@ -312,7 +314,7 @@ export default function Apply() {
           </dl>
           <p className="tm-eyebrow">What happens next</p>
           <ol className="pp-apply-next">
-            <li>We review your application and your channels against the guidelines.</li>
+            <li>We review your account and your channels against the guidelines.</li>
             <li>{LIVE ? "If it is approved, sign in to your portal to find your code and links." : "If it is approved, your code and your portal sign-in arrive by email."}</li>
             <li>You share TrueMark as the guidelines describe, and earn on every referred order.</li>
           </ol>

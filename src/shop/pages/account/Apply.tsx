@@ -64,7 +64,7 @@ const steps: { index: string; label: string; title: string; note: string; keys: 
 
 
 export default function Apply() {
-  useTitle("Apply for a research account");
+  useTitle("Create a research account");
   // Answers gathered in the chat arrive filled in; the page asks for what the chat does not (a password, documents).
   const [fromChat] = useState(readDraft);
   useEffect(() => { if (fromChat) clearDraft(); }, [fromChat]);
@@ -177,7 +177,7 @@ export default function Apply() {
       } else setReceived(await store.applications.submit(draft));
       moved.current = true;
     } catch (error) {
-      setFailure(error instanceof Error ? error.message : "The application could not be sent.");
+      setFailure(error instanceof Error ? error.message : "The account could not be created.");
       setStatus("failed");
     }
   }
@@ -200,14 +200,14 @@ export default function Apply() {
         <header className="tm-acct-apply-head">
           <p className="tm-eyebrow">Research account</p>
           <h1 id="tm-acct-apply-title" className="tm-page-title">
-            Apply for an account.
+            Create an account.
             <br />
             <span>Four short steps.</span>
           </h1>
         </header>
         <p className="tm-section-note tm-acct-apply-note">
-          Research accounts are for laboratories and research institutions. Every application is reviewed before an
-          account can order.
+          Research accounts are for laboratories and research institutions. Every new account is reviewed before it
+          can order.
         </p>
         {fromChat && !received && (
           <p className="tm-acct-from-chat" role="status">
@@ -241,15 +241,16 @@ export default function Apply() {
         {received ? (
           <div className="tm-acct-step tm-acct-received tm-acct-rise">
             <p className="tm-eyebrow">
-              Application {received.id && <span className="tm-mono">{received.id}</span>}
+              Under review {received.id && <span className="tm-mono">{received.id}</span>}
             </p>
             <h2 className="tm-heading" tabIndex={-1} ref={heading}>
-              {LIVE ? (confirmationRequired ? "Confirm your email." : "Research account received.") : <>Application received.<br /><span>We’ll email you when your account has been reviewed.</span></>}
+              {LIVE && confirmationRequired ? "Confirm your email." : "Research account created."}
             </h2>
-            {LIVE && <>
-              {confirmationRequired && <p className="tm-acct-intro">Check your email to confirm your account.</p>}
-              <p className="tm-acct-intro">{confirmationRequired ? "Research account received. " : ""}We review every research account; you'll hear from us by email. Sign in once you're approved.</p>
-            </>}
+            <p className="tm-acct-intro">
+              {LIVE && confirmationRequired
+                ? "Check your email to confirm your account. Then you can sign in and see prices; ordering opens once we've reviewed the account, and we'll email you when it's approved."
+                : "You can sign in and see prices now. Ordering opens once we've reviewed the account; we'll email you when it's approved."}
+            </p>
             <dl className="tm-acct-dl is-compact">
               <div>
                 <dt>Name</dt>
@@ -404,18 +405,23 @@ export default function Apply() {
             </div>
 
             <div className="tm-acct-step-nav">
-              <button type="submit" className="tm-button tm-button-primary" disabled={status === "busy"}>
-                {last ? (status === "busy" ? "Submitting…" : "Submit application") : `Next: ${steps[step + 1].label}`}
+              <button type="submit" className="tm-button tm-button-primary" disabled={status === "busy"} aria-describedby={last ? "tm-acct-review-note" : undefined}>
+                {last ? (status === "busy" ? "Creating account…" : "Create account") : `Next: ${steps[step + 1].label}`}
               </button>
               {step > 0 && (
                 <button type="button" className="tm-acct-quiet" onClick={() => goTo(step - 1)}>
                   Back
                 </button>
               )}
+              {last && (
+                <p className="tm-acct-hint" id="tm-acct-review-note">
+                  Accounts are reviewed before ordering opens. Until then, you can sign in and see prices.
+                </p>
+              )}
             </div>
             {status === "failed" && (
               <p className="tm-acct-error" role="alert">
-                {LIVE ? failure : "The application could not be sent. Your answers are kept; try again."}
+                {LIVE ? failure : "The account could not be created. Your answers are kept; try again."}
               </p>
             )}
           </form>

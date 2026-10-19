@@ -385,7 +385,7 @@ export function BuyingWithUs() {
             ))}
           </ul>
           <Link className="tm-button tm-button-primary tm-closing-apply" to="/access/apply">
-            Apply for a research account
+            Create a research account
           </Link>
           <dl className="tm-closing-terms">
             {researchUse.map(([title, text]) => (
