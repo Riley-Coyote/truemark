@@ -38,8 +38,9 @@ import "../product-room.css";
  * On a wide screen the opening's own products stand on their own pedestals; every other product stands on the centre
  * one (the tallest), where the opening's vial would be. A phone held upright sees the room's tall cut, as the opening
  * does there, with its middle three pedestals: there every product stands on the centre one, since the tall cut has too
- * little room beside its outer two for a vial on them to stand in the middle of the screen (the opening's camera then
- * crossfades into BPC-157 and NAD+ rather than moving, flight.ts geometry).
+ * little room beside its outer two for a vial on them to stand in the middle of the screen. The one exception is the
+ * opening's camera move: a vial it carries the reader to stays on the pedestal it was taken from, so the move is one
+ * unbroken shot (flight.ts geometry needs the same pedestal at both ends).
  */
 /** The room the opening shows on this screen (MistOpening.tsx): the tall cut on a phone held upright. */
 const TALL_ROOM = TALL_SCREEN;
@@ -196,11 +197,13 @@ function ProductRoom({ product, signInToOrder }: { product: Product; signInToOrd
 
   // The room the opening shows on this screen, and the pedestal this product stands on: on a wide screen the opening's
   // own, found by name so every size of a compound stands where it does, or the centre one; on a phone held upright,
-  // always the centre one, so every vial stands in the middle of the screen.
+  // the centre one, so every vial stands in the middle of the screen, unless the opening's camera brought the reader
+  // here, when the vial stays where the camera came to it.
   const tall = useMediaQuery(TALL_ROOM);
   const room = tall ? COLLECTION_TALL : COLLECTION;
   const seats = tall ? COLLECTION_TALL_SEATS : COLLECTION_SEATS;
-  const own = tall ? -1 : collectionIds.findIndex((shownId) => products.find((p) => p.id === shownId)?.name === product.name);
+  const shownIds = tall ? collectionIds.slice(1, 4) : collectionIds;
+  const own = tall && !enteredByMove ? -1 : shownIds.findIndex((shownId) => products.find((p) => p.id === shownId)?.name === product.name);
   const pedestal = own >= 0 ? own : tall ? CENTRE.tall : CENTRE.wide;
   const seat = seats[pedestal];
   const half = (tall ? FOG_SCENES.collectionTall : FOG_SCENES.collection).pedestals[pedestal].half;
