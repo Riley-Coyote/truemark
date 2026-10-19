@@ -93,7 +93,7 @@ test('preview reset is an honest message; partner preview still has no password 
     const html = preview.reset(gate); assert.match(html, /Password resets work in the live platform\./); assert.doesNotMatch(html, /<input/);
   }
   assert.doesNotMatch(preview.apply(), /type="password"/);
-  assert.match(preview.apply(), /Design preview: applications are kept on this page and not sent/);
+  assert.match(preview.apply(), /Design preview: accounts are kept on this page and not sent/);
   assert.match(input(live.apply(), 'password'), /autoComplete="new-password"/);
   assert.match(input(live.apply(), 'password'), /minLength="10"/);
   const draft = { name: 'Fixture', email: 'fixture@example.test', channel: 'https://fixture.example', otherChannels: [], audience: 'Fixture', feature: 'Fixture', commitments: [] };
