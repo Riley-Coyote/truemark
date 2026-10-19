@@ -15,9 +15,11 @@ async function insert(tx, table, row, conflict='') {
   const pairs=Object.entries(row), values=pairs.map(([,v]) => v);
   return query(tx,'insert into public.'+table+' ('+pairs.map(([key])=>key).join(',')+') values ('+pairs.map((_,i)=>'$'+(i+1)).join(',')+') on conflict '+conflict+' do nothing',values);
 }
-export async function seed(config) {
-  assertLocal(config);
-  const sql=database(config);
+/** Seeds the local platform; scripts/staging.mjs passes a staging target with its own check, connection and password. */
+export async function seed(config, target={}) {
+  (target.assert??assertLocal)(config);
+  const sql=target.sql??database(config);
+  const accountPassword=target.password??password;
   const admin=createClient(config.API_URL,config.SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
   try {
     await sql.unsafe('create schema if not exists local_development; revoke all on schema local_development from public; create table if not exists local_development.checkpoints (name text primary key, at timestamptz default now());');
@@ -29,7 +31,7 @@ export async function seed(config) {
     for(const account of accounts) {
       let user=listed.data.users.find(u=>u.email===account.email);
       if(!user) {
-        const created=await admin.auth.admin.createUser({email:account.email,password,email_confirm:true});
+        const created=await admin.auth.admin.createUser({email:account.email,password:accountPassword,email_confirm:true});
         if(created.error) throw created.error;user=created.data.user;
       }
       users.set(account.email,user.id);

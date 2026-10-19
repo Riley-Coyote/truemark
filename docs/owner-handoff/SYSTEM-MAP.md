@@ -27,6 +27,7 @@ results pass. Saving a passing certificate releases it automatically.
 | GitHub, `Riley-Coyote/truemark` | The code, and the site's current hosting | You, after the repository transfer | You're a collaborator; transfer comes later |
 | Supabase, project `gydihnfzmuqmbnykaihg` | Database, sign-ins, certificate files, server functions | You | You're an Owner |
 | Hosting and domain (`truemarkbiolabs.com`) | Where the real site lives | You | Not set up yet |
+| Staging (Cloudflare Pages + Supabase **TrueMark Staging**) | A copy with sample data for walkthroughs and trying changes: https://truemark-staging.pages.dev | You; its website is on Riley's Cloudflare for now | Live |
 | Payment processor | Takes card payments | You (merchant account) | Not chosen; checkout runs on a simulator |
 | Email sender | Sign-up confirmations and order emails | You | Not set up; the demo only acts out the email step |
 | ShipStation | Labels, tracking, printer | You | Not connected; the demo simulates it |

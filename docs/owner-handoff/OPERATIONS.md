@@ -62,6 +62,8 @@ Before the client's first release:
 
 Backups (`npm run backup`, `npm run backup:check`) and the step-by-step undo for the website, database changes and functions are in [BACKUPS-AND-UNDO.md](BACKUPS-AND-UNDO.md).
 
+Staging (https://truemark-staging.pages.dev, its own Supabase project with sample data and simulated providers) is described in [STAGING.md](STAGING.md): try database changes there before the real project.
+
 Current function names: `assistant`, `messages`, `payments`, `shipping`, `uploads`. Existing server secret names include `FUNCTIONS_KEY`, assistant/provider keys and simulator/webhook settings; do not blindly regenerate these or break existing scheduled worker/webhook connections. Inspect vault/cron configuration as part of integration review without printing secrets.
 
 ## Independent daily work
