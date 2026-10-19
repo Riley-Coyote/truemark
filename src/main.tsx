@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "@fontsource-variable/manrope";
-import { LIVE, PATH_ROUTER, entryUrl, enterRoot } from "./platform/mode";
+import { LIVE, PATH_ROUTER, entryUrl } from "./platform/mode";
 import { GlidingBrowserRouter, GlidingHashRouter, readyPagesWith, ScrollMemory } from "./Navigation";
 import { SectionScroll } from "./SectionLink";
 import { preloadPath, readyNeighbours } from "./pages";
@@ -47,14 +47,6 @@ async function renderApp() {
   if (LIVE) {
     const { bootstrap } = await import("./platform/live/bootstrap");
     await bootstrap();
-    if (PATH_ROUTER) {
-      const { live } = await import("./platform/live/runtime");
-      const base = new URL(routerBase, window.location.href).pathname.replace(/\/?$/, "/");
-      const path = window.location.pathname.slice(base.length - 1) || "/";
-      let redirect = false;
-      try { redirect = enterRoot(path, await live().auth.hasSession(), sessionStorage); } catch { /* Continue without tab storage. */ }
-      if (redirect) window.history.replaceState(window.history.state, "", `${base}access${window.location.search}`);
-    }
   }
   // Catalog groupings in screen modules are calculated when imported. In live,
   // import them only after the database catalog has replaced the source array.

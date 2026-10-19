@@ -49,7 +49,7 @@ test('live loads the database catalog before importing screens or rendering, inc
   assert.equal(f.classCalls, 1);
   assert.equal(f.renders.length, 1);
   assert.equal(location.pathname, '/');
-  assert.equal(location.hash, '#/access');
+  assert.equal(location.hash, '#/');
 });
 
 test('a failed live catalog never renders static prices; the error screen retry can recover', async () => {

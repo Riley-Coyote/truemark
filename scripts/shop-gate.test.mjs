@@ -25,7 +25,7 @@ async function bundle(mode, fixtureUi = false) {
   const outfile = join(temp, `${mode}-${fixtureUi}.mjs`);
   await build({ stdin: { resolveDir: root, loader: 'tsx', contents: `
     export { shopAccess, gatedShopPath } from './src/App.tsx';
-    export { entryUrl, enterRoot } from './src/platform/mode.ts';
+    export { entryUrl } from './src/platform/mode.ts';
     export { catalogAccess, catalogReloadNeeded, rememberLink, bootstrap } from './src/platform/live/bootstrap.ts';
     export { readReferral } from './src/shop/context.tsx';
     export { createLiveAdapter } from './src/platform/live/adapter.ts';
@@ -158,7 +158,7 @@ test('signed-out live header hides bag and search; preview keeps both', () => {
   const before = preview.headerMarkup(); assert(before.includes('Open cart')); assert(before.includes('>Search<'));
   globalThis.fixtureSignedIn = true; assert(liveUi.headerMarkup().includes('Open cart')); assert(liveUi.headerMarkup().includes('>Search<'));
 });
-test('QR hash paths, launch Pages restore and per-tab root entry preserve destinations and queries', () => {
+test('QR hash paths, launch Pages restore and per-tab root entry preserve destinations and queries', async () => {
   assert.equal(live.entryUrl('https://fixture.test/truemark/live/verify?lot=TM-BPC10-2609-01', '/truemark/live/', false, true, true), '/truemark/live/#/verify?lot=TM-BPC10-2609-01');
   assert.equal(live.entryUrl('https://fixture.test/truemark/live/checkout/confirmation/TM-10500?ref=FIXTURE27', '/truemark/live/', false, true, true), '/truemark/live/#/checkout/confirmation/TM-10500?ref=FIXTURE27');
   assert.equal(live.entryUrl('https://fixture.test/truemark/live/verify?lot=fixture', './', false, true, true), '/truemark/live/#/verify?lot=fixture');
@@ -171,9 +171,10 @@ test('QR hash paths, launch Pages restore and per-tab root entry preserve destin
   assert.equal(pagesDestination('/anything'), '/truemark/#/review');
   assert.equal(live.entryUrl('https://fixture.test/truemark/live/#/verify?lot=fixture', '/truemark/live/', false, true, true), null);
   assert.equal(live.entryUrl('https://fixture.test/truemark/', '/truemark/', false, true, false), '/truemark/#/review');
-  values.clear(); assert.equal(live.enterRoot('/', false, storage), true); assert.equal(live.enterRoot('/', false, storage), false);
-  values.clear(); assert.equal(live.enterRoot('/verify', false, storage), false); assert.equal(live.enterRoot('/', false, storage), false);
-  values.clear(); assert.equal(live.enterRoot('/', true, storage), false);
+  // Anyone may see the landing: the live site opens on it, never on sign-in (the shop pages ask for an account).
+  assert.equal(live.entryUrl('https://fixture.test/truemark/live/', '/truemark/live/', false, true, true), '/truemark/live/#/');
+  const main = await readFile(join(root, 'src/main.tsx'), 'utf8');
+  assert.doesNotMatch(main, /access\$\{window\.location\.search\}/);
   assert.equal(live.entryUrl('https://fixture.test/truemark/launch/?p=%2F%2Fevil.test', '/truemark/launch/', true, false, true), null);
 });
 test('application files upload before sign-up and claim afterwards; failures stop sign-up', async () => {
@@ -272,9 +273,8 @@ test('actual entry restores routes before bootstrap, selects the Router and impo
   assert.deepEqual(restored.visits, ['FIXTURE27']);
   assert.equal(restored.renders[0].props.children.type.name, 'GlidingBrowserRouter');
   assert.equal(restored.renders[0].props.children.props.basename, '/truemark/launch/');
+  // The launch site opens on its landing for a signed-out visitor, first visit included.
   values.clear(); await entry('https://fixture.test/truemark/launch/', true, false);
-  assert.equal(location.pathname, '/truemark/launch/access');
-  await entry('https://fixture.test/truemark/launch/', true, false);
   assert.equal(location.pathname, '/truemark/launch/');
   values.clear(); const full = await entry('https://fixture.test/truemark/launch/products', true, true);
   assert(full.reads.includes('full'));

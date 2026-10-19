@@ -91,8 +91,8 @@ function SignedIn({ profile, onSignedOut }: { profile: Profile; onSignedOut: () 
 }
 
 /**
- * The front door. Every logged-out visitor lands here on the client's live site,
- * so it carries the brand at its most exact: the real lockup, their ink, their
+ * The door into the shop. Anyone may see the landing; a logged-out visitor comes here on their way to the catalog,
+ * a product, the cart or their account, so it carries the brand at its most exact: the real lockup, their ink, their
  * copy, one real vial and its printed lot number (no invented results).
  */
 export default function Gate() {

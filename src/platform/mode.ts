@@ -36,10 +36,6 @@ export function entryUrl(href: string, base: string, pathRouter: boolean, hashRo
   if (!hashRouter || url.hash) return null;
   const rest = url.pathname.startsWith(basePath) ? url.pathname.slice(basePath.length) : "";
   if (live && rest) return `${basePath}#/${rest}${url.search}`;
-  return `${url.pathname}${url.search}#${live ? "/access" : "/review"}`;
-}
-export function enterRoot(path: string, signedIn: boolean, storage: Pick<Storage, "getItem" | "setItem">): boolean {
-  const entered = storage.getItem("tm-entered") === "1";
-  storage.setItem("tm-entered", "1");
-  return path === "/" && !signedIn && !entered;
+  // The live site opens on its landing, which anyone may see; the shop pages ask for an account (App.tsx).
+  return `${url.pathname}${url.search}#${live ? "/" : "/review"}`;
 }
