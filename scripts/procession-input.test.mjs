@@ -23,7 +23,7 @@ class Element extends EventTarget {
   cloneNode() { return new Element(); }
   closest() { return null; }
 }
-function fixture(scrollY = 450, touch = false) {
+function fixture(scrollY = 450, touch = false, geometry) {
   let time = 0, id = 0, reported;
   const frames = new Map();
   const win = new EventTarget(); Object.assign(win, { innerWidth: 390, innerHeight: 844, scrollY, setTimeout: () => 1, clearTimeout() {} });
@@ -31,6 +31,16 @@ function fixture(scrollY = 450, touch = false) {
   stage.rect.top = 180;
   stage.children = Array.from({length: 8}, (_, i) => { const el = new Element(); el.dataset.productId = `vial-${i}`; return el; });
   plate.children = stage.children;
+  if (geometry) {
+    win.innerWidth = geometry.width;
+    hero.rect = { ...hero.rect, left: geometry.left, width: geometry.width - 2 * geometry.left };
+    // The first collection class is on the left plinth; the middle hero vial has no class entry.
+    plate.children = [0, 2, 4, 6, 7].map((id, index) => {
+      const el = new Element(); el.dataset.productId = `vial-${id}`;
+      el.style.getPropertyValue = key => String({ '--seat-x': .1 + index * .2, '--seat-y': .6, '--vial-h': .15 }[key] ?? 0);
+      return el;
+    });
+  }
   section.closest = selector => selector === ".tm-home" ? home : null;
   home.map['.tm-mist'] = opening; opening.map['.tm-mist-stage'] = hero; hero.map['.tm-room-plate'] = plate;
   section.map['.tm-procession-stage'] = stage; hero.map['.tm-seq-camera'] = new Element();
@@ -39,7 +49,7 @@ function fixture(scrollY = 450, touch = false) {
   install('window', win);
   install('document', Object.assign(new EventTarget(), { hidden:false, body:new Element(), createElement:()=>new Element(), querySelector:()=>null, fonts:{ready:Promise.resolve()} }));
   install('matchMedia',()=>({matches:touch}));
-  install('getComputedStyle',()=>({height:'200',width:'390',bottom:'66',left:'0',top:'0'}));
+  install('getComputedStyle',()=>({height:'200',width:String(geometry ? hero.rect.width : 390),bottom:'66',left:'0',top:'0'}));
   install('ResizeObserver',class {observe() {} disconnect() {}});
   install('MutationObserver',class {observe() {} disconnect() {}});
   install('IntersectionObserver',class {observe() {} disconnect() {}});
@@ -151,4 +161,26 @@ test('the opening takes the collection styling at once, and keeps it only while 
     left.controller.destroy();
     assert.equal(left.home.dataset.procession, undefined);
   } finally { left.close(); }
+});
+
+
+test('desktop zoom stays on the middle hero vial when the collection starts on a side plinth', () => {
+  for (const width of [701, 1440, 1920]) for (const left of [0, 37]) {
+    const f = fixture(0, false, { width, left });
+    try {
+      const camera = f.hero.map['.tm-seq-camera'];
+      const center = left + f.hero.rect.width / 2;
+      const end = Number(f.section.dataset.scrollEnd);
+      // Forward and reverse scroll must hold the same horizontal anchor, including an inset preview.
+      for (const p of [0, .08, .2, .32, .2, .08, 0]) {
+        scrollTo(f, end * p);
+        const matrix = /translate3d\(([-\d.e+]+)px,[-\d.e+]+px,0\) scale\(([-\d.e+]+)\)/.exec(camera.style.transform);
+        assert.ok(matrix, camera.style.transform);
+        const [, translate, zoom] = matrix.map(Number);
+        const drawnCenter = left + translate + (center - left) * zoom;
+        assert.ok(Math.abs(drawnCenter - center) < .001, `width ${width}, inset ${left}, progress ${p}: drifted ${drawnCenter - center}px`);
+      }
+      assert.equal(f.status().active, 2, 'centering the camera does not reorder the collection');
+    } finally { f.close(); }
+  }
 });
