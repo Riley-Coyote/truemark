@@ -108,3 +108,14 @@ providers do not establish real processor/carrier/sender readiness. Full receivi
 split-lot quantities and unified in-app email replies remain in the owner implementation
 plan. Read Mason's incoming handoff, reconcile it with these requirements, and continue
 from this application. No publication or hosted provider activation is part of this setup.
+
+
+## Desktop opening scroll centering — 20 October 2026
+
+**Request:** Mason supplied a screen recording of the staging landing page drifting sideways during the opening zoom; mobile already behaved correctly.
+
+**Cause and change:** The desktop procession chose its camera pivot from the collection's initial class. Staging's class representatives omit Semax (the middle hero vial), so the initial class resolves to BPC-157 on a side pedestal. The camera now uses the middle vial actually drawn in the opening, matching the existing phone passage. Carousel ordering, approved artwork, phone controller and database behavior are unchanged. Source base: public `claude/staging` at `e82d092b3385f77a04f6b19dfc1403ca58e989ad`; fix branch: `codex/fix-desktop-scroll-centering`.
+
+**Evidence:** The new controller regression failed before the fix and passes afterward, including widths 701/1440/1920, inset layouts and forward/reverse scrolling with a side vial as the initial class. All 37 targeted procession, native carousel, pinned passage and hero shelf tests pass. TypeScript and the production preview build pass (existing large-chunk warning only). Browser checks cover 1280×800 desktop, 768×900 tablet-sized layout and 390×844 phone layout, return scrolling, collection arrival and Motion off/on. In a 1413-pixel-wide browser at scroll 271, staging moved the middle vial from x=694.686 to x=831.889; the corrected sample preview with the same eight class representatives holds x=694.690 (under 0.01 px drift). No horizontal overflow or browser error logs observed in the checked desktop state.
+
+**Preview and boundary:** Local sample preview runs on port 5186. `scroll-check.local/index.html` is an ignored visual fixture with desktop/phone controls, rendering the actual storefront component and matching staging's public class representatives; it excludes onboarding and does not submit or persist a researcher attestation. It is not included in the published fix. No hosted data, migrations, main branch or deployment was changed. Review the local preview before publishing to staging.

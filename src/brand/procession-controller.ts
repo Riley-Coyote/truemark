@@ -110,9 +110,13 @@ export function createProcession(section: HTMLElement, order: number[], initial:
       height: plateH * Number(vial.style.getPropertyValue("--vial-h")),
       light: Number(vial.style.getPropertyValue("--tm-lit")) || 1,
     }]));
-    const featured = sources.get(actors[initial].dataset.productId!) ?? [...sources.values()][0];
+    // Keep the opening centered on its middle vial, just as the phone passage does.
+    // The collection can start on a side vial when the middle product has no class entry;
+    // that carousel choice must not pull the camera sideways as it zooms.
+    const seats = [...sources.values()];
+    const featured = seats[Math.floor(seats.length / 2)];
     heroX = heroRect.left; heroY = heroRect.top + y;
-    pivotX = featured?.x ?? width / 2;
+    pivotX = featured?.x ?? heroX + heroRect.width / 2;
     pivotY = featured ? featured.foot - featured.height / 2 : height / 2;
     const capTop = Math.min(...[...sources.values()].map(source => source.foot - source.height));
     fall = height + 32 - (pivotY + (capTop - pivotY) * options.depth);
