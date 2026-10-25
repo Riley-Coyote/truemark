@@ -1,58 +1,76 @@
-/* Wider screens: the vial's flight to the cart shows what was added, and the bar is not drawn. What it says is still
-   read out, as on a phone; its picture and buttons are left out, so nothing unseen takes focus. (Two classes, so the
-   shop's own .tm surface, which would draw it across the page, never wins.) */
-@media not all and (max-width: 760px) {
-  .tm.tm-addbar { position: fixed; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .tm-addbar > :is(img, button) { display: none; }
+/* The note an add leaves (MobileAdd.tsx): what was added, the way to the cart, and the bag's rewards. On a phone a bar
+   along the foot of the screen; on a wider screen the same note as a card over the foot of the page, rising once the
+   vial has landed in the cart, so the eye follows one thing at a time (the client asked for the phone's note on every
+   screen, October 2026). Two classes throughout, so the shop's own .tm surface, which would draw it across the page,
+   never wins. */
+.tm.tm-addbar {
+  position: fixed;
+  z-index: 35;
+  display: grid;
+  grid-template-columns: var(--tm-space-6) minmax(0, 1fr) auto var(--tm-space-6);
+  align-items: center;
+  gap: var(--tm-space-2) var(--tm-space-3);
+  padding: var(--tm-space-4);
+  background: var(--tm-paper);
+  /* It rises into place on a spring and settles, and leaves the way it rose (below); asked back on its way, it turns
+     from wherever it was. */
+  transition: opacity var(--tm-dur-slow) var(--tm-ease-enter), transform var(--tm-dur-spring) var(--tm-ease-spring);
 }
-.tm-add-flight { position: fixed; z-index: 100; pointer-events: none; object-fit: contain; }
+@starting-style {
+  .tm.tm-addbar { opacity: 0; transform: translateY(var(--tm-space-6)); }
+}
+/* Leaving: it sinks back as it fades, taking no taps. */
+.tm.tm-addbar[data-state="closing"] {
+  opacity: 0;
+  transform: translateY(var(--tm-space-6));
+  transition-duration: var(--tm-dur-base);
+  transition-delay: 0s;
+  transition-timing-function: var(--tm-ease-enter);
+}
 @media (max-width: 760px) {
   .tm.tm-addbar {
-    position: fixed;
-    z-index: 35;
     inset-inline: 0;
     bottom: calc(var(--tm-add-dock-room) + env(safe-area-inset-bottom, 0px));
-    display: grid;
-    grid-template-columns: var(--tm-space-6) minmax(0, 1fr) auto var(--tm-space-6);
-    align-items: center;
-    gap: var(--tm-space-2) var(--tm-space-3);
-    padding: var(--tm-space-4);
     border-top: 1px solid var(--tm-line-strong);
-    background: var(--tm-paper);
-    /* It rises into place, and leaves the way it rose (below); asked back on its way, it turns from wherever it was. */
-    transition: opacity var(--tm-dur-base) var(--tm-ease-enter), transform var(--tm-dur-base) var(--tm-ease-enter);
   }
-  @starting-style {
-    .tm.tm-addbar { opacity: 0; transform: translateY(var(--tm-space-6)); }
-  }
-  /* Leaving (MobileAdd.tsx): it sinks back as it fades, in two thirds of the time it took to rise, taking no taps. */
-  .tm.tm-addbar[data-state="closing"] {
-    opacity: 0;
-    transform: translateY(var(--tm-space-6));
-    transition-duration: var(--tm-dur-leave);
-  }
-  .tm-addbar-thumb { width: 100%; height: var(--tm-control); object-fit: contain; }
-  .tm .tm-addbar-title { margin: 0; font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans); color: var(--tm-ink); }
-  .tm-addbar .tm-shipping-progress { grid-column: 2 / -1; margin: 0; }
-  .tm-addbar :is(.tm-addbar-view, .tm-addbar-close, .tm-addbar-retry) {
-    position: relative;
-    min-height: var(--tm-control-sm);
-    padding: 0;
-    background: transparent;
-    border: 0;
-    border-bottom: 1px solid transparent;
-    color: var(--tm-ink-2);
-    font: var(--tm-weight-medium) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
-    cursor: pointer;
-    transition: color var(--tm-dur-quick) var(--tm-ease-enter), border-color var(--tm-dur-quick) var(--tm-ease-enter);
-  }
-  /* Each one's target is a finger's size, though it looks no larger. */
-  .tm-addbar :is(.tm-addbar-view, .tm-addbar-close, .tm-addbar-retry)::after { content: ""; position: absolute; inset: min(0px, calc(50% - var(--tm-reach) / 2)); }
-  .tm-addbar-close { display: grid; place-items: center; }
-  .tm-addbar-retry { grid-column: 2 / -1; justify-self: start; }
-  .tm-addbar button:hover { color: var(--tm-ink); border-bottom-color: var(--tm-ink-3); }
-  .tm-addbar button:focus-visible { outline: none; border-bottom-color: var(--tm-ink); }
-  .tm-addbar button:active { color: var(--tm-purple); }
-  .tm-addbar button:disabled { opacity: 0.5; cursor: default; }
 }
+@media not all and (max-width: 760px) {
+  .tm.tm-addbar {
+    left: 50%;
+    bottom: calc(var(--tm-space-6) + var(--tm-add-dock-room));
+    width: min(30rem, calc(100vw - 2 * var(--tm-space-6)));
+    grid-template-columns: var(--tm-space-7) minmax(0, 1fr) auto var(--tm-space-6);
+    padding: var(--tm-space-4) var(--tm-space-5);
+    border: 1px solid var(--tm-line-strong);
+    border-radius: var(--tm-radius-lg);
+    box-shadow: var(--tm-shadow-float);
+    translate: -50% 0;
+    /* The vial's flight to the cart comes first (MobileAdd.tsx); the card rises as it lands. */
+    transition-delay: 0.75s;
+  }
+}
+.tm-add-flight { position: fixed; z-index: 100; pointer-events: none; object-fit: contain; }
+.tm-addbar-thumb { width: 100%; height: var(--tm-control); object-fit: contain; }
+.tm .tm-addbar-title { margin: 0; font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans); color: var(--tm-ink); }
+.tm-addbar .tm-shipping-progress { grid-column: 2 / -1; margin: 0; }
+.tm-addbar :is(.tm-addbar-view, .tm-addbar-close, .tm-addbar-retry) {
+  position: relative;
+  min-height: var(--tm-control-sm);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  color: var(--tm-ink-2);
+  font: var(--tm-weight-medium) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  cursor: pointer;
+  transition: color var(--tm-dur-quick) var(--tm-ease-enter), border-color var(--tm-dur-quick) var(--tm-ease-enter);
+}
+/* Each one's target is a finger's size, though it looks no larger. */
+.tm-addbar :is(.tm-addbar-view, .tm-addbar-close, .tm-addbar-retry)::after { content: ""; position: absolute; inset: min(0px, calc(50% - var(--tm-reach) / 2)); }
+.tm-addbar-close { display: grid; place-items: center; }
+.tm-addbar-retry { grid-column: 2 / -1; justify-self: start; }
+.tm-addbar button:hover { color: var(--tm-ink); border-bottom-color: var(--tm-ink-3); }
+.tm-addbar button:focus-visible { outline: none; border-bottom-color: var(--tm-ink); }
+.tm-addbar button:active { color: var(--tm-purple); }
+.tm-addbar button:disabled { opacity: 0.5; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .tm.tm-addbar { transition: none; } }

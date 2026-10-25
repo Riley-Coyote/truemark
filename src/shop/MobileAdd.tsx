@@ -116,13 +116,16 @@ export function MobileAdd() {
       const t = index / 12;
       const dx = 2 * (1 - t) * t * x * 0.35 + t * t * x;
       const dy = 2 * (1 - t) * t * (Math.min(y, 0) - 64) + t * t * y;
-      return { transform: `translate(${dx}px, ${dy}px) scale(${1 - 0.92 * t})`, opacity: 0.9 * (1 - t), offset: t };
+      // Seen the whole way, it only fades as it goes into the cart.
+      return { transform: `translate(${dx}px, ${dy}px) scale(${1 - 0.86 * t})`, opacity: t < 0.8 ? 0.95 : 0.95 * (1 - (t - 0.8) / 0.2), offset: t };
     });
-    const flight = vial.animate(arc, { duration: 600, easing: "cubic-bezier(0.2, 0.7, 0.1, 1)" });
+    // Slow enough to follow with the eye (the client asked for slower adds, October 2026): it lifts away, travels and
+    // eases into the cart, and the note rises as it lands (mobile-add.css).
+    const flight = vial.animate(arc, { duration: 900, easing: "cubic-bezier(0.4, 0, 0.2, 1)" });
     let pulse: Animation | undefined;
     flight.onfinish = () => {
       vial.remove();
-      pulse = target.animate([{ transform: "scale(1)" }, { transform: "scale(1.08)" }, { transform: "scale(1)" }], { duration: 240 });
+      pulse = target.animate([{ transform: "scale(1)" }, { transform: "scale(1.08)" }, { transform: "scale(1)" }], { duration: 360, easing: "cubic-bezier(0.34, 1.3, 0.64, 1)" });
     };
     return () => { flight.cancel(); pulse?.cancel(); vial.remove(); };
   }, [entry, reduced]);
