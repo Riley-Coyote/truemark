@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Pause, Play } from "lucide-react";
 import { compoundClasses } from "../data";
 import { productById, productCutout } from "../shop/catalog";
-import { collectionIds } from "./carousel";
 import { useMotion } from "./Sequence";
 import { createProcession } from "./procession-controller";
 import { createNativeProcession } from "./native-procession";
@@ -16,16 +15,16 @@ import "./procession.css";
 
 const shown = (img: HTMLElement) => img.checkVisibility?.({ opacityProperty: true, visibilityProperty: true }) ?? true;
 
-/** The chosen collection: the opening's real artwork, then all eight compound classes. */
+/** The collection: all eight compound classes in their own order, Class 01 first and round again (the client's request,
+ *  October 2026; the opening's five vials used to lead it). */
 export function Procession() {
   const root = useRef<HTMLElement>(null);
   const controller = useRef<ProcessionController | null>(null);
   const moving = useMotion();
   const movingNow = useRef(moving); movingNow.current = moving;
   const classes = compoundClasses.filter(c => c.onHome && productById(c.vial ?? ""));
-  const original = collectionIds.map(id => classes.findIndex(c => c.vial === id)).filter(i => i >= 0);
-  const order = [...original, ...classes.map((_, i) => i).filter(i => !original.includes(i))];
-  const initial = original[Math.floor(original.length / 2)] ?? 0;
+  const order = classes.map((_, i) => i);
+  const initial = 0;
   const [status, setStatus] = useState<ProcessionStatus>({ active: initial, paused: false, reduced: !moving, arrived: false, progress: 0 });
   const signature = classes.map(c => c.id).join("|");
   const slot = useFlightSlot();
