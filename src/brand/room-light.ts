@@ -4,7 +4,7 @@
  * the window light's water (wall-light.ts) carried into the room: the same ripples, their edges just split into colour,
  * laid on the arches in the corridor's own perspective, finer toward its far end and fading into its haze. It falls only
  * where the photograph is already lit, gathering that light into lines and leaving a little less between them, as water
- * does; never more than a seventh less, so the words over the room keep their contrast.
+ * does; never more than a fifth less, so the words over the room keep their contrast.
  *
  * Drawn at half the screen's resolution, only while the room can be seen; with motion off it holds still and is drawn
  * again only when asked. After every frame it tells the room (onFrame), so the liquid's water can bend what was drawn.
@@ -47,7 +47,7 @@ void main() {
   if (above <= 0.0) { gl_FragColor = vec4(0.0); return; }
   // Only where the photograph is lit does the light fall.
   vec3 photo = texture2D(room, p * fit.xy + fit.zw).rgb;
-  float lit = smoothstep(0.64, 0.88, dot(photo, vec3(0.2126, 0.7152, 0.0722))) * above;
+  float lit = smoothstep(0.6, 0.86, dot(photo, vec3(0.2126, 0.7152, 0.0722))) * above;
   if (lit <= 0.0) { gl_FragColor = vec4(0.0); return; }
 
   // Where this pixel lies in the corridor: on a side or the vault (a box seen down its length), how far along it, and
@@ -56,16 +56,18 @@ void main() {
   float z, s;
   if (abs(q.x) > abs(q.y)) { z = 1.0 / abs(q.x); s = q.y * z; } else { z = 1.0 / abs(q.y); s = q.x * z; }
   z = min(z, 40.0);
-  vec2 cp = vec2(z * 0.9 + t * 0.02, s * 0.9);
+  vec2 cp = vec2(z * 0.6 + t * 0.012, s * 0.6);
   cp = mod(cp * 6.28318, 6.28318) - 250.0;
-  float time = t * 0.3 + 23.0;
+  float time = t * 0.2 + 23.0;
   float spread = 0.05;
   vec3 ripple = vec3(caustic(cp + vec2(spread, 0.0), time), caustic(cp, time), caustic(cp - vec2(spread, 0.0), time));
 
   // Water gathers the light it passes into lines and leaves a little less between them: on a wall already lit almost
   // white, the lines alone would barely show. Farther off, fainter, as the haze takes it.
-  float here = lit * min(exp(-0.22 * (z - 1.0)), 1.0) * (1.0 - smoothstep(5.0, 10.0, z));
-  float bright = clamp(here * strength * clamp(ripple.g, 0.0, 1.3), 0.0, 0.85);
+  float here = lit * min(exp(-0.22 * (z - 1.0)), 1.0) * (1.0 - smoothstep(3.0, 6.0, z));
+  // Thin lines, never pools: where ripples gather, the light sharpens rather than spreads, and it never fills a wall
+  // white.
+  float bright = clamp(here * strength * pow(clamp(ripple.g, 0.0, 1.3), 1.6), 0.0, 0.55);
   float shade = here * shadeBetween * (1.0 - clamp(ripple.g, 0.0, 1.0));
   vec3 colour = mix(vec3(0.97, 0.955, 1.0), vec3(1.0), clamp(ripple, 0.0, 1.0));
   gl_FragColor = vec4(colour * bright, bright + shade);
@@ -108,8 +110,8 @@ export function startRoomLight(canvas: HTMLCanvasElement, photo: HTMLImageElemen
   gl.uniform2f(u("vp"), corridor.vp[0], corridor.vp[1]);
   gl.uniform2f(u("box"), corridor.box[0], corridor.box[1]);
   gl.uniform1f(u("floorAt"), corridor.floorAt);
-  gl.uniform1f(u("strength"), 0.9);
-  gl.uniform1f(u("shadeBetween"), 0.14);
+  gl.uniform1f(u("strength"), 1.15);
+  gl.uniform1f(u("shadeBetween"), 0.2);
 
   // The photograph, as a texture the light reads where it falls.
   const texture = gl.createTexture();
