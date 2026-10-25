@@ -1,0 +1,43 @@
+/* The opening's two ways in as one liquid (OpeningLiquid.ts): a layer over the room and under the words. Placed before
+   the copy in the page's order at the copy's own height, so the words stand over it. */
+.tm-mist-liquid {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+.tm-liquid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* The light ringing out on the pedestals as the drop lands: in the room's plate, over the room and its mist, under the
+   vials (stories.css gives them 1, after this). */
+.tm-room-ripples {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.tm-room-ripples > canvas {
+  position: absolute;
+  left: 0;
+}
+
+/* The two ways in give their fill, edge and shade to the liquid beneath them, and keep their words and focus ring.
+   Pointed at or pressed, the liquid answers (it swells, it squeezes), so the buttons themselves hold still. */
+.tm.tm-mist[data-liquid] .tm-mist-actions .tm-button,
+.tm.tm-mist[data-liquid] .tm-mist-actions .tm-button:is(:hover, :active) {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transform: none;
+  transition: color 260ms var(--tm-ease-enter);
+}
+/* Until the liquid under them has arrived, their words wait. */
+.tm.tm-mist[data-liquid-words] .tm-mist-actions .tm-button {
+  color: transparent;
+}
