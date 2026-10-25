@@ -1,5 +1,5 @@
 import { stockProblem } from "../../../platform/commerce";
-import { InsuranceRow, useInsuranceChoice } from "../../Insurance";
+import { InsuranceChoice, InsuranceRow, useInsuranceChoice } from "../../Insurance";
 import { LIVE, storageKey } from "../../../platform/mode";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
@@ -531,6 +531,7 @@ export function BagContents() {
           <span>{money(subtotal)}</span>
         </p>
         <StockNotice issues={issues} checking={catalogChecking} error={catalogError} onRetry={reloadCatalog} />
+        <InsuranceChoice base={priced?.base ?? roundMoney(subtotal - discount)} settings={shipping.data?.settings} />
         <dl className="tm-totals">
           <DiscountRow discount={code.discount} amount={priced?.discountAmount ?? discount} />
           <FreeVialRow {...free} />
@@ -644,6 +645,7 @@ export function CartPage() {
             closeCart();
           }} />
           <StockNotice issues={issues} checking={catalogChecking} error={catalogError} onRetry={reloadCatalog} />
+          <InsuranceChoice base={priced?.base ?? roundMoney(subtotal - discount)} settings={shipping.data?.settings} />
           <dl className="tm-totals">
             <div className="tm-totals-row">
               <dt>Subtotal</dt>

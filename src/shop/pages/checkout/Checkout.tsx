@@ -3,8 +3,8 @@ import { live } from "../../../platform/live/runtime";
 import { PaymentOutcomes } from "./Pay";
 import type { Outcome } from "../../../platform/live/payments";
 import type { Order } from "../../../platform/types";
-import { InsuranceRow, useInsuranceChoice, clearInsuranceChoice } from "../../Insurance";
-import { lineCharge, priceQuote, shippingPrice, insurancePrice } from "../../../platform/pricing";
+import { InsuranceChoice, InsuranceRow, useInsuranceChoice, clearInsuranceChoice } from "../../Insurance";
+import { lineCharge, priceQuote, shippingPrice } from "../../../platform/pricing";
 import { LIVE } from "../../../platform/mode";
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
@@ -517,7 +517,7 @@ export default function Checkout() {
   const reduced = usePrefersReducedMotion();
   const { clear } = useShop();
   const { lines, count, subtotal, issues, catalogChecking, catalogError, reloadCatalog } = useBagLines();
-  const [insured, setInsured] = useInsuranceChoice();
+  const [insured] = useInsuranceChoice();
   const code = useBagCode();
   const session = useResource(() => store.session.get(), []);
   const methods = useResource(() => store.catalog.shippingMethods(), []);
@@ -945,11 +945,7 @@ export default function Checkout() {
                     </label>
                   ))}
                 </fieldset>
-                {settings.data?.insuranceMode === "optional" && <label className="tm-check">
-                  <input type="checkbox" className="tm-check-input" checked={insured} onChange={(event) => setInsured(event.target.checked)} />
-                  <span className="tm-check-box" aria-hidden="true"><Check size={14} strokeWidth={2.2} /></span>
-                  <span className="tm-check-text">Insure this shipment · {money(insurancePrice(roundMoney(subtotal - discountAmount), settings.data, true))}</span>
-                </label>}
+                <InsuranceChoice base={roundMoney(subtotal - discountAmount)} settings={settings.data} />
                 <div className="tm-step-actions">
                   <button
                     type="button"

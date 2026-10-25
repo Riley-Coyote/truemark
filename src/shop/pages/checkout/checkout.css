@@ -1292,6 +1292,71 @@
   color: var(--tm-ink);
 }
 
+/* The same switch for the shipment's insurance in the cart (Insurance.tsx), set as a line beside the totals rather than
+   the checkout's card: the box, its tick and its press are the checkout's own. */
+:is(.tm-bag, .tm-cart-summary) .tm-check {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--tm-space-3);
+  margin: 0 0 var(--tm-space-3);
+  cursor: pointer;
+}
+:is(.tm-bag, .tm-cart-summary) .tm-check-input {
+  position: absolute;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+:is(.tm-bag, .tm-cart-summary) .tm-check-box {
+  display: grid;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 1px solid var(--tm-ink-3);
+  border-radius: var(--tm-radius-xs);
+  background: var(--tm-paper);
+  color: var(--tm-paper);
+  transition:
+    background-color var(--tm-dur-base) var(--tm-ease-enter),
+    border-color var(--tm-dur-base) var(--tm-ease-enter),
+    transform var(--tm-dur-quick) var(--tm-ease-micro);
+}
+:is(.tm-bag, .tm-cart-summary) .tm-check-box svg {
+  width: 0.75rem;
+  height: 0.75rem;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity var(--tm-dur-quick) var(--tm-ease-enter), transform var(--tm-dur-base) var(--tm-ease-micro);
+}
+:is(.tm-bag, .tm-cart-summary) .tm-check:active .tm-check-box {
+  transform: scale(0.92);
+}
+:is(.tm-bag, .tm-cart-summary) .tm-check:has(.tm-check-input:checked) .tm-check-box {
+  border-color: var(--tm-ink);
+  background: var(--tm-ink);
+}
+:is(.tm-bag, .tm-cart-summary) .tm-check:has(.tm-check-input:checked) .tm-check-box svg {
+  opacity: 1;
+  transform: none;
+}
+:is(.tm-bag, .tm-cart-summary) .tm-check:has(.tm-check-input:focus-visible) .tm-check-box {
+  outline: 2px solid var(--tm-ink);
+  outline-offset: 2px;
+}
+:is(.tm-bag, .tm-cart-summary) .tm-check-text {
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.tm-bag, .tm-cart-summary) :is(.tm-check-box, .tm-check-box svg) {
+    transition: none;
+  }
+}
+
 .tm-place {
   display: flex;
   flex-direction: column;
