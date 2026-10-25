@@ -69,10 +69,14 @@ export function openStory() {
 /** How long each rest is held while its caption is read (ms; the room's, the first, is passed straight through): the
  *  approach; the label's three details; the connection; the record; the certificate's three findings; the finale. A
  *  caption is a line or two, so a rest is a glance, as a phone's stories are; a tap goes on sooner, a hold stays.
- *  The whole story plays in about 27 s (it was about 39 s, which Riley found too slow, Oct 13). */
+ *  The whole story plays in about 24 s (it was about 39 s, which Riley found too slow, Oct 13). */
 const DWELL = [0, 1700, 1500, 1350, 1500, 1800, 2200, 1650, 1500, 1500, 3000] as const;
-/** The story's bars, one to a chapter, and the finale's last. */
-const STORY_BARS = [1, 2, 3, 4, 5, FINALE] as const;
+/** The rest the story passes through on its way in without stopping: the approach. A closer look opens on the label,
+ *  so it shows what it does rather than only a vial coming nearer (the client's request, October 2026). The camera
+ *  still lifts the vial off its pedestal, in one move from the room to the label; the approach's words never show. */
+const PASSED = 1;
+/** The story's bars, one to a chapter from the label, and the finale's last. */
+const STORY_BARS = [2, 3, 4, 5, FINALE] as const;
 /** How much faster a move runs once a tap has asked to go on, how long (ms) a reading the taps go on past takes to
  *  cross, and how fast the story runs back to an earlier rest. */
 const RUSH = 3, PASS = 260, REWIND = 2.4;
@@ -267,7 +271,7 @@ const two = (n: number) => String(n).padStart(2, "0");
 /* ---------- The parts, shared by the moving and the still forms ---------- */
 
 /** A chapter's words: its number and name, its two lines, and what it says. In the story the chapters count from the
- *  approach, as its bars do; the still form counts the room as the first. */
+ *  label, as its bars do; the still form counts the room as the first. */
 function ChapterWords({ chapter, count = chapter + 1 }: { chapter: number; count?: number }) {
   const words = WORDS[chapter];
   if (!words) return null;
@@ -913,12 +917,13 @@ export function SequenceTrack({ on, scene, lead, ready, children }: {
           <h2 className="sr-only">
             One vial, the whole story: {record.compound}, lot {LOT}
           </h2>
-          <div className="tm-seq-chapter" data-chapter="1" data-rest="1">
+          {/* The approach is passed through (PASSED): its words stay in place, unseen, to measure its picture by. */}
+          <div className="tm-seq-chapter" data-chapter="1" data-rest="1" aria-hidden="true">
             <ChapterWords chapter={1} count={1} />
             {lead && <div className="tm-seq-card tm-seq-lead-copy">{lead}</div>}
           </div>
           <div className="tm-seq-chapter" data-chapter="2" data-rest="2">
-            <ChapterWords chapter={2} count={2} />
+            <ChapterWords chapter={2} count={1} />
             <Decoder go={travel} />
           </div>
           {/* The decoder's markers, beside the vial wherever it floats: each brings its detail into view. A pointer's
@@ -933,18 +938,18 @@ export function SequenceTrack({ on, scene, lead, ready, children }: {
             ))}
           </div>
           <div className="tm-seq-chapter" data-chapter="3" data-rest="5">
-            <ChapterWords chapter={3} count={3} />
+            <ChapterWords chapter={3} count={2} />
             <VerifyCard />
           </div>
           <div className="tm-seq-chapter" data-chapter="4" data-rest="6">
-            <ChapterWords chapter={4} count={4} />
+            <ChapterWords chapter={4} count={3} />
             <RecordCard go={travel} />
           </div>
           <div className="tm-seq-traveler" aria-hidden="true">
             <span className="tm-seq-print">{LOT}</span>
           </div>
           <div className="tm-seq-chapter" data-chapter="5" data-rest="7">
-            <ChapterWords chapter={5} count={5} />
+            <ChapterWords chapter={5} count={4} />
             <Findings go={travel} />
             <Paper />
           </div>
@@ -1158,6 +1163,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
     const segs: Seg[] = [];
     let end = 0;
     for (let i = 1, at = 0; i < RESTS.length; i++) {
+      if (i === PASSED) continue;
       const [h0, h1] = RESTS[i].hold;
       const move = travelTime(at, h0);
       segs.push({ rest: i, move: true, t0: end, t1: end + move, p0: at, p1: h0 });
@@ -1167,7 +1173,8 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
       at = h1;
     }
     const segAt = (c: number) => segs.find((s) => c < s.t1) ?? segs[segs.length - 1];
-    const dwellOf = (rest: number) => segs.find((s) => s.rest === rest && !s.move) ?? segs[segs.length - 1];
+    // The approach has no reading of its own: asked for, it is the label's.
+    const dwellOf = (rest: number) => segs.find((s) => s.rest === (rest === PASSED ? PASSED + 1 : rest) && !s.move) ?? segs[segs.length - 1];
     const pAt = (c: number) => {
       if (c <= 0) return 0;
       const s = segAt(c);
@@ -1311,7 +1318,8 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
         return;
       }
       if (!s.move) clock = s.t0;
-      const to = s.rest - 1;
+      // Before the label there is only the room: the approach is passed through, never read.
+      const to = s.rest - 1 === PASSED ? PASSED - 1 : s.rest - 1;
       const reading = to >= 1 ? dwellOf(to) : null;
       back = reading ? reading.t0 : 0;
       backEdge = reading ? reading.t1 : 0;
@@ -1418,7 +1426,8 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
     };
 
     // The cards' own buttons go to a rest: the next by the usual way on, an earlier one by running back.
-    go.current = (rest: number) => {
+    go.current = (asked: number) => {
+      const rest = asked === PASSED ? PASSED + 1 : asked;
       if (!open || closing || !RESTS[rest]) return;
       const s = segAt(clock);
       if (rest === s.rest + 1 || (rest === s.rest && s.move)) next();
@@ -1646,7 +1655,7 @@ function useFilm(track: RefObject<HTMLDivElement | null>, on: boolean, base: Sce
 
       // Each chapter's words: in as its picture arrives, out as the next begins, rising a little as they come.
       el.chapterWords.forEach((node, i) => {
-        const o = L.chapters[i + 1] ?? 0;
+        const o = i + 1 === PASSED ? 0 : (L.chapters[i + 1] ?? 0);
         write(node, "opacity", fixed(o));
         write(node, "translate", `0 ${fixed((1 - o) * 12, 2)}px`);
       });
