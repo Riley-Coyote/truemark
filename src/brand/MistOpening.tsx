@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import type { Product } from "../data";
 import { store, useResource } from "../platform/store";
 import { productById } from "../shop/catalog";
+import { offerAmount, useStoreOffers } from "../shop/offers";
 import { useMediaQuery } from "../shop/motion";
 import { placeOnOpening } from "../Navigation";
 import { collectionIds } from "./carousel";
@@ -33,6 +34,25 @@ import "./hero.css";
 import "./mist.css";
 import "./mist-word.css";
 import "./stories.css";
+
+/** The shop's standing offers on the room's floor, below the vials, where the client's first homepage had them (the
+ *  meeting notes of Oct 18): free shipping from its threshold and the first-order discount, each said only while it is
+ *  offered. Two lines on a phone, one elsewhere; mist.css places them. */
+function OpeningOffers() {
+  const { data } = useStoreOffers();
+  const offers = [
+    data?.freeShipping != null ? `Free shipping over ${offerAmount(data.freeShipping)}` : null,
+    data?.firstOrderPercent ? `${data.firstOrderPercent}% off your first order` : null,
+  ].filter((offer): offer is string => Boolean(offer));
+  if (!offers.length) return null;
+  return (
+    <p className="tm-mist-offers">
+      {offers.map((offer) => (
+        <span key={offer}>{offer}</span>
+      ))}
+    </p>
+  );
+}
 
 /** Every window but an upright phone's sees the room as first photographed; its widened edges wait for very wide screens. */
 const BAND = OPENING_BAND;
@@ -415,6 +435,7 @@ export function MistOpening() {
             {way}
           </div>
         )}
+        <OpeningOffers />
       </div>
       <SequenceCamera>
         <Plate box={box}>

@@ -195,6 +195,45 @@
 .tm.tm-mist[data-shape="tall"] .tm-mist-kind {
   color: var(--tm-ink);
 }
+/* The shop's offers, lettered as the caption is, on the room's floor below the vials: level with the Motion switch on a
+   landscape screen, between the switch in one corner and the desk in the other. Words only: every touch goes through
+   them to the room. */
+.tm.tm-mist .tm-mist-offers {
+  position: absolute;
+  left: 50%;
+  bottom: var(--tm-space-5);
+  display: flex;
+  align-items: center;
+  min-height: 2rem;
+  margin: 0;
+  translate: -50% 0;
+  white-space: nowrap;
+  pointer-events: none;
+  font: var(--tm-weight-medium) var(--tm-type-nano) / 1.4 var(--tm-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tm-ink);
+}
+.tm.tm-mist .tm-mist-offers > span + span::before {
+  content: "·";
+  margin-inline: 0.9em;
+}
+/* On a phone, two lines in the Motion switch's row, opposite it and over the way into the shop: a row the room already
+   leaves clear at every height, where the floor above it may meet the pedestals on a short screen. */
+@media (max-width: 560px) {
+  .tm.tm-mist[data-shape="tall"] .tm-mist-offers {
+    left: var(--tm-margin);
+    bottom: calc(var(--tm-space-5) + var(--tm-control) + var(--tm-space-4));
+    translate: none;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.3em;
+  }
+  .tm.tm-mist[data-shape="tall"] .tm-mist-offers > span + span::before {
+    content: none;
+  }
+}
 
 /* The entrance: the headline's lines rise one after another (hero.css) as the vials stand; a beat after its last
    line the lead comes up gently, then the way in, then (on a phone) the lead and caption beneath the room. Their
