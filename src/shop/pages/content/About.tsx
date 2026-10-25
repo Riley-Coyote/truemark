@@ -119,7 +119,7 @@ export default function About() {
           <p className="tm-section-note">{whoWeSupply}</p>
           <div className="tm-actions">
             <Link className="tm-button tm-button-primary" to="/products">
-              View catalog
+              Shop peptides
             </Link>
             <Link className="tm-button tm-button-outline" to="/contact">
               Contact us

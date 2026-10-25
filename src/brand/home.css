@@ -226,7 +226,7 @@ body:has(.tm-wall-light) .tm-footer {
   row-gap: var(--tm-space-7);
   padding-top: calc(var(--tm-space-silence) + var(--tm-space-6));
 }
-/* The heading block at the top left; "View catalog" opposite, on its last line. */
+/* The heading block at the top left; "Shop peptides" opposite, on its last line. */
 .tm-index-head {
   grid-column: 1 / span 7;
 }

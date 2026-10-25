@@ -86,7 +86,7 @@ export function Procession() {
     <section className="tm tm-index tm-procession" ref={root} aria-labelledby="tm-index-title" aria-roledescription="carousel">
       <header className="tm-procession-heading">
         <div><p className="tm-eyebrow">The research collection</p><h2 id="tm-index-title" className="tm-heading">Organized by<br />compound class.</h2></div>
-        <div className="tm-procession-intro"><p>Eight classes. Full specification data.<br /> A clear place to begin your research.</p><Link className="tm-textlink" to="/products">View catalog <ArrowRight size={16} strokeWidth={1.6} /></Link></div>
+        <div className="tm-procession-intro"><p>Eight classes. Full specification data.<br /> A clear place to begin your research.</p><Link className="tm-textlink" to="/products">Shop peptides <ArrowRight size={16} strokeWidth={1.6} /></Link></div>
       </header>
       <div
         className="tm-procession-stage"
@@ -142,7 +142,11 @@ export function Procession() {
           <button type="button" className="tm-procession-play" aria-label={status.reduced ? "Motion is off" : status.paused ? "Play collection" : "Pause collection"} disabled={status.reduced} onClick={() => controller.current?.toggle()}>{status.paused || status.reduced ? <Play size={14} /> : <Pause size={14} />}<span>{status.reduced ? "Still" : status.paused ? "Play" : "Pause"}</span></button>
         </div>
       </div>
-      <p className="tm-procession-specs">CAS number · Molecular formula &amp; weight · Sequence · Purity &amp; identity · Solubility · Storage</p>
+      {/* The section's foot: what every product page carries, and the way on to the shop once the classes are seen. */}
+      <div className="tm-procession-foot">
+        <p className="tm-procession-specs">CAS number · Molecular formula &amp; weight · Sequence · Purity &amp; identity · Solubility · Storage</p>
+        <Link className="tm-button tm-button-primary" to="/products" data-keep-clear="">Shop peptides</Link>
+      </div>
       <p className="sr-only" aria-live="polite" aria-atomic="true">{status.paused ? `${classes[status.active]?.name}. ${classes[status.active]?.members}.` : ""}</p>
     </section>
   );

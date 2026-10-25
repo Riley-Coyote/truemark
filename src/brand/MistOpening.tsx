@@ -375,7 +375,7 @@ export function MistOpening() {
           the foot of the screen, the second one under the mark's corner. */}
       <div className="tm-actions tm-mist-actions" data-keep-clear="">
         <Link className="tm-button tm-button-primary" to="/products">
-          View catalog
+          Shop peptides
         </Link>
         <Link className="tm-button tm-button-outline" to="/verify">
           Verify a lot

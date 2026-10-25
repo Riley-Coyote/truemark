@@ -229,7 +229,7 @@ export function ClassIndex() {
           </p>
         </header>
         <Link className="tm-textlink tm-index-all" to="/products" data-reveal>
-          View catalog <ArrowRight size={16} strokeWidth={1.6} />
+          Shop peptides <ArrowRight size={16} strokeWidth={1.6} />
         </Link>
         <ul className="tm-class-grid">
           {compoundClasses.map((c, i) => {

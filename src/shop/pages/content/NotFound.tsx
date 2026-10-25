@@ -28,7 +28,7 @@ export default function NotFound() {
           </p>
           <div className="tm-actions">
             <Link className="tm-button tm-button-primary" to="/products">
-              View catalog
+              Shop peptides
             </Link>
             <Link className="tm-button tm-button-outline" to="/verify">
               Verify a lot
