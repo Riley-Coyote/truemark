@@ -7,20 +7,91 @@
   display: flex;
   align-items: center;
   gap: var(--tm-space-2);
-  margin: 0 0 var(--tm-space-2);
+  margin: 0 0 var(--tm-space-3);
   font: inherit;
   color: inherit;
 }
-.tm-shipping-track {
-  height: var(--tm-space-1);
-  background: var(--tm-line);
+
+/* The rewards' line, drawn as the paper trail is (paper-trail.css): a hairline, a station at each reward, hollow until
+   the bag reaches it and then filled, with a quiet ring; the bag's progress an ink line travelling along it. Inset by
+   half a station, so the stations at its ends stand inside it. */
+.tm-rewards {
+  --tm-station: 9px;
+  position: relative;
+  height: var(--tm-station);
+  margin: 0 calc(var(--tm-station) / 2);
 }
-.tm-shipping-track span {
-  display: block;
-  height: 100%;
+.tm-rewards-line,
+.tm-rewards-fill {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+}
+.tm-rewards-line {
+  height: 1px;
+  translate: 0 -50%;
+  background: var(--tm-line-strong);
+}
+/* It travels as the lot does along its record, at the pace of a scene: easing in, settling at the bag's figure. */
+.tm-rewards-fill {
+  height: 2px;
+  translate: 0 -50%;
   background: var(--tm-ink);
-  transition: width var(--tm-dur-base) var(--tm-ease-enter);
+  transform: scaleX(var(--tm-share, 0));
+  transform-origin: left center;
+  transition: transform var(--tm-dur-scene) var(--tm-ease-enter);
 }
+.tm-rewards-station {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--tm-at) * 100%);
+  width: var(--tm-station);
+  height: var(--tm-station);
+  border: 1px solid var(--tm-ink-3);
+  border-radius: var(--tm-radius-pill);
+  background: var(--tm-paper);
+  translate: -50% -50%;
+  /* Reached, it fills as the line arrives at it, not before. */
+  transition:
+    background-color var(--tm-dur-slow) var(--tm-ease-enter) var(--tm-dur-slow),
+    border-color var(--tm-dur-slow) var(--tm-ease-enter) var(--tm-dur-slow),
+    box-shadow var(--tm-dur-slow) var(--tm-ease-enter) var(--tm-dur-slow);
+}
+.tm-rewards-station[data-reached] {
+  border-color: var(--tm-ink);
+  background: var(--tm-ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tm-ink) 14%, transparent);
+}
+
+/* The names, at the line's two ends: the nearest reward at its start, the last at its end. */
+.tm .tm-rewards-legend, .tm-rewards-legend {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--tm-space-3);
+  margin: var(--tm-space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  font: var(--tm-weight-regular) var(--tm-type-micro) / 1.4 var(--tm-font-sans);
+  color: var(--tm-ink-3);
+}
+.tm-rewards-legend li:only-child {
+  margin-left: auto;
+}
+.tm-rewards-legend li:last-child:not(:only-child) {
+  text-align: right;
+}
+.tm-rewards-legend span {
+  font-variant-numeric: tabular-nums;
+}
+.tm-rewards-legend li[data-reached] {
+  color: var(--tm-ink);
+  transition: color var(--tm-dur-slow) var(--tm-ease-enter) var(--tm-dur-slow);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .tm-shipping-track span { transition: none; }
+  .tm-rewards-fill,
+  .tm-rewards-station,
+  .tm-rewards-legend li[data-reached] {
+    transition: none;
+  }
 }

@@ -191,11 +191,13 @@ test('shipping progress is absent for empty/off, shows cents remaining and unloc
 test('the progress bar points to the next reward: free BAC water, then free shipping; the vial only while one can be sent', () => {
   const settings = { ...current.pricing.defaultSettings, freeShippingThreshold: 200, freeBacWaterThreshold: 75 };
   const markup = (base, extra = {}) => current.renderToStaticMarkup(current.progressMarkup({ base, count: 1, settings, bacWater: true, ...extra }));
-  assert.match(markup(40), /\$35\.00 more for free BAC water/); assert.match(markup(40), /aria-label="Free BAC water" aria-valuenow="53"/);
+  // Both rewards on one line (the client's request, October 2026): a station for each, the progress along the whole line.
+  const stations = (html) => (html.match(/tm-rewards-station/g) ?? []).length;
+  assert.match(markup(40), /\$35\.00 more for free BAC water/); assert.match(markup(40), /aria-label="Rewards"[^>]*aria-valuenow="20"/); assert.equal(stations(markup(40)), 2);
   assert.match(markup(74.99), /\$0\.01 more for free BAC water/);
-  assert.match(markup(75), /\$125\.00 more for free shipping/); assert.match(markup(75), /aria-label="Free shipping" aria-valuenow="38"/);
+  assert.match(markup(75), /\$125\.00 more for free shipping/); assert.match(markup(75), /aria-valuenow="38"/); assert.match(markup(75), /tm-rewards-station" data-reached=""/);
   assert.match(markup(200), /Free shipping unlocked/);
-  assert.match(markup(40, { bacWater: false }), /\$160\.00 more for free shipping/);
+  assert.match(markup(40, { bacWater: false }), /\$160\.00 more for free shipping/); assert.equal(stations(markup(40, { bacWater: false })), 1);
   assert.match(markup(80, { settings: { ...settings, freeShippingThreshold: null } }), /Free BAC water unlocked/);
   assert.equal(markup(80, { settings: { ...settings, freeShippingThreshold: null, freeBacWaterThreshold: null } }), '');
   assert.equal(current.pricing.earnsFreeBacWater(74.99, settings), false); assert.equal(current.pricing.earnsFreeBacWater(75, settings), true);
