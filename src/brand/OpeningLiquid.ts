@@ -111,6 +111,10 @@ function pairIn(layer: HTMLElement, shopEl: HTMLElement, verifyEl: HTMLElement):
   return { shop, verify, span: { x: (left + right) / 2, y: (top + bottom) / 2, w: right - left, h: bottom - top } };
 }
 
+/** The drop falls once a visit. The opening lays its words out anew as it readies (a phone's pictures arriving, a
+ *  phone turned), and a liquid built again after the drop has begun to fall only settles into place. */
+let arrival: "none" | "playing" | "done" = "none";
+
 const near = (p: Piece, box: Box) => Math.abs(p.w - box.w) < 1 && Math.abs(p.h - box.h) < 1 && Math.abs(p.x - box.x) < 1 && Math.abs(p.y - box.y) < 1;
 
 /** TrueMark's one ink as the page has it now, read off a probe: the button's own background may be mid-transition
@@ -321,6 +325,13 @@ class OpeningLiquid {
   /** The words come and go; the liquid follows. */
   show() {
     if (this.shown) return;
+    if (!this.fell && arrival !== "none") {
+      this.fell = true;
+      this.paint();
+      if (this.measure()) this.settle();
+      arrival = "done";
+      return;
+    }
     void (this.fell ? this.reform() : this.arrive());
   }
 
@@ -472,8 +483,9 @@ class OpeningLiquid {
     const pair = this.measure();
     if (!pair) return;
     this.fell = true;
+    arrival = "playing";
     this.state = "arriving";
-    if (this.glass.reduced) { this.settle(); return; }
+    if (this.glass.reduced) { this.settle(); arrival = "done"; return; }
     this.words(false);
     const { shop, verify } = this.pieces, { span } = pair, D = span.h;
     verify.hidden = true;
@@ -494,6 +506,7 @@ class OpeningLiquid {
     await this.glass.until(() => shop.w > span.w * 0.97 || (shop.w > span.w * 0.9 && shop.sw.v <= 0), 1.2);
     if (run !== this.run) return;
     await this.divide(run);
+    if (run === this.run) arrival = "done";
   }
 
   /** The words back after they went: the ink wells up as a drop, spreads into one pill, and divides again. */
@@ -609,8 +622,8 @@ class OpeningLiquid {
 
 /**
  * The opening's two ways in as one liquid. `stage` is a layer over the room and under the words; `plate` a layer in
- * the room's plate, under the vials, for the ripples. Rebuilt when the opening lays its words out anew (a phone turned,
- * the story's pictures ready).
+ * the room's plate, under the vials, for the ripples. Rebuilt only when the opening takes another shape (a phone
+ * turned): everything else that moves the buttons, it follows by measuring them.
  */
 export function useOpeningLiquid(
   section: RefObject<HTMLElement | null>,
@@ -655,8 +668,11 @@ export function useOpeningLiquid(
     const waiting = entrance && Number(entrance.currentTime ?? 0) < Number(entrance.effect?.getTiming().delay ?? 0);
     const listeners = new AbortController();
     const on = { signal: listeners.signal };
+    // A frame later, not at once: React builds the opening twice as it first mounts in development, and the first is
+    // put away before that frame comes, so only the opening that stays lets the drop fall.
+    let entering = 0;
     if (way && waiting) way.addEventListener("animationstart", enter, { once: true, signal: listeners.signal });
-    else enter();
+    else entering = requestAnimationFrame(enter);
     const fallback = window.setTimeout(enter, 2400);
 
     let frame = 0;
@@ -696,6 +712,7 @@ export function useOpeningLiquid(
 
     return () => {
       window.clearTimeout(fallback);
+      cancelAnimationFrame(entering);
       cancelAnimationFrame(frame);
       listeners.abort();
       watched.disconnect();

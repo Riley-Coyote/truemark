@@ -191,8 +191,8 @@ export function MistOpening() {
   }, [haze]);
   const softs = vials.map(softCutout);
   const ready = useSequenceReady(seq, softs.filter((src): src is string => Boolean(src)));
-  useRoomLight(section, lightCanvas, tall, [phone, seq, ready]);
-  useOpeningLiquid(section, liquidLayer, rippleLayer, [phone, tall, seq, ready]);
+  useRoomLight(section, lightCanvas, tall, [phone]);
+  useOpeningLiquid(section, liquidLayer, rippleLayer, [phone, tall]);
   // Each shown lot's record in the current world, which the caption reads. Found by its lot, so a set still loading
   // for the other shape of screen is never read as this one's.
   const records = useResource(() => Promise.all(vials.map((product) => store.lots.get(product.lot))), [ids]);
