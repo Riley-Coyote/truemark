@@ -290,6 +290,8 @@ function ProductRoom({ product, signInToOrder }: { product: Product; signInToOrd
   const purity = lot ? hplcPurity(lot) : undefined;
   const groups = lot ? resultGroups(lot.results) : [];
   const single = groups.length === 1 ? groups[0] : undefined;
+  // A blend's every component, each figure named: never only its lowest (the client's request, October 2026).
+  const parts = groups.filter((g) => g.purity);
 
   const compact: [string, string][] = spec.cas
     ? [["CAS", spec.cas], ["Formula", spec.formula ?? ""], ["Mol. weight", spec.weight ?? ""], ["Storage", spec.storage]]
@@ -334,9 +336,19 @@ function ProductRoom({ product, signInToOrder }: { product: Product; signInToOrd
             {(waiting || purity) && (
               <div>
                 <dt>HPLC purity</dt>
-                <dd className="tm-mono">
-                  {purity ? `${purity.value}%` : "\u00a0"}<small>this lot</small>
-                </dd>
+                {parts.length > 1 ? (
+                  <dd className="tm-mono tm-proom-parts">
+                    {parts.map((g) => (
+                      <span key={g.component}>
+                        {g.purity!.value}%<small>{g.component}</small>
+                      </span>
+                    ))}
+                  </dd>
+                ) : (
+                  <dd className="tm-mono">
+                    {purity ? `${purity.value}%` : "\u00a0"}<small>this lot</small>
+                  </dd>
+                )}
               </div>
             )}
           </dl>
@@ -639,6 +651,7 @@ function LotSection({ product, lot, loading, onOpen }: { product: Product; lot: 
   const record = lot ? recordFromLot(lot) : null;
   const groups = lot ? resultGroups(lot.results) : [];
   const purity = lot ? hplcPurity(lot) : undefined;
+  const parts = groups.filter((g) => g.purity);
   const identity = groups.find((g) => g.identity)?.identity;
   const lab = labLink(lot?.reference);
   const contents = groups.filter((g) => g.content);
@@ -662,12 +675,22 @@ function LotSection({ product, lot, loading, onOpen }: { product: Product; lot: 
               {purity && (
                 <div>
                   <dt>HPLC purity</dt>
-                  <dd>
-                    <span className="tm-figure">{purity.value}<small>%</small></span>
-                    <span className="tm-figure-text">
-                      {groups.length > 1 ? `The lowest of its ${groups.length} components. ` : ""}Specification ≥{PURITY_MINIMUM}%
-                    </span>
-                  </dd>
+                  {parts.length > 1 ? (
+                    <dd>
+                      {parts.map((g) => (
+                        <span key={g.component} className="tm-figure tm-figure-part">
+                          {g.purity!.value}<small>%</small>
+                          <span className="tm-figure-name">{g.component}</span>
+                        </span>
+                      ))}
+                      <span className="tm-figure-text">Specification ≥{PURITY_MINIMUM}% for each component</span>
+                    </dd>
+                  ) : (
+                    <dd>
+                      <span className="tm-figure">{purity.value}<small>%</small></span>
+                      <span className="tm-figure-text">Specification ≥{PURITY_MINIMUM}%</span>
+                    </dd>
+                  )}
                 </div>
               )}
               {identity && (

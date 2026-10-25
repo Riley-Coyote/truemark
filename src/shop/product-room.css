@@ -296,6 +296,7 @@
 }
 .tm-proom-record div {
   display: grid;
+  align-content: start;
   gap: var(--tm-space-2);
 }
 .tm-proom-record dt,
@@ -314,6 +315,11 @@
   margin-left: var(--tm-space-2);
   font-size: var(--tm-type-micro);
   color: var(--tm-ink-2);
+}
+/* A blend's purities, one line to a component, each named after its figure. */
+.tm-proom-record .tm-proom-parts {
+  display: grid;
+  gap: var(--tm-space-1);
 }
 .tm.tm-proom .tm-proom-proof .tm-textlink {
   margin-top: var(--tm-space-4);
@@ -733,6 +739,16 @@
 /* A word or a date among the figures, set a step down so it holds its column. */
 .tm.tm-proom-lot .tm-proom-word {
   font-size: var(--tm-type-h3);
+}
+/* A blend's purities, a step down so its components stack in the column, each named after its figure. */
+.tm.tm-proom-lot .tm-figure-part {
+  font-size: var(--tm-type-h3);
+}
+.tm.tm-proom-lot .tm-figure-name {
+  margin-left: var(--tm-space-3);
+  font: var(--tm-weight-regular) var(--tm-type-ui) / 1.5 var(--tm-font-sans);
+  letter-spacing: 0;
+  color: var(--tm-ink-2);
 }
 /* The lot number is the heading: a step down from a section's, so an identifier holds one line in its column. */
 .tm.tm-proom-lot .tm-proom-lot-number {
