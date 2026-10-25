@@ -24,6 +24,15 @@
   position: absolute;
   left: 0;
 }
+/* The room's daylight through water (room-light.ts): the whole plate, over the photograph and under the word on its
+   wall, the floor's mist and the vials (the page's own order in the plate). */
+.tm-room-light {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
 
 /* The two ways in give their fill, edge and shade to the liquid beneath them, and keep their words and focus ring.
    Pointed at or pressed, the liquid answers (it swells, it squeezes), so the buttons themselves hold still. */

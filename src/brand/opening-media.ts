@@ -4,8 +4,8 @@
  * the site's code has arrived (vite.config.ts), and it must ask for exactly the file the room shows.
  */
 export const OPENING_MEDIA = {
-  wide: { poster: "media/open-deep.jpg", large: { poster: "media/open-deep-4k.jpg" } },
-  tall: { poster: "media/open-phone-deep.jpg", large: { poster: "media/open-phone-deep-4k.jpg" } },
+  wide: { poster: "media/open-arches.jpg", large: { poster: "media/open-arches-4k.jpg" } },
+  tall: { poster: "media/open-phone-arches.jpg", large: { poster: "media/open-phone-arches-4k.jpg" } },
 } as const;
 
 /** The screens that see the tall cut, with its middle three pedestals: a phone held upright (MistOpening.tsx, flight.ts,

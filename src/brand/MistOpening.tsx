@@ -13,6 +13,7 @@ import { TALL_SCREEN } from "./opening-media";
 import { useArrivedByFlight, useFlightAllowed, useFlightSlot } from "./FlightViews";
 import { collectionVerified } from "./plinth";
 import { useOpeningLiquid } from "./OpeningLiquid";
+import { useRoomLight } from "./RoomLight";
 import {
   COLLECTION,
   COLLECTION_SEATS,
@@ -116,6 +117,7 @@ export function MistOpening() {
   /* The two ways in as one liquid (OpeningLiquid.ts): its layer over the room, and the ripples in the room's plate. */
   const liquidLayer = useRef<HTMLDivElement>(null);
   const rippleLayer = useRef<HTMLDivElement>(null);
+  const lightCanvas = useRef<HTMLCanvasElement>(null);
   const head = useRef<HTMLDivElement>(null);
   const lead = useRef<HTMLParagraphElement>(null);
   const actions = useRef<HTMLDivElement>(null);
@@ -189,6 +191,7 @@ export function MistOpening() {
   }, [haze]);
   const softs = vials.map(softCutout);
   const ready = useSequenceReady(seq, softs.filter((src): src is string => Boolean(src)));
+  useRoomLight(section, lightCanvas, tall, [phone, seq, ready]);
   useOpeningLiquid(section, liquidLayer, rippleLayer, [phone, tall, seq, ready]);
   // Each shown lot's record in the current world, which the caption reads. Found by its lot, so a set still loading
   // for the other shape of screen is never read as this one's.
@@ -451,6 +454,8 @@ export function MistOpening() {
               whichever page shows it (share.ts); the lens's focus comes on only as the camera moves to a pedestal. */}
           <img className="tm-room tm-room-still" src={roomMedia(room).poster} alt="" aria-hidden="true" draggable={false} />
           <RoomLoop room={room} still={still} />
+          {/* The room's daylight through water (RoomLight.ts): over the photograph, under the word and the mist. */}
+          <canvas className="tm-room-light" ref={lightCanvas} aria-hidden="true" />
           {/* "TRUEMARK" on the back wall, in the photograph's own light (mist-word.css), and the floor mist. */}
           <div className="tm-mist-light" style={word ?? undefined} data-word={word ? "" : undefined}>
             {word && (

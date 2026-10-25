@@ -168,7 +168,7 @@ class MistCopy {
 
 /** Paints the room as it stands behind the layer, for the water to bend: the room's picture where the page shows it,
  *  fitted as the page fits it (object-fit: cover, at its object-position), and the floor mist over it. */
-function paintRoom(into: HTMLCanvasElement, layer: HTMLElement, root: HTMLElement, mist: MistCopy) {
+function paintRoom(into: HTMLCanvasElement, layer: HTMLElement, root: HTMLElement, mist: MistCopy, drawnLight = false) {
   const L = layer.getBoundingClientRect();
   const w = Math.max(1, Math.round(L.width)), h = Math.max(1, Math.round(L.height));
   if (into.width !== w || into.height !== h) { into.width = w; into.height = h; }
@@ -188,6 +188,13 @@ function paintRoom(into: HTMLCanvasElement, layer: HTMLElement, root: HTMLElemen
   if (fog && mist.has) {
     const r = fog.getBoundingClientRect();
     ctx.drawImage(mist.canvas, r.left - L.left, r.top - L.top, r.width, r.height);
+  }
+  // The room's daylight through water, as it was just drawn (room-light.ts): read only in the frame it's drawn, and
+  // empty at any other moment.
+  const light = root.querySelector<HTMLCanvasElement>(".tm-room-light");
+  if (light && drawnLight) {
+    const r = light.getBoundingClientRect();
+    ctx.drawImage(light, r.left - L.left, r.top - L.top, r.width, r.height);
   }
 }
 
@@ -274,6 +281,7 @@ class OpeningLiquid {
   private down: Which | null = null;
   private lean: Record<Which, { x: number; y: number }> = { shop: { x: 0, y: 0 }, verify: { x: 0, y: 0 } };
   private roomAt = "";
+  private lightAt = 0;
   private inkAt: string;
 
   constructor(
@@ -335,12 +343,25 @@ class OpeningLiquid {
     }
   }
 
-  paint(again = false) {
+  paint(again = false, light = false) {
     const key = roomKey(this.layer, this.root);
     if (key === this.roomAt && !again) return;
     this.roomAt = key;
-    paintRoom(this.room, this.layer, this.root, this.mist);
+    paintRoom(this.room, this.layer, this.root, this.mist, light);
     this.glass.invalidateBackdrop();
+  }
+
+  /** The room's light has just drawn a frame: while the water is out and the light can reach what lies behind it, its
+   *  picture of the room is painted again, at most twenty times a second. */
+  lightDrawn() {
+    if (this.state === "hidden" || !this.pieces.verify.visible) return;
+    const now = performance.now();
+    if (now - this.lightAt < 50) return;
+    const light = this.root.querySelector<HTMLCanvasElement>(".tm-room-light")?.getBoundingClientRect();
+    const V = this.els.verify.getBoundingClientRect();
+    if (!light || V.top > light.top + light.height * 0.6) return;
+    this.lightAt = now;
+    this.paint(true, true);
   }
 
   /** Where the floor mist lies behind the two (a phone's way in stands on the room's floor), the water's picture of it
@@ -657,6 +678,8 @@ export function useOpeningLiquid(
     verify.addEventListener("pointerdown", () => liquid.press("verify"), on);
     window.addEventListener("pointerup", () => liquid.release(), on);
     window.addEventListener("pointercancel", () => liquid.release(), on);
+
+    root.addEventListener("tm-room-light", () => liquid.lightDrawn(), on);
 
     const watched = new MutationObserver(sync);
     watched.observe(root, { attributes: true, attributeFilter: ["data-story"] });
