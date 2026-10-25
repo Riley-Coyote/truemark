@@ -12,6 +12,7 @@ import { flyToProduct, preloadProduct, registerHome } from "./flight";
 import { TALL_SCREEN } from "./opening-media";
 import { useArrivedByFlight, useFlightAllowed, useFlightSlot } from "./FlightViews";
 import { collectionVerified } from "./plinth";
+import { useOpeningGlass } from "./OpeningGlass";
 import {
   COLLECTION,
   COLLECTION_SEATS,
@@ -111,6 +112,10 @@ let shownBefore = false;
  */
 export function MistOpening() {
   const stage = useRef<HTMLDivElement>(null);
+  const section = useRef<HTMLElement>(null);
+  /* The glass under the floating controls (OpeningGlass.ts): one layer over the room, one in its plate. */
+  const glassStage = useRef<HTMLDivElement>(null);
+  const glassPlate = useRef<HTMLDivElement>(null);
   const head = useRef<HTMLDivElement>(null);
   const lead = useRef<HTMLParagraphElement>(null);
   const actions = useRef<HTMLDivElement>(null);
@@ -184,6 +189,7 @@ export function MistOpening() {
   }, [haze]);
   const softs = vials.map(softCutout);
   const ready = useSequenceReady(seq, softs.filter((src): src is string => Boolean(src)));
+  useOpeningGlass(section, glassStage, glassPlate, [phone, tall, seq, ready]);
   // Each shown lot's record in the current world, which the caption reads. Found by its lot, so a set still loading
   // for the other shape of screen is never read as this one's.
   const records = useResource(() => Promise.all(vials.map((product) => store.lots.get(product.lot))), [ids]);
@@ -410,6 +416,7 @@ export function MistOpening() {
       <span className="tm-mist-screen" ref={screenSizer} aria-hidden="true" />
       {/* Where the room falls short of the stage (a short, wide window): the same room, far softer, all around it. */}
       {frame.fill && <img className="tm-mist-fill" src={roomMedia(room).poster} alt="" aria-hidden="true" draggable={false} />}
+      <div className="tm-mist-glass" ref={glassStage} aria-hidden="true" />
       <div className="tm-mist-copy">
         <div className="tm-mist-head" ref={head}>
           <p className="tm-pill-eyebrow">
@@ -439,6 +446,7 @@ export function MistOpening() {
       </div>
       <SequenceCamera>
         <Plate box={box}>
+          <div className="tm-cue-glass" ref={glassPlate} aria-hidden="true" />
           {/* The loop's first frame under the loop, while it loads. The loop and the mist are the room's, lent to
               whichever page shows it (share.ts); the lens's focus comes on only as the camera moves to a pedestal. */}
           <img className="tm-room tm-room-still" src={roomMedia(room).poster} alt="" aria-hidden="true" draggable={false} />
@@ -492,7 +500,7 @@ export function MistOpening() {
   );
   return (
     <>
-      <section className="tm tm-mist" aria-labelledby="tm-mist-title" data-shape={tall ? "tall" : "wide"} data-arrived={arrived ? "" : undefined} data-seq={seq ? "" : undefined} data-dawn={dawn && seq ? "" : undefined} data-dawn-haze={haze && seq ? "" : undefined} data-dawned={dawned ? "" : undefined}>
+      <section ref={section} className="tm tm-mist" aria-labelledby="tm-mist-title" data-shape={tall ? "tall" : "wide"} data-arrived={arrived ? "" : undefined} data-seq={seq ? "" : undefined} data-dawn={dawn && seq ? "" : undefined} data-dawn-haze={haze && seq ? "" : undefined} data-dawned={dawned ? "" : undefined}>
         <SequenceTrack on={seq} scene={{ box, plateScale: PLATE_SCALE, seat: seats[featuredAt], tall }} lead={null} ready={ready}>
           {scene}
         </SequenceTrack>

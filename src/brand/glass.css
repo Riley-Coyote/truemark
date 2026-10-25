@@ -1,0 +1,55 @@
+/* The opening's glass (OpeningGlass.ts): layers over the room and under the controls' words. */
+.tm-mist-glass,
+.tm-cue-glass {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+/* Placed before the copy in the page's order at the copy's own height, so the words stand over it; the Motion switch,
+   a step higher, does too. */
+.tm-mist-glass {
+  z-index: 5;
+}
+/* In the room's plate, under "Look closer" (stories.css gives it 2). */
+.tm-cue-glass {
+  z-index: 1;
+}
+/* A capsule of clear glass, in our liquid glass's clear numbers (measured from Apple's): the room behind it blurred 2 px
+   and lifted 8% toward white; a hairline rim at 0.17 all round with another 0.1 along the top, where the light falls; a
+   key and an ambient shade beneath, in the room's own ink as every shade on the site is, never grey. A box-shadow falls
+   outside the glass only, so the shade is never seen through it. Its size and place are its springs' (OpeningGlass.ts). */
+.tm-glass {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.17),
+    inset 0 1px 0 rgba(255, 255, 255, 0.27),
+    0 9px 24px -6px rgba(36, 26, 74, 0.24),
+    0 1.5px 3px rgba(36, 26, 74, 0.12);
+  will-change: transform;
+}
+
+/* The controls give their fill, edge and shade to the glass beneath them, and keep their words, marks and focus ring.
+   Pointed at or pressed, the glass answers (it swells, it squeezes), so the controls themselves hold still. */
+.tm.tm-mist[data-glass] .tm-mist-actions .tm-button-outline,
+.tm.tm-mist[data-glass] .tm-mist-actions .tm-button-outline:is(:hover, :active),
+.tm.tm-mist[data-glass] .tm-seq-switch.tm-seq-switch-rest,
+.tm.tm-mist[data-glass] .tm-seq-switch.tm-seq-switch-rest:is(:hover, :active),
+.tm.tm-mist[data-glass] .tm-story-cue,
+.tm.tm-mist[data-glass] .tm-story-cue:is(:hover, :active) {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transform: none;
+}
+.tm.tm-mist[data-glass] .tm-story-cue:is(:hover, :active) {
+  translate: -50% 0;
+  scale: none;
+}
